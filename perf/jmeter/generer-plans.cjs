@@ -100,7 +100,11 @@ const COLONNES = ["weekDate", "date", "id", "moisCourant",
   // Les codes du référentiel semé : ce que les corps des écritures (`corps-balayage.json`) nomment.
   "corpsEmploiCode", "statutEmploiCode", "natureCode", "plageCode", "typeMilieuCode",
   // Une fiche du répertoire du personnel.
-  "employeId"];
+  "employeId",
+  // Les états que les balayages supposent (preparer.cjs, semerComplements) : paie, équipages publiés,
+  // période en collecte, remplacement, échange.
+  "debutPeriode", "dateEquipage", "periodeCollecteId", "dateCollecte", "dateFuture", "finManifestation",
+  "placeEchangeId", "placePartenaireId"];
 
 /**
  * Les paramètres du module `effectifs`, reconnus au **préfixe exact** qui précède le paramètre.
@@ -152,6 +156,8 @@ function substituer(chemin) {
       const e = ENTITES.map(([re, colonne]) => ({ colonne, rang: avant.search(re) })).filter((x) => x.rang >= 0).sort((a, b) => b.rang - a.rang)[0];
       return e ? `\${${e.colonne}}` : "${id}";
     }
+    // Les disponibilités se déposent sur la période **en collecte**, pas sur la période publiée.
+    if (nom === "periodeId" && /\/disponibilites\//.test(avant)) return "${periodeCollecteId}";
     if (COLONNES.includes(nom)) return `\${${nom}}`;
     if (nom === "uniteId") return "${uniteCode}";
     if (nom === "format") return "csv";
@@ -206,7 +212,9 @@ const gardeEcritures = (enfants) => J.si('${__jexl3("${ecritures}" == "true")}',
  * les condamnait — archiver la conversation semée faisait refuser l'envoi de message, la réponse et
  * le brouillon qui le suivaient ; supprimer la liste rendait 404 à sa modification.
  */
-const DESTRUCTEUR = /\/(archiver|supprimer|fermer|clore|annuler|liberer|refuser|rejeter|retirer|desactiver|revoquer|debrancher|non-comble|raccrocher)$/;
+// `demarrer` et `reviser` font changer d'étape une campagne AGPH : joués tôt, ils fermaient le dépôt
+// des disponibilités que les écritures suivantes mesuraient.
+const DESTRUCTEUR = /\/(archiver|supprimer|fermer|clore|annuler|liberer|refuser|rejeter|retirer|desactiver|revoquer|debrancher|non-comble|raccrocher|demarrer|reviser)$/;
 function estDestructeur(r) {
   return r.methode === "delete" || DESTRUCTEUR.test(r.chemin);
 }

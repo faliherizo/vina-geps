@@ -31,7 +31,7 @@
 <hashTree>
 
 </hashTree>
-<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Identifiants (CSV)"><stringProp name="filename">${identifiants}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">weekDate,date,id,moisCourant,periodeId,placeId,ressourceId,segmentId,uniteCode,typeRef,codeRef,absenceEffectifId,campagneId,remplacementId,echangeId,milieuEffId,posteEffId,equipageId,regleId,feuilleId,pointageId,quotaId,perimetreId,messageEsbId,connecteurCode,relaisCode,profilCode,fluxRegleId,conversationId,messageId,listeId,corpsEmploiCode,statutEmploiCode,natureCode,plageCode,typeMilieuCode,employeId</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
+<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Identifiants (CSV)"><stringProp name="filename">${identifiants}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">weekDate,date,id,moisCourant,periodeId,placeId,ressourceId,segmentId,uniteCode,typeRef,codeRef,absenceEffectifId,campagneId,remplacementId,echangeId,milieuEffId,posteEffId,equipageId,regleId,feuilleId,pointageId,quotaId,perimetreId,messageEsbId,connecteurCode,relaisCode,profilCode,fluxRegleId,conversationId,messageId,listeId,corpsEmploiCode,statutEmploiCode,natureCode,plageCode,typeMilieuCode,employeId,debutPeriode,dateEquipage,periodeCollecteId,dateCollecte,dateFuture,finManifestation,placeEchangeId,placePartenaireId</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
 <hashTree>
 
 </hashTree>
@@ -282,7 +282,7 @@
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/effectifs/disponibilites/periodes/{periodeId}">
       <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -296,7 +296,7 @@
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/effectifs/disponibilites/periodes/{periodeId}/attribution-automatique">
       <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}/attribution-automatique</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}/attribution-automatique</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -310,7 +310,7 @@
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}">
       <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}/ressources/${ressourceId}</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}/ressources/${ressourceId}</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1042,7 +1042,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/choix">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;posteId&quot;:&quot;${posteEffId}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/choix</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1055,22 +1055,8 @@
 
 </hashTree>
 </hashTree>
-<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/demarrer">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/demarrer</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-    </HTTPSamplerProxy>
-<hashTree>
-<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
-<hashTree>
-
-</hashTree>
-<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
-<hashTree>
-
-</hashTree>
-</hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/effectifs/agph/campagnes/{id}/disponibilites/moi">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;plages&quot;:[{&quot;jour&quot;:1,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;},{&quot;jour&quot;:2,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;}]}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/disponibilites/moi</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1084,7 +1070,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/effectifs/agph/campagnes/{id}/disponibilites/{ressourceId}">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;plages&quot;:[{&quot;jour&quot;:1,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;},{&quot;jour&quot;:2,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;}]}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/disponibilites/${ressourceId}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1112,22 +1098,8 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/effectifs/agph/campagnes/{id}/parametres">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;budgetHeuresSemaine&quot;:60}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/parametres</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
-    </HTTPSamplerProxy>
-<hashTree>
-<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
-<hashTree>
-
-</hashTree>
-<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
-<hashTree>
-
-</hashTree>
-</hashTree>
-<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/reviser">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/reviser</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1154,7 +1126,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/remplacements">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;posteId&quot;:&quot;${posteEffId}&quot;,&quot;origine&quot;:&quot;POSTE_VACANT&quot;,&quot;debut&quot;:&quot;${dateFuture}&quot;,&quot;fin&quot;:&quot;${dateFuture}&quot;,&quot;finManifestation&quot;:&quot;${finManifestation}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/remplacements</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1196,8 +1168,8 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/effectifs/disponibilites/moi/{periodeId}">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/moi/${periodeId}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;plages&quot;:[{&quot;date&quot;:&quot;${dateCollecte}&quot;,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;}]}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/moi/${periodeCollecteId}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1211,7 +1183,7 @@
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/disponibilites/periodes/{periodeId}/attribuer">
       <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}/attribuer</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}/attribuer</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1224,8 +1196,8 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}/ressources/${ressourceId}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;plages&quot;:[{&quot;date&quot;:&quot;${dateCollecte}&quot;,&quot;debut&quot;:360,&quot;fin&quot;:1080,&quot;type&quot;:&quot;DISPONIBLE&quot;}]}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}/ressources/${ressourceId}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1239,7 +1211,7 @@
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}/approuver">
       <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
-      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeId}/ressources/${ressourceId}/approuver</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/disponibilites/periodes/${periodeCollecteId}/ressources/${ressourceId}/approuver</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
@@ -1252,7 +1224,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/echanges">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;placeCedeeId&quot;:&quot;${placeId}&quot;,&quot;placeVoulueId&quot;:&quot;${placeId}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;placeCedeeId&quot;:&quot;${placeEchangeId}&quot;,&quot;placeVoulueId&quot;:&quot;${placePartenaireId}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/echanges</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1336,7 +1308,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/integrations/equipages">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;date&quot;:&quot;${dateEquipage}&quot;,&quot;uniteCode&quot;:&quot;${uniteCode}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/integrations/equipages</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1378,7 +1350,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/integrations/paie">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;debut&quot;:&quot;${debutPeriode}&quot;,&quot;uniteCode&quot;:&quot;${uniteCode}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/integrations/paie</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -1980,7 +1952,7 @@
 </hashTree>
 </hashTree>
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/temps/flux">
-      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;objet&quot;:&quot;POINTAGE&quot;,&quot;palier&quot;:${__Random(1,10)},&quot;champ&quot;:&quot;uniteCode&quot;,&quot;operateur&quot;:&quot;eq&quot;,&quot;valeur&quot;:&quot;AUCUNE&quot;,&quot;approbateur&quot;:{&quot;type&quot;:&quot;ROLE&quot;,&quot;valeur&quot;:&quot;director&quot;}}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/temps/flux</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
@@ -2024,6 +1996,34 @@
 <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/clore">
       <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
       <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/clore</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/demarrer">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/demarrer</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/effectifs/agph/campagnes/{id}/reviser">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/effectifs/agph/campagnes/${campagneId}/reviser</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
     </HTTPSamplerProxy>
 <hashTree>
 <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>

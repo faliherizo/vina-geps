@@ -194,11 +194,33 @@ par geste destructeur.
 | JMeter — communication | 38 routes, **0 erreur**, couverture utile **71 %** (61 % avant) |
 | JMeter — personnel, parcours, sonde | **0 erreur**, objectifs tenus ; pool sans épuisement |
 
-Ce qui borne encore la couverture utile des effectifs : 4 identifiants que l'amorce ne sait pas
-semer (remplacement long terme, échange, message ESB, règle de flux) et des écritures dont le corps
-n'est pas connu d'un essai (campagne AGPH, intégrations, disponibilités). Vitest et l'audit
+Ce qui bornait alors la couverture utile des effectifs (4 identifiants non semés, corps AGPH,
+intégrations et disponibilités) est traité dans la troisième passe ci-dessous. Vitest et l'audit
 d'interface n'ont pas été rejoués : l'interface n'a pas changé depuis leur passage vert (241 essais,
 44/44).
+
+### Couverture JMeter — troisième passe (13 novembre 2026)
+
+L'amorce (`preparer.cjs`, `semerComplements`) sème désormais l'état que chaque essai HTTP Java
+monte avant d'appeler sa route : une semaine publiée **à venir** et une partenaire pour l'échange
+(cible tirée de `…/places/{id}/demandables`), un remplacement long terme sur poste vacant, les
+connecteurs d'intégration actifs (PFT, SAAV, GRAPH, ESB, ENTREPOT, RAO et BD_CORPO avec leur jeu
+d'essai) puis un message ESB, une règle de flux qui ne s'applique jamais, une période en collecte
+(les disponibilités s'y déposent : `{periodeId}` → `${periodeCollecteId}`), la campagne AGPH ouverte
+au dépôt. Les **4 identifiants manquants sont semés** ; 11 corps de plus ; `demarrer` et `reviser`
+se jouent après les dépôts ; le code de relais semé était en minuscules (`esb`, refusé).
+
+| Balayage | Avant | Après |
+|---|---|---|
+| Effectifs (154 routes) | 51 % en 2xx | **59 %**, 0 erreur |
+| Communication (38) | 71 % | 71 %, 0 erreur |
+| Personnel (6), parcours, sonde | 100 % / 83–100 % | inchangé, 0 erreur |
+
+Ce qui reste refusé tient à la **machine à états**, pas aux corps : une transition ne réussit
+qu'une fois par entité (ouvrir, démarrer, clore une campagne ; accepter, valider un échange), un
+second échange sur le même quart est un conflit, la paie exige une feuille approuvée, et les trois
+jeux semés relient un seul compte à des ressources de trois unités — les disponibilités ne passent
+que pour le jeu de son unité. Mesurer ces gestes demanderait une entité neuve par itération.
 
 ### Défauts trouvés en résolvant les dettes
 

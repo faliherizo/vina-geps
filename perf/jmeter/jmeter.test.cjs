@@ -257,3 +257,8 @@ test("un identifiant vide d'un jeu semé prend la valeur d'un autre jeu", () => 
   const { completerLesVides } = require("./preparer.cjs");
   assert.deepEqual(completerLesVides([{ a: "1", b: "" }, { a: "", b: "" }, { a: "3", b: "x" }]), [{ a: "1", b: "x" }, { a: "1", b: "x" }, { a: "3", b: "x" }]);
 });
+
+test("les disponibilités se déposent sur la période en collecte, pas sur la période publiée", () => {
+  assert.equal(substituer("/api/effectifs/disponibilites/moi/{periodeId}"), "/api/effectifs/disponibilites/moi/${periodeCollecteId}");
+  assert.equal(substituer("/api/effectifs/planification/periodes/{id}/etat"), "/api/effectifs/planification/periodes/${periodeId}/etat");
+});

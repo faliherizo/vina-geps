@@ -2087,8 +2087,8 @@
    "ressourceId": "${ressourceId}"
   },
   "post /api/effectifs/echanges": {
-   "placeCedeeId": "${placeId}",
-   "placeVoulueId": "${placeId}"
+   "placeCedeeId": "${placeEchangeId}",
+   "placeVoulueId": "${placePartenaireId}"
   },
   "post /api/effectifs/agph/campagnes": {
    "uniteCode": "${uniteCode}",
@@ -2207,6 +2207,90 @@
   },
   "post /api/effectifs/planification/periodes/{id}/etat": {
    "etat": "PUBLIEE"
+  },
+  "post /api/effectifs/integrations/paie": {
+   "debut": "${debutPeriode}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/integrations/equipages": {
+   "date": "${dateEquipage}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/temps/flux": {
+   "objet": "POINTAGE",
+   "palier": "${__Random(1,10)}",
+   "champ": "uniteCode",
+   "operateur": "eq",
+   "valeur": "AUCUNE",
+   "approbateur": {
+    "type": "ROLE",
+    "valeur": "director"
+   }
+  },
+  "put /api/effectifs/disponibilites/moi/{periodeId}": {
+   "plages": [
+    {
+     "date": "${dateCollecte}",
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    }
+   ]
+  },
+  "put /api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}": {
+   "plages": [
+    {
+     "date": "${dateCollecte}",
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    }
+   ]
+  },
+  "put /api/effectifs/agph/campagnes/{id}/disponibilites/moi": {
+   "plages": [
+    {
+     "jour": 1,
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    },
+    {
+     "jour": 2,
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    }
+   ]
+  },
+  "put /api/effectifs/agph/campagnes/{id}/disponibilites/{ressourceId}": {
+   "plages": [
+    {
+     "jour": 1,
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    },
+    {
+     "jour": 2,
+     "debut": 360,
+     "fin": 1080,
+     "type": "DISPONIBLE"
+    }
+   ]
+  },
+  "put /api/effectifs/agph/campagnes/{id}/parametres": {
+   "budgetHeuresSemaine": 60
+  },
+  "post /api/effectifs/agph/campagnes/{id}/choix": {
+   "posteId": "${posteEffId}"
+  },
+  "post /api/effectifs/agph/remplacements": {
+   "posteId": "${posteEffId}",
+   "origine": "POSTE_VACANT",
+   "debut": "${dateFuture}",
+   "fin": "${dateFuture}",
+   "finManifestation": "${finManifestation}"
   },
   "post /api/auth/emprunt": {
    "cibleId": "usr-123",

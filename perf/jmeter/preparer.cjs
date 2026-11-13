@@ -93,7 +93,7 @@ async function semerEffectifs(appel, tenant, n) {
     periodeId: "", placeId: "", ressourceId: "", segmentId: "", uniteCode: "", typeRef: "unites", codeRef: "",
     absenceEffectifId: "", campagneId: "", remplacementId: "", echangeId: "", milieuEffId: "", posteEffId: "",
     equipageId: "", regleId: "", feuilleId: "", pointageId: "", quotaId: "", perimetreId: "", messageEsbId: "",
-    connecteurCode: "ESB", relaisCode: "esb", profilCode: "", fluxRegleId: "",
+    connecteurCode: "ESB", relaisCode: "ESB", profilCode: "", fluxRegleId: "",
   };
   const MODULES = ["effectifs", "effectifs_planification", "effectifs_regles", "effectifs_agph",
     "effectifs_absences", "effectifs_echanges", "effectifs_disponibilites", "effectifs_presence",
@@ -206,9 +206,10 @@ async function semerEffectifs(appel, tenant, n) {
   const pointage = placeDuJour
     ? await poser("/api/effectifs/presence/pointages", { placeId: placeDuJour.id, sens: "ENTREE", preuve: { type: "AUCUNE" } })
     : null;
-  const echange = place && ressource
-    ? await poser("/api/effectifs/echanges", { placeCedeeId: place.id, placeVoulueId: place.id })
-    : null;
+  const complements = await semerComplements(appel, tenant, {
+    poser, unite, corpsEmploi, suffixe, jour, periode, equipages, ressource, poste, campagne, aujourdHui,
+  });
+  const echange = complements.echange;
   // Une fiche au répertoire du personnel : sans elle, la lecture et la correction d'une fiche restent en 404.
   const employe = await poser("/api/personnel/employes", { firstName: "Fiche", lastName: `De charge ${n}`, email: `charge-${n}@exemple.qc.ca` });
   return {
@@ -224,6 +225,7 @@ async function semerEffectifs(appel, tenant, n) {
     pointageId: pointage?.id ?? "", echangeId: echange?.id ?? "",
     corpsEmploiCode: corpsEmploi, statutEmploiCode: `TC${suffixe}`, natureCode: `R${suffixe}`,
     plageCode: `J${suffixe}`, typeMilieuCode: `CA${suffixe}`,
+    ...complements.colonnes,
   };
 }
 
@@ -239,6 +241,66 @@ async function semerEffectifs(appel, tenant, n) {
  * environnement où le fournisseur serait configuré enverrait pour de vrai — d'où le refus
  * explicite ci-dessous plutôt qu'une surprise sur la facture.
  */
+/**
+ * **Ce qui manquait aux balayages** : chaque bloc sème l'état que l'essai HTTP Java correspondant
+ * monte avant d'appeler la route (`backend-java/src/test/java/.../effectifs/infrastructure/web/`).
+ * Sans lui, la route est mesurée sur un refus — un 404 ou un 409 qui répond vite et ne mesure rien.
+ */
+async function semerComplements(appel, tenant, c) {
+  const { poser, unite, corpsEmploi, suffixe, jour, periode, equipages, ressource, poste, campagne, aujourdHui } = c;
+  const demain = new Date(Date.now() + 86_400_000).toISOString();
+  // Échange (`ControleurEchangesEffectifsHttpTest`) : deux quarts **à venir** d'une période publiée,
+  // l'un à la ressource du compte, l'autre à une partenaire de la même unité ; le compte propose, la
+  // cible vient de « demandables ». La période semée finit cette semaine : une semaine suivante, à part,
+  // porte l'échange (le cycle du poste ne travaille que du lundi au vendredi).
+  const partenaire = await poser("/api/effectifs/planification/ressources", {
+    matricule: `Q${suffixe}`, nom: `Partenaire de charge`, corpsEmploiCode: corpsEmploi, uniteCode: unite,
+    statutEmploiCode: `TC${suffixe}`, anciennete: 50,
+  });
+  const suivante = await poser("/api/effectifs/planification/periodes", { nom: `Semaine d'échange`, uniteCode: unite, debut: jour(14), fin: jour(20) });
+  if (suivante) {
+    await poser(`/api/effectifs/planification/periodes/${suivante.id}/etat`, { etat: "CONFECTION" });
+    await poser(`/api/effectifs/planification/periodes/${suivante.id}/generer`, {});
+  }
+  const futurs = suivante ? await appel("GET", `/api/effectifs/planification/periodes/${suivante.id}/equipages`, null, tenant).catch(() => null) : null;
+  const aVenir = (Array.isArray(futurs) ? futurs : []).filter((e) => e.date > aujourdHui && e.places?.length);
+  const cedee = aVenir[0]?.places?.[0] ?? null;
+  const voulue = aVenir[1]?.places?.[0] ?? null;
+  if (cedee && ressource) await poser(`/api/effectifs/planification/places/${cedee.id}/attribuer`, { ressourceId: ressource.id });
+  if (voulue && partenaire) await poser(`/api/effectifs/planification/places/${voulue.id}/attribuer`, { ressourceId: partenaire.id });
+  if (suivante) await poser(`/api/effectifs/planification/periodes/${suivante.id}/etat`, { etat: "PUBLIEE" });
+  const demandables = cedee ? await appel("GET", `/api/effectifs/echanges/places/${cedee.id}/demandables`, null, tenant).catch(() => null) : null;
+  const cible = Array.isArray(demandables) ? demandables[0]?.placeId : null;
+  const echange = cedee && cible ? await poser("/api/effectifs/echanges", { placeCedeeId: cedee.id, placeVoulueId: cible }) : null;
+  // Remplacement long terme sur un poste vacant (`ControleurAgphEffectifsHttpTest`, l. 508 et 606).
+  const remplacement = poste ? await poser("/api/effectifs/agph/remplacements",
+    { posteId: poste.id, origine: "POSTE_VACANT", debut: jour(21), fin: jour(27), finManifestation: demain }) : null;
+  // Intégrations (`ControleurIntegrationsEffectifsHttpTest`) : un connecteur inactif répond 409 à tout geste.
+  const connecteur = (code, extra = {}) => appel("PUT", `/api/effectifs/integrations/connecteurs/${code}`, { actif: true, ...extra }, tenant).catch(() => null);
+  for (const code of ["PFT", "SAAV", "GRAPH", "ESB", "ENTREPOT"]) await connecteur(code);
+  await connecteur("RAO", { jeuEssai: [{ cle: `r${suffixe}`, matricule: `P${suffixe}`, sens: "ENTREE", horodatage: new Date().toISOString() }] });
+  await connecteur("BD_CORPO", { jeuEssai: [{ matricule: `P${suffixe}`, anciennete: 12.5 }] });
+  const dateEquipage = (Array.isArray(equipages) ? equipages : [])[0]?.date ?? jour(0);
+  const message = await poser("/api/effectifs/integrations/equipages", { date: dateEquipage, uniteCode: unite });
+  // Règle de flux (`ControleurTempsFluxEffectifsHttpTest`) : une condition qui ne s'applique jamais,
+  // pour que l'approbation des feuilles ne change pas pendant la mesure.
+  const flux = await poser("/api/effectifs/temps/flux", { objet: "POINTAGE", palier: 9, champ: "uniteCode", operateur: "eq",
+    valeur: "AUCUNE", approbateur: { type: "ROLE", valeur: "director" } });
+  // Disponibilités (`ControleurDisponibilitesEffectifsHttpTest`) : une période en collecte, après la période publiée.
+  const collecte = await poser("/api/effectifs/planification/periodes", { nom: `Collecte de charge`, uniteCode: unite, debut: jour(21), fin: jour(27) });
+  if (collecte) await poser(`/api/effectifs/planification/periodes/${collecte.id}/etat`, { etat: "COLLECTE", finCollecte: jour(20) });
+  // AGPH : la campagne ouverte au dépôt reçoit les semaines types et ses paramètres.
+  if (campagne) await poser(`/api/effectifs/agph/campagnes/${campagne.id}/ouvrir`, {});
+  return {
+    echange,
+    colonnes: {
+      remplacementId: remplacement?.id ?? "", messageEsbId: message?.id ?? "", fluxRegleId: flux?.id ?? "",
+      debutPeriode: periode ? jour(0) : "", dateEquipage, periodeCollecteId: collecte?.id ?? "", dateCollecte: jour(21),
+      dateFuture: jour(21), finManifestation: demain, placeEchangeId: cedee?.id ?? "", placePartenaireId: cible ?? "",
+    },
+  };
+}
+
 /**
  * **Les identifiants vides d'une ligne prennent la valeur d'une autre ligne.** Les trois jeux sont
  * semés dans le même organisme : une absence le même jour, une règle de même clé sont refusées au
