@@ -1,0 +1,314 @@
+{
+ "pourquoi": [
+  "Le contenu des douze planches, en données. Un organisme de démonstration amorcé avec autre",
+  "chose que ce que les planches montrent oblige l'évaluateur à faire la traduction lui-même —",
+  "et c'est précisément le moment où l'on cesse de croire la démonstration.",
+  "",
+  "Chaque valeur est reprise d'une planche, et la planche est nommée. Ce qui n'y figure pas n'est",
+  "pas inventé : les chiffres des tuiles (24, 08, 12, 03) sont **calculés** par les écrans à",
+  "partir des quarts semés ici, et ne sont donc pas écrits."
+ ],
+ "organisme": {
+  "nom": "Urgences-santé — démonstration",
+  "planCode": "enterprise"
+ },
+ "unite": {
+  "code": "OPS",
+  "libelleFr": "Opérations préhospitalières",
+  "libelleEn": "Prehospital operations"
+ },
+ "corpsEmploi": {
+  "code": "PARA",
+  "libelleFr": "Paramédic",
+  "libelleEn": "Paramedic",
+  "planche": "s01, s03 — colonne « Poste »"
+ },
+ "statutsEmploi": [
+  {
+   "code": "TC",
+   "libelleFr": "Temps complet",
+   "comportement": "TEMPS_COMPLET",
+   "planche": "s04 — P-104"
+  },
+  {
+   "code": "TPR",
+   "libelleFr": "Temps partiel régulier",
+   "comportement": "TEMPS_PARTIEL_REGULIER",
+   "planche": "s04 — P-105"
+  },
+  {
+   "code": "TP",
+   "libelleFr": "Temps partiel occasionnel",
+   "comportement": "TEMPS_PARTIEL_OCCASIONNEL"
+  }
+ ],
+ "typeMilieu": {
+  "code": "CENTRE",
+  "libelleFr": "Centre opérationnel",
+  "comportement": "CASERNE"
+ },
+ "milieux": [
+  {
+   "code": "CV",
+   "libelle": "Centre-ville",
+   "planche": "s01 — ligne 06:00–14:00"
+  },
+  {
+   "code": "NORD",
+   "libelle": "Nord",
+   "planche": "s01 — ligne 14:00–22:00"
+  },
+  {
+   "code": "SUD",
+   "libelle": "Sud",
+   "planche": "s01 — ligne 22:00–06:00"
+  }
+ ],
+ "plages": [
+  {
+   "code": "J",
+   "libelleFr": "Jour",
+   "debut": 360,
+   "fin": 840,
+   "planche": "s01 — 06:00–14:00"
+  },
+  {
+   "code": "S",
+   "libelleFr": "Soir",
+   "debut": 840,
+   "fin": 1320,
+   "planche": "s01 — 14:00–22:00"
+  },
+  {
+   "code": "N",
+   "libelleFr": "Nuit",
+   "debut": 1320,
+   "fin": 360,
+   "planche": "s01 — 22:00–06:00"
+  }
+ ],
+ "naturesQuart": [
+  {
+   "code": "REG",
+   "libelleFr": "Régulier",
+   "comportement": "REGULIER"
+  },
+  {
+   "code": "ADH",
+   "libelleFr": "Ad hoc",
+   "comportement": "AD_HOC",
+   "planche": "s05 — onglet « Quarts ad hoc »"
+  }
+ ],
+ "typesHeure": [
+  {
+   "code": "REG",
+   "libelleFr": "Régulier",
+   "comportement": "TRAVAILLEE",
+   "attributs": {
+    "codePaie": "100"
+   }
+  },
+  {
+   "code": "PNP",
+   "libelleFr": "Pause non payée",
+   "comportement": "PAUSE_NON_PAYEE"
+  },
+  {
+   "code": "PREA",
+   "libelleFr": "Présence préalable",
+   "comportement": "PRESENCE_PREALABLE",
+   "attributs": {
+    "codePaie": "105"
+   }
+  },
+  {
+   "code": "HS",
+   "libelleFr": "Heures supplémentaires",
+   "comportement": "SUPPLEMENTAIRE",
+   "attributs": {
+    "codePaie": "150",
+    "majorationPourcent": 50
+   },
+   "planche": "s09 — onglet « Heures sup. »"
+  }
+ ],
+ "postes": [
+  {
+   "code": "P-104",
+   "libelle": "Poste P-104 — Centre-ville, jour",
+   "statutEmploiCode": "TC",
+   "milieu": "CV",
+   "plage": "J",
+   "planche": "s04"
+  },
+  {
+   "code": "P-105",
+   "libelle": "Poste P-105 — Nord, soir",
+   "statutEmploiCode": "TPR",
+   "milieu": "NORD",
+   "plage": "S",
+   "planche": "s04"
+  },
+  {
+   "code": "P-106",
+   "libelle": "Poste P-106 — Sud, nuit",
+   "statutEmploiCode": "TC",
+   "milieu": "SUD",
+   "plage": "N",
+   "planche": "s04"
+  }
+ ],
+ "quartsDuJour": [
+  {
+   "code": "Q-2401",
+   "milieu": "CV",
+   "plage": "J",
+   "places": 4,
+   "pourvues": 3,
+   "planche": "s01 — 06:00–14:00, Centre-ville, 3 / 4"
+  },
+  {
+   "code": "Q-2402",
+   "milieu": "NORD",
+   "plage": "S",
+   "places": 3,
+   "pourvues": 1,
+   "planche": "s01 — 14:00–22:00, Nord, 1 / 3"
+  },
+  {
+   "code": "Q-2403",
+   "milieu": "SUD",
+   "plage": "N",
+   "places": 2,
+   "pourvues": 2,
+   "planche": "s01 — 22:00–06:00, Sud, 2 / 2"
+  }
+ ],
+ "personnes": [
+  {
+   "matricule": "P-100",
+   "nom": "Julie Roy",
+   "statutEmploiCode": "TC",
+   "anciennete": 142,
+   "compte": {
+    "username": "julie.roy",
+    "role": "employee"
+   },
+   "profil": "Paramédic — temps complet",
+   "voit": "Son horaire, ses disponibilités, son pointage, sa feuille de temps, ses absences et ses échanges.",
+   "planche": "s02 — portail employé ; s03 — mon horaire"
+  },
+  {
+   "matricule": "P-101",
+   "nom": "Marc Dubé",
+   "statutEmploiCode": "TPR",
+   "anciennete": 96,
+   "compte": {
+    "username": "marc.dube",
+    "role": "employee"
+   },
+   "profil": "Paramédic — temps partiel régulier",
+   "voit": "La même chose que Julie : il faut deux personnes pour qu'un échange de quarts existe.",
+   "planche": "s07 — « Employé B »"
+  },
+  {
+   "matricule": "P-102",
+   "nom": "Ana Côté",
+   "statutEmploiCode": "TP",
+   "anciennete": 54,
+   "compte": {
+    "username": "ana.cote",
+    "role": "employee"
+   },
+   "profil": "Paramédic — temps partiel occasionnel",
+   "voit": "Le même espace personnel ; son statut la place en fin de tour de rôle à l'AGPH.",
+   "planche": "s04 — tour de rôle ; s07 — « Employé C »"
+  },
+  {
+   "matricule": "P-103",
+   "nom": "Claire Nadeau",
+   "statutEmploiCode": "TC",
+   "anciennete": 210,
+   "compte": {
+    "username": "claire.nadeau",
+    "role": "manager"
+   },
+   "perimetre": "GESTION",
+   "profil": "Planificatrice des effectifs",
+   "voit": "Tout le module : comblement, quarts, postes, périodes, quotas, absences, échanges, AGPH, présence et feuilles de temps — **dans son périmètre**.",
+   "planche": "s01 — tableau de bord gestionnaire ; s05 — centre de couverture"
+  },
+  {
+   "matricule": "P-104",
+   "nom": "Denis Lavoie",
+   "statutEmploiCode": "TC",
+   "anciennete": 300,
+   "compte": {
+    "username": "denis.lavoie",
+    "role": "director"
+   },
+   "perimetre": "GESTION",
+   "profil": "Directeur des opérations",
+   "voit": "Les mêmes écrans de pilotage que la planification : il lit les indicateurs et tranche les dérogations.",
+   "planche": "s01, s10 — rapports et indicateurs"
+  },
+  {
+   "matricule": null,
+   "nom": "Sophie Marchand",
+   "statutEmploiCode": null,
+   "anciennete": null,
+   "compte": {
+    "username": "sophie.marchand",
+    "role": "rh"
+   },
+   "profil": "Ressources humaines",
+   "voit": "Les écrans personnels ; elle n'est pas planifiable et n'a donc ni horaire ni feuille de temps.",
+   "planche": "— (profil de l'application, hors planches)"
+  }
+ ],
+ "regles": [
+  {
+   "code": "repos-minimal",
+   "libelle": "Repos minimal",
+   "contexte": "ECHANGE",
+   "condition": {
+    "fait": "reposHeures",
+    "op": ">=",
+    "valeur": 8
+   },
+   "action": "BLOQUER",
+   "message": "Repos insuffisant : 8 h sont exigées entre deux quarts.",
+   "planche": "s07 — « Repos insuffisant » ; s11 — « Repos minimal · Paramédics · v3.2 »"
+  },
+  {
+   "code": "quarts-par-semaine",
+   "libelle": "Disponibilités minimales",
+   "contexte": "DISPONIBILITE",
+   "condition": {
+    "fait": "quartsParSemaine",
+    "op": ">=",
+    "valeur": 2
+   },
+   "action": "AVERTIR",
+   "message": "Au moins 2 quarts par semaine sont attendus.",
+   "planche": "s11 — « Quota de comblement »"
+  }
+ ],
+ "communication": {
+  "pourquoi": "La communication entre le personnel (planche P11) : le même service et la même messagerie que le module Santé Québec, servis dans Urgences-santé. Le groupe donne les **noms** des participants — sans lui, le fil porterait des identifiants.",
+  "groupe": {
+   "code": "OPS-EST",
+   "nom": "Opérations — secteur Est",
+   "planche": "P11 — en-tête du fil"
+  },
+  "conversation": {
+   "sujet": "Couverture du quart de nuit — véhicule 412",
+   "planche": "P11 — sujet du fil",
+   "messages": [
+    "Le 412 sort à 23 h avec un seul paramédic : je cherche un deuxième jusqu'à 7 h.",
+    "Je peux prendre la nuit si on décale mon début de demain à 11 h."
+   ]
+  }
+ }
+}

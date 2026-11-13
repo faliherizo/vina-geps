@@ -1,0 +1,52 @@
+{
+  "_doc": "Objectifs de niveau de service (SLO) par classe d'endpoint, et l'engagement contractuel (SLA). Les SLI mesurés par JMeter (p50, p95, p99, taux d'erreur, débit) se comparent ici : analyser.cjs rend le verdict. Voir docs/PERFORMANCE-JMETER.md.",
+  "sla": {
+    "source": "Devis Santé Québec 26-432315-1226, exigences 8.1–8.2 et annexe C 10.1.1 ; AO-5338 NF",
+    "utilisateurs_simultanes": 2500,
+    "dont_en_ecriture": 500,
+    "p95_ms": 2000,
+    "disponibilite_pct": 99.5,
+    "fenetre": "mensuelle"
+  },
+  "classes": [
+    {
+      "classe": "sante",
+      "motif": "^GET /api/health",
+      "p95_ms": 100,
+      "p99_ms": 300,
+      "erreurs_pct": 0.0
+    },
+    {
+      "classe": "connexion",
+      "motif": "^POST /api/auth/login",
+      "p95_ms": 800,
+      "p99_ms": 1500,
+      "erreurs_pct": 0.1
+    },
+    {
+      "classe": "rapport",
+      "motif": "(export|\\.csv|\\.pdf|\\.xlsx|\\.ics|rapport|report|summary|dashboard|insights|apercu|projection|statistiques|bilan)",
+      "p95_ms": 2000,
+      "p99_ms": 4000,
+      "erreurs_pct": 0.5
+    },
+    {
+      "classe": "ecriture",
+      "motif": "^(POST|PUT|PATCH|DELETE) ",
+      "p95_ms": 1000,
+      "p99_ms": 2000,
+      "erreurs_pct": 0.5
+    },
+    {
+      "classe": "lecture",
+      "motif": "^GET ",
+      "p95_ms": 500,
+      "p99_ms": 1000,
+      "erreurs_pct": 0.1
+    }
+  ],
+  "budget_erreur": {
+    "slo_disponibilite_pct": 99.9,
+    "explication": "0,1 % des requêtes valides peuvent échouer (5xx ou dépassement de seuil) sur la fenêtre ; au-delà, le budget est consommé et le déploiement se fige jusqu'à correction."
+  }
+}

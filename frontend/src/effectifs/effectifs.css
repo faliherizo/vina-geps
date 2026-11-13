@@ -1,0 +1,28 @@
+/* Gestion des effectifs — mise en page propre aux écrans du module.
+ * Barre d'outils qui se replie sous 600 px (WCAG 1.4.10), cases à cocher de 24 px au moins
+ * (WCAG 2.5.8), aucune largeur fixe qui obligerait à défiler latéralement à 320 px. */
+.eff-barre { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 16px; margin: 0 0 12px; }
+.eff-barre > p { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.eff-barre select, .eff-barre input { max-width: 100%; }
+.eff-case { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.eff-case input[type="checkbox"] { width: 24px; height: 24px; margin: 0; flex: none; }
+.eff-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.eff-actions button { min-height: 24px; }
+/* P-TN-8 : choisir le format puis exporter ; le message d'échec passe sous la rangée, jamais par-dessus. */
+.eff-export { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.eff-export > p { margin: 0; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.eff-export > button { min-height: 24px; }
+.eff-export > .message { flex-basis: 100%; }
+fieldset.eff-groupe { border: 1px solid var(--border-strong); border-radius: 6px; padding: 8px 12px; margin: 0 0 12px; }
+@media (max-width: 600px) { .eff-barre { flex-direction: column; align-items: stretch; } }
+.eff-places { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.eff-cycle select { min-width: 4.5em; }
+.eff-tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin: 0 0 16px; }
+/* Les plages d'un dépôt : une liste de groupes qui se replient, jamais un tableau qui déborde (1.4.10). */
+.eff-plages { list-style: none; margin: 0 0 8px; padding: 0; }
+.eff-plages select, .eff-plages input[type="time"] { min-height: 24px; max-width: 100%; }
+/* Lot R9 : les petits tableaux de la feuille (totaux, écarts) — pleine largeur au téléphone, jamais de défilement latéral. */
+.eff-table-compacte { width: 100%; max-width: 32rem; border-collapse: collapse; margin: 8px 0 16px; }
+.eff-table-compacte caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
+.eff-table-compacte th, .eff-table-compacte td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border, #d0d7de); overflow-wrap: anywhere; }
+.eff-empreinte { overflow-wrap: anywhere; word-break: break-all; }

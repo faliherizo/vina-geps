@@ -1,0 +1,144 @@
+{
+  "pourquoi": [
+    "Les autres jeux d'Urgences-santé prouvent qu'une commande est **à l'écran** (`exigences-fonctionnelles.json`), **atteignable** par la personne concernée (`profils.json`) et qu'on peut y **écrire** (`saisies.json`). Aucun ne prouve qu'une règle **décide juste** : un bouton présent n'est pas une règle appliquée.",
+    "Ce jeu joue les décisions par l'API, contre le backend qui sert la campagne — le Java (`backend-java/scripts/campagne-e2e.sh`), qui est la cible. Chaque attendu porte sur une **valeur** rendue (un statut, un motif, un compte) : un attendu qui se contente d'une présence passe quoi qu'il arrive.",
+    "Les scénarios sont **ordonnés et solidaires** sur un organisme semé une fois par l'amorce. Trois périodes séparent les sujets : `PLAN` pour la planification, `DISPO` pour les disponibilités, `ABS` pour les absences — une règle ou un quart d'un sujet ne fausse pas le calcul d'un autre.",
+    "Les dates sont fixes et **dans l'avenir** (mars 2030), choisies pour leur jour de semaine : le 2030-03-04 est un lundi. Les comptes portent le suffixe de l'organisme ; `{{suffixe}}` le rend.",
+    "Gabarits : `{{nom}}` rend une valeur capturée (son type est conservé quand le gabarit est seul), `{{suffixe}}` les six derniers caractères de l'organisme. Chemins de capture : `id`, `places.0.id`, `ids.0`.",
+    "Attendus : `statut` (nombre), `corps` (sous-ensemble : chaque clé citée doit valoir ce qui est écrit ; un tableau se compare élément par élément sur ses premiers éléments), `texte` (expression régulière sur le JSON ou le texte rendu)."
+  ],
+  "acteurs": {
+    "julie": { "role": "employee" },
+    "marc": { "role": "employee" },
+    "chef": { "role": "manager" }
+  },
+  "amorce": [
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/unites", "corps": { "effectifDepuis": "2026-01-01", "code": "EST", "libelleFr": "Opérations Est" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/corps_emploi", "corps": { "effectifDepuis": "2026-01-01", "code": "PARA", "libelleFr": "Paramédics" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/titres_emploi", "corps": { "effectifDepuis": "2026-01-01", "code": "PSA", "libelleFr": "Paramédic en soins avancés", "attributs": { "corps": "PARA" } }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/statuts_emploi", "corps": { "effectifDepuis": "2026-01-01", "code": "TC", "libelleFr": "Temps complet", "comportement": "TEMPS_COMPLET" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/statuts_emploi", "corps": { "effectifDepuis": "2026-01-01", "code": "TPR", "libelleFr": "Temps partiel régulier", "comportement": "TEMPS_PARTIEL_REGULIER" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/natures_quart", "corps": { "effectifDepuis": "2026-01-01", "code": "REG", "libelleFr": "Régulier", "comportement": "REGULIER" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/natures_quart", "corps": { "effectifDepuis": "2026-01-01", "code": "ADH", "libelleFr": "Ad hoc", "comportement": "AD_HOC" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/types_milieu", "corps": { "effectifDepuis": "2026-01-01", "code": "CASERNE", "libelleFr": "Caserne", "comportement": "CASERNE" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/plages_horaires", "corps": { "effectifDepuis": "2026-01-01", "code": "J", "libelleFr": "Jour", "attributs": { "debut": 360, "fin": 1080 } }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/codes_absence", "corps": { "effectifDepuis": "2026-01-01", "code": "MAL", "libelleFr": "Maladie", "comportement": "PAYE", "attributs": { "duree": "PONCTUELLE" } }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/codes_absence", "corps": { "effectifDepuis": "2026-01-01", "code": "FORM", "libelleFr": "Formation PSA", "comportement": "PAYE", "attributs": { "duree": "PONCTUELLE", "titres": ["PSA"] } }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/milieux", "corps": { "code": "C12", "libelle": "Caserne 12", "typeCode": "CASERNE", "uniteCode": "EST" }, "attendu": { "statut": 201 }, "capturer": { "c12": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P1", "nom": "Julie", "corpsEmploiCode": "PARA", "titreEmploiCode": "PSA", "uniteCode": "EST", "statutEmploiCode": "TPR", "anciennete": 3, "utilisateurId": "{{u_julie}}" }, "attendu": { "statut": 201 }, "capturer": { "P1": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P2", "nom": "Marc", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TPR", "anciennete": 9, "utilisateurId": "{{u_marc}}" }, "attendu": { "statut": 201 }, "capturer": { "P2": "id" } }
+  ],
+  "scenarios": [
+    {
+      "id": "C-01",
+      "titre": "Un quart ad hoc se crée hors de tout poste ; hors période, sans composition, à minimum impossible ou sur une plage inconnue, il est refusé",
+      "exigences": ["E-GN-2", "E-GN-3", "E-GN-4", "E-GR-6", "E-GR-13"],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "PLAN", "uniteCode": "EST", "debut": "2030-03-18", "fin": "2030-03-24" }, "attendu": { "statut": 201 }, "capturer": { "plan": "id" } },
+        { "pourquoi": "Hors de la période : un quart n'existe que dans une période", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-04-01", "debut": 600, "fin": 660, "natureCode": "ADH", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 422 } },
+        { "pourquoi": "Sans composition : un quart sans place n'est pas un quart", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 600, "fin": 660, "natureCode": "ADH", "milieuId": "{{c12}}", "composition": [] }, "attendu": { "statut": 422 } },
+        { "pourquoi": "Un minimum opérationnel de 3 sur 2 places ne serait jamais atteint", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 600, "fin": 660, "natureCode": "ADH", "milieuId": "{{c12}}", "minimumOperationnel": 3, "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 422 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 600, "fin": 660, "natureCode": "ADH", "milieuId": "{{c12}}", "plageCode": "ZZ", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 422 } },
+        { "pourquoi": "Le mode d'attribution se choisit par quart ; le minimum se déclare", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 600, "fin": 660, "natureCode": "ADH", "milieuId": "{{c12}}", "modeAttribution": "AUTOMATISE", "minimumOperationnel": 1, "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 201, "corps": { "modeAttribution": "AUTOMATISE", "minimumOperationnel": 1 } }, "capturer": { "adhoc": "id", "placeAdhoc": "places.0.id" } }
+      ]
+    },
+    {
+      "id": "C-02",
+      "titre": "Une règle de repos bloque l'attribution en nommant son motif ; forcer exige le niveau GESTION et une justification, et le forçage est tracé",
+      "exigences": ["E-GN-11", "E-GN-8", "E-GN-9"],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/regles", "corps": { "contexte": "ATTRIBUTION", "cle": "repos-minimal", "condition": { "fait": "reposHeures", "op": "<", "valeur": 8 }, "action": "BLOQUER", "message": "Repos de {reposHeures} h : il en faut 8", "effectifDepuis": "2027-01-01" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "Marc tient le quart de jour, qui finit à 18 h", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "placeJour": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeJour}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{plan}}", "date": "2030-03-18", "debut": 1080, "fin": 1320, "natureCode": "ADH", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }], "note": "Renfort de soirée" }, "attendu": { "statut": 201, "corps": { "modeAttribution": "MANUEL", "note": "Renfort de soirée" } }, "capturer": { "placeSoir": "places.0.id" } },
+        { "pourquoi": "Sans repos entre deux quarts, la règle refuse et dit pourquoi", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeSoir}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 409, "texte": "Repos de 0 h : il en faut 8" } },
+        { "pourquoi": "Un gestionnaire sans périmètre n'a aucun droit : refus par défaut", "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeSoir}}/attribuer", "corps": { "ressourceId": "{{P2}}", "forcer": true, "justification": "Aucun autre PSA disponible, appel massif" }, "attendu": { "statut": 403 } },
+        { "methode": "POST", "chemin": "/api/effectifs/perimetres", "corps": { "utilisateurId": "{{u_chef}}", "uniteCode": "EST", "etendue": "UNITE", "niveau": "GESTION", "depuis": "2026-01-01" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "Une justification de trois mots n'en est pas une", "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeSoir}}/attribuer", "corps": { "ressourceId": "{{P2}}", "forcer": true, "justification": "court" }, "attendu": { "statut": 422 } },
+        { "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeSoir}}/attribuer", "corps": { "ressourceId": "{{P2}}", "forcer": true, "justification": "Aucun autre PSA disponible, appel massif" }, "attendu": { "statut": 200, "corps": { "force": true }, "texte": "Aucun autre PSA disponible, appel massif" } },
+        { "pourquoi": "La trace dit quelle règle a été écartée", "methode": "GET", "chemin": "/api/effectifs/journal?action=place.attribution.forcee", "attendu": { "statut": 200, "texte": "repos-minimal" } }
+      ]
+    },
+    {
+      "id": "C-03",
+      "titre": "Un poste se publie une fois ; une liste vide ou un poste déjà publié est refusé",
+      "exigences": ["E-CH-2", "E-CH-4", "E-CH-5"],
+      "etapes": [
+        { "pourquoi": "Un paramètre de poste se déclare avant usage : le refus nomme le référentiel à compléter", "methode": "POST", "chemin": "/api/effectifs/planification/postes", "corps": { "code": "3412-J0", "libelle": "PSA jour", "uniteCode": "EST", "statutEmploiCode": "TC", "corpsEmploiCode": "PARA", "milieuId": "{{c12}}", "natureCode": "REG", "cycle": [["J", "J", "J", null, null, null, null]], "debutCycle": "2030-03-18", "parametres": { "VEHICULE": "3412" } }, "attendu": { "statut": 422, "texte": "paramètre de poste inconnu : « VEHICULE »" } },
+        { "methode": "POST", "chemin": "/api/effectifs/referentiels/parametres_poste", "corps": { "effectifDepuis": "2026-01-01", "code": "VEHICULE", "libelleFr": "Véhicule", "attributs": { "typeValeur": "TEXTE" } }, "attendu": { "statut": 201 } },
+        { "pourquoi": "Le type déclaré se vérifie : un nombre n'est pas un texte", "methode": "POST", "chemin": "/api/effectifs/planification/postes", "corps": { "code": "3412-J0", "libelle": "PSA jour", "uniteCode": "EST", "statutEmploiCode": "TC", "corpsEmploiCode": "PARA", "milieuId": "{{c12}}", "natureCode": "REG", "cycle": [["J", "J", "J", null, null, null, null]], "debutCycle": "2030-03-18", "parametres": { "VEHICULE": 12 } }, "attendu": { "statut": 422 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/postes", "corps": { "code": "3412-J1", "libelle": "PSA jour", "uniteCode": "EST", "statutEmploiCode": "TC", "corpsEmploiCode": "PARA", "milieuId": "{{c12}}", "natureCode": "REG", "cycle": [["J", "J", "J", null, null, null, null]], "debutCycle": "2030-03-18", "parametres": { "VEHICULE": "3412" } }, "attendu": { "statut": 201, "corps": { "etat": "BROUILLON", "parametres": { "VEHICULE": "3412" } } }, "capturer": { "poste": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/postes/publier", "corps": { "ids": [] }, "attendu": { "statut": 422 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/postes/publier", "corps": { "ids": ["{{poste}}"] }, "attendu": { "statut": 200, "corps": [{ "etat": "PUBLIE" }] } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/postes/publier", "corps": { "ids": ["{{poste}}"] }, "attendu": { "statut": 422 } }
+      ]
+    },
+    {
+      "id": "C-04",
+      "titre": "Hors collecte, le dépôt de disponibilités est refusé en disant pourquoi ; en collecte, un dépôt trop maigre est bloqué avec son motif, un dépôt suffisant passe avec un avertissement",
+      "exigences": ["E-GN-12", "E-GN-13", "E-GN-15", "E-GN-16", "E-GR-10", "E-GR-11"],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "DISPO", "uniteCode": "EST", "debut": "2030-03-11", "fin": "2030-03-17" }, "attendu": { "statut": 201 }, "capturer": { "dispo": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{dispo}}", "date": "2030-03-11", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}", "modeAttribution": "AUTOMATISE", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "placeDispo": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/regles", "corps": { "contexte": "DISPONIBILITE", "cle": "minimum-quarts", "condition": { "fait": "quartsParSemaine", "op": "<", "valeur": 2 }, "action": "BLOQUER", "message": "Au moins 2 quarts par semaine ({quartsParSemaine} offert)", "effectifDepuis": "2027-01-01" }, "attendu": { "statut": 201 } },
+        { "methode": "POST", "chemin": "/api/effectifs/regles", "corps": { "contexte": "DISPONIBILITE", "cle": "peu-d-heures", "condition": { "fait": "heuresParPeriode", "op": "<", "valeur": 30 }, "action": "AVERTIR", "message": "Seulement {heuresParPeriode} h offertes", "effectifDepuis": "2027-01-01" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "La période est en préparation : le dépôt n'existe que par période ouverte", "acteur": "julie", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-03-11", "debut": 360, "fin": 1080, "type": "DISPONIBLE" }] }, "attendu": { "statut": 422, "texte": "collecte.*n'est pas ouverte" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{dispo}}/etat", "corps": { "etat": "COLLECTE", "finCollecte": "2030-03-01" }, "attendu": { "statut": 200 } },
+        { "acteur": "julie", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-03-11", "debut": 360, "fin": 1080, "type": "DISPONIBLE" }] }, "attendu": { "statut": 409, "texte": "Au moins 2 quarts par semaine \\(1 offert\\)" } },
+        { "acteur": "julie", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-03-11", "debut": 360, "fin": 1080, "type": "DISPONIBLE" }, { "date": "2030-03-12", "debut": 360, "fin": 1080, "type": "DISPONIBLE" }] }, "attendu": { "statut": 200, "corps": { "conformite": "AVERTIE" }, "texte": "Seulement 24 h offertes" } }
+      ]
+    },
+    {
+      "id": "C-05",
+      "titre": "Le bassin de candidats d'une place exclut, motif à l'appui, la ressource qui n'a rien déposé",
+      "exigences": ["E-GN-14", "E-GN-16"],
+      "etapes": [
+        { "acteur": "chef", "methode": "GET", "chemin": "/api/effectifs/disponibilites/places/{{placeDispo}}/candidats", "attendu": { "statut": 200, "corps": { "admissibles": [{ "nom": "Julie" }] }, "texte": "\"exclus\":\\[[^\\]]*\"nom\":\"Marc\"[^\\]]*\"motif\":\"[^\"]+\"" } }
+      ]
+    },
+    {
+      "id": "C-06",
+      "titre": "Une absence qui ferait tomber le comblement est refusée d'office, et le refus est conservé avec son motif",
+      "exigences": ["P-GN-2", "P-GH-2", "E-GN-6", "E-GR-3"],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "ABS", "uniteCode": "EST", "debut": "2030-03-04", "fin": "2030-03-10" }, "attendu": { "statut": 201 }, "capturer": { "abs": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{abs}}/etat", "corps": { "etat": "CONFECTION" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{abs}}", "date": "2030-03-04", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}", "modeAttribution": "AUTOMATISE", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "placeLundi": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeLundi}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{abs}}", "date": "2030-03-05", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}", "modeAttribution": "AUTOMATISE", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "placeMardi": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{placeMardi}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/regles", "corps": { "contexte": "ABSENCE", "cle": "comblement-minimal", "condition": { "fait": "tauxComblementApres", "op": "<", "valeur": 60 }, "action": "REFUSER", "message": "Le comblement tomberait à {tauxComblementApres} %", "effectifDepuis": "2027-01-01" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "motif": "MAL", "du": "2030-03-04", "au": "2030-03-05", "commentaire": "Grippe" }, "attendu": { "statut": 201, "corps": { "statut": "REFUSEE_AUTO", "placesLiberees": 0 }, "texte": "Le comblement tomberait à 0 %" }, "capturer": { "refusee": "ids.0" } },
+        { "pourquoi": "L'impact se lit avant de décider : le taux avant et après", "methode": "GET", "chemin": "/api/effectifs/absences/{{refusee}}/impact", "attendu": { "statut": 200, "corps": { "tauxAvant": 100, "tauxApres": 0 } } }
+      ]
+    },
+    {
+      "id": "C-07",
+      "titre": "La dérogation exige un droit, un motif et un code ; elle accorde l'absence et rend les places vacantes par un mécanisme journalisé",
+      "exigences": ["E-GN-5", "E-GN-6", "E-CH-6", "E-GN-9"],
+      "etapes": [
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/absences/{{refusee}}/decisions", "corps": { "decision": "DEROGER", "motif": "Hospitalisation confirmée par billet médical", "codeAbsence": "MAL" }, "attendu": { "statut": 403 } },
+        { "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/absences/{{refusee}}/decisions", "corps": { "decision": "DEROGER", "motif": "court", "codeAbsence": "MAL" }, "attendu": { "statut": 422 } },
+        { "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/absences/{{refusee}}/decisions", "corps": { "decision": "DEROGER", "motif": "Hospitalisation confirmée par billet médical", "codeAbsence": "MAL" }, "attendu": { "statut": 200, "corps": { "statut": "ACCEPTEE", "derogationCode": "MAL", "placesLiberees": 2, "decideePar": "{{u_chef}}" } } },
+        { "methode": "GET", "chemin": "/api/effectifs/journal?action=places.vacantes", "attendu": { "statut": 200, "texte": "places\\.vacantes" } }
+      ]
+    },
+    {
+      "id": "C-08",
+      "titre": "Une absence conforme est acceptée d'office ; un code réservé à un titre d'emploi est refusé à qui ne le porte pas",
+      "exigences": ["P-GN-3", "P-GH-1"],
+      "etapes": [
+        { "acteur": "marc", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "motif": "MAL", "du": "2030-03-08" }, "attendu": { "statut": 201, "corps": { "statut": "ACCEPTEE" } } },
+        { "acteur": "marc", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "motif": "FORM", "du": "2030-04-01" }, "attendu": { "statut": 422 } }
+      ]
+    },
+    {
+      "id": "C-09",
+      "titre": "Le journal s'exporte en CSV, en-tête fixe : chaque geste humain ou automatique y est retrouvable",
+      "exigences": ["E-GN-10", "E-RF-8"],
+      "etapes": [
+        { "methode": "GET", "chemin": "/api/effectifs/journal?format=csv", "attendu": { "statut": 200, "texte": "^horodatage,origine,acteurId,action,objetType,objetId,uniteCode,avant,apres" } }
+      ]
+    }
+  ]
+}

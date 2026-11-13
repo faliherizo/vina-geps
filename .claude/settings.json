@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls backend/src/procurement/ 2>/dev/null; echo \"=== OCR fiche §5 ===\"; sed -n '/## 5\\\\|§ *5\\\\|## 5\\\\./,/## 6/p' docs/MIFI/FICHE-*OCR*.md 2>/dev/null | head -60; echo \"=== find fiche ===\"; ls docs/MIFI/ | grep -i ocr)",
+      "Bash(ffmpeg -hide_banner -encoders)",
+      "Bash(ffmpeg -v error -i frontend/public/vitrine/demo-mifi-points-cles.webm -af volumedetect -f null -)",
+      "Bash(python3 -c \"print\\(f'{81.263 - 81.20:.2f} s \\(prolongation de dernière image, aucune accélération\\)'\\)\")",
+      "Bash(ffprobe -v error -show_entries stream=codec_type,codec_name -of csv=p=0 frontend/public/vitrine/demo-parcours-complet.webm)",
+      "Bash(ffmpeg -hide_banner -i frontend/public/vitrine/demo-parcours-complet.webm -af volumedetect -f null /dev/null)",
+      "Bash(say -v '?')",
+      "Bash(python3 -c 'import sys,json;[print\\(f\"  {t[\\\\\"code\\\\\"]:14} {t[\\\\\"labelFr\\\\\"]}\"\\) for t in json.load\\(sys.stdin\\)]')",
+      "Bash(python3 -c 'import sys,json *)",
+      "Bash(ffprobe -v error -show_entries stream=codec_type,codec_name -of csv=p=0 frontend/public/vitrine/demo-nexu-vina.webm)",
+      "Bash(ffmpeg -hide_banner -i frontend/public/vitrine/demo-nexu-vina.webm -af volumedetect -f null /dev/null)",
+      "Bash(python3 -c ' *)",
+      "Bash(rm -f frontend/public/vitrine/demo-parcours-complet.webm frontend/public/vitrine/demo-parcours-complet.fr.vtt frontend/public/vitrine/demo-mifi-points-cles.webm frontend/public/vitrine/demo-mifi-points-cles.fr.vtt frontend/public/vitrine/demo.webm frontend/public/vitrine/demo.fr.vtt frontend/public/vitrine/demo-ao5338.old.webm)",
+      "Bash(rm -f e2e/tests/e2e/demo-parcours-complet.spec.ts e2e/tests/e2e/demo-mifi.spec.ts scripts/narration/demo-parcours-complet.json scripts/narration/demo-mifi.json e2e/demo-parcours-complet-report.json e2e/demo-mifi-points-cles-report.json)",
+      "Bash(mvn:*)",
+      "Bash(java:*)",
+      "Bash(gitnexus:*)",
+      "Bash(curl:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/faliherizo/Projects/freelance-invoicing/docs/MIFI"
+    ]
+  }
+}

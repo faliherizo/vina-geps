@@ -1,0 +1,667 @@
+[
+ {
+  "id": 1,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Logiciel-service clé en main de type infonuagique SaaS.",
+  "response": "Architecture multi-tenant (module saas/), déployable Docker/Azure, abonnements et quotas par tenant."
+ },
+ {
+  "id": 2,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Rendu adaptatif sur ordinateurs de bureau, portables et appareils mobiles.",
+  "response": "Frontend React responsive testé sur 4 points de rupture (390/768/1024/1440) ; tables empilées sur mobile ; Capacitor Android/iOS."
+ },
+ {
+  "id": 3,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Environnements de tests additionnels au besoin.",
+  "response": "Tenants en mode trial + conteneurs paramétrables ; suite e2e dédiée (--with-e2e)."
+ },
+ {
+  "id": 4,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Solution intuitive et facile d'utilisation.",
+  "response": "Page MIFI à sous-menus groupés, calendrier éditable, vues unifiées RH+Profs."
+ },
+ {
+  "id": 5,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Navigation facile d'une fenêtre contextuelle à l'autre.",
+  "response": "SPA React, modales accessibles (Modal.tsx), navigation latérale persistante."
+ },
+ {
+  "id": 6,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Accessibilité selon les standards SGQRI 008 2.0 (WCAG AA).",
+  "response": "Landmarks, aria-labels, focus visibles, contrastes AA, th scope, labels associés ; vitrine + app."
+ },
+ {
+  "id": 7,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Accès en lecture seule ou en écriture selon les rôles et responsabilités.",
+  "response": "RBAC requireRole/requireOwnership ; cloisonnement par rôle (admin/manager/employee) et par tenant."
+ },
+ {
+  "id": 8,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Traitements en lots planifiés (génération de contrats, échelles, avancements).",
+  "response": "Seed de règles en lot, génération programmatique de contrats, notifications en lot, statuts de contrats."
+ },
+ {
+  "id": 9,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Notification externe par voie électronique ou SMS, individuelle ou en lot.",
+  "response": "Module notifications (varpay/notifications.ts) : email/SMS, individuel/lot, variables {{cle}}."
+ },
+ {
+  "id": 10,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Interfaçage des données avec les systèmes internes du MIFI (INTIMM, Francisation Québec).",
+  "response": "Hub d'intégration (varpay/integrationHub) : connecteur INTIMM configurable (mock/live), synchro + journal des transferts ; prêt à brancher."
+ },
+ {
+  "id": 11,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Profil du professeur synchronisé entre la solution, les systèmes du MIFI, SAGIR et SAGIP.",
+  "response": "Profil synchronisé via le hub (connecteur SAGIR, sagirEmployeeId) ; endpoint de synchro d'échelon + statut de synchro."
+ },
+ {
+  "id": 12,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Connecteur SAGIR (transfert direct ou génération d'extrants — fichiers plats).",
+  "response": "Génération du fichier plat SAGIR 516 caractères (Annexe 4) ; téléchargement .txt."
+ },
+ {
+  "id": 13,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Échange bidirectionnel via API avec les systèmes de soutien (ex. SCOLAGO).",
+  "response": "Connecteur SCOLAGO bidirectionnel (pull absences / push) via le hub d'intégration, journalisé."
+ },
+ {
+  "id": 14,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Numéro d'employé SAGIR comme identifiant du professeur.",
+  "response": "Champ sagirEmployeeId unique par tenant (UNIQUE tenantId, sagirEmployeeId)."
+ },
+ {
+  "id": 15,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Identifier un employé du gouvernement qui enseigne aussi en francisation.",
+  "response": "Indicateur isGovernmentEmployee + lien employé↔professeur (people/service.ts)."
+ },
+ {
+  "id": 16,
+  "category": "Générales",
+  "status": "implemented",
+  "text": "Connexions Transfert Sécurisé de Fichiers (HTTPS/FTPS/SFTP, push/pull).",
+  "response": "Transfert sécurisé : config SFTP/HTTPS par tenant + journal des transferts (mifi_transfer_log) ; push HTTPS réel, SFTP configurable."
+ },
+ {
+  "id": 17,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Définition de différents types de professeurs pour le calcul.",
+  "response": "Types regular/occasional/released + champs configurables."
+ },
+ {
+  "id": 18,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Définition de différents types d'activités rémunérées au sein d'un même contrat.",
+  "response": "payCalc : teaching/pedagogical/training/evaluation/released/substitution."
+ },
+ {
+  "id": 19,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Taux différents selon les types d'activités et les échelons.",
+  "response": "Module rules (resolveRate) : multiplicateur/taux fixe par activité × échelon."
+ },
+ {
+  "id": 20,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Génération automatique des heures estimées d'enseignement (sans FDT).",
+  "response": "estimateTeachingPeriods à partir des contrats (jours planifiés − jours fériés/pédago)."
+ },
+ {
+  "id": 21,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Collecte et saisie des heures travaillées par période et type d'activité.",
+  "response": "varpay_activities + entrées du calcul de paie (heures additionnelles)."
+ },
+ {
+  "id": 22,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Calcul des heures travaillées par activité, échelon et contrat.",
+  "response": "payCalc.calculatePay (intègre toutes les activités, échelon, seuil)."
+ },
+ {
+  "id": 23,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Saisie des heures des professeurs dégagés selon les feuilles de temps.",
+  "response": "Activité 'released' saisissable au calcul."
+ },
+ {
+  "id": 24,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Calcul des heures des professeurs dégagés.",
+  "response": "payCalc inclut releasedHours dans la rémunération."
+ },
+ {
+  "id": 25,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Détection des journées pédagogiques et exclusion des heures d'enseignement à payer.",
+  "response": "getHolidaysInRange + journées pédago exclues de l'enseignement."
+ },
+ {
+  "id": 26,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Générer un fichier texte des gains (heures normales A010) et suppléances (A067) pour SAGIR.",
+  "response": "sagirExport : fichier plat 516c conforme Annexe 4 (A010/A067)."
+ },
+ {
+  "id": 27,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Générer un fichier texte H750 (indemnités de vacances 20%) pour SAGIP.",
+  "response": "sagipExport : fichier H750 conforme Annexe 5 (en-tête + sections A/B)."
+ },
+ {
+  "id": 28,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Contrôler la qualité/exactitude des informations et confirmer l'envoi à SAGIR et SAGIP.",
+  "response": "Génération en brouillon (generatePayRun) + rapport d'anomalies à lever avant confirmation ; confirmPayCalculation ; marquage exportedSagirAt/exportedSagipAt."
+ },
+ {
+  "id": 29,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Correction des heures travaillées reliées aux paies déjà versées.",
+  "response": "createPayCorrection : produit une paie corrective rattachée (correctionOf), marque l'originale « corrigée » et la conserve ; l'export SAGIR la transmet en opération « M » avec l'identifiant de référence. Bouton « Corriger les heures » dans MIFI › Calcul de paie."
+ },
+ {
+  "id": 30,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Conversion des périodes d'enseignement en heures (facteur 1,75 ; 20×1,75=35 h).",
+  "response": "periods.ts : periodsToHours + arrondi au centième (testé BDD). Facteur réglable par tenant (défaut 1,75) et inscrit sur chaque calcul pour rester explicable."
+ },
+ {
+  "id": 31,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Déduction des heures d'absence du calcul des heures à payer.",
+  "response": "absences + totalAbsenceHours déduit dans payCalc."
+ },
+ {
+  "id": 32,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Synchroniser les statuts de groupes (INTIMM/ARRIMA) pour bloquer la paie si groupe fermé.",
+  "response": "Statut de groupe (varpay_group_status, source ARRIMA/INTIMM) : un groupe 'closed' BLOQUE l'activation de contrat / la paie (garde testée)."
+ },
+ {
+  "id": 33,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Rapport des heures travaillées par profil, établissement, période de paie, session.",
+  "response": "Rapport reports.ts (workedHoursReport) + endpoint /reports/worked-hours (filtres établissement/profil/dates)."
+ },
+ {
+  "id": 34,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Paramétrer un ou plusieurs taux applicables selon les heures travaillées.",
+  "response": "Module rules : taux multiples par activité/échelon/période de validité."
+ },
+ {
+  "id": 35,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Paramétrer un seuil heures/suppléance (20/21 périodes, cumul d'activités).",
+  "response": "splitNormalAndSubstitution : seuil 20/21 + cumul enseignement/remplacement."
+ },
+ {
+  "id": 36,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Intégration automatique du calendrier pédagogique annuel (gains pédagogiques).",
+  "response": "varpay/calendar : journées pédago ajoutées en heures rémunérées."
+ },
+ {
+  "id": 37,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Récupération automatique des heures pédagogiques (ou interface de saisie/mise à jour).",
+  "response": "Écran Calendrier (événements de type pédagogique, nominatifs et multi-jours compris) et API historique ; les deux sources alimentent le calcul, sans double comptage d'une même date."
+ },
+ {
+  "id": 38,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Interface permettant à Formation-profs de saisir les heures de formation.",
+  "response": "Activité 'training' saisissable (UI Paie + API)."
+ },
+ {
+  "id": 39,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Inclusion des heures de formation des professeurs temps partiel au calcul.",
+  "response": "payCalc : training rémunéré pour part_time (exclu pour temps complet 35 h)."
+ },
+ {
+  "id": 40,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Saisie des heures d'évaluation de classement.",
+  "response": "Activité 'evaluation' saisissable."
+ },
+ {
+  "id": 41,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Inclusion des heures d'évaluation de classement au calcul de la paie.",
+  "response": "payCalc intègre evaluationHours."
+ },
+ {
+  "id": 42,
+  "category": "Paie",
+  "status": "implemented",
+  "text": "Saisie des heures pédago/formation/évaluation et heures des professeurs dégagés.",
+  "response": "Toutes activités saisissables (calendrier + calcul de paie)."
+ },
+ {
+  "id": 43,
+  "category": "Avancement d'échelon",
+  "status": "implemented",
+  "text": "Synchronisation avec l'avancement d'échelons de SAGIR ou saisie manuelle.",
+  "response": "updateEchelon (manual/sagir_sync) + historique + endpoint /teachers/:id/echelon-sync (SAGIR via le hub)."
+ },
+ {
+  "id": 44,
+  "category": "Avancement d'échelon",
+  "status": "implemented",
+  "text": "Comptabiliser les périodes d'enseignement (incl. heures normales des dégagés).",
+  "response": "cumulatedTeachingPeriods agrège périodes + heures normales dégagés."
+ },
+ {
+  "id": 45,
+  "category": "Avancement d'échelon",
+  "status": "implemented",
+  "text": "Extraction du nombre de périodes enseignées dans une fourchette de dates.",
+  "response": "Écran MIFI › Avancement d'échelon › Périodes enseignées : décompte par professeur sur une fourchette de dates (filtre établissement) + extraction CSV. API : GET /reports/teaching-periods[?format=csv]."
+ },
+ {
+  "id": 46,
+  "category": "Absences et remplacements",
+  "status": "implemented",
+  "text": "Couper les heures d'absence déclarées des heures travaillées.",
+  "response": "totalAbsenceHours déduit dans payCalc."
+ },
+ {
+  "id": 47,
+  "category": "Absences et remplacements",
+  "status": "implemented",
+  "text": "Rapport d'absences selon critères (temps, profil, établissement).",
+  "response": "Rapport reports.ts (absencesReport) + endpoint /reports/absences."
+ },
+ {
+  "id": 48,
+  "category": "Absences et remplacements",
+  "status": "implemented",
+  "text": "Fonctionnalité de gestion des absences.",
+  "response": "Module varpay/absences (saisie manuelle ou import SCOLAGO)."
+ },
+ {
+  "id": 49,
+  "category": "Absences et remplacements",
+  "status": "implemented",
+  "text": "Fonctionnalité automatisée pour les remplacements.",
+  "response": "Suggestion automatisée de remplaçants disponibles (GET /absences/:id/replacement-suggestions, classés par disponibilité le jour de l'absence puis ancienneté) + affectation (PATCH /absences/:id/replacement)."
+ },
+ {
+  "id": 50,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Création/paramétrage de la structure du contrat (dates, heures, jours fériés, prof, salle).",
+  "response": "contracts.ts + calendrier des jours fériés + réservation de salle/établissement."
+ },
+ {
+  "id": 51,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Génération automatique de contrats en lot.",
+  "response": "Création programmatique en lot à partir d'une structure définie."
+ },
+ {
+  "id": 52,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Génération manuelle de contrat individuellement.",
+  "response": "POST /contracts (formulaire UI)."
+ },
+ {
+  "id": 53,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Modification du contrat pour certains rôles (gestion des accès).",
+  "response": "requireModule('contracts') + RBAC."
+ },
+ {
+  "id": 54,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Sauvegarde d'une saisie manuelle de contrat non terminée.",
+  "response": "Statut 'draft'."
+ },
+ {
+  "id": 55,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Terminer la saisie d'un contrat sans le générer.",
+  "response": "Statut 'draft' conservé (pas d'export ni d'activation)."
+ },
+ {
+  "id": 56,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Traçabilité des modifications apportées au contrat.",
+  "response": "audit_log sur toute mutation."
+ },
+ {
+  "id": 57,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Consultation des horaires consolidés par professeur (selon les contrats).",
+  "response": "Feuille de temps consolidée (cours récurrents + tâches), export Excel."
+ },
+ {
+  "id": 58,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Gérer les statuts de contrats et le journal de génération/régénération.",
+  "response": "Statuts draft/active/closed/cancelled + audit_log."
+ },
+ {
+  "id": 59,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Envoi automatique des contrats aux professeurs par courriel.",
+  "response": "Endpoint POST /varpay/contracts/:id/email : envoi du contrat au professeur par courriel (notifications, journalisé)."
+ },
+ {
+  "id": 60,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Synchronisation INTIMM/ARRIMA pour fermer le contrat selon le statut du groupe.",
+  "response": "Statut de groupe fermé via le hub (ARRIMA) → garde bloquant l'activation/fermeture du contrat (testée)."
+ },
+ {
+  "id": 61,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Générer la liste des contrats selon critères (temps, statuts, autres).",
+  "response": "listContracts avec filtres (teacherId, statut)."
+ },
+ {
+  "id": 62,
+  "category": "Gestion contractuelle",
+  "status": "implemented",
+  "text": "Gérer les accès reliés à la gestion contractuelle.",
+  "response": "requireModule + RBAC par rôle."
+ },
+ {
+  "id": 63,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Module de collecte/centralisation/traitement des plaintes.",
+  "response": "varpay/complaints.ts (collecte, suivi, réponse)."
+ },
+ {
+  "id": 64,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Saisie des plaintes dans un portail unique.",
+  "response": "POST /complaints (onglet Plaintes)."
+ },
+ {
+  "id": 65,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Centraliser, assigner au service concerné et notifier le service responsable.",
+  "response": "assignComplaint (service paramétrable) + notifications."
+ },
+ {
+  "id": 66,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Accès aux infos nécessaires à l'analyse en temps réel (contrat, pédago, formation, absences).",
+  "response": "Plainte liée à payCalculationId + détail complet."
+ },
+ {
+  "id": 67,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Communiquer réception/traitement/résolution et garder un historique des échanges.",
+  "response": "varpay_complaint_events (journal horodaté)."
+ },
+ {
+  "id": 68,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Gérer les différents statuts de la plainte jusqu'à la fermeture.",
+  "response": "open→assigned→in_progress→resolved→closed."
+ },
+ {
+  "id": 69,
+  "category": "Gestion des plaintes",
+  "status": "implemented",
+  "text": "Générer un rapport des plaintes selon différents critères.",
+  "response": "complaintsReport (par statut)."
+ },
+ {
+  "id": 70,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Module d'affectation (groupes, transfert Arrima, contrat, transfert paie).",
+  "response": "assignments.ts + statut 'transferred' (Arrima mock)."
+ },
+ {
+  "id": 71,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Recueillir les disponibilités d'enseignement des professeurs.",
+  "response": "setAvailability (jour/heures)."
+ },
+ {
+  "id": 72,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Interroger les disponibilités pour faciliter l'affectation.",
+  "response": "listAvailabilities (filtres prof/jour)."
+ },
+ {
+  "id": 73,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Mise à jour par le professeur de ses disponibilités.",
+  "response": "POST/DELETE /availabilities."
+ },
+ {
+  "id": 74,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Préaffectation automatisée selon disponibilité et ancienneté.",
+  "response": "suggestPreAssignments (tri disponibilité puis ancienneté)."
+ },
+ {
+  "id": 75,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Vue unique de pré-affectation/affectation pour une session.",
+  "response": "listAssignments?session= (vue par session)."
+ },
+ {
+  "id": 76,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Consulter les affectations par session et fourchette de dates.",
+  "response": "listAssignments avec filtres."
+ },
+ {
+  "id": 77,
+  "category": "Gestion des affectations",
+  "status": "implemented",
+  "text": "Notifications en lot/individuelles aux professeurs ET établissements (variables).",
+  "response": "sendNotifications (recipientType teacher/establishment, variables {{cle}})."
+ },
+ {
+  "id": 78,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Conformité confidentialité/intégrité/disponibilité des données.",
+  "response": "TLS 1.3, AES-256, RBAC, audit_log, sauvegardes PG."
+ },
+ {
+  "id": 79,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Politiques de gestion des accès et journalisation.",
+  "response": "requireRole/requireOwnership + audit_log de toutes les mutations."
+ },
+ {
+  "id": 80,
+  "category": "Sécurité",
+  "status": "pivot",
+  "text": "Certifications SOC2 / ISO27001 (application hébergée).",
+  "response": "Architecture alignée SOC2/ISO27001 ; certification cible avec hébergeur certifié (Azure)."
+ },
+ {
+  "id": 81,
+  "category": "Sécurité",
+  "status": "infra",
+  "text": "Plan de reprise après sinistre (DR) et continuité.",
+  "response": "RTO 4 h / RPO 15 min ; snapshots PG continus (hébergement Azure)."
+ },
+ {
+  "id": 82,
+  "category": "Sécurité",
+  "status": "pivot",
+  "text": "Rapport d'auditeur indépendant annuel (NCMC 3416).",
+  "response": "Prévu avec l'hébergeur certifié et audit indépendant."
+ },
+ {
+  "id": 83,
+  "category": "Sécurité",
+  "status": "infra",
+  "text": "Hébergement exclusif des données de paie au Canada.",
+  "response": "Région Azure canadacentral (tenant.region) ; pas de transfert transfrontalier."
+ },
+ {
+  "id": 84,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Chiffrement au repos (AES-256) et en transit (TLS 1.2/1.3) + BYOK.",
+  "response": "TLS 1.3 ; module byok (plan sovereign) pour clés gérées par le client."
+ },
+ {
+  "id": 85,
+  "category": "Sécurité",
+  "status": "pivot",
+  "text": "Programme de gestion des vulnérabilités (scans, pentests, remédiation).",
+  "response": "SDLC sécurisé + npm audit ; SAST/DAST et pentests planifiés avant mise en production."
+ },
+ {
+  "id": 86,
+  "category": "Sécurité",
+  "status": "infra",
+  "text": "Journalisation et surveillance de sécurité (SIEM/SOC), rétention, notification.",
+  "response": "Azure Monitor/Sentinel ; audit_log applicatif complémentaire."
+ },
+ {
+  "id": 87,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Isolation logique/physique des données de paie en multi-tenant.",
+  "response": "Cloisonnement tenantId sur toutes les requêtes + plan dedicated (infra dédiée)."
+ },
+ {
+  "id": 88,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Conformité Loi 25 / LPRPDE, EFVP, droit à l'effacement et portabilité.",
+  "response": "Export tenant (JSON/CSV) + destruction avec certificat ; EFVP documentée."
+ },
+ {
+  "id": 89,
+  "category": "Sécurité",
+  "status": "pivot",
+  "text": "Identification des sous-traitants tiers et exigences de sécurité.",
+  "response": "Documenté (hébergeur, passerelle SMS/SMTP) avec exigences contractuelles."
+ },
+ {
+  "id": 90,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Pratiques de développement sécuritaire (SDLC : revue, SAST/DAST, OWASP Top 10).",
+  "response": "Revue de code, tests unit/intégration/BDD/E2E, requêtes paramétrées (anti-injection), CSRF, RBAC."
+ },
+ {
+  "id": 91,
+  "category": "Sécurité",
+  "status": "infra",
+  "text": "Engagements de disponibilité (SLA) chiffrés, RTO/RPO.",
+  "response": "Plan enterprise SLA 99,9 % ; RTO 4 h / RPO 15 min."
+ },
+ {
+  "id": 92,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Classification des données (Protégé A/B) et contrôles associés.",
+  "response": "Données déjà cloisonnées par établissement (tenantId + requireBaseTenant + JWT autoritaire). Classement formel Protégé A/B par domaine (data_classification, migration 0006), étiquette UI + marquage des extrants + audit d'accès."
+ },
+ {
+  "id": 93,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "MFA pour tous les utilisateurs (TOTP/FIDO2…), récupération en cas de perte.",
+  "response": "MFA TOTP (RFC 6238) + question secrète ; challenge au login ; page Mon compte."
+ },
+ {
+  "id": 94,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Protection réseau/applicative : Firewall, WAF (OWASP Top 10), DDoS.",
+  "response": "En-têtes de sécurité OWASP + limitation de débit Nginx (anti-abus) ; code aligné OWASP Top 10. WAF/DDoS managé au niveau hébergeur (Azure)."
+ },
+ {
+  "id": 95,
+  "category": "Sécurité",
+  "status": "implemented",
+  "text": "Restitution intégrale des données et destruction sécurisée (certificat).",
+  "response": "Endpoints d'export et de destruction du tenant (certificat de destruction)."
+ }
+]

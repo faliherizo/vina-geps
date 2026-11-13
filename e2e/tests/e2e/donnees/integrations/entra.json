@@ -1,0 +1,16 @@
+{
+  "tenantEntra": "d3d3d3d3-0000-4000-8000-c55dc55dc55d",
+  "clientId": "0a1b2c3d-d3a0-4000-8000-0000d3a00001",
+  "compte": { "bouton": "entra-compte-manager", "courriel": "marc.gagnon@cssdc-demo.qc.ca", "role": "manager" },
+  "decouverte": { "alg": "RS256", "pkce": "S256", "authMethod": "client_secret_post" },
+  "erreursJeton": [
+    { "cas": "secret client faux", "corps": { "grant_type": "authorization_code", "client_id": "0a1b2c3d-d3a0-4000-8000-0000d3a00001", "client_secret": "faux", "code": "0.x" }, "statut": 401, "error": "invalid_client", "codeAad": 7000215 },
+    { "cas": "code inconnu", "corps": { "grant_type": "authorization_code", "client_id": "0a1b2c3d-d3a0-4000-8000-0000d3a00001", "client_secret": "secret-demonstration-entra", "code": "0.inconnu" }, "statut": 400, "error": "invalid_grant", "codeAad": 70000 },
+    { "cas": "type d'octroi inconnu", "corps": { "grant_type": "password", "client_id": "0a1b2c3d-d3a0-4000-8000-0000d3a00001", "client_secret": "secret-demonstration-entra" }, "statut": 400, "error": "unsupported_grant_type", "codeAad": 70003 },
+    { "cas": "client inconnu", "corps": { "grant_type": "authorization_code", "client_id": "autre" }, "statut": 400, "error": "unauthorized_client", "codeAad": 700016 }
+  ],
+  "erreursAutorisation": [
+    { "cas": "sans PKCE", "query": "client_id=0a1b2c3d-d3a0-4000-8000-0000d3a00001&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%2Fcb&scope=openid&state=s", "error": "invalid_request" },
+    { "cas": "response_type non pris en charge", "query": "client_id=0a1b2c3d-d3a0-4000-8000-0000d3a00001&response_type=token&redirect_uri=http%3A%2F%2Flocalhost%2Fcb&scope=openid&code_challenge=x&code_challenge_method=S256", "error": "unsupported_response_type" }
+  ]
+}

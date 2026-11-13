@@ -1,0 +1,365 @@
+{
+  "xml": [
+    {
+      "libelle": "champs simples",
+      "records": [
+        {
+          "id": "1",
+          "nom": "Tremblay"
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <id>1</id>\n    <nom>Tremblay</nom>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "liste vide",
+      "records": [],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n\n</records>\n"
+    },
+    {
+      "libelle": "racine et element personnalises",
+      "records": [
+        {
+          "a": 1
+        }
+      ],
+      "root": "facturation",
+      "item": "facture",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<facturation>\n  <facture>\n    <a>1</a>\n  </facture>\n</facturation>\n"
+    },
+    {
+      "libelle": "caracteres a echapper",
+      "records": [
+        {
+          "txt": "a & b < c > d \" e ' f"
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <txt>a &amp; b &lt; c &gt; d &quot; e &apos; f</txt>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "nombres entiers et decimaux",
+      "records": [
+        {
+          "entier": 20,
+          "decimal": 20.5,
+          "zero": 0,
+          "negatif": -3
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <entier>20</entier>\n    <decimal>20.5</decimal>\n    <zero>0</zero>\n    <negatif>-3</negatif>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "valeurs nulles",
+      "records": [
+        {
+          "nul": null,
+          "vide": ""
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <nul></nul>\n    <vide></vide>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "booleens",
+      "records": [
+        {
+          "actif": true,
+          "inactif": false
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <actif>true</actif>\n    <inactif>false</inactif>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "objet imbrique et tableau",
+      "records": [
+        {
+          "obj": {
+            "a": 1
+          },
+          "tab": [
+            1,
+            2,
+            3
+          ],
+          "tabVide": []
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <obj>[object Object]</obj>\n    <tab>1,2,3</tab>\n    <tabVide></tabVide>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "plusieurs enregistrements",
+      "records": [
+        {
+          "a": 1
+        },
+        {
+          "b": 2
+        }
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n    <a>1</a>\n  </record>\n  <record>\n    <b>2</b>\n  </record>\n</records>\n"
+    },
+    {
+      "libelle": "enregistrement sans champ",
+      "records": [
+        {}
+      ],
+      "root": "records",
+      "item": "record",
+      "attendu": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<records>\n  <record>\n\n  </record>\n</records>\n"
+    }
+  ],
+  "role": [
+    {
+      "libelle": "claim scalaire mappe",
+      "claims": {
+        "roles": "Admins"
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {
+          "Admins": "admin"
+        }
+      },
+      "attendu": "admin"
+    },
+    {
+      "libelle": "claim tableau premier gagnant",
+      "claims": {
+        "roles": [
+          "Inconnu",
+          "Gestion"
+        ]
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {
+          "Gestion": "manager",
+          "Inconnu": "employee"
+        }
+      },
+      "attendu": "employee"
+    },
+    {
+      "libelle": "aucun mappage avec repli",
+      "claims": {
+        "roles": "X"
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {},
+        "fallback": "employee"
+      },
+      "attendu": "employee"
+    },
+    {
+      "libelle": "aucun mappage sans repli",
+      "claims": {
+        "roles": "X"
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {}
+      },
+      "attendu": null
+    },
+    {
+      "libelle": "claim absent",
+      "claims": {},
+      "mapping": {
+        "claim": "roles",
+        "map": {
+          "A": "admin"
+        },
+        "fallback": "employee"
+      },
+      "attendu": "employee"
+    },
+    {
+      "libelle": "claim nul explicite",
+      "claims": {
+        "roles": null
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {
+          "null": "admin"
+        }
+      },
+      "attendu": "admin"
+    },
+    {
+      "libelle": "claim numerique",
+      "claims": {
+        "groups": 42
+      },
+      "mapping": {
+        "claim": "groups",
+        "map": {
+          "42": "director"
+        }
+      },
+      "attendu": "director"
+    },
+    {
+      "libelle": "tableau avec element nul",
+      "claims": {
+        "roles": [
+          null,
+          "Gestion"
+        ]
+      },
+      "mapping": {
+        "claim": "roles",
+        "map": {
+          "Gestion": "manager"
+        }
+      },
+      "attendu": "manager"
+    }
+  ],
+  "courriel": [
+    {
+      "libelle": "motif partiel",
+      "email": {
+        "from": "a@b.c",
+        "subject": "Facture 1234 a payer",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "facture",
+          "action": "creer-facture"
+        }
+      ],
+      "attendu": {
+        "action": "creer-facture",
+        "matchedPattern": "facture"
+      }
+    },
+    {
+      "libelle": "insensible a la casse",
+      "email": {
+        "from": "a@b.c",
+        "subject": "FACTURE",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "facture",
+          "action": "creer-facture"
+        }
+      ],
+      "attendu": {
+        "action": "creer-facture",
+        "matchedPattern": "facture"
+      }
+    },
+    {
+      "libelle": "premiere route gagnante",
+      "email": {
+        "from": "a@b.c",
+        "subject": "facture conge",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "conge",
+          "action": "conge"
+        },
+        {
+          "subjectPattern": "facture",
+          "action": "facture"
+        }
+      ],
+      "attendu": {
+        "action": "conge",
+        "matchedPattern": "conge"
+      }
+    },
+    {
+      "libelle": "aucune correspondance",
+      "email": {
+        "from": "a@b.c",
+        "subject": "bonjour",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "facture",
+          "action": "facture"
+        }
+      ],
+      "attendu": {
+        "action": null,
+        "matchedPattern": null
+      }
+    },
+    {
+      "libelle": "motif invalide ignore",
+      "email": {
+        "from": "a@b.c",
+        "subject": "facture",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "[",
+          "action": "casse"
+        },
+        {
+          "subjectPattern": "facture",
+          "action": "facture"
+        }
+      ],
+      "attendu": {
+        "action": "facture",
+        "matchedPattern": "facture"
+      }
+    },
+    {
+      "libelle": "aucune route",
+      "email": {
+        "from": "a@b.c",
+        "subject": "facture",
+        "body": ""
+      },
+      "routes": [],
+      "attendu": {
+        "action": null,
+        "matchedPattern": null
+      }
+    },
+    {
+      "libelle": "ancrage regexp",
+      "email": {
+        "from": "a@b.c",
+        "subject": "RE: facture",
+        "body": ""
+      },
+      "routes": [
+        {
+          "subjectPattern": "^facture",
+          "action": "facture"
+        }
+      ],
+      "attendu": {
+        "action": null,
+        "matchedPattern": null
+      }
+    }
+  ]
+}

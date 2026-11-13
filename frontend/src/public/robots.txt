@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+# L'application (espace connecté) n'est pas indexable ; seul le site vitrine l'est.
+Disallow: /app/
+Disallow: /api/
+
+Sitemap: https://www.exemple-finance.qc.ca/sitemap.xml

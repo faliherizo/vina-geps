@@ -1,0 +1,21 @@
+# Généré au build ou au déploiement — jamais versionné.
+backend-java/target/
+frontend/node_modules/
+frontend/dist/
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/
+infra/terraform/**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars.local
+.env
+.env.*
+*.db
+*.db-wal
+*.db-shm
+.DS_Store
+backend-java/data/
+
+# Index local de GitNexus (gitnexus analyze)
+.gitnexus/

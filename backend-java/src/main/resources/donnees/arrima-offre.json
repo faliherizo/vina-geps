@@ -1,0 +1,30 @@
+{
+  "_lisezMoi": [
+    "Offre de cours simulée d'Arrima — le système de mission du MIFI (AIN20260525, §3.1).",
+    "",
+    "Elle tient dans un fichier de données, et non dans le code, pour deux raisons : les essais",
+    "de bout en bout s'y réfèrent sans dupliquer des littéraux, et le jour où le MIFI fournit",
+    "une extraction réelle, on remplace ce fichier sans toucher au connecteur.",
+    "",
+    "Les codes suivent la nomenclature observée au devis : groupes « G-xxx », cours « FRA-xxx »,",
+    "sessions « H2026 » (hiver) et « A2026 » (automne). Un groupe fermé est présent à dessein :",
+    "c'est le cas qui bloque l'activation d'un contrat (exigences #32 et #60)."
+  ],
+  "session": "H2026",
+  "groupes": [
+    { "groupId": "G-001", "libelle": "Francisation temps complet — matin",   "cours": "FRA-101", "session": "H2026", "statut": "open",   "etablissement": "MTL-CENTRE" },
+    { "groupId": "G-002", "libelle": "Francisation temps complet — soir",    "cours": "FRA-101", "session": "H2026", "statut": "open",   "etablissement": "MTL-CENTRE" },
+    { "groupId": "G-003", "libelle": "Francisation temps partiel — samedi",  "cours": "FRA-201", "session": "H2026", "statut": "open",   "etablissement": "MTL-NORD" },
+    { "groupId": "G-004", "libelle": "Français des affaires",                "cours": "FRA-301", "session": "H2026", "statut": "open",   "etablissement": "QUE-CENTRE" },
+    { "groupId": "G-005", "libelle": "Francisation en entreprise",           "cours": "FRA-401", "session": "H2026", "statut": "closed", "etablissement": "QUE-CENTRE" },
+    { "groupId": "G-101", "libelle": "Francisation temps complet — matin",   "cours": "FRA-101", "session": "A2026", "statut": "open",   "etablissement": "MTL-CENTRE" },
+    { "groupId": "G-102", "libelle": "Alphabétisation",                      "cours": "FRA-050", "session": "A2026", "statut": "open",   "etablissement": "MTL-NORD" }
+  ],
+  "cours": [
+    { "code": "FRA-050", "libelle": "Alphabétisation en français" },
+    { "code": "FRA-101", "libelle": "Français langue seconde — débutant" },
+    { "code": "FRA-201", "libelle": "Français langue seconde — intermédiaire" },
+    { "code": "FRA-301", "libelle": "Français des affaires" },
+    { "code": "FRA-401", "libelle": "Francisation en milieu de travail" }
+  ]
+}

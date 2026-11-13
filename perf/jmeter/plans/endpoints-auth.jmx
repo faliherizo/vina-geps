@@ -1,0 +1,1161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Nexu VINA — endpoints auth">
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables du plan">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+<Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Environnement (propriétés -q env/*.properties)"><collectionProp name="Arguments.arguments"><elementProp name="protocole" elementType="Argument"><stringProp name="Argument.name">protocole</stringProp><stringProp name="Argument.value">${__P(protocole,http)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="hote" elementType="Argument"><stringProp name="Argument.name">hote</stringProp><stringProp name="Argument.value">${__P(hote,localhost)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="port" elementType="Argument"><stringProp name="Argument.name">port</stringProp><stringProp name="Argument.value">${__P(port,4020)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="tenant" elementType="Argument"><stringProp name="Argument.name">tenant</stringProp><stringProp name="Argument.value">${__P(tenant,default)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="comptes" elementType="Argument"><stringProp name="Argument.name">comptes</stringProp><stringProp name="Argument.value">${__P(comptes,donnees/comptes.csv)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="identifiants" elementType="Argument"><stringProp name="Argument.name">identifiants</stringProp><stringProp name="Argument.value">${__P(identifiants,donnees/identifiants.csv)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="utilisateurs" elementType="Argument"><stringProp name="Argument.name">utilisateurs</stringProp><stringProp name="Argument.value">${__P(utilisateurs,1)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="montee" elementType="Argument"><stringProp name="Argument.name">montee</stringProp><stringProp name="Argument.value">${__P(montee,1)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="duree" elementType="Argument"><stringProp name="Argument.name">duree</stringProp><stringProp name="Argument.value">${__P(duree,30)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="reflexion" elementType="Argument"><stringProp name="Argument.name">reflexion</stringProp><stringProp name="Argument.value">${__P(reflexion,0)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="debit" elementType="Argument"><stringProp name="Argument.name">debit</stringProp><stringProp name="Argument.value">${__P(debit,20)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="unites_operation" elementType="Argument"><stringProp name="Argument.name">unites_operation</stringProp><stringProp name="Argument.value">${__P(unites_operation,10)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="duree_operation" elementType="Argument"><stringProp name="Argument.name">duree_operation</stringProp><stringProp name="Argument.value">${__P(duree_operation,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="ecritures" elementType="Argument"><stringProp name="Argument.name">ecritures</stringProp><stringProp name="Argument.value">${__P(ecritures,true)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_lecture" elementType="Argument"><stringProp name="Argument.name">seuil_lecture</stringProp><stringProp name="Argument.value">${__P(seuil_lecture,500)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_ecriture" elementType="Argument"><stringProp name="Argument.name">seuil_ecriture</stringProp><stringProp name="Argument.value">${__P(seuil_ecriture,1000)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_rapport" elementType="Argument"><stringProp name="Argument.name">seuil_rapport</stringProp><stringProp name="Argument.value">${__P(seuil_rapport,2000)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></Arguments>
+<hashTree>
+
+</hashTree>
+<ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="Défauts HTTP (hôte, port, protocole de l'environnement)">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.domain">${hote}</stringProp><stringProp name="HTTPSampler.port">${port}</stringProp><stringProp name="HTTPSampler.protocol">${protocole}</stringProp><stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+      <stringProp name="HTTPSampler.connect_timeout">5000</stringProp><stringProp name="HTTPSampler.response_timeout">30000</stringProp><stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+    </ConfigTestElement>
+<hashTree>
+
+</hashTree>
+<HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="En-têtes (JSON, jeton, établissement)"><collectionProp name="HeaderManager.headers"><elementProp name="" elementType="Header"><stringProp name="Header.name">Content-Type</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">Accept</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">Authorization</stringProp><stringProp name="Header.value">Bearer ${__P(jeton,)}</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">X-Tenant-Id</stringProp><stringProp name="Header.value">${tenant}</stringProp></elementProp></collectionProp></HeaderManager>
+<hashTree>
+
+</hashTree>
+<CookieManager guiclass="CookiePanel" testclass="CookieManager" testname="Témoins (session)"><boolProp name="CookieManager.clearEachIteration">false</boolProp><boolProp name="CookieManager.controlledByThreadGroup">false</boolProp></CookieManager>
+<hashTree>
+
+</hashTree>
+<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Identifiants (CSV)"><stringProp name="filename">${identifiants}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">weekDate,date,id,moisCourant,periodeId,placeId,ressourceId,segmentId,uniteCode,typeRef,codeRef,absenceEffectifId,campagneId,remplacementId,echangeId,milieuEffId,posteEffId,equipageId,regleId,feuilleId,pointageId,quotaId,perimetreId,messageEsbId,connecteurCode,relaisCode,profilCode,fluxRegleId,conversationId,messageId,listeId,corpsEmploiCode,statutEmploiCode,natureCode,plageCode,typeMilieuCode,employeId</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
+<hashTree>
+
+</hashTree>
+<SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Connexion (setUp : un jeton pour tous)">
+      <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController"><stringProp name="LoopController.loops">1</stringProp><boolProp name="LoopController.continue_forever">false</boolProp></elementProp>
+      <stringProp name="ThreadGroup.num_threads">1</stringProp><stringProp name="ThreadGroup.ramp_time">1</stringProp>
+      <boolProp name="ThreadGroup.scheduler">false</boolProp><stringProp name="ThreadGroup.duration"></stringProp><stringProp name="ThreadGroup.delay"></stringProp>
+      <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+    </SetupThreadGroup>
+<hashTree>
+<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Comptes (CSV)"><stringProp name="filename">${comptes}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">username,password,tenantId,role</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
+<hashTree>
+
+</hashTree>
+<HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="En-têtes (JSON, jeton, établissement)"><collectionProp name="HeaderManager.headers"><elementProp name="" elementType="Header"><stringProp name="Header.name">Content-Type</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">Accept</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp></collectionProp></HeaderManager>
+<hashTree>
+
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/login">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;username&quot;:&quot;${username}&quot;,&quot;password&quot;:&quot;${password}&quot;,&quot;tenantId&quot;:&quot;${tenantId}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/login</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Code 200"><collectionProp name="Asserion.test_strings"><stringProp name="0">200</stringProp></collectionProp><stringProp name="Assertion.custom_message">code 200 attendu</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">false</boolProp><intProp name="Assertion.test_type">8</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extraire jeton"><stringProp name="JSONPostProcessor.referenceNames">jeton</stringProp><stringProp name="JSONPostProcessor.jsonPathExprs">$.token</stringProp><stringProp name="JSONPostProcessor.match_numbers">1</stringProp><stringProp name="JSONPostProcessor.defaultValues"></stringProp></JSONPostProcessor>
+<hashTree>
+
+</hashTree>
+<JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Publier jeton"><stringProp name="scriptLanguage">groovy</stringProp><stringProp name="script">props.put(&quot;jeton&quot;, vars.get(&quot;jeton&quot;) ?: &quot;&quot;)</stringProp><stringProp name="parameters"></stringProp><stringProp name="filename"></stringProp><stringProp name="cacheKey">true</stringProp></JSR223PostProcessor>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+<ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Balayage /api/auth (80 endpoints)">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController"><stringProp name="LoopController.loops">-1</stringProp><boolProp name="LoopController.continue_forever">false</boolProp></elementProp>
+      <stringProp name="ThreadGroup.num_threads">${utilisateurs}</stringProp><stringProp name="ThreadGroup.ramp_time">${montee}</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp><stringProp name="ThreadGroup.duration">${__P(duree_balayage,106)}</stringProp><stringProp name="ThreadGroup.delay"></stringProp>
+      <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+    </ThreadGroup>
+<hashTree>
+<ConstantTimer guiclass="ConstantTimerGui" testclass="ConstantTimer" testname="Temps de réflexion"><stringProp name="ConstantTimer.delay">${reflexion}</stringProp></ConstantTimer>
+<hashTree>
+
+</hashTree>
+<GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Lectures (37)"/>
+<hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/annuaires">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/annuaires</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/approvers">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/approvers</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/assignable-roles">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/assignable-roles</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/audit">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/audit</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/audit/integrite">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/audit/integrite</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/audit/revues">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/audit/revues</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/audit/siem-export">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/audit/siem-export</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_rapport)"><stringProp name="DurationAssertion.duration">${seuil_rapport}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/capabilities">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/capabilities</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/deploiement">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/deploiement</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/emprunt/journal">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/emprunt/journal</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/emprunt/reglage">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/emprunt/reglage</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/invitations">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/invitations</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/invitations/jeton/{jeton}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/invitations/jeton/x</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/journal-actions">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/journal-actions</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/me">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/me</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/me/photo">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/me/photo</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/password-policy">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/password-policy</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/personnes/{userId}/photo">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/personnes/x/photo</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/profile">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/profile</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/roles">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/roles</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/security/catalog">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/catalog</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/security/question">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/question</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/security/questions">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/questions</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/security/siem-console">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/siem-console</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/security/status">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/status</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/annuaires">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/annuaires</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/annuaires/callback">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/annuaires/callback</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/annuaires/{id}/login">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/annuaires/${id}/login</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/entra/callback">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/entra/callback</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/entra/status">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/entra/status</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/saml/metadata">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/saml/metadata</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/sso/saml/status">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/saml/status</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/tenant-by-slug/{slug}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/tenant-by-slug/x</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/tenants">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/tenants</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/users">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/users</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/webauthn/credentials">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/credentials</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/auth/whoami">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/whoami</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+<IfController guiclass="IfControllerPanel" testclass="IfController" testname="Écritures — seulement si ecritures=true (jamais en production)"><stringProp name="IfController.condition">${__jexl3(&quot;${ecritures}&quot; == &quot;true&quot;)}</stringProp><boolProp name="IfController.evaluateAll">false</boolProp><boolProp name="IfController.useExpression">true</boolProp></IfController>
+<hashTree>
+<GenericController guiclass="LogicControllerGui" testclass="GenericController" testname="Écritures (39)"/>
+<hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/annuaires">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/annuaires</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/auth/annuaires/{id}">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/annuaires/${id}</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/audit/revues">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/audit/revues</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/change-password">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/change-password</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/emprunt">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;cibleId&quot;:&quot;usr-123&quot;,&quot;motif&quot;:&quot;Reproduire le problème de saisie signalé&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/emprunt</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/auth/emprunt/reglage">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;actif&quot;:true}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/emprunt/reglage</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/emprunt/terminer">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/emprunt/terminer</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/first-login/change-password">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/first-login/change-password</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/invitations">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/invitations</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/invitations/jeton/{jeton}/accepter">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/invitations/jeton/x/accepter</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/auth/me/photo">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/me/photo</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/password-policy/check">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/password-policy/check</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /api/auth/profile">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/profile</stringProp><stringProp name="HTTPSampler.method">PATCH</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/roles">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/roles</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /api/auth/roles/{code}">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/roles/x</stringProp><stringProp name="HTTPSampler.method">PATCH</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PUT /api/auth/roles/{code}/capabilities/{capability}">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/roles/x/capabilities/x</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/catalog">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/catalog</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /api/auth/security/catalog/{id}">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/catalog/${id}</stringProp><stringProp name="HTTPSampler.method">PATCH</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/retention/erase-user">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/retention/erase-user</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/retention/purge">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/retention/purge</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/setup">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/setup</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/totp/init">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/totp/init</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/security/verify">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/verify</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/sso/entra/session">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/entra/session</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/sso/saml/acs">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/sso/saml/acs</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/users">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;username&quot;:&quot;lea.tremblay&quot;,&quot;password&quot;:&quot;Provisoire-2026!&quot;,&quot;role&quot;:&quot;employee&quot;,&quot;employeeId&quot;:&quot;emp-1&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/users</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="PATCH /api/auth/users/{id}">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/users/${id}</stringProp><stringProp name="HTTPSampler.method">PATCH</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/users/{id}/reset-security">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/users/${id}/reset-security</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/webauthn/authenticate/begin">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/authenticate/begin</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/webauthn/authenticate/finish">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/authenticate/finish</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/webauthn/register/begin">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/register/begin</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/auth/webauthn/register/finish">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/register/finish</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/annuaires/{id}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/annuaires/${id}</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/invitations/{id}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/invitations/${id}</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/me/photo">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/me/photo</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/roles/{code}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/roles/x</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/security/catalog/{id}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/security/catalog/${id}</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/users/{id}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/users/${id}</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="DELETE /api/auth/webauthn/credentials/{id}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/auth/webauthn/credentials/${id}</stringProp><stringProp name="HTTPSampler.method">DELETE</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_ecriture)"><stringProp name="DurationAssertion.duration">${seuil_ecriture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+</hashTree>
+</hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

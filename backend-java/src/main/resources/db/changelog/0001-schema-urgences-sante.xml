@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Base vierge : le schéma complet est créé. Base reprise du produit d'origine (la table `users`
+    existe déjà) : le changeset est constaté sans rien exécuter — on ne recrée jamais un schéma
+    vivant, et la reprise d'un organisme passe par sa copie (E-TN-6).
+  -->
+  <changeSet id="0001-schema-urgences-sante" author="separation-urgences-sante">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="users"/>
+      </not>
+    </preConditions>
+    <comment>Schéma initial d'Urgences-santé : tables du socle et du module.</comment>
+    <sqlFile path="db/changelog/0001-schema-urgences-sante.sql" splitStatements="true" endDelimiter=";" stripComments="true"/>
+  </changeSet>
+
+</databaseChangeLog>

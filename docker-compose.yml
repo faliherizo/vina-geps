@@ -1,0 +1,49 @@
+# Urgences-santé — la pile locale : le serveur Java (base SQLite créée par Liquibase) et nginx.
+#
+#   docker compose up -d --build        # interface : http://localhost:${US_WEB_PORT:-8090}
+#
+# Les secrets de production ne vivent pas ici : JWT_SECRET, ADMIN_PASSWORD et SUPERADMIN_PASSWORD
+# se fournissent par l'environnement (Secrets Manager sur AWS, voir infra/terraform/aws).
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend-java/Dockerfile
+    container_name: urgences-sante-backend
+    restart: unless-stopped
+    environment:
+      PORT: "4000"
+      DB_URL: jdbc:sqlite:/app/data/urgences-sante.db
+      NEXU_DONNEES: /app/data/fichiers
+      SAUVEGARDES_DOSSIER: /app/data/sauvegardes
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+      LOG_NIVEAU: ${LOG_NIVEAU:-info}
+      JWT_SECRET: ${JWT_SECRET:-developpement-uniquement-secret-de-32-octets-min}
+      CORS_ORIGINS: http://localhost:${US_WEB_PORT:-8090}
+      COOKIE_SECURE: "0"
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      SUPERADMIN_USERNAME: ${SUPERADMIN_USERNAME:-superadmin}
+      SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-superadmin}
+      REGION_DONNEES: ${REGION_DONNEES:-poste-local}
+      HEBERGEUR: ${HEBERGEUR:-Docker local}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:${US_WEB_PORT:-8090}}
+      SMS_FOURNISSEUR: ${SMS_FOURNISSEUR:-}
+    volumes:
+      - donnees:/app/data
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: urgences-sante-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: backend
+      API_PORT: "4000"
+    ports:
+      - "${US_WEB_PORT:-8090}:80"
+volumes:
+  donnees:

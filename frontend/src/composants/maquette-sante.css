@@ -1,0 +1,203 @@
+/*
+ * **Système visuel des maquettes de santé** (AO 26-015-DO, ADR 0069).
+ *
+ * Source : les douze planches de `docs/urgences-sante/maquettes/svg/` (s01 à s12). Il sert **les
+ * deux modules de santé** — Urgences-santé et Santé Québec : ils s'adressent au même métier et
+ * se montrent au même client, et deux chartes pour un même domaine se remarquent surtout quand on
+ * passe de l'un à l'autre. Les planches portent
+ * leurs teintes en clair dans le SVG, donc exactes plutôt qu'approchées — neuf couleurs en tout,
+ * ce qui rend la mesure courte et la décision nette.
+ *
+ * ## Ce qui est repris, et ce qui est corrigé
+ *
+ * Mesuré, jamais jugé à l'œil (WCAG 1.4.3, seuil 4,5:1 pour le texte courant) :
+ *
+ * | Teinte de la maquette | Usage dessiné | Mesure | Décision |
+ * |---|---|---:|---|
+ * | `#102a43` | bandeau marine, titres | 14,64:1 sur blanc | **reprise** |
+ * | `#334e68` | texte courant | 8,64:1 sur blanc | **reprise** |
+ * | `#627d98` | sous-titres, en-têtes de colonnes | **4,28:1** blanc · **3,95:1** page | **corrigée** → `#536980` |
+ * | `#0b6e69` | bouton primaire, texte blanc | 6,09:1 | **reprise** |
+ * | `#d9e2ec` | bordure de carte | 1,31:1 | **reprise en surface**, jamais autour d'un contrôle |
+ * | `#f4f6f9` | fond de page | — | **reprise** |
+ * | `#e6f0f7` | entrée de menu active | — | **reprise** |
+ * | `#e6edf3` | filet de tableau | — | **reprise** |
+ *
+ * Une seule teinte de texte était en défaut, et c'est la plus employée après le texte courant :
+ * les en-têtes de colonnes et tous les sous-titres. La suivre à la lettre aurait donné un module
+ * à refaire après l'audit — c'est-à-dire après l'avoir montré au client.
+ *
+ * La bordure `#d9e2ec` reste celle des **cartes** (1,31:1 : une carte n'est pas un contrôle, et
+ * 1.4.11 ne la vise pas). Autour d'une **saisie** ou d'un **bouton**, le critère 1.4.11 exige 3:1,
+ * d'où `--maquette-trait-controle` à 4,12:1 — la maquette ne dessine pas de champ de saisie, elle ne
+ * pouvait donc pas trancher la question.
+ *
+ * ## Ce qui n'est pas repris, et pourquoi
+ *
+ * Les planches dessinent **leur propre barre d'application** marine en haut de l'écran et **leur
+ * propre colonne de menu**. L'application en a déjà, partagées avec tous les autres modules, et
+ * réglées sur les maquettes Santé Québec (en-tête blanc souligné de bleu). Un module ne peut pas
+ * imposer sa barre à l'application : il y aurait deux chromes empilés, ou un chrome qui change
+ * selon l'écran ouvert — ce qui se lit comme une panne.
+ *
+ * La reconnaissance visuelle du marine est donc rendue par un **bandeau de module** (`.maquette-bandeau`)
+ * posé en tête de page : même teinte, même nom en capitales, même rapport de texte. Le reste —
+ * fond de page, cartes, bandeau d'indicateurs, tableau, bouton primaire — est repris tel quel.
+ *
+ * Pas de thème sombre : l'application n'en a aucun (voir `santequebec/styles.css`, correction du
+ * 25 octobre 2026). Un module ne peut pas avoir un thème que l'application n'a pas.
+ */
+
+.maquette-page {
+  /* Surfaces — teintes des maquettes, inchangées */
+  --maquette-fond: #f4f6f9;
+  --maquette-surface: #ffffff;
+  --maquette-marine: #102a43;
+  --maquette-teinte: #e6f0f7;        /* fond de l'entrée active, planches s01 à s12 */
+  --maquette-trait: #d9e2ec;         /* bordure de carte — surface, pas contour de contrôle */
+  --maquette-filet: #e6edf3;         /* séparateur de lignes de tableau */
+
+  /* Texte — mesuré, et annoté de son rapport là où l'on serait tenté de le « corriger » */
+  --maquette-encre: #102a43;         /* 14,64:1 sur blanc · 13,52:1 sur le fond de page */
+  --maquette-courant: #334e68;       /* 8,64:1 sur blanc · 7,98:1 sur le fond de page */
+  --maquette-doux: #536980;          /* 5,68:1 blanc · 5,24:1 page · 4,91:1 sur la teinte active
+                                  — la maquette proposait #627d98, à 4,28 / 3,95 / 3,70 */
+  --maquette-sur-marine: #d9e2ec;    /* 11,18:1 sur le bandeau marine */
+
+  /* Accent sarcelle — la seule couleur vive des planches */
+  --maquette-primaire: #0b6e69;      /* 6,09:1 avec du texte blanc */
+  --maquette-primaire-appui: #095c58;/* 7,83:1 — survol et activation */
+  --maquette-accent-texte: #0a605b;  /* 7,40:1 sur blanc · 6,84:1 sur le fond de page */
+  --maquette-trait-controle: #6b7f96;/* 4,12:1 sur blanc · 3,80:1 sur la page (1.4.11 exige 3:1) */
+
+  background: var(--maquette-fond);
+  color: var(--maquette-courant);
+}
+
+/* ── Bandeau de module ────────────────────────────────────────────────────── */
+
+/*
+ * Le marine des planches, réduit à un bandeau de page. Il porte le nom du module en capitales —
+ * comme la maquette — et, à droite, la phrase qui situe l'écran dans la journée.
+ */
+.maquette-bandeau {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.625rem;
+  background: var(--maquette-marine);
+  color: #ffffff;
+}
+
+.maquette-bandeau-nom {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.maquette-bandeau-contexte {
+  margin: 0;
+  color: var(--maquette-sur-marine);
+  font-size: 0.9375rem;
+}
+
+/* ── Bandeau d'indicateurs (planches s01 à s12, quatre cartes) ────────────── */
+
+/*
+ * Les planches montrent quatre cartes chiffrées sous le titre. L'application en a déjà le
+ * composant (`composants/Tuile`), et les écrans qui ont de vraies mesures les affichent déjà —
+ * le comblement, par exemple. On **habille donc l'existant** au lieu d'ajouter un second jeu de
+ * cartes : deux composants pour la même intention finissent par diverger, et l'écran afficherait
+ * alors deux bandeaux dont l'un serait vide.
+ *
+ * Ce qui n'est pas fait, et c'est une décision : aucune carte n'est ajoutée là où le chiffre
+ * n'existe pas. Une tuile « Anomalies de présence : 03 » recopiée de la maquette serait une
+ * mesure inventée, et une mesure inventée se lit comme une mesure.
+ */
+.maquette-page .tuile {
+  border: 1px solid var(--maquette-trait);
+  border-radius: 0.625rem;
+  background: var(--maquette-surface);
+  padding: 0.875rem 1rem;
+}
+
+.maquette-page .tuile-libelle {
+  color: var(--maquette-doux);
+  font-size: 0.9375rem;
+  font-weight: 400;
+}
+
+.maquette-page .tuile-valeur {
+  color: var(--maquette-encre);
+  font-size: 1.875rem;
+  font-weight: 700;
+}
+
+.maquette-page .tuile-periode { color: var(--maquette-doux); }
+
+.maquette-page .tuile-ouvrir { color: var(--maquette-accent-texte); }
+
+/* ── Chrome des écrans : titre, cartes, tableau, bouton ───────────────────── */
+
+.maquette-page .ecran-entete-titre { color: var(--maquette-encre); }
+.maquette-page .ecran-entete-description { color: var(--maquette-doux); }
+
+/* La grande carte des planches : « Données et opérations ». */
+.maquette-page .card,
+.maquette-page .panel {
+  border: 1px solid var(--maquette-trait);
+  border-radius: 0.625rem;
+  background: var(--maquette-surface);
+}
+
+.maquette-page table th {
+  color: var(--maquette-doux);
+  border-bottom: 1px solid var(--maquette-filet);
+}
+
+.maquette-page table td {
+  color: var(--maquette-courant);
+  border-bottom: 1px solid var(--maquette-filet);
+}
+
+/*
+ * Le contour d'un contrôle n'est pas celui d'une carte : 1.4.11 exige 3:1 pour ce qui permet de
+ * **reconnaître** un champ ou un bouton. C'est la seule règle de cette feuille que la maquette
+ * ne pouvait pas trancher, faute d'y dessiner un formulaire.
+ */
+.maquette-page input:not([type="checkbox"]):not([type="radio"]),
+.maquette-page select,
+.maquette-page textarea {
+  border: 1px solid var(--maquette-trait-controle);
+  border-radius: 0.375rem;
+}
+
+/* Le bouton primaire sarcelle des planches, en bas à droite de la carte. */
+.maquette-page button[type="submit"],
+.maquette-page .maquette-primaire {
+  background: var(--maquette-primaire);
+  border-color: var(--maquette-primaire);
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.maquette-page button[type="submit"]:hover,
+.maquette-page button[type="submit"]:focus-visible,
+.maquette-page .maquette-primaire:hover,
+.maquette-page .maquette-primaire:focus-visible {
+  background: var(--maquette-primaire-appui);
+  border-color: var(--maquette-primaire-appui);
+}
+
+/* Les onglets du module tiennent la place du ruban de repères des planches
+   (« À combler · Quarts ad hoc · Quotas · Ajustements »). */
+.maquette-page [role="tab"][aria-selected="true"] {
+  background: var(--maquette-teinte);
+  color: var(--maquette-encre);
+}

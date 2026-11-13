@@ -1,0 +1,52 @@
+{
+  "_commentaire": "Jetons emis par jsonwebtoken (bibliotheque du backend Node), HS256. Validite longue a dessein : ces vecteurs verifient la lecture du format, pas la peremption — celle-ci a son propre vecteur (jetonPerime). Secrets de test, jamais ceux de production.",
+  "secret": "secret-de-test-parite-jwt-suffisamment-long-1234",
+  "secret_trop_court": "dev-only-secret-change-me",
+  "jeton_perime": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3ItMTc4NjAxMjk4Mjc0NS05MTc2NTAiLCJ1c2VybmFtZSI6ImFkbWluQEB0LTAwMSIsInJvbGUiOiJhZG1pbiIsImVtcGxveWVlSWQiOiJlbXBfeDdrMms5bTEiLCJ0ZW5hbnRJZCI6InQtMDAxIiwiaWF0IjoxNzg2MTYyODg5LCJleHAiOjE3ODYxNTkyODl9.nF1I3hGGuKBtLaTW-im8yQGxmryHHSZV-C_BVHnTK9I",
+  "vecteurs": [
+    {
+      "libelle": "admin-avec-tenant",
+      "charge": {
+        "sub": "usr-1786012982745-917650",
+        "username": "admin@@t-001",
+        "role": "admin",
+        "employeeId": "emp_x7k2k9m1",
+        "tenantId": "t-001"
+      },
+      "jeton": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3ItMTc4NjAxMjk4Mjc0NS05MTc2NTAiLCJ1c2VybmFtZSI6ImFkbWluQEB0LTAwMSIsInJvbGUiOiJhZG1pbiIsImVtcGxveWVlSWQiOiJlbXBfeDdrMms5bTEiLCJ0ZW5hbnRJZCI6InQtMDAxIiwiaWF0IjoxNzg2MTYyODg5LCJleHAiOjQ5Mzk3NjI4ODl9.0Y3rXLHzuuySVQ2wlU6NYHecEYqHcnBGC3axH-kkbok"
+    },
+    {
+      "libelle": "superadmin-global",
+      "charge": {
+        "sub": "usr-1",
+        "username": "superadmin",
+        "role": "superadmin",
+        "employeeId": null,
+        "tenantId": null
+      },
+      "jeton": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3ItMSIsInVzZXJuYW1lIjoic3VwZXJhZG1pbiIsInJvbGUiOiJzdXBlcmFkbWluIiwiZW1wbG95ZWVJZCI6bnVsbCwidGVuYW50SWQiOm51bGwsImlhdCI6MTc4NjE2Mjg4OSwiZXhwIjo0OTM5NzYyODg5fQ.H_PFWALKbftwIwAXRAGbdTmPuvfEWLQVQb8_kjyTni0"
+    },
+    {
+      "libelle": "role-personnalise",
+      "charge": {
+        "sub": "usr-2",
+        "username": "coordo",
+        "role": "coordonnateur-paie",
+        "employeeId": null,
+        "tenantId": "t-002"
+      },
+      "jeton": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3ItMiIsInVzZXJuYW1lIjoiY29vcmRvIiwicm9sZSI6ImNvb3Jkb25uYXRldXItcGFpZSIsImVtcGxveWVlSWQiOm51bGwsInRlbmFudElkIjoidC0wMDIiLCJpYXQiOjE3ODYxNjI4ODksImV4cCI6NDkzOTc2Mjg4OX0.1VJ70R-dek27TstOC3Sv2AAsnull38f74t87AiMRgKo"
+    },
+    {
+      "libelle": "accents-nom",
+      "charge": {
+        "sub": "usr-3",
+        "username": "éléonore.côté@@t-003",
+        "role": "rh",
+        "employeeId": "emp_a",
+        "tenantId": "t-003"
+      },
+      "jeton": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3ItMyIsInVzZXJuYW1lIjoiw6lsw6lvbm9yZS5jw7R0w6lAQHQtMDAzIiwicm9sZSI6InJoIiwiZW1wbG95ZWVJZCI6ImVtcF9hIiwidGVuYW50SWQiOiJ0LTAwMyIsImlhdCI6MTc4NjE2Mjg4OSwiZXhwIjo0OTM5NzYyODg5fQ.rEL5lyW2_ay8qIpYmEu8mO5sDNV769KtLE7z2nUO-MU"
+    }
+  ]
+}

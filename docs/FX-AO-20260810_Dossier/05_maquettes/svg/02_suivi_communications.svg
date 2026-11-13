@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+<rect width="1440" height="900" fill="#f3f5f8"/>
+<rect width="1440" height="76" fill="#17324d"/>
+<text x="34" y="48" font-family="Arial" font-size="26" font-weight="bold" fill="#ffffff">Santé Québec Laurentides</text>
+<text x="1120" y="46" font-family="Arial" font-size="16" fill="#ffffff">Utilisateur connecté  ▾</text>
+<rect x="0" y="76" width="250" height="824" fill="#ffffff"/>
+<rect x="12" y="102" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="132" font-family="Arial" font-size="17" fill="#17324d">Tableau de bord</text>
+<rect x="12" y="160" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="190" font-family="Arial" font-size="17" fill="#17324d">Communications</text>
+<rect x="12" y="218" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="248" font-family="Arial" font-size="17" fill="#17324d">Groupes et gardes</text>
+<rect x="12" y="276" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="306" font-family="Arial" font-size="17" fill="#17324d">Disponibilités</text>
+<rect x="12" y="334" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="364" font-family="Arial" font-size="17" fill="#17324d">Administration</text>
+<rect x="12" y="392" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="422" font-family="Arial" font-size="17" fill="#17324d">Rapports</text>
+<rect x="12" y="450" width="226" height="46" rx="7" fill="#ffffff"/>
+<text x="30" y="480" font-family="Arial" font-size="17" fill="#17324d">Aide</text>
+<text x="292" y="132" font-family="Arial" font-size="29" font-weight="bold" fill="#17324d">Suivi des communications</text>
+<text x="292" y="166" font-family="Arial" font-size="15" fill="#637487">Maquette fonctionnelle indicative — contenu et règles à valider</text>
+<rect x="292" y="210" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="235" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Communications</text>
+<text x="316" y="257" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="288" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="313" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Messages envoyés</text>
+<text x="316" y="335" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="366" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="391" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Recherche</text>
+<text x="316" y="413" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="444" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="469" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Patient / destinataire / expéditeur / groupe</text>
+<text x="316" y="491" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="522" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="547" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Filtres</text>
+<text x="316" y="569" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="600" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="625" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Période  •  Site  •  Statut  •  Priorité</text>
+<text x="316" y="647" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="678" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="703" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Table</text>
+<text x="316" y="725" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+<rect x="292" y="756" width="1090" height="62" rx="8" fill="#ffffff" stroke="#d7dee7"/>
+<text x="316" y="781" font-family="Arial" font-size="14" font-weight="bold" fill="#17324d">Heure | Destinataire | Message | Canal | Statut</text>
+<text x="316" y="803" font-family="Arial" font-size="12" fill="#637487">Configuration dynamique • droits contrôlés • journalisation activée</text>
+</svg>

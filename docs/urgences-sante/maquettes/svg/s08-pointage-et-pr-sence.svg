@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+<rect width="1440" height="900" fill="#f4f6f9"/>
+<rect x="0" y="0" width="1440" height="72" fill="#102a43"/>
+<text x="34" y="45" fill="#ffffff" font-family="Arial" font-size="25" font-weight="bold">URGENCES-SANTÉ</text>
+<text x="1290" y="44" fill="#d9e2ec" font-family="Arial" font-size="16">Profil connecté ▾</text>
+<rect x="0" y="72" width="250" height="828" fill="#ffffff"/>
+<text x="28" y="125" fill="#334e68" font-family="Arial" font-size="16" font-weight="bold">MENU PRINCIPAL</text>
+<rect x="12" y="147" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="175" fill="#334e68" font-family="Arial" font-size="17">Tableau de bord</text>
+<rect x="12" y="205" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="233" fill="#334e68" font-family="Arial" font-size="17">Mon horaire</text>
+<rect x="12" y="263" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="291" fill="#334e68" font-family="Arial" font-size="17">Disponibilités</text>
+<rect x="12" y="321" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="349" fill="#334e68" font-family="Arial" font-size="17">Absences</text>
+<rect x="12" y="379" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="407" fill="#334e68" font-family="Arial" font-size="17">Confection AGPH</text>
+<rect x="12" y="437" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="465" fill="#334e68" font-family="Arial" font-size="17">Gestion des quarts</text>
+<rect x="12" y="495" width="226" height="44" rx="8" fill="#e6f0f7"/>
+<text x="30" y="523" fill="#334e68" font-family="Arial" font-size="17">Pointage</text>
+<rect x="12" y="553" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="581" fill="#334e68" font-family="Arial" font-size="17">Feuilles de temps</text>
+<rect x="12" y="611" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="639" fill="#334e68" font-family="Arial" font-size="17">Rapports</text>
+<rect x="12" y="669" width="226" height="44" rx="8" fill="#ffffff"/>
+<text x="30" y="697" fill="#334e68" font-family="Arial" font-size="17">Administration</text>
+<text x="290" y="130" fill="#102a43" font-family="Arial" font-size="30" font-weight="bold">Pointage et présence</text>
+<text x="290" y="166" fill="#627d98" font-family="Arial" font-size="17">Déclaration des heures</text>
+<rect x="290" y="195" width="1110" height="60" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="310" y="232" fill="#334e68" font-family="Arial" font-size="16" font-weight="bold">Pointer</text>
+<text x="575" y="232" fill="#334e68" font-family="Arial" font-size="16" font-weight="bold">Mes segments</text>
+<text x="840" y="232" fill="#334e68" font-family="Arial" font-size="16" font-weight="bold">Présence</text>
+<text x="1105" y="232" fill="#334e68" font-family="Arial" font-size="16" font-weight="bold">Corrections</text>
+<rect x="290" y="280" width="260" height="110" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="308" y="315" fill="#627d98" font-family="Arial" font-size="15">Pointer</text>
+<text x="308" y="365" fill="#102a43" font-family="Arial" font-size="30" font-weight="bold">24</text>
+<rect x="567" y="280" width="260" height="110" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="585" y="315" fill="#627d98" font-family="Arial" font-size="15">Mes segments</text>
+<text x="585" y="365" fill="#102a43" font-family="Arial" font-size="30" font-weight="bold">08</text>
+<rect x="844" y="280" width="260" height="110" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="862" y="315" fill="#627d98" font-family="Arial" font-size="15">Présence</text>
+<text x="862" y="365" fill="#102a43" font-family="Arial" font-size="30" font-weight="bold">12</text>
+<rect x="1121" y="280" width="260" height="110" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="1139" y="315" fill="#627d98" font-family="Arial" font-size="15">Corrections</text>
+<text x="1139" y="365" fill="#102a43" font-family="Arial" font-size="30" font-weight="bold">03</text>
+<rect x="290" y="415" width="1110" height="420" rx="10" fill="#ffffff" stroke="#d9e2ec"/>
+<text x="315" y="455" fill="#102a43" font-family="Arial" font-size="21" font-weight="bold">Données et opérations</text>
+<text x="315.0" y="505" fill="#627d98" font-family="Arial" font-size="14" font-weight="bold">Quart</text>
+<text x="531.0" y="505" fill="#627d98" font-family="Arial" font-size="14" font-weight="bold">Heure</text>
+<text x="747.0" y="505" fill="#627d98" font-family="Arial" font-size="14" font-weight="bold">Lieu</text>
+<text x="963.0" y="505" fill="#627d98" font-family="Arial" font-size="14" font-weight="bold">Validation</text>
+<text x="1179.0" y="505" fill="#627d98" font-family="Arial" font-size="14" font-weight="bold">Action</text>
+<line x1="315" y1="525" x2="1375" y2="525" stroke="#e6edf3"/>
+<text x="315.0" y="550" fill="#334e68" font-family="Arial" font-size="15">Q-2401</text>
+<text x="531.0" y="550" fill="#334e68" font-family="Arial" font-size="15">05:52</text>
+<text x="747.0" y="550" fill="#334e68" font-family="Arial" font-size="15">Centre 1</text>
+<text x="963.0" y="550" fill="#334e68" font-family="Arial" font-size="15">Lieu conforme</text>
+<text x="1179.0" y="550" fill="#334e68" font-family="Arial" font-size="15">Déclarer</text>
+<line x1="315" y1="607" x2="1375" y2="607" stroke="#e6edf3"/>
+<text x="315.0" y="632" fill="#334e68" font-family="Arial" font-size="15">Pause</text>
+<text x="531.0" y="632" fill="#334e68" font-family="Arial" font-size="15">10:00–10:30</text>
+<text x="747.0" y="632" fill="#334e68" font-family="Arial" font-size="15">Centre 1</text>
+<text x="963.0" y="632" fill="#334e68" font-family="Arial" font-size="15">Profil valide</text>
+<text x="1179.0" y="632" fill="#334e68" font-family="Arial" font-size="15">Ajouter</text>
+<line x1="315" y1="689" x2="1375" y2="689" stroke="#e6edf3"/>
+<text x="315.0" y="714" fill="#334e68" font-family="Arial" font-size="15">Fin de quart</text>
+<text x="531.0" y="714" fill="#334e68" font-family="Arial" font-size="15">14:07</text>
+<text x="747.0" y="714" fill="#334e68" font-family="Arial" font-size="15">Centre 1</text>
+<text x="963.0" y="714" fill="#334e68" font-family="Arial" font-size="15">À confirmer</text>
+<text x="1179.0" y="714" fill="#334e68" font-family="Arial" font-size="15">Soumettre</text>
+<rect x="1190" y="845" width="185" height="38" rx="8" fill="#0b6e69"/>
+<text x="1220" y="870" fill="#ffffff" font-family="Arial" font-size="15" font-weight="bold">Action principale</text>
+</svg>

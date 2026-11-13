@@ -1,0 +1,2273 @@
+{
+ "routes": [
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/by-document"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/delegataires"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/delegations"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/delegations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/document-types"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/document-types"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/approvals/document-types/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/approvals/document-types/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/relaunch"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/requests"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/requests"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/requests/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/requests/{id}/additional-approver"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/approvals/rules"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/rules"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/approvals/steps/{id}/decide"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/annuaires"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/annuaires"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/annuaires/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/auth/annuaires/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/approvers"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/assignable-roles"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/audit"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/audit/integrite"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/audit/revues"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/audit/revues"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/audit/siem-export"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/capabilities"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/change-password"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/deploiement"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/emprunt"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/emprunt/journal"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/emprunt/reglage"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/auth/emprunt/reglage"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/emprunt/terminer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/first-login/change-password"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/invitations"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/invitations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/invitations/jeton/{jeton}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/invitations/jeton/{jeton}/accepter"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/invitations/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/journal-actions"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/login"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/logout"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/me"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/me/photo"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/me/photo"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/auth/me/photo"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/password-policy"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/password-policy/check"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/personnes/{userId}/photo"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/profile"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/auth/profile"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/roles"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/roles"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/roles/{code}"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/auth/roles/{code}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/auth/roles/{code}/capabilities/{capability}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/security/catalog"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/catalog"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/security/catalog/{id}"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/auth/security/catalog/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/security/question"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/security/questions"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/retention/erase-user"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/retention/purge"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/setup"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/security/siem-console"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/security/status"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/totp/init"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/security/verify"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/annuaires"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/annuaires/callback"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/annuaires/{id}/login"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/entra/callback"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/entra/login"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/sso/entra/session"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/entra/status"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/sso/saml/acs"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/saml/login"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/saml/metadata"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/sso/saml/status"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/tenant-by-slug/{slug}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/tenants"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/users"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/users"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/users/{id}"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/auth/users/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/users/{id}/reset-security"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/webauthn/authenticate/begin"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/webauthn/authenticate/finish"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/webauthn/credentials"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/auth/webauthn/credentials/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/webauthn/register/begin"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/auth/webauthn/register/finish"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/auth/whoami"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/acheminement/unites"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/communication/acheminement/unites/{uniteId}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/communication/acheminement/unites/{uniteId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/appels"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/appels"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/appels/en-cours"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/appels/{id}/decrocher"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/appels/{id}/raccrocher"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/appels/{id}/refuser"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/brouillons"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/conversations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations/non-lus"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations/{id}/acheminement"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/conversations/{id}/archiver"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/communication/conversations/{id}/brouillon"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations/{id}/brouillon"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/communication/conversations/{id}/brouillon"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/conversations/{id}/lu"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/conversations/{id}/messages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/conversations/{id}/messages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/conversations/{id}/participants"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/communication/conversations/{id}/participants/{personId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/groupes"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/groupes/{id}/membres"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/listes-distribution"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/listes-distribution"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/communication/listes-distribution/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/listes-distribution/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/communication/listes-distribution/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/listes-distribution/{id}/conversation"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/listes-distribution/{id}/destinataires"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/messages/recherche"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/messages/{id}/lectures"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/communication/messages/{id}/lu"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/communication/pieces-jointes/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/countries"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/countries/{code}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/countries/{code}/income-tax"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/countries/{code}/official-remittance"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/countries/{code}/payroll"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/countries/{code}/remittance"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/countries/{code}/sales-tax"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/absences"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/absences"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/absences/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/absences/{id}/annuler"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/absences/{id}/comblement"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/absences/{id}/decisions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/absences/{id}/impact"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/absences/{id}/remplacement"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/campagnes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/campagnes/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/choix"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/clore"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/demarrer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/disponibilites"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/disponibilites/moi"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/disponibilites/moi"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/disponibilites/{ressourceId}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/ouvrir"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/parametres"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/postes-disponibles"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/reviser"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/campagnes/{id}/revision/choix"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/remplacements"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/remplacements"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/remplacements/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/remplacements/{id}/fermer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/agph/remplacements/{id}/interesses"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/effectifs/agph/remplacements/{id}/interet"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/remplacements/{id}/interet"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/agph/remplacements/{id}/non-comble"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/configuration/paquet"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/configuration/paquet"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/disponibilites/moi"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/disponibilites/moi/{periodeId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}/attribuer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}/attribution-automatique"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/disponibilites/periodes/{periodeId}/ressources/{ressourceId}/approuver"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/disponibilites/places/{placeId}/candidats"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/echanges"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/echanges/moi"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/echanges/places/{placeId}/demandables"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/echanges/ressources/{id}/quarts"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/echanges/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges/{id}/accepter"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges/{id}/annuler"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges/{id}/refuser"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges/{id}/rejeter"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/echanges/{id}/valider"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/anciennetes/{uniteCode}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/calendriers/{ressourceId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/integrations/connecteurs"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/integrations/connecteurs/{code}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/equipages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/horodatages/tirer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/integrations/messages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/messages/{id}/rejouer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/paie"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/integrations/relais/{code}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/journal"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/liaisons/organisation"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/liaisons/organisation"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/ma-ressource"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/milieux"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/milieux"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/milieux/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/milieux/{id}/preuves"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/mon-horaire"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/perimetres"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/perimetres"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/perimetres/moi"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/perimetres/{id}/fermer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/equipages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/equipages/lot"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/effectifs/planification/equipages/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/periodes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/periodes"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/periodes/{id}/comblement"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/periodes/{id}/equipages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/periodes/{id}/etat"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/periodes/{id}/generer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/places/{id}/attribuer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/places/{id}/liberer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/postes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/postes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/postes/lot"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/postes/publier"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/planification/postes/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/quotas"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/quotas"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/quotas/{id}/surcharges"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/planification/ressources"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/planification/ressources"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/planification/ressources/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/audit-localisations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/audit-localisations.csv"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/presence/horodatages"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/milieux/{id}/code-qr"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/moi"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/mon-profil"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/pointages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/presence/pointages"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/pointages/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/presence/pointages/{id}/approuver"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/presence/pointages/{id}/rejeter"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/profils"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/presence/profils"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/effectifs/presence/profils/{code}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/referentiels-profils"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/presence/ressources/{id}/pointages"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/presence/saisies"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/referentiels"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/referentiels/{type}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/referentiels/{type}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/referentiels/{type}/{code}/fermer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/referentiels/{type}/{code}/historique"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/referentiels/{type}/{code}/versions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/regles"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/regles"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/regles/apercu"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/regles/evaluations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/regles/faits"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/regles/simuler"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/regles/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/regles/{id}/retirer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/regles/{id}/versions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/retention"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/retention"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/retention/appliquer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/export-paie"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/feuilles"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/preparer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/feuilles/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/approuver"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/regenerer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/retourner"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/segments"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/segments/{segmentId}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/segments/{segmentId}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/segments/{segmentId}/confirmer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/segments/{segmentId}/historique"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/feuilles/{id}/soumettre"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/flux"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/effectifs/temps/flux"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/effectifs/temps/flux/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/moi"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/parametres"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/effectifs/temps/parametres"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/effectifs/temps/rapports"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/exploitation/copies-organisme"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/exploitation/copies-organisme/{fichier}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/exploitation/sauvegardes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/exploitation/sauvegardes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/exploitation/sauvegardes/planifier"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/exploitation/sauvegardes/restaurations"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/exploitation/sauvegardes/tester-restauration"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/exploitation/securite"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/objets"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/habilitations/objets"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/objets/{code}/droits"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/habilitations/octrois"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/octrois"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/habilitations/octrois"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/permissions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/types-objet"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/utilisateurs/{id}/fiche"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/utilisateurs/{id}/permission"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/habilitations/utilisateurs/{id}/profils"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/habilitations/utilisateurs/{id}/profils"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/habilitations/utilisateurs/{id}/profils/{profilId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/health"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/api-clients"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/api-clients"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/integrations/api-clients/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/demonstration/{code}/brancher"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/demonstration/{code}/debrancher"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/demonstration/{code}/essai"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/etat"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/export.xml"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/inbound-email"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/openapi.json"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/sso/map-role"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/swagger"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/webhooks"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/webhooks"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/webhooks/envois/{id}/rejouer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/webhooks/evenements"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/integrations/webhooks/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/integrations/webhooks/{id}/activite"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/integrations/webhooks/{id}/envois"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/annonces"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/annonces"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/annonces/toutes"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/notifications/annonces/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/annonces/{id}/lue"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/appareils"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/appareils"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/notifications/appareils/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/envoyer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/evenements"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/livraisons"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/livraisons/{id}/relancer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/preferences"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/notifications/preferences"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/notifications/push/abonnements"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/push/abonnements"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/push/abonnements"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/push/cle-publique"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/regroupement"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/notifications/regroupement/defaut"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/notifications/regroupement/mien"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/sms"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/sms"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/sms/etat"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/sms/quota"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/notifications/sms/quota"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/notifications/sms/resume"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/sms/statut/twilio"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/notifications/sms/{id}/rafraichir"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/oauth/token"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/ordonnanceur/taches"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/ordonnanceur/tic"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisation/operations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisation/organigramme"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/organisation/reorganisations"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisation/unites/{uniteId}/historique"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisation/versions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisation/versions/{id}/filiation"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisme/alertes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/organisme/alertes"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisme/alertes/journal"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/organisme/alertes/{id}"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/organisme/charte"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisme/charte"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/organisme/charte"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/organisme/pays"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/organisme/pays"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/personnel/employes"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/personnel/employes"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/personnel/employes/suggestions"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/personnel/employes/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/personnel/employes/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/agregats"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/comparer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/enregistres"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/enregistres"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/rapports/enregistres/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/enregistres/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/rapports/enregistres/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/enregistres/{id}/executer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/enregistres/{id}/exporter"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/executer"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/exporter"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/formats"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/indicateurs"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/indicateurs"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/indicateurs/formats"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/indicateurs/mesurer"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/indicateurs/mesures"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/api/rapports/indicateurs/{id}"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/rapports/indicateurs/{id}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/operateurs"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/periodicites"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/sources"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/rapports/utilisation"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/rapports/valider"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/consommation"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/consommation/{id}"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/saas/consommation/{id}/quotas"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/maintenance"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/saas/maintenance"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/modules"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/my-modules"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/plans"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/saas/tenants"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/saas/tenants/{id}/activate"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants/{id}/attestation-destruction"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/saas/tenants/{id}/country"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants/{id}/country-lock"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/saas/tenants/{id}/detruire-donnees"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/saas/tenants/{id}/modules"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/saas/tenants/{id}/suspend"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/saas/tenants/{id}/terminate"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants/{id}/usage"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/tenants/{id}/vues"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/saas/tenants/{id}/vues"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/saas/vues"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/securite/incidents"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents.csv"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents.pdf"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents/tous"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents/tous.csv"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents/tous.pdf"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/securite/incidents/vocabulaire"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/securite/incidents/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/securite/incidents/{id}/clore"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/disponibilite"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/engagements"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/soutien/engagements/{tenantId}"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/maintenances"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/maintenances"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/maintenances/{id}/annuler"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/notification"
+  },
+  {
+   "methode": "put",
+   "chemin": "/api/soutien/notification"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/politique"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/tickets"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/tickets"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/tickets/par-etablissement"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/tickets/resume"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/tickets/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/tickets/{id}/messages"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/soutien/tickets/{id}/pieces/{pieceId}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/tickets/{id}/satisfaction"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/soutien/tickets/{id}/statut"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/superadmin/tenants"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants"
+  },
+  {
+   "methode": "patch",
+   "chemin": "/api/superadmin/tenants/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/activate"
+  },
+  {
+   "methode": "get",
+   "chemin": "/api/superadmin/tenants/{id}/admins"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/admins"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/admins/{userId}/activate"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/admins/{userId}/deactivate"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/admins/{userId}/reset-password"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/suspend"
+  },
+  {
+   "methode": "post",
+   "chemin": "/api/superadmin/tenants/{id}/terminate"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/entra/{tenant}/discovery/v2.0/keys"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/entra/{tenant}/login"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/entra/{tenant}/oauth2/v2.0/authorize"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/entra/{tenant}/oauth2/v2.0/logout"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/entra/{tenant}/oauth2/v2.0/token"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/entra/{tenant}/v2.0/.well-known/openid-configuration"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/oauth/ressource"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/saml/metadata"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/saml/sso"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/saml/sso"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/telnyx/v2/messages"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/telnyx/v2/messages/{id}"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/twilio/2010-04-01/Accounts/{sid}/Calls.json"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/twilio/2010-04-01/Accounts/{sid}/Calls/{casid}.json"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/twilio/2010-04-01/Accounts/{sid}/Messages.json"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/twilio/2010-04-01/Accounts/{sid}/Messages/{msid}.json"
+  },
+  {
+   "methode": "post",
+   "chemin": "/mock/webhooks/recepteur"
+  },
+  {
+   "methode": "delete",
+   "chemin": "/mock/webhooks/recepteur/journal"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/webhooks/recepteur/journal"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/webhooks/recepteur/journal.html"
+  },
+  {
+   "methode": "get",
+   "chemin": "/mock/webhooks/recepteur/reglages"
+  },
+  {
+   "methode": "put",
+   "chemin": "/mock/webhooks/recepteur/reglages"
+  }
+ ],
+ "corps": {
+  "post /api/communication/conversations": {
+   "sujet": "Conversation de charge",
+   "type": "groupe",
+   "participants": [
+    "admin",
+    "superadmin"
+   ]
+  },
+  "post /api/communication/conversations/{id}/messages": {
+   "corps": "Message de charge"
+  },
+  "post /api/communication/conversations/{id}/participants": {
+   "personId": "p-${__UUID()}"
+  },
+  "put /api/communication/conversations/{id}/brouillon": {
+   "corps": "Brouillon de charge"
+  },
+  "post /api/communication/listes-distribution": {
+   "nom": "Liste ${__UUID()}",
+   "membres": [
+    {
+     "nature": "personne",
+     "cible": "admin"
+    }
+   ]
+  },
+  "put /api/communication/listes-distribution/{id}": {
+   "nom": "Liste de charge",
+   "membres": [
+    {
+     "nature": "personne",
+     "cible": "admin"
+    }
+   ]
+  },
+  "post /api/communication/listes-distribution/{id}/conversation": {
+   "sujet": "Diffusion de charge"
+  },
+  "post /api/communication/appels": {
+   "appeleId": "superadmin"
+  },
+  "put /api/communication/acheminement/unites/{uniteId}": {
+   "etapes": [
+    {
+     "canal": "sms",
+     "mode": "sonnerie"
+    },
+    {
+     "canal": "courriel",
+     "mode": "sonnerie"
+    }
+   ]
+  },
+  "post /api/effectifs/absences": {
+   "motif": "MAL",
+   "du": "${date}"
+  },
+  "post /api/effectifs/milieux": {
+   "code": "M${__UUID()}",
+   "libelle": "Milieu de charge",
+   "typeCode": "${typeMilieuCode}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/planification/ressources": {
+   "matricule": "P${__UUID()}",
+   "nom": "Ressource de charge",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "anciennete": 10
+  },
+  "post /api/effectifs/planification/postes": {
+   "code": "PO${__UUID()}",
+   "libelle": "Poste de charge",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "milieuId": "${milieuEffId}",
+   "natureCode": "${natureCode}",
+   "cycle": [
+    [
+     "${plageCode}",
+     "${plageCode}",
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "debutCycle": "${date}"
+  },
+  "post /api/effectifs/planification/periodes": {
+   "nom": "Période de charge",
+   "uniteCode": "${uniteCode}",
+   "debut": "${date}",
+   "fin": "${date}"
+  },
+  "post /api/effectifs/planification/quotas": {
+   "uniteCode": "${uniteCode}",
+   "plageCode": "${plageCode}",
+   "natureCode": "${natureCode}",
+   "quota": 2,
+   "depuis": "${date}"
+  },
+  "post /api/effectifs/planification/places/{id}/attribuer": {
+   "ressourceId": "${ressourceId}"
+  },
+  "post /api/effectifs/echanges": {
+   "placeCedeeId": "${placeId}",
+   "placeVoulueId": "${placeId}"
+  },
+  "post /api/effectifs/agph/campagnes": {
+   "uniteCode": "${uniteCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "annee": "${__Random(2030,2999)}",
+   "delaiChoixMinutes": 60
+  },
+  "post /api/personnel/employes": {
+   "firstName": "Charge",
+   "lastName": "Personne ${__UUID()}",
+   "email": "charge@exemple.qc.ca"
+  },
+  "put /api/personnel/employes/{id}": {
+   "firstName": "Charge",
+   "lastName": "Personne corrigée"
+  },
+  "post /api/effectifs/referentiels/{type}": {
+   "code": "U${__UUID()}",
+   "libelleFr": "Unité de charge",
+   "effectifDepuis": "2026-01-01"
+  },
+  "post /api/effectifs/referentiels/{type}/{code}/versions": {
+   "libelleFr": "Unité de charge (révisée)",
+   "depuis": "${date}"
+  },
+  "post /api/effectifs/temps/feuilles/{id}/segments": {
+   "date": "${date}",
+   "debut": "${date}T14:00:00Z",
+   "fin": "${date}T16:00:00Z",
+   "typeHeureCode": "REG"
+  },
+  "post /api/effectifs/temps/feuilles/preparer": {
+   "uniteCode": "${uniteCode}",
+   "debut": "${date}",
+   "fin": "${date}"
+  },
+  "post /api/effectifs/planification/postes/publier": {
+   "ids": [
+    "${posteEffId}"
+   ]
+  },
+  "post /api/effectifs/planification/postes/lot": {
+   "ids": [
+    "${posteEffId}"
+   ],
+   "changements": {
+    "statutEmploiCode": "${statutEmploiCode}"
+   }
+  },
+  "put /api/effectifs/planification/postes/{id}": {
+   "libelle": "Poste de charge",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "milieuId": "${milieuEffId}",
+   "natureCode": "${natureCode}",
+   "cycle": [
+    [
+     "${plageCode}",
+     "${plageCode}",
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "debutCycle": "${date}"
+  },
+  "put /api/effectifs/planification/ressources/{id}": {
+   "nom": "Ressource de charge",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "anciennete": 100
+  },
+  "put /api/effectifs/milieux/{id}": {
+   "libelle": "Caserne de charge",
+   "typeCode": "${typeMilieuCode}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/regles": {
+   "contexte": "DISPONIBILITE",
+   "cle": "charge-${__UUID()}",
+   "action": "AVERTIR",
+   "condition": {
+    "fait": "quartsParSemaine",
+    "op": "<",
+    "valeur": 3
+   },
+   "message": "Au moins 3 quarts par semaine",
+   "effectifDepuis": "${date}"
+  },
+  "put /api/effectifs/presence/profils": {
+   "code": "PF${__UUID()}",
+   "libelle": "Profil de charge",
+   "mode": "MIXTE",
+   "porteeType": "ORGANISME"
+  },
+  "post /api/effectifs/presence/pointages": {
+   "placeId": "${placeId}",
+   "sens": "ENTREE",
+   "preuve": {
+    "type": "AUCUNE"
+   }
+  },
+  "post /api/effectifs/presence/saisies": {
+   "justification": "Formation à la caserne",
+   "segments": [
+    {
+     "debut": "${date}T13:00:00.000Z",
+     "fin": "${date}T15:00:00.000Z",
+     "type": "TRAVAIL"
+    }
+   ]
+  },
+  "post /api/effectifs/planification/periodes/{id}/etat": {
+   "etat": "PUBLIEE"
+  },
+  "post /api/auth/emprunt": {
+   "cibleId": "usr-123",
+   "motif": "Reproduire le problème de saisie signalé"
+  },
+  "put /api/auth/emprunt/reglage": {
+   "actif": true
+  },
+  "post /api/auth/login": {
+   "username": "admin",
+   "password": "••••••••",
+   "tenantId": "tnt-demo"
+  },
+  "post /api/auth/users": {
+   "username": "lea.tremblay",
+   "password": "Provisoire-2026!",
+   "role": "employee",
+   "employeeId": "emp-1"
+  },
+  "post /api/notifications/annonces": {
+   "titre": "Rentrée",
+   "corps": "Les horaires changent lundi.",
+   "roles": [
+    "employee"
+   ],
+   "du": "2026-08-24",
+   "au": "2026-09-04"
+  },
+  "post /api/notifications/appareils": {
+   "jeton": "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+   "plateforme": "ios",
+   "nom": "iPhone de Léa"
+  },
+  "post /api/notifications/envoyer": {
+   "employeeIds": [
+    "emp-1"
+   ],
+   "sujet": "Réunion d'équipe jeudi 9 h",
+   "corps": "Bonjour {{prenom}}, réunion d'équipe jeudi à 9 h au local 204.",
+   "canaux": [
+    "courriel",
+    "poussee"
+   ]
+  },
+  "put /api/notifications/preferences": {
+   "texto": true,
+   "evenements": {
+    "feuille.decidee": {
+     "poussee": false
+    },
+    "absence.decidee": {
+     "texto": false
+    }
+   }
+  },
+  "post /api/saas/tenants": {
+   "name": "CSS des Rives",
+   "type": "government",
+   "country": "CA",
+   "region": "QC",
+   "planCode": "enterprise"
+  }
+ }
+}

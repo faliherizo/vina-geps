@@ -1,0 +1,964 @@
+/*
+ * Santé Québec — feuille de base du module.
+ *
+ * Reprend la feuille recommandée par `docs/sante-quebec/2027-005/guide_wcag_html_css_accessibilite.md`
+ * (§6.2). Son objet n'est pas l'esthétique : c'est d'**empêcher les chevauchements** et les
+ * débordements, qui cachent du contenu, masquent le focus et rendent des boutons inatteignables.
+ *
+ * Les règles sont portées par `.sq-page` plutôt que par le sélecteur universel : le reste de
+ * l'application a sa propre feuille, et la réécrire d'un bloc depuis ce module casserait des
+ * écrans qui ne demandent rien. Les garde-fous qui doivent valoir **partout** (modèle de boîte,
+ * focus visible, boutons qui reviennent à la ligne) vivent dans `src/styles.css`.
+ */
+
+.sq-page,
+.sq-page *,
+.sq-page *::before,
+.sq-page *::after {
+  box-sizing: border-box;
+}
+
+/* Largeur de lecture bornée, gouttière constante : pas de texte collé au bord à 320 px. */
+.sq-page {
+  width: min(100%, 90rem);
+  margin-inline: auto;
+  padding-inline: 1rem;
+  line-height: 1.5;
+}
+
+.sq-page > header {
+  margin-block-end: 1.5rem;
+}
+
+.sq-page h1 {
+  margin-block: 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+/* L'intention de la page, en une phrase : un écran qui ne dit pas à quoi il sert se devine. */
+.sq-intro {
+  max-width: 70ch;
+  margin-block: 0 0.75rem;
+}
+
+/* ── Système visuel des maquettes Santé Québec (pack UI v1.0, 25 oct. 2026) ──
+ *
+ * Les teintes viennent de la palette des maquettes
+ * (`docs/sante-quebec/2027-005/maquettes_ui_horaires_medicaux_page_par_page/analyse.md`).
+ * Elles **ne sont pas reprises telles quelles pour le texte**, et c'est une décision mesurée, pas
+ * un écart de goût : le calcul de contraste (WCAG 1.4.3) donne
+ *
+ *   - `#0878E8` (bleu vif des maquettes) contre blanc : **4,32:1** — sous le seuil de 4,5 exigé
+ *     pour du texte courant. Un bouton primaire bleu vif à texte blanc serait donc non conforme ;
+ *   - `#63798D` (gris doux) sur le fond de page `#F2F7FB` : **4,19:1** — même problème ;
+ *   - les teintes d'état (vert 4,34, orange 3,42, sarcelle 4,00) sont sous le seuil dès qu'elles
+ *     portent du texte.
+ *
+ * Les **surfaces** gardent donc les teintes des maquettes — barre de navigation, fonds teintés,
+ * bordures — et le **texte** reçoit des variantes assombries, chacune vérifiée par calcul et
+ * annotée de son rapport. Le thème sombre a ses propres valeurs : un bleu de 7,48:1 sur blanc
+ * tombe à 2,38:1 sur fond sombre, et une seule palette ne peut pas servir les deux.
+ */
+.sq-page {
+  /* Surfaces — teintes des maquettes */
+  /*
+   * Le fond et les surfaces du module sont **ceux de l'application**, et non des valeurs à lui.
+   * Elles en différaient de quelques points (#f2f7fb contre #f5f8fb) : assez peu pour passer
+   * inaperçu à la relecture, assez pour qu'un liseré se voie là où la page rencontre le reste de
+   * l'écran. Deux jeux de valeurs pour une même intention finissent toujours par diverger.
+   */
+  --sq-fond: var(--bg);
+  --sq-surface: var(--panel);
+  --sq-nav: var(--sidebar);
+  --sq-trait: #d7e5f0;
+  --sq-teinte: #eaf4fc;
+
+  /* Texte et accents — variantes vérifiées */
+  --sq-encre: #17324d;          /* 12,32:1 sur le fond de page */
+  --sq-doux: #4f6579;           /* 5,68:1 sur le fond de page */
+  --sq-accent: #0a5ba8;         /* 6,41:1 sur le fond de page */
+  --sq-primaire: #07569a;       /* 7,48:1 avec du texte blanc */
+  --sq-primaire-appui: #06477f; /* 9,48:1 — survol et activation */
+
+  /* États : fond teinté + texte assombri, chacun ≥ 5,7:1 sur son fond */
+  --sq-succes-fond: #e6f4ee;  --sq-succes-texte: #0f6b4c;
+  --sq-attente-fond: #fdf1de; --sq-attente-texte: #8a5200;
+  --sq-refus-fond: #fbe9ec;   --sq-refus-texte: #a32b3f;
+  --sq-neutre-fond: #edf1f5;  --sq-neutre-texte: #44556a;
+  --sq-info-fond: #e4f0fb;    --sq-info-texte: #0a5ba8;
+
+  background: var(--sq-fond);
+  color: var(--sq-encre);
+}
+
+/* ── En-tête de page : titre et geste principal ───────────────────────────── */
+/* Le fil d'Ariane est celui de l'application (`composants/FilAriane`) : voir noyau.tsx. */
+
+.sq-titre-rangee {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sq-titre-rangee > .sq-actions {
+  margin-block: 0;
+}
+
+/* ── Cartes d'indicateurs ─────────────────────────────────────────────────── */
+
+.sq-indicateurs {
+  display: grid;
+  /* `auto-fit` + `minmax` : quatre cartes sur un portable, une seule à 320 px, sans requête de
+     média — et donc sans largeur de bascule à régler à la main écran par écran. */
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+  margin-block: 0 1.25rem;
+  padding: 0;
+  list-style: none;
+}
+
+.sq-indicateur {
+  min-width: 0;
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--sq-trait);
+  border-radius: 0.75rem;
+  background: var(--sq-surface);
+}
+
+.sq-indicateur > .sq-indicateur-libelle {
+  margin: 0;
+  color: var(--sq-doux);
+  font-size: 0.875rem;
+}
+
+.sq-indicateur > .sq-indicateur-valeur {
+  margin: 0.25rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.sq-indicateur > .sq-indicateur-detail {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+}
+
+/* ── Pastilles d'état ─────────────────────────────────────────────────────── */
+
+/*
+ * Une pastille porte **un mot**, jamais une couleur seule (WCAG 1.4.1) : la teinte accompagne le
+ * texte, elle ne le remplace pas. C'est aussi ce qui la rend lisible dans un export CSV, où la
+ * couleur n'existe pas.
+ */
+.sq-pastille {
+  display: inline-block;
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+  background: var(--sq-neutre-fond);
+  color: var(--sq-neutre-texte);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.sq-pastille-succes { background: var(--sq-succes-fond); color: var(--sq-succes-texte); }
+.sq-pastille-attente { background: var(--sq-attente-fond); color: var(--sq-attente-texte); }
+.sq-pastille-refus { background: var(--sq-refus-fond); color: var(--sq-refus-texte); }
+.sq-pastille-info { background: var(--sq-info-fond); color: var(--sq-info-texte); }
+
+/* ── Parcours : les étapes d'un objet, numérotées ─────────────────────────── */
+
+.sq-parcours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: sq-etape;
+}
+
+.sq-parcours > li {
+  min-width: 0;
+  padding-inline-start: 2.25rem;
+  position: relative;
+}
+
+/*
+ * Le numéro est décoratif : l'ordre est déjà porté par la liste ordonnée, et le faire lire
+ * ajouterait « 1 un » à chaque étape.
+ */
+.sq-parcours > li::before {
+  counter-increment: sq-etape;
+  content: counter(sq-etape);
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 999px;
+  background: var(--sq-teinte);
+  color: var(--sq-accent);
+  font-weight: 700;
+}
+
+.sq-parcours-titre {
+  display: block;
+  font-weight: 600;
+}
+
+.sq-parcours-detail {
+  display: block;
+  color: var(--sq-doux);
+  font-size: 0.875rem;
+}
+
+/* ── Pied de page : fraîcheur de la donnée ────────────────────────────────── */
+
+.sq-pied {
+  margin-block: 1.5rem 0;
+  padding-block: 0.75rem;
+  border-block-start: 1px solid var(--sq-trait);
+  color: var(--sq-doux);
+  font-size: 0.8125rem;
+}
+
+/* ── Panneaux ─────────────────────────────────────────────────────────────── */
+
+.sq-panneau {
+  min-width: 0;
+  margin-block-end: 1.25rem;
+  padding: 1rem;
+  border: 1px solid var(--sq-bordure, #767676);
+  border-radius: 0.5rem;
+  background: var(--sq-fond-panneau, #fff);
+}
+
+.sq-panneau > h2 {
+  margin-block: 0 0.5rem;
+  font-size: 1.125rem;
+  overflow-wrap: anywhere;
+}
+
+.sq-aide {
+  max-width: 70ch;
+  margin: 0;
+  color: var(--sq-texte-doux, #4a4a4a);
+}
+
+/* ── Cartes d'indicateurs ─────────────────────────────────────────────────── */
+
+.sq-cartes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 1rem;
+}
+
+/* `min-width: 0` : sans lui, un libellé long force la colonne à déborder de la grille. */
+.sq-cartes > * {
+  min-width: 0;
+}
+
+/* La grille de cartes est parfois une liste (indicateurs cliquables) : pas de puce, pas de retrait. */
+ul.sq-cartes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sq-carte > h3 {
+  margin: 0;
+  font-size: 1rem;
+  overflow-wrap: anywhere;
+}
+
+.sq-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--sq-bordure, #767676);
+  border-radius: 0.5rem;
+}
+
+.sq-carte dt,
+.sq-carte .sq-carte-libelle {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.sq-carte dd,
+.sq-carte .sq-carte-valeur {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+/* ── Formulaires et filtres ───────────────────────────────────────────────── */
+
+/*
+ * Une **grille**, pas une rangée flexible.
+ *
+ * Deux défauts venaient du flex : en empilement (`flex-direction: column` sous 640 px), la base
+ * `flex: 1 1 16rem` s'appliquait à la **hauteur** — chaque champ mesurait 16 rem de haut, d'où
+ * des vides béants entre deux libellés sur téléphone. Et à la largeur du portable, les champs
+ * d'une seconde ligne s'étiraient différemment de ceux de la première : les bords ne
+ * s'alignaient plus d'une rangée à l'autre.
+ *
+ * La grille répond aux deux : des colonnes de même largeur, quel que soit le nombre de lignes,
+ * et une hauteur dictée par le contenu. `align-items: start` empêche qu'un champ muni d'une
+ * phrase d'aide étire ses voisins pour rien.
+ */
+.sq-rangee {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 1rem 1.25rem;
+  align-items: start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+/** Un groupe de champs nommé par une légende : la légende n'est pas une case de la grille. */
+.sq-groupe {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--sq-bordure, #767676);
+  border-radius: 0.375rem;
+  min-width: 0;
+}
+
+.sq-groupe > legend {
+  padding-inline: 0.375rem;
+  font-weight: 600;
+}
+
+.sq-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  min-width: 0;
+}
+
+.sq-champ > label {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.sq-champ input,
+.sq-champ select,
+.sq-champ textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  /* La flèche d'une liste déroulante est peinte par le navigateur **par-dessus** le texte :
+     sans cette réserve, « … · publiée » passait dessous et devenait illisible. */
+  padding-inline-end: 2.25rem;
+  border: 1px solid var(--sq-bordure-champ, #595959);
+  border-radius: 0.25rem;
+  font: inherit;
+}
+
+.sq-champ-aide {
+  margin: 0;
+  color: var(--sq-texte-doux, #4a4a4a);
+  font-size: 0.9375rem;
+}
+
+/*
+ * Une case à cocher n'est pas un champ de texte : elle ne prend ni la largeur, ni la hauteur
+ * minimale des autres contrôles. Et son libellé, quand il revient à la ligne, doit s'aligner sur
+ * lui-même plutôt que de repasser **sous** la case — sinon la deuxième ligne paraît appartenir à
+ * autre chose.
+ */
+/*
+ * **24 px, la case elle-même** — pas seulement son libellé.
+ *
+ * On pouvait soutenir que la cible de pointage est le libellé entier, cliquable, donc conforme
+ * au critère 2.5.8. C'est vrai, et c'est fragile : il suffit qu'un écran pose une case sans
+ * libellé enveloppant pour que la cible retombe à 20 px, et rien ne le dirait. La case porte
+ * donc elle-même la dimension minimale, et le libellé reste cliquable par-dessus.
+ */
+.sq-champ input[type="checkbox"],
+.sq-champ input[type="radio"] {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  min-width: 0;
+  height: 1.5rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.sq-champ > label:has(> input[type="checkbox"]),
+.sq-champ > label:has(> input[type="radio"]) {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  /* La cible, c'est le libellé entier : au moins 24 px de haut (WCAG 2.5.8). */
+  min-height: 1.5rem;
+  font-weight: 400;
+}
+
+/* Les actions ne se superposent jamais : elles s'alignent, puis elles passent à la ligne. */
+.sq-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-block-start: 1rem;
+}
+
+/*
+ * Cible d'au moins 44 px (WCAG 2.5.8 exige 24 px ; l'interface sert un public clinique pressé,
+ * souvent sur tablette) et libellé qui **revient à la ligne** plutôt que de déborder du bouton.
+ */
+.sq-page button,
+.sq-page .sq-bouton {
+  min-height: 2.75rem;
+  max-width: 100%;
+  padding: 0.625rem 1rem;
+  border: 1px solid var(--sq-bordure-champ, #595959);
+  border-radius: 0.375rem;
+  font: inherit;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+/* ── Tableaux ─────────────────────────────────────────────────────────────── */
+
+/*
+ * Le défilement horizontal appartient au **tableau**, jamais à la page (1.4.10) : un grand
+ * tableau de quarts ne doit pas faire défiler l'écran entier de côté.
+ */
+.sq-tableau-cadre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.sq-page table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sq-page caption {
+  text-align: start;
+  padding-block-end: 0.5rem;
+}
+
+.sq-page th,
+.sq-page td {
+  padding: 0.625rem 0.75rem;
+  border-block-end: 1px solid var(--sq-bordure, #767676);
+  text-align: start;
+  vertical-align: top;
+  /*
+   * `break-word` et non `anywhere` : `anywhere` coupe **à l'intérieur des mots** dès que la
+   * colonne se resserre, et « Garde d'urgence » devenait « GARDE D'URGE / NCE ». On ne coupe
+   * donc qu'en dernier recours — et la largeur minimale du tableau, ci-dessous, fait qu'on n'y
+   * arrive presque jamais.
+   */
+  overflow-wrap: break-word;
+}
+
+/*
+ * Un tableau ne se comprime pas sous la lisibilité : en deçà, il **défile** dans son cadre.
+ * Le défilement appartient au tableau, jamais à la page (1.4.10).
+ */
+.sq-tableau-cadre > table {
+  min-width: min(100%, 34rem);
+}
+
+.sq-page thead th {
+  border-block-end-width: 2px;
+}
+
+/* ── États, messages ──────────────────────────────────────────────────────── */
+
+.sq-etat,
+.sq-erreur,
+.sq-vide {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--sq-bordure, #767676);
+  border-radius: 0.375rem;
+  overflow-wrap: anywhere;
+}
+
+/* L'erreur n'est **jamais** portée par la seule couleur (1.4.1) : elle est préfixée en texte. */
+.sq-erreur {
+  border-color: #a4262c;
+  border-inline-start-width: 4px;
+}
+
+.sq-etat {
+  border-color: #0b6a0b;
+  border-inline-start-width: 4px;
+}
+
+.sq-liste-nue {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+}
+
+.sq-liste-nue > li + li {
+  margin-block-start: 0.25rem;
+}
+
+.sq-page .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Focus franchement visible, et **jamais** masqué par un voisin : l'anneau est tracé à l'extérieur. */
+.sq-page :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 3px solid var(--sq-focus, #005fcc);
+  outline-offset: 3px;
+}
+
+/*
+ * **L'espacement de flux**, posé une fois pour toutes.
+ *
+ * Les `gap` ne séparent que les enfants d'une grille ou d'une boîte flexible ; deux blocs qui se
+ * suivent dans le flux normal — une rangée de champs puis sa phrase d'aide, un titre puis un
+ * tableau — n'en reçoivent aucun. Avec les marges remises à zéro, ils se touchaient : zéro pixel
+ * entre deux blocs, et l'œil les lit comme un seul. Chaque frère reçoit donc un écart du
+ * précédent, quel que soit l'élément : c'est la règle qui ne s'oublie pas à l'ajout d'un bloc.
+ */
+.sq-page :is(.sq-panneau, .sq-groupe, form, header) > * + * {
+  /*
+   * Deux classes dans le sélecteur, à dessein : une remise à zéro écrite « élément + classe »
+   * — `ul.sq-cartes { margin: 0 }` — pèse plus lourd qu'une classe seule et gagnait contre la
+   * règle de flux. La grille de cartes collait alors à sa phrase d'aide, et seulement elle.
+   */
+  margin-block-start: 0.75rem;
+}
+
+/* Un titre a besoin de plus d'air avant lui qu'un paragraphe : il ouvre une idée. */
+.sq-page .sq-panneau > h3 + *,
+.sq-page .sq-panneau > * + h3 {
+  margin-block-start: 1.25rem;
+}
+
+.sq-gestes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Un geste de ligne reste un bouton ordinaire, mais plus compact : une colonne de gestes
+   n'a pas à peser autant qu'une action de formulaire. */
+.sq-gestes > button {
+  padding-block: 0.375rem;
+}
+
+@media (max-width: 40rem) {
+  .sq-page {
+    padding-inline: 0.75rem;
+  }
+
+  /*
+   * Les rangées sont une grille : elles s'empilent d'elles-mêmes sous 640 px (une colonne de
+   * 16 rem ne tient pas deux fois). Les forcer en colonne flexible rendait la base `16rem`
+   * verticale, et chaque champ mesurait 16 rem de haut.
+   */
+  .sq-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sq-actions > button,
+  .sq-actions > .sq-bouton {
+    width: 100%;
+  }
+}
+
+/*
+ * **Pas de thème sombre ici**, et c'est la correction du 25 octobre 2026.
+ *
+ * Ce module en avait un (`@media (prefers-color-scheme: dark)`, `--sq-fond: #121820`) alors que
+ * `src/styles.css` n'en a **aucun**. Sur une machine réglée en sombre, le corps de la page
+ * (`.sq-page`) virait donc au noir **à l'intérieur** d'une application restée claire : colonne
+ * bleue, bandeau blanc, et un rectangle noir au milieu. Un module ne peut pas avoir un thème que
+ * l'application n'a pas.
+ *
+ * Le rétablir suppose de donner d'abord un thème sombre à toute l'application, dans
+ * `src/styles.css`, avec le commutateur explicite (`:root[data-theme]`) qui permet à un usager de
+ * le refuser — et de remesurer les contrastes des deux thèmes. Les valeurs retirées étaient
+ * mesurées et annotées ; elles sont dans l'historique si ce chantier s'ouvre.
+ */
+
+/* ── Tableau de bord du module (maquette P02) ─────────────────────────────── */
+
+/*
+ * Le bloc est posé **dans** l'accueil de l'application : il ne reprend donc pas la gouttière ni
+ * la largeur bornée de `.sq-page`, qui l'écarteraient des sections voisines.
+ */
+.sq-tdb {
+  width: auto;
+  margin-inline: 0;
+  padding-inline: 0;
+}
+
+.sq-tdb > .sq-titre-rangee > div > h2 {
+  margin-block: 0 0.25rem;
+}
+
+/*
+ * Deux panneaux côte à côte au-dessus de 52 rem, l'un sous l'autre en deçà.
+ * `minmax(min(100%, 22rem), 1fr)` : la borne basse ne peut pas dépasser la largeur disponible,
+ * sans quoi la grille déborde horizontalement à 320 px — le défaut que l'audit mesure.
+ */
+.sq-duo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.sq-liste-actions {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sq-liste-actions > li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  min-height: 2.75rem; /* cible de pointage ≥ 44 px pour le lien de la ligne (WCAG 2.5.8 renforcé) */
+  padding-block: 0.375rem;
+  border-block-start: 1px solid var(--sq-trait);
+}
+
+.sq-liste-actions > li:first-child {
+  border-block-start: 0;
+}
+
+/* Le libellé prend la place restante : le lien se range à droite, aligné d'une ligne à l'autre. */
+.sq-liste-actions .sq-liste-libelle {
+  flex: 1 1 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/*
+ * La pastille de couleur de la maquette. Elle est **décorative** : la ligne porte son libellé
+ * écrit, et c'est lui qui dit de quoi il s'agit (WCAG 1.4.1). Elle ne reçoit donc aucun texte.
+ */
+.sq-point {
+  flex: 0 0 auto;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 999px;
+  background: var(--sq-neutre-texte);
+}
+
+.sq-point-succes { background: var(--sq-succes-texte); }
+.sq-point-attente { background: var(--sq-attente-texte); }
+.sq-point-refus { background: var(--sq-refus-texte); }
+.sq-point-info { background: var(--sq-info-texte); }
+
+/* ── Bannière d'appel entre collègues ─────────────────────────────────────── */
+
+/*
+ * Elle est **dans le flux**, en haut du contenu, et non flottante : une couche en position fixe
+ * recouvre ce qui défile dessous — et c'est précisément le défaut que l'audit géométrique du
+ * dépôt interdit. Un appel qui masque le bouton qu'on allait cliquer ne rend service à personne.
+ */
+.sq-appels-bandeau {
+  display: grid;
+  gap: 0.5rem;
+  margin-block-end: 1rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--sq-attente-texte, #8a5200);
+  border-radius: 0.75rem;
+  background: var(--sq-attente-fond, #fdf1de);
+  color: var(--sq-attente-texte, #8a5200);
+}
+
+.sq-appel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: center;
+}
+
+.sq-appel-texte {
+  flex: 1 1 14rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Une note qui occupe toute la largeur : elle explique, elle n'est pas une étiquette de bouton. */
+.sq-appel-note {
+  flex: 1 0 100%;
+  font-size: 0.8125rem;
+}
+
+/*
+ * **44 px**, et non 24 : décrocher se fait dans l'urgence, souvent d'une main, parfois en
+ * marchant. La cible minimale de WCAG 2.5.8 est un plancher, pas une cible à viser ici.
+ */
+.sq-appel button {
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  padding-inline: 1rem;
+  border: 1px solid transparent;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* #0f6b4c sur blanc : 5,76:1 — le vert des maquettes n'y tiendrait pas (4,34:1). */
+.sq-appel-decrocher { background: var(--sq-succes-texte, #0f6b4c); color: #ffffff; }
+/* #a32b3f sur blanc : 6,54:1. */
+.sq-appel-refuser { background: var(--sq-refus-texte, #a32b3f); color: #ffffff; }
+
+.sq-appels-refus {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* Les pièces jointes listées dans une cellule : une par ligne, sans puce ni retrait. */
+.sq-page .sq-pieces { margin: 0; padding: 0; list-style: none; }
+.sq-page .sq-pieces > li + li { margin-block-start: 0.25rem; }
+
+/*
+ * Un bouton qui **a l'air** d'un lien : le téléchargement passe par `apiFetch`, qui porte le
+ * jeton — une balise `<a href>` partirait sans lui. L'apparence suit l'action, pas la balise.
+ */
+.sq-page .sq-lien {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--sq-accent);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sq-page .sq-doux { color: var(--sq-doux); font-size: 0.875rem; }
+
+/* ── Messagerie sécurisée (maquette P11) ──────────────────────────────────────
+ *
+ * Deux colonnes : les fils à gauche, celui qu'on lit à droite. Les teintes sont celles du module,
+ * déjà mesurées — l'encre sur la teinte donne 11,78:1, le gris doux 5,43:1 ; rien de neuf n'est
+ * introduit ici, et c'est voulu : une messagerie n'a pas de palette à elle.
+ */
+.msg-ecran {
+  display: grid;
+  /* 20rem tient un sujet et un aperçu sans couper ; `minmax(0, 1fr)` empêche le fil de pousser
+     la grille au-delà de la page quand un message porte un mot très long. */
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  /* Sur un téléphone, on choisit avant de lire : la liste passe au-dessus, pas à côté. */
+  .msg-ecran { grid-template-columns: minmax(0, 1fr); }
+}
+
+.msg-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--sq-trait);
+  border-radius: 0.625rem;
+  background: var(--sq-surface);
+  overflow: hidden;
+}
+
+.msg-liste-ligne {
+  display: flex;
+  gap: 0.625rem;
+  align-items: center;
+  width: 100%;
+  /* 44 px : la cible d'un public large (WCAG 2.5.8 exige 24 px ; une liste qu'on parcourt au
+     pouce mérite la taille confortable). */
+  min-height: 44px;
+  padding: 0.625rem 0.75rem;
+  border: 0;
+  border-block-end: 1px solid var(--sq-trait);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.msg-liste > li:last-child > .msg-liste-ligne { border-block-end: 0; }
+
+.msg-liste-ligne:hover { background: var(--sq-teinte); }
+
+.msg-liste-ligne-active {
+  background: var(--sq-teinte);
+  /* Un liseré en plus de la teinte : la couleur seule ne dit pas où l'on est (WCAG 1.4.1). */
+  box-shadow: inset 3px 0 0 0 var(--sq-primaire);
+}
+
+.msg-liste-texte {
+  display: grid;
+  gap: 0.125rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.msg-liste-sujet {
+  font-weight: 600;
+  color: var(--sq-encre);
+  /* Un sujet long se coupe plutôt que d'élargir la colonne : la grille ne doit jamais déborder. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-liste-apercu {
+  color: var(--sq-doux);
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.msg-liste-cote {
+  display: grid;
+  justify-items: end;
+  gap: 0.25rem;
+  flex: none;
+}
+
+.msg-liste-heure {
+  color: var(--sq-doux);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.msg-liste-compte {
+  min-width: 1.5rem;
+  padding: 0 0.375rem;
+  border-radius: 999px;
+  background: var(--sq-primaire);
+  color: #fff;          /* 7,48:1 — la teinte primaire du module */
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.5rem;
+  text-align: center;
+}
+
+/* ── Le fil, en bulles ─────────────────────────────────────────────────────── */
+
+.msg-fil {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+.msg-bulle {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.msg-corps {
+  min-width: 0;
+  flex: 1 1 auto;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--sq-trait);
+  border-radius: 0.75rem;
+  background: var(--sq-surface);
+}
+
+/* Mes messages : la teinte du module, et l'avatar passe à droite. Le décalage est **doublé par
+   le nom**, écrit dans chaque bulle — l'alignement seul ne se voit pas au lecteur d'écran. */
+.msg-bulle-moi { flex-direction: row-reverse; }
+.msg-bulle-moi > .msg-corps { background: var(--sq-teinte); }
+
+.msg-entete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.625rem;
+  align-items: baseline;
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.msg-auteur { font-weight: 700; color: var(--sq-encre); }
+.msg-heure { color: var(--sq-doux); font-variant-numeric: tabular-nums; }
+.msg-portee { color: var(--sq-doux); }
+
+.msg-texte {
+  margin: 0;
+  color: var(--sq-encre);
+  /* Les retours à la ligne saisis par l'auteur sont conservés ; un mot sans espace ne déborde pas. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.msg-pieces { list-style: none; margin: 0.5rem 0 0; padding: 0; display: grid; gap: 0.25rem; }
+
+.msg-piece {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 24px;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--sq-trait);
+  border-radius: 0.5rem;
+  background: var(--sq-fond);
+  font: inherit;
+  color: var(--sq-accent);
+  cursor: pointer;
+  text-align: start;
+  overflow-wrap: anywhere;
+}
+
+.msg-gestes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+}
+
+.msg-vide { margin: 0; color: var(--sq-doux); }
+
+/* ── État de lecture, gestes du fil et personnes nommées (maquette P11) ───── */
+
+/* Le geste collectif, au-dessus du fil : rattraper une garde ne demande pas quarante clics. */
+.msg-gestes-fil { display: flex; justify-content: flex-end; margin: 0 0 0.5rem; font-size: 0.875rem; }
+
+/*
+ * « Lu » et « Non lu » sont **des mots**, et leur teinte ne fait que les appuyer : une pastille
+ * muette se devine (WCAG 1.4.1), et un fil exporté perd les couleurs mais garde les mots.
+ * Le non-lu est en gras parce que c'est lui qui réclame quelque chose.
+ */
+.msg-lu { color: var(--sq-doux); }
+.msg-non-lu { color: var(--sq-primaire); font-weight: 700; }
+
+/* Un visage, puis un nom : la paire tient sur une ligne et ne se sépare pas. */
+.msg-personne { display: inline-flex; align-items: center; gap: 0.5rem; min-width: 0; }
+
+.sq-rangee-personne { align-items: center; }

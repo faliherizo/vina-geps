@@ -1,0 +1,127 @@
+[
+  {
+    "code": "CA-QC",
+    "label": "Québec (TPS + TVQ)",
+    "country": "Canada",
+    "taxes": [
+      {
+        "name": "TPS",
+        "rate": 5
+      },
+      {
+        "name": "TVQ",
+        "rate": 9.975
+      }
+    ]
+  },
+  {
+    "code": "CA-ON",
+    "label": "Ontario (TVH)",
+    "country": "Canada",
+    "taxes": [
+      {
+        "name": "TVH",
+        "rate": 13
+      }
+    ]
+  },
+  {
+    "code": "CA-BC",
+    "label": "Colombie-Britannique (TPS + PST)",
+    "country": "Canada",
+    "taxes": [
+      {
+        "name": "TPS",
+        "rate": 5
+      },
+      {
+        "name": "PST",
+        "rate": 7
+      }
+    ]
+  },
+  {
+    "code": "CA-AB",
+    "label": "Alberta (TPS)",
+    "country": "Canada",
+    "taxes": [
+      {
+        "name": "TPS",
+        "rate": 5
+      }
+    ]
+  },
+  {
+    "code": "CA-NS",
+    "label": "Nouvelle-Écosse (TVH)",
+    "country": "Canada",
+    "taxes": [
+      {
+        "name": "TVH",
+        "rate": 15
+      }
+    ]
+  },
+  {
+    "code": "FR",
+    "label": "France (TVA 20%)",
+    "country": "France",
+    "taxes": [
+      {
+        "name": "TVA",
+        "rate": 20
+      }
+    ]
+  },
+  {
+    "code": "FR-INTRA",
+    "label": "France auto-entrepreneur (franchise TVA)",
+    "country": "France",
+    "taxes": []
+  },
+  {
+    "code": "BE",
+    "label": "Belgique (TVA 21%)",
+    "country": "Belgique",
+    "taxes": [
+      {
+        "name": "TVA",
+        "rate": 21
+      }
+    ]
+  },
+  {
+    "code": "CH",
+    "label": "Suisse (TVA 8.1%)",
+    "country": "Suisse",
+    "taxes": [
+      {
+        "name": "TVA",
+        "rate": 8.1
+      }
+    ]
+  },
+  {
+    "code": "US",
+    "label": "United States (no federal VAT)",
+    "country": "USA",
+    "taxes": []
+  },
+  {
+    "code": "UK",
+    "label": "United Kingdom (VAT 20%)",
+    "country": "UK",
+    "taxes": [
+      {
+        "name": "VAT",
+        "rate": 20
+      }
+    ]
+  },
+  {
+    "code": "NONE",
+    "label": "Aucune taxe",
+    "country": "—",
+    "taxes": []
+  }
+]

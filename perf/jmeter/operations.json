@@ -1,0 +1,208 @@
+{
+ "_doc": "Les opérations de l'accord de niveau de service (docs/SLA) : chacune est mesurée seule, à débit fixe (debit requêtes/s) pendant la durée de référence (duree_operation), dans deux contextes de données — « typique » (établissement de taille courante) et « volumineux » (établissement chargé). Cibles en ms ; le taux d'erreur ne compte que les statuts « Erreur » (5xx). SLO = cible visée ; SLA = minimum contractuel. L'ordre du catalogue est l'ordre d'exécution : les lectures d'abord, les écritures en dernier — une écriture jouée 600 s à 20 req/s crée 12 000 lignes et contaminerait la mesure des lectures qui la suivraient ; pour la même raison, campagne-accord.sh repart d'une base neuve avant de semer le profil volumineux.",
+ "contexte": {
+  "debit": 20,
+  "duree": 600,
+  "unites": 10
+ },
+ "profils": {
+  "typique": "un organisme de taille courante : une unité, un milieu, une ressource, un poste, une période publiée, quelques quarts, une feuille, une absence, un pointage et une conversation — ce que preparer.cjs sème par défaut",
+  "volumineux": "le journal d'avis chargé : 2 000 textos simulés — preparer.cjs --profil volumineux"
+ },
+ "operations": [
+  {
+   "nom": "Connexion",
+   "libelle": "Ouvrir une session (jeton et témoin)",
+   "methode": "POST",
+   "chemin": "/api/auth/login",
+   "sansJeton": true,
+   "corps": "{\"username\":\"${username}\",\"password\":\"${password}\",\"tenantId\":\"${tenantId}\"}",
+   "slo": {
+    "moyen_typique": 100,
+    "p95_typique": 150,
+    "moyen_volumineux": 100,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 400,
+    "erreurs": 0.1
+   },
+   "notes": "Le hachage du mot de passe (bcrypt) est volontairement coûteux : la cible est plus large que celle d'une lecture. Le compte est celui de donnees/comptes.csv ; à débit fixe la limite du pare-feu par adresse (WAF_REQUETES_PAR_MINUTE) doit admettre 1 200 connexions par minute."
+  },
+  {
+   "nom": "ObtenirCatalogueAvis",
+   "libelle": "Le catalogue des avis (préférences de notification)",
+   "methode": "GET",
+   "chemin": "/api/notifications/evenements",
+   "slo": {
+    "moyen_typique": 10,
+    "p95_typique": 20,
+    "moyen_volumineux": 10,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 50,
+    "p95_typique": 100,
+    "moyen_volumineux": 50,
+    "erreurs": 0.1
+   },
+   "notes": "Sans lecture de base : la référence « plancher » du serveur (sérialisation, filtre de sécurité, session)."
+  },
+  {
+   "nom": "LireMesModules",
+   "libelle": "Les modules et les sous-menus de l'établissement (lus à CHAQUE chargement de l'application)",
+   "methode": "GET",
+   "chemin": "/api/saas/my-modules",
+   "slo": {
+    "moyen_typique": 20,
+    "p95_typique": 50,
+    "moyen_volumineux": 30,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 150,
+    "p95_typique": 300,
+    "moyen_volumineux": 200,
+    "erreurs": 0.1
+   },
+   "notes": "La route la plus appelée du produit : chaque utilisateur la sollicite à l'ouverture, à chaque rechargement et au retour d'onglet. Elle lit désormais AUSSI les sous-menus masqués (ADR 0042) — une requête de plus sur le chemin le plus chaud, d'où sa présence ici. La cible reste basse parce qu'elle ne croît pas avec les données de l'établissement : deux lectures indexées par organisme."
+  },
+  {
+   "nom": "LireConsommationDAvis",
+   "libelle": "La consommation de textos et de courriels de TOUS les organismes, pour un mois",
+   "methode": "GET",
+   "chemin": "/api/saas/consommation?mois=${moisCourant}",
+   "slo": {
+    "moyen_typique": 60,
+    "p95_typique": 150,
+    "moyen_volumineux": 400,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 900,
+    "moyen_volumineux": 1500,
+    "erreurs": 0.1
+   },
+   "notes": "Agrégat INTER-ORGANISMES sur les journaux d'envois : somme des segments et comptage par organisme sur sms_message et courriel_message, pour le mois. C'est la lecture qui croît le plus vite du produit — l'historique des envois ne se purge pas, et un mois chargé se mesure en dizaines de milliers de lignes. La cible « volumineux » est délibérément haute : elle est atteinte par un superadmin, seul, une fois par mois, et non par des utilisateurs en séance."
+  },
+  {
+   "nom": "LireComblementDeLaPeriode",
+   "libelle": "Le tableau de comblement d'une période (la question du matin : quels véhicules ne sortiront pas ?)",
+   "methode": "GET",
+   "chemin": "/api/effectifs/planification/periodes/${periodeId}/comblement",
+   "slo": {
+    "moyen_typique": 60,
+    "p95_typique": 120,
+    "moyen_volumineux": 250,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 1200,
+    "erreurs": 0.1
+   },
+   "notes": "AO 26-015-DO, E-GR-1 et E-GR-3. Calculé à la lecture (taux, sous-minimum, quotas jour par jour) : rien n'est stocké, donc la mesure porte bien sur le calcul. Le SLA tient la borne de 2 s de E-TN-17 avec une marge."
+  },
+  {
+   "nom": "LireEquipagesDeLaPeriode",
+   "libelle": "Les quarts et équipages d'une période, avec leurs places et leurs titulaires",
+   "methode": "GET",
+   "chemin": "/api/effectifs/planification/periodes/${periodeId}/equipages",
+   "slo": {
+    "moyen_typique": 50,
+    "p95_typique": 100,
+    "moyen_volumineux": 300,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 1500,
+    "erreurs": 0.1
+   },
+   "notes": "E-CH-2 à E-CH-5, E-GR-5. C'est la lecture qui croît le plus vite du module : une période de 14 jours × 2 quarts/jour × 2 places tient 56 lignes, un établissement de 150 ressources en tient des milliers."
+  },
+  {
+   "nom": "LireMaFeuilleDeTemps",
+   "libelle": "Ma feuille de temps de la période (segments, totaux par type, anomalies)",
+   "methode": "GET",
+   "chemin": "/api/effectifs/temps/moi",
+   "slo": {
+    "moyen_typique": 30,
+    "p95_typique": 60,
+    "moyen_volumineux": 150,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 200,
+    "p95_typique": 500,
+    "moyen_volumineux": 800,
+    "erreurs": 0.1
+   },
+   "notes": "E-RF-1 à E-RF-3. L'écran que chaque personne ouvre à chaque quart : c'est la transaction la plus fréquente du module, donc celle dont le SLO doit être le plus serré."
+  },
+  {
+   "nom": "LireMesDisponibilites",
+   "libelle": "Mes disponibilités pour la période en collecte, avec leur conformité",
+   "methode": "GET",
+   "chemin": "/api/effectifs/disponibilites/moi",
+   "slo": {
+    "moyen_typique": 30,
+    "p95_typique": 60,
+    "moyen_volumineux": 120,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 200,
+    "p95_typique": 500,
+    "moyen_volumineux": 800,
+    "erreurs": 0.1
+   },
+   "notes": "E-GN-13, E-GN-15, E-GN-16, E-GR-11. La conformité est évaluée à la lecture par le moteur de règles : la mesure couvre donc aussi ce moteur."
+  },
+  {
+   "nom": "PointerUneEntree",
+   "libelle": "Pointer son entrée sur un quart, avec la preuve de présence",
+   "methode": "POST",
+   "chemin": "/api/effectifs/presence/pointages",
+   "corps": "{\"placeId\":\"${placeId}\",\"sens\":\"ENTREE\",\"preuve\":{\"type\":\"AUCUNE\"}}",
+   "slo": {
+    "moyen_typique": 80,
+    "p95_typique": 150,
+    "moyen_volumineux": 200,
+    "erreurs": 0.5
+   },
+   "sla": {
+    "moyen_typique": 500,
+    "p95_typique": 1000,
+    "moyen_volumineux": 1200,
+    "erreurs": 0.5
+   },
+   "notes": "E-GP-1, E-GP-4, E-GP-10 à E-GP-13. Écriture **et** évaluation des règles du quart (retard, emplacement, preuve) dans la même requête. Le pic est quotidien et concentré : 500 paramédics pointent à la même minute au changement de garde — c'est la transaction qui dicte le dimensionnement. **Mesure partielle, et il faut le dire** : le pointage est une machine à états par place et par personne — rejouer ENTREE sur la même place est refusé après le premier appel. À débit fixe sur trois places, la mesure porte donc sur le **refus** (le coût de la garde), non sur l'écriture. Une mesure fidèle exige le profil volumineux : une place distincte par utilisateur virtuel et par itération."
+  },
+  {
+   "nom": "PreparerLesFeuillesDeTemps",
+   "libelle": "Préparer les feuilles de temps d'une unité pour une période de paie",
+   "methode": "POST",
+   "chemin": "/api/effectifs/temps/feuilles/preparer",
+   "corps": "{\"uniteCode\":\"${uniteCode}\",\"debut\":\"${date}\",\"fin\":\"${date}\"}",
+   "slo": {
+    "moyen_typique": 200,
+    "p95_typique": 400,
+    "moyen_volumineux": 1500,
+    "erreurs": 0.5
+   },
+   "sla": {
+    "moyen_typique": 1000,
+    "p95_typique": 2000,
+    "moyen_volumineux": 4000,
+    "erreurs": 0.5
+   },
+   "notes": "E-RF-1. Opération **de lot**, non transactionnelle : elle bâtit une feuille par ressource de l'unité depuis l'horaire et les pointages. E-TN-17 ne s'y applique pas (il vise les « fonctionnalités transactionnelles de base ») ; son SLA est donc énoncé à part, et son exécution se place hors période de pointe."
+  }
+ ]
+}

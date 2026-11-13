@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "name": "distinct answers",
+      "questionIndexes": [1, 2, 3],
+      "answers": ["Rex", "Tremblay", "Montréal"],
+      "login": ["Rex", "Tremblay", "Montréal"]
+    },
+    {
+      "name": "identical answers (cas réel utilisateur)",
+      "questionIndexes": [1, 2, 3],
+      "answers": ["Faly", "Faly", "Faly"],
+      "login": ["Faly", "Faly", "Faly"]
+    },
+    {
+      "name": "answers with different case/space (normalisation)",
+      "questionIndexes": [1, 2, 3],
+      "answers": ["Rex", "Tremblay", "Montréal"],
+      "login": ["  rex ", "TREMBLAY", "montréal"]
+    }
+  ]
+}

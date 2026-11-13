@@ -1,0 +1,53 @@
+{
+  "_commentaire": "Vecteurs produits par bcryptjs (bibliotheque du backend Node), cout 8, variante $2b — celle observee en base. Ne pas regenerer : ces empreintes sont la reference du test de compatibilite.",
+  "vecteurs": [
+    {
+      "libelle": "simple",
+      "motDePasse": "superadmin",
+      "octets": 10,
+      "empreinte": "$2b$08$2EdQEDcNdv3tV8gLorfn1uCsKTN6kX/QIxbw9LryPQSTVlk8XE7Um"
+    },
+    {
+      "libelle": "politique-du-depot",
+      "motDePasse": "Motdepasse123!Fort",
+      "octets": 18,
+      "empreinte": "$2b$08$BPx941UAXxe37cirMswgN.SxDvZWaKBX6/fSXdAEIEzNW38AMHd8y"
+    },
+    {
+      "libelle": "accents-quebec",
+      "motDePasse": "Éléonore-Côté2026!",
+      "octets": 22,
+      "empreinte": "$2b$08$kdV1LJYVJKxT8o9xtYFx9OaNtwPCdT7y.A29Z7imtCQud6Wc2HUXi"
+    },
+    {
+      "libelle": "accents-composes",
+      "motDePasse": "naïve façon Ç 2026!",
+      "octets": 22,
+      "empreinte": "$2b$08$rRV5KQDDs4BDZSSYptXzbeGkDQWRcx/Z8r1xedPVYdFsvTlr55Xfu"
+    },
+    {
+      "libelle": "emoji",
+      "motDePasse": "Paie2026!🇨🇦",
+      "octets": 17,
+      "empreinte": "$2b$08$gCiFgs4B2OfCF0YBA41iPezZBBxRmRFq/oSfGTkGfjE58SYbwHDDO"
+    },
+    {
+      "libelle": "long-72-octets",
+      "motDePasse": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "octets": 72,
+      "empreinte": "$2b$08$0yEOL3kbe0nUmIpqkFtfEezoKLdMBO.CxR3EoZx6xbyul4VkGxMWq"
+    },
+    {
+      "libelle": "au-dela-de-72",
+      "motDePasse": "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+      "octets": 80,
+      "empreinte": "$2b$08$kJU5TRoBDtfRmSa9T.ajMOwSbfOFT6wDXDhAFToZ0nw9JwH/yX8hO"
+    },
+    {
+      "libelle": "espaces-bords",
+      "motDePasse": "  espace  ",
+      "octets": 10,
+      "empreinte": "$2b$08$03NoQ4EXE7QdFIocdF0xYOyj7/e.uXROzzIg6ddAtWxR.eKPe532i"
+    }
+  ]
+}

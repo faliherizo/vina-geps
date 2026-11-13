@@ -1,0 +1,541 @@
+{
+  "packs": {
+    "fr": {
+      "brandName": "Nexu VINA",
+      "heroEyebrow": "Nexu VINA · le nexus de votre gestion",
+      "heroTitle": "Nexu VINA — Finance, Paie & RH infonuagiques",
+      "heroLede": "Facturation, comptabilité, approvisionnement, contrats signés électroniquement, projets, impôt et paie conforme Revenu Québec — dans une seule plateforme, assistée par IA.",
+      "heroSubtitle": "Gestion financière et contractuelle multi-établissement, hébergée au Canada, conforme Loi 25.",
+      "ctaText": "Demander une démonstration",
+      "demoTitle": "La solution en moins de huit minutes",
+      "demoSubtitle": "De la création de l'établissement jusqu'aux fichiers transmis au gouvernement : configuration, personnel, contrats, feuilles de temps et paie variable. Commentaire en français, vingt-deux chapitres.",
+      "videoUrl": "demo-nexu-vina.webm",
+      "posterUrl": "demo-poster.svg",
+      "footerText": "Suite de gestion pour TPE/PME et organismes publics du Québec.",
+      "features": [
+        {
+          "title": "Facturation multidevise",
+          "text": "Factures Canada et international, TPS/TVH/TVQ, états de comptes, encaissements, relevés en lot et PDF.",
+          "icon": "🧾"
+        },
+        {
+          "title": "Paie conforme Revenu Québec",
+          "text": "RRQ, RRQ2, AE, RQAP, FSS, CNESST — bulletins PDF et remises RQ/ARC (TPZ-1015, PD7A, EFT).",
+          "icon": "💵"
+        },
+        {
+          "title": "Comptabilité & états financiers",
+          "text": "Grand livre équilibré, dimensions, immobilisations et amortissement, budgets, états financiers PSAS.",
+          "icon": "📚"
+        },
+        {
+          "title": "Approvisionnement (P2P)",
+          "text": "Réquisitions → bons de commande → réceptions/retours → 3-way match, fournisseurs et comptes à payer.",
+          "icon": "📦"
+        },
+        {
+          "title": "Contrats & signature électronique",
+          "text": "Éditeur WYSIWYG, génération PDF, invitation publique à signer en ligne (jeton) ou à téléverser.",
+          "icon": "✍️"
+        },
+        {
+          "title": "Impôt sur le revenu",
+          "text": "Calculateur d'impôt corporatif et personnel (Québec), déclarations avec pièces par ligne et revue par comptable.",
+          "icon": "🏦"
+        },
+        {
+          "title": "Trésorerie & conciliation",
+          "text": "Import de relevés bancaires, conciliation automatisée, lots de paiement EFT et rapport des paiements.",
+          "icon": "🏛️"
+        },
+        {
+          "title": "Projets, budgets & feuilles de temps",
+          "text": "Budgets de projet, saisie des heures, calendrier synchronisé, workflow d'approbation configurable.",
+          "icon": "📁"
+        },
+        {
+          "title": "Assistant IA intégré",
+          "text": "Vérification comptable assistée (connaissances Revenu Québec), suggestions et relances — en libre-service.",
+          "icon": "🤖"
+        },
+        {
+          "title": "Paie variable MIFI",
+          "text": "Professeurs occasionnels (article 22), calendrier pédagogique, banque d'heures, exports SAGIR et SAGIP.",
+          "icon": "📐"
+        },
+        {
+          "title": "RH, organigramme & champs perso",
+          "text": "Employés, postes, hiérarchie récursive, avantages, absences, champs personnalisés propagés partout.",
+          "icon": "👥"
+        },
+        {
+          "title": "Multi-établissement sécurisé",
+          "text": "Isolation par tenant, MFA (TOTP / question secrète), RBAC, journal d'audit, hébergement Canada (Loi 25).",
+          "icon": "🏢"
+        }
+      ],
+      "pricingEyebrow": "Tarification simple et transparente",
+      "pricingTitle": "Choisissez le forfait adapté à votre organisation",
+      "pricingSubtitle": "Des forfaits mensuels ou annuels, par professeur ou par établissement. Sans engagement.",
+      "subscribeCtaText": "Choisir ce forfait",
+      "subscribeTitle": "Démarrer votre abonnement",
+      "subscribeSubtitle": "Laissez-nous vos coordonnées : notre équipe configure votre établissement et vous accompagne.",
+      "subscribeSuccess": "Merci ! Votre demande a bien été reçue. Nous vous contacterons sous peu.",
+      "pricingValueProps": [
+        "Technologie propulsée par l'IA",
+        "Soutien illimité gratuit",
+        "Paie conforme Revenu Québec"
+      ],
+      "step1Label": "Sélectionnez un forfait",
+      "step2Label": "Ajoutez des modules (facultatif)",
+      "promoToggleSaveLabel": "Achetez maintenant et économisez",
+      "promoToggleTrialLabel": "Essai gratuit",
+      "trialNote": "Essai gratuit de 30 jours, sans carte de crédit.",
+      "comparisonRows": [
+        {
+          "label": "Facturation multidevise",
+          "icon": "🧾",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Paie conforme Revenu Québec",
+          "icon": "💵",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Rapports & exportations (SAGIR/SAGIP)",
+          "icon": "📊",
+          "plans": [
+            "mod_reports",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Multi-écoles / horaires asynchrones",
+          "icon": "🏫",
+          "plans": [
+            "mod_multi_school",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Portail administrateur centralisé",
+          "icon": "🛠️",
+          "plans": [
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Gestion de la suppléance (banque d'heures)",
+          "icon": "⏱️",
+          "plans": [
+            "ext_substitution"
+          ]
+        }
+      ]
+    },
+    "en": {
+      "brandName": "Nexu VINA",
+      "heroEyebrow": "Nexu VINA · the nexus of your operations",
+      "heroTitle": "Nexu VINA — Cloud Finance, Payroll & HR",
+      "heroLede": "Invoicing, accounting, procurement, e-signed contracts, projects, income tax and Revenu Québec-compliant payroll — in a single AI-assisted platform.",
+      "heroSubtitle": "Multi-entity financial and contract management, hosted in Canada, Law 25 compliant.",
+      "ctaText": "Request a demo",
+      "demoTitle": "The solution in under eight minutes",
+      "demoSubtitle": "From setting up the organisation to the files sent to government: configuration, staff, contracts, timesheets and variable pay. French narration, twenty-two chapters.",
+      "videoUrl": "demo-nexu-vina.webm",
+      "posterUrl": "demo-poster.svg",
+      "footerText": "Management suite for SMBs and public organizations.",
+      "features": [
+        {
+          "title": "Multi-currency invoicing",
+          "text": "Canada & international invoices, GST/HST/QST, statements, collections, batch remittances and PDF.",
+          "icon": "🧾"
+        },
+        {
+          "title": "Revenu Québec-compliant payroll",
+          "text": "QPP, QPP2, EI, QPIP, HSF, CNESST — PDF pay stubs and RQ/CRA remittances (TPZ-1015, PD7A, EFT).",
+          "icon": "💵"
+        },
+        {
+          "title": "Accounting & financial statements",
+          "text": "Balanced ledger, dimensions, fixed assets and depreciation, budgets, PSAS statements.",
+          "icon": "📚"
+        },
+        {
+          "title": "Procurement (P2P)",
+          "text": "Requisitions → purchase orders → receipts/returns → 3-way match, suppliers and accounts payable.",
+          "icon": "📦"
+        },
+        {
+          "title": "Contracts & e-signature",
+          "text": "WYSIWYG editor, PDF generation, public invitation to sign online (token) or upload.",
+          "icon": "✍️"
+        },
+        {
+          "title": "Income tax",
+          "text": "Corporate and personal (Quebec) tax calculator, returns with per-line attachments and accountant review.",
+          "icon": "🏦"
+        },
+        {
+          "title": "Treasury & reconciliation",
+          "text": "Bank statement import, automated reconciliation, EFT payment batches and payment report.",
+          "icon": "🏛️"
+        },
+        {
+          "title": "Projects, budgets & timesheets",
+          "text": "Project budgets, time entry, synchronized calendar, configurable approval workflow.",
+          "icon": "📁"
+        },
+        {
+          "title": "Built-in AI assistant",
+          "text": "Assisted accounting review (Revenu Québec knowledge), suggestions and reminders — self-service.",
+          "icon": "🤖"
+        },
+        {
+          "title": "MIFI variable pay",
+          "text": "Occasional teachers (article 22), pedagogical calendar, hour bank, SAGIR and SAGIP exports.",
+          "icon": "📐"
+        },
+        {
+          "title": "HR, org chart & custom fields",
+          "text": "Employees, positions, recursive hierarchy, benefits, absences, custom fields propagated everywhere.",
+          "icon": "👥"
+        },
+        {
+          "title": "Secure multi-entity",
+          "text": "Tenant isolation, MFA (TOTP / security question), RBAC, audit log, Canada hosting (Law 25).",
+          "icon": "🏢"
+        }
+      ],
+      "pricingEyebrow": "Simple, transparent pricing",
+      "pricingTitle": "Choose the plan that fits your organization",
+      "pricingSubtitle": "Monthly or annual plans, per teacher or per establishment. No commitment.",
+      "subscribeCtaText": "Choose this plan",
+      "subscribeTitle": "Start your subscription",
+      "subscribeSubtitle": "Leave us your details: our team sets up your establishment and supports you.",
+      "subscribeSuccess": "Thank you! Your request has been received. We'll contact you shortly.",
+      "pricingValueProps": [
+        "AI-powered technology",
+        "Free unlimited support",
+        "Revenu Québec-compliant payroll"
+      ],
+      "step1Label": "Select a plan",
+      "step2Label": "Add modules (optional)",
+      "promoToggleSaveLabel": "Buy now and save",
+      "promoToggleTrialLabel": "Free trial",
+      "trialNote": "30-day free trial, no credit card.",
+      "comparisonRows": [
+        {
+          "label": "Multi-currency invoicing",
+          "icon": "🧾",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Revenu Québec-compliant payroll",
+          "icon": "💵",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Reports & exports (SAGIR/SAGIP)",
+          "icon": "📊",
+          "plans": [
+            "mod_reports",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Multi-school / asynchronous schedules",
+          "icon": "🏫",
+          "plans": [
+            "mod_multi_school",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Centralized admin portal",
+          "icon": "🛠️",
+          "plans": [
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Substitution management (hour bank)",
+          "icon": "⏱️",
+          "plans": [
+            "ext_substitution"
+          ]
+        }
+      ]
+    },
+    "mg": {
+      "brandName": "Nexu VINA",
+      "heroEyebrow": "Nexu VINA · ny fototra ifandraisan'ny fitantananao",
+      "heroTitle": "Nexu VINA — Fitantanam-bola, Karama & HR an-rahona",
+      "heroLede": "Fakitiora, kaonty, fividianana, fifanarahana vita sonia elektronika, tetikasa, hetra ary karama mifanaraka amin'ny Revenu Québec — amin'ny sehatra tokana ampian'ny AI.",
+      "heroSubtitle": "Fitantanana ara-bola sy ara-tsata maro-toerana, ampiantranoina any Canada, mifanaraka amin'ny Lalàna 25.",
+      "ctaText": "Hangataka fampisehoana",
+      "demoTitle": "Ny vahaolana ao anatin'ny valo minitra",
+      "demoSubtitle": "Manomboka amin'ny famoronana ny andrim-panjakana ka hatramin'ny rakitra alefa amin'ny fanjakana : fandrindrana, mpiasa, fifanarahana, taratasy fotoana ary karama miovaova.",
+      "videoUrl": "demo-nexu-vina.webm",
+      "posterUrl": "demo-poster.svg",
+      "footerText": "Fitaovana fitantanana ho an'ny orinasa madinika sy ny sampan-draharaham-panjakana.",
+      "features": [
+        {
+          "title": "Fakitiora vola maro",
+          "text": "Fakitiora Canada sy iraisam-pirenena, TPS/TVH/TVQ, taratasin-kaonty, fanangonam-bola, andiana ary PDF.",
+          "icon": "🧾"
+        },
+        {
+          "title": "Karama mifanaraka amin'ny Revenu Québec",
+          "text": "RRQ, RRQ2, AE, RQAP, FSS, CNESST — bileta PDF sy fandoavana RQ/ARC (TPZ-1015, PD7A, EFT).",
+          "icon": "💵"
+        },
+        {
+          "title": "Kaonty & tatitra ara-bola",
+          "text": "Boky lehibe mifandanja, refy, fananana raikitra sy fihenam-bidy, teti-bola, tatitra PSAS.",
+          "icon": "📚"
+        },
+        {
+          "title": "Fividianana (P2P)",
+          "text": "Fangatahana → baiko fividianana → fandraisana/famerenana → fampifanarahana 3, mpamatsy sy trosa haloa.",
+          "icon": "📦"
+        },
+        {
+          "title": "Fifanarahana & sonia elektronika",
+          "text": "Fanova WYSIWYG, famoahana PDF, fanasana ampahibemaso hanao sonia an-tserasera (mari-pamantarana) na hampiditra.",
+          "icon": "✍️"
+        },
+        {
+          "title": "Hetra amin'ny fidiram-bola",
+          "text": "Kajy hetra orinasa sy olon-tsotra (Québec), fanambarana miaraka amin'ny antontan-taratasy isaky ny andalana sy fanaraha-mason'ny mpitan-kaonty.",
+          "icon": "🏦"
+        },
+        {
+          "title": "Tahiry & fampifanarahana",
+          "text": "Fampidirana taratasin-kaonty, fampifanarahana mandeha ho azy, andiam-pandoavana EFT sy tatitra fandoavana.",
+          "icon": "🏛️"
+        },
+        {
+          "title": "Tetikasa, teti-bola & fandaharan'ora",
+          "text": "Teti-bolan'ny tetikasa, fandraisana ora, tetiandro mifanaraka, fizotry ny fankatoavana azo alamina.",
+          "icon": "📁"
+        },
+        {
+          "title": "Mpanampy AI tafiditra",
+          "text": "Fanamarinana kaonty ampiana (fahalalana Revenu Québec), soso-kevitra sy fampahatsiahivana — mahaleo tena.",
+          "icon": "🤖"
+        },
+        {
+          "title": "Karama miovaova MIFI",
+          "text": "Mpampianatra tsindraindray (andininy 22), tetiandro ara-pampianarana, banky ora, fanondranana SAGIR sy SAGIP.",
+          "icon": "📐"
+        },
+        {
+          "title": "HR, rafitra & saha manokana",
+          "text": "Mpiasa, toerana, ambaratonga miverimberina, tombontsoa, tsy fanatrehana, saha manokana miparitaka hatraiza hatraiza.",
+          "icon": "👥"
+        },
+        {
+          "title": "Toerana maro voaaro",
+          "text": "Fisarahan'ny mpampiasa, MFA (TOTP / fanontaniana miafina), RBAC, diarin'ny fanaraha-maso, fampiantranoana Canada (Lalàna 25).",
+          "icon": "🏢"
+        }
+      ],
+      "pricingEyebrow": "Vidiny tsotra sy mangarahara",
+      "pricingTitle": "Fidio ny tolotra mifanaraka amin'ny fikambananao",
+      "pricingSubtitle": "Tolotra isam-bolana na isan-taona, isam-pampianatra na isan-toeram-pianarana. Tsy misy fatorana.",
+      "subscribeCtaText": "Fidio ity tolotra ity",
+      "subscribeTitle": "Manomboha ny fisoratana anaranao",
+      "subscribeSubtitle": "Avelao ny mombamomba anao: ny ekipanay no mandamina ny toeranao sy manampy anao.",
+      "subscribeSuccess": "Misaotra! Voaray ny fangatahanao. Hifandray aminao tsy ho ela izahay.",
+      "pricingValueProps": [
+        "Teknolojia ampian'ny AI",
+        "Fanohanana maimaim-poana tsy voafetra",
+        "Karama mifanaraka amin'ny Revenu Québec"
+      ],
+      "step1Label": "Misafidiana tolotra",
+      "step2Label": "Manampia modely (tsy voatery)",
+      "promoToggleSaveLabel": "Vidio izao ka mitsitsy",
+      "promoToggleTrialLabel": "Andrana maimaim-poana",
+      "trialNote": "Andrana maimaim-poana 30 andro, tsy misy karatra fitrosana.",
+      "comparisonRows": [
+        {
+          "label": "Fakitiora vola maro",
+          "icon": "🧾",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Karama mifanaraka amin'ny Revenu Québec",
+          "icon": "💵",
+          "plans": [
+            "solo_base",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Tatitra & fanondranana (SAGIR/SAGIP)",
+          "icon": "📊",
+          "plans": [
+            "mod_reports",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Sekoly maro / fandaharam-potoana tsy mitovy",
+          "icon": "🏫",
+          "plans": [
+            "mod_multi_school",
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Tobim-pitantanana afovoany",
+          "icon": "🛠️",
+          "plans": [
+            "school_connected"
+          ]
+        },
+        {
+          "label": "Fitantanana solo (banky ora)",
+          "icon": "⏱️",
+          "plans": [
+            "ext_substitution"
+          ]
+        }
+      ]
+    }
+  },
+  "forfaitsParDefaut": [
+    {
+      "code": "solo_base",
+      "name": "Plan Solo Base",
+      "audience": "b2c",
+      "kind": "base",
+      "price": 4.99,
+      "currency": "CAD",
+      "interval": "month",
+      "description": "Saisie du temps (classe, correction, préparation), horaire sur cycle, statistiques de base.",
+      "includesModules": [
+        "payroll",
+        "contracts"
+      ],
+      "active": true,
+      "sortOrder": 1,
+      "originalPrice": 9.99,
+      "badge": "Le plus populaire",
+      "highlighted": true
+    },
+    {
+      "code": "solo_base_annual",
+      "name": "Plan Solo Base (annuel)",
+      "audience": "b2c",
+      "kind": "base",
+      "price": 39.99,
+      "currency": "CAD",
+      "interval": "year",
+      "description": "Plan Solo Base facturé annuellement.",
+      "includesModules": [
+        "payroll",
+        "contracts"
+      ],
+      "active": true,
+      "sortOrder": 2,
+      "originalPrice": 59.99,
+      "badge": null,
+      "highlighted": false
+    },
+    {
+      "code": "mod_reports",
+      "name": "Module Rapports & Exportation",
+      "audience": "b2c",
+      "kind": "module",
+      "price": 1.99,
+      "currency": "CAD",
+      "interval": "month",
+      "description": "Exports Excel/PDF préformatés (direction/syndicat).",
+      "includesModules": [
+        "sagirExport",
+        "sagipExport"
+      ],
+      "active": true,
+      "sortOrder": 3,
+      "originalPrice": null,
+      "badge": null,
+      "highlighted": false
+    },
+    {
+      "code": "mod_multi_school",
+      "name": "Module Multi-Écoles",
+      "audience": "b2c",
+      "kind": "module",
+      "price": 2.99,
+      "currency": "CAD",
+      "interval": "month",
+      "description": "Horaires asynchrones multi-établissements + bascule rapide.",
+      "includesModules": [
+        "assignments"
+      ],
+      "active": true,
+      "sortOrder": 4,
+      "originalPrice": null,
+      "badge": null,
+      "highlighted": false
+    },
+    {
+      "code": "school_connected",
+      "name": "Plan Établissement Connecté",
+      "audience": "b2b",
+      "kind": "base",
+      "price": 2.5,
+      "currency": "CAD",
+      "interval": "per_prof_month",
+      "description": "Plan Solo pour toutes les enseignantes + portail admin (charge globale) + calendrier centralisé.",
+      "includesModules": [
+        "payroll",
+        "contracts",
+        "absences",
+        "notifications"
+      ],
+      "active": true,
+      "sortOrder": 5,
+      "originalPrice": 5,
+      "badge": "Conçu pour évoluer",
+      "highlighted": true
+    },
+    {
+      "code": "ext_substitution",
+      "name": "Extension Gestion de la Suppléance",
+      "audience": "b2b",
+      "kind": "module",
+      "price": 49,
+      "currency": "CAD",
+      "interval": "per_school_month",
+      "description": "Banque d'heures + disponibilités pour la suppléance interne.",
+      "includesModules": [
+        "assignments",
+        "echelons"
+      ],
+      "active": true,
+      "sortOrder": 6,
+      "originalPrice": null,
+      "badge": null,
+      "highlighted": false
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "e2e",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:ui": "E2E_NO_BACKEND=1 playwright test --project=interface --workers=50%",
+    "record:demo": "ts-node scripts/record-demo.ts",
+    "install:browsers": "playwright install --with-deps chromium",
+    "test:e2e": "playwright test --project=e2e --workers=1",
+    "test:all": "npm run test:ui && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.45.0"
+  }
+}

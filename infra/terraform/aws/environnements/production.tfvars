@@ -1,0 +1,9 @@
+environnement              = "production"
+taches_application         = 2              # la seconde permet un déploiement sans coupure
+processeur_tache           = 1024           # 1 vCPU
+memoire_tache              = 2048           # 2 Gio
+classe_base                = "db.t4g.large" # 2 vCPU, 8 Gio — 0,141 USD/h relevé le 27 sept. 2026
+stockage_base_go           = 100
+retention_sauvegarde_jours = 14
+pare_feu_actif             = true
+domaine                    = "cssdc.nexu.ca"

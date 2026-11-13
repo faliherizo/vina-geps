@@ -1,0 +1,235 @@
+{
+ "_doc": "Corps des écritures balayées dont le contrat OpenAPI n'a pas d'exemple : une requête que la validation accepte, pour mesurer le travail réel plutôt que le refus. Les variables viennent du CSV des identifiants (preparer.cjs) ; ${__UUID()} rend un code unique à chaque itération. Un exemple de contrat l'emporte toujours.",
+ "corps": {
+  "post /api/communication/conversations": {
+   "sujet": "Conversation de charge",
+   "type": "groupe",
+   "participants": [
+    "admin",
+    "superadmin"
+   ]
+  },
+  "post /api/communication/conversations/{id}/messages": {
+   "corps": "Message de charge"
+  },
+  "post /api/communication/conversations/{id}/participants": {
+   "personId": "p-${__UUID()}"
+  },
+  "put /api/communication/conversations/{id}/brouillon": {
+   "corps": "Brouillon de charge"
+  },
+  "post /api/communication/listes-distribution": {
+   "nom": "Liste ${__UUID()}",
+   "membres": [
+    {
+     "nature": "personne",
+     "cible": "admin"
+    }
+   ]
+  },
+  "put /api/communication/listes-distribution/{id}": {
+   "nom": "Liste de charge",
+   "membres": [
+    {
+     "nature": "personne",
+     "cible": "admin"
+    }
+   ]
+  },
+  "post /api/communication/listes-distribution/{id}/conversation": {
+   "sujet": "Diffusion de charge"
+  },
+  "post /api/communication/appels": {
+   "appeleId": "superadmin"
+  },
+  "put /api/communication/acheminement/unites/{uniteId}": {
+   "etapes": [
+    {
+     "canal": "sms",
+     "mode": "sonnerie"
+    },
+    {
+     "canal": "courriel",
+     "mode": "sonnerie"
+    }
+   ]
+  },
+  "post /api/effectifs/absences": {
+   "motif": "MAL",
+   "du": "${date}"
+  },
+  "post /api/effectifs/milieux": {
+   "code": "M${__UUID()}",
+   "libelle": "Milieu de charge",
+   "typeCode": "${typeMilieuCode}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/planification/ressources": {
+   "matricule": "P${__UUID()}",
+   "nom": "Ressource de charge",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "anciennete": 10
+  },
+  "post /api/effectifs/planification/postes": {
+   "code": "PO${__UUID()}",
+   "libelle": "Poste de charge",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "milieuId": "${milieuEffId}",
+   "natureCode": "${natureCode}",
+   "cycle": [
+    [
+     "${plageCode}",
+     "${plageCode}",
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "debutCycle": "${date}"
+  },
+  "post /api/effectifs/planification/periodes": {
+   "nom": "Période de charge",
+   "uniteCode": "${uniteCode}",
+   "debut": "${date}",
+   "fin": "${date}"
+  },
+  "post /api/effectifs/planification/quotas": {
+   "uniteCode": "${uniteCode}",
+   "plageCode": "${plageCode}",
+   "natureCode": "${natureCode}",
+   "quota": 2,
+   "depuis": "${date}"
+  },
+  "post /api/effectifs/planification/places/{id}/attribuer": {
+   "ressourceId": "${ressourceId}"
+  },
+  "post /api/effectifs/echanges": {
+   "placeCedeeId": "${placeId}",
+   "placeVoulueId": "${placeId}"
+  },
+  "post /api/effectifs/agph/campagnes": {
+   "uniteCode": "${uniteCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "annee": "${__Random(2030,2999)}",
+   "delaiChoixMinutes": 60
+  },
+  "post /api/personnel/employes": {
+   "firstName": "Charge",
+   "lastName": "Personne ${__UUID()}",
+   "email": "charge@exemple.qc.ca"
+  },
+  "put /api/personnel/employes/{id}": {
+   "firstName": "Charge",
+   "lastName": "Personne corrigée"
+  },
+  "post /api/effectifs/referentiels/{type}": {
+   "code": "U${__UUID()}",
+   "libelleFr": "Unité de charge",
+   "effectifDepuis": "2026-01-01"
+  },
+  "post /api/effectifs/referentiels/{type}/{code}/versions": {
+   "libelleFr": "Unité de charge (révisée)",
+   "depuis": "${date}"
+  },
+  "post /api/effectifs/temps/feuilles/{id}/segments": {
+   "date": "${date}",
+   "debut": "${date}T14:00:00Z",
+   "fin": "${date}T16:00:00Z",
+   "typeHeureCode": "REG"
+  },
+  "post /api/effectifs/temps/feuilles/preparer": {
+   "uniteCode": "${uniteCode}",
+   "debut": "${date}",
+   "fin": "${date}"
+  },
+  "post /api/effectifs/planification/postes/publier": {
+   "ids": [
+    "${posteEffId}"
+   ]
+  },
+  "post /api/effectifs/planification/postes/lot": {
+   "ids": [
+    "${posteEffId}"
+   ],
+   "changements": {
+    "statutEmploiCode": "${statutEmploiCode}"
+   }
+  },
+  "put /api/effectifs/planification/postes/{id}": {
+   "libelle": "Poste de charge",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "milieuId": "${milieuEffId}",
+   "natureCode": "${natureCode}",
+   "cycle": [
+    [
+     "${plageCode}",
+     "${plageCode}",
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   ],
+   "debutCycle": "${date}"
+  },
+  "put /api/effectifs/planification/ressources/{id}": {
+   "nom": "Ressource de charge",
+   "corpsEmploiCode": "${corpsEmploiCode}",
+   "uniteCode": "${uniteCode}",
+   "statutEmploiCode": "${statutEmploiCode}",
+   "anciennete": 100
+  },
+  "put /api/effectifs/milieux/{id}": {
+   "libelle": "Caserne de charge",
+   "typeCode": "${typeMilieuCode}",
+   "uniteCode": "${uniteCode}"
+  },
+  "post /api/effectifs/regles": {
+   "contexte": "DISPONIBILITE",
+   "cle": "charge-${__UUID()}",
+   "action": "AVERTIR",
+   "condition": {
+    "fait": "quartsParSemaine",
+    "op": "<",
+    "valeur": 3
+   },
+   "message": "Au moins 3 quarts par semaine",
+   "effectifDepuis": "${date}"
+  },
+  "put /api/effectifs/presence/profils": {
+   "code": "PF${__UUID()}",
+   "libelle": "Profil de charge",
+   "mode": "MIXTE",
+   "porteeType": "ORGANISME"
+  },
+  "post /api/effectifs/presence/pointages": {
+   "placeId": "${placeId}",
+   "sens": "ENTREE",
+   "preuve": {
+    "type": "AUCUNE"
+   }
+  },
+  "post /api/effectifs/presence/saisies": {
+   "justification": "Formation à la caserne",
+   "segments": [
+    {
+     "debut": "${date}T13:00:00.000Z",
+     "fin": "${date}T15:00:00.000Z",
+     "type": "TRAVAIL"
+    }
+   ]
+  },
+  "post /api/effectifs/planification/periodes/{id}/etat": {
+   "etat": "PUBLIEE"
+  }
+ }
+}

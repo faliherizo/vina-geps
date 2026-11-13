@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    L'acheminement des avis réglé par unité (dette 4 de la séparation) : une ligne par étape de la
+    chaîne d'escalade. Une unité sans ligne suit le défaut de l'établissement.
+  -->
+  <changeSet id="0002-acheminement-unites" author="separation-urgences-sante">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="msg_acheminement_unites"/>
+      </not>
+    </preConditions>
+    <comment>Réglage de l'acheminement des avis, par unité d'effectifs.</comment>
+    <sql>
+      CREATE TABLE msg_acheminement_unites (
+        tenantId TEXT NOT NULL,
+        uniteId TEXT NOT NULL,
+        ordre INTEGER NOT NULL,
+        canal TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        modifieLe TEXT NOT NULL,
+        modifiePar TEXT,
+        PRIMARY KEY (tenantId, uniteId, ordre)
+      )
+    </sql>
+  </changeSet>
+
+  <!--
+    Ce que la séparation a retiré du produit (D3) : la paie, la tarification commerciale et la
+    facturation SaaS. Leurs tables ne sont plus lues ni écrites ; les laisser ferait croire qu'elles
+    servent encore.
+  -->
+  <changeSet id="0002-retrait-paie-et-facturation" author="separation-urgences-sante">
+    <comment>Retrait des tables de paie, de tarification et de facturation SaaS.</comment>
+    <sql>DROP TABLE IF EXISTS varpay_pay_rules</sql>
+    <sql>DROP TABLE IF EXISTS pricing_plans</sql>
+    <sql>DROP TABLE IF EXISTS billing_invoices</sql>
+    <sql>DROP TABLE IF EXISTS operator_company</sql>
+  </changeSet>
+
+</databaseChangeLog>

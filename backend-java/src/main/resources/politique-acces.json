@@ -1,0 +1,257 @@
+{
+  "employee.create": {
+    "roles": [
+      "admin",
+      "rh",
+      "manager"
+    ],
+    "libelle": "Créer un employé",
+    "portee": "Le gestionnaire est borné à son propre périmètre d'équipe."
+  },
+  "employee.update": {
+    "roles": [
+      "admin",
+      "rh",
+      "manager"
+    ],
+    "libelle": "Modifier une fiche employé",
+    "portee": "Le gestionnaire est borné à ses subordonnés ; l'employé à lui-même et à quelques champs."
+  },
+  "employee.delete": {
+    "roles": [
+      "admin",
+      "rh",
+      "manager"
+    ],
+    "libelle": "Retirer un employé"
+  },
+  "approval.decide": {
+    "roles": [
+      "admin",
+      "manager",
+      "director"
+    ],
+    "libelle": "Approuver une feuille de temps ou une demande d'absence",
+    "portee": "Borné par `scopeForUser` : on ouvre la porte, on n'élargit pas le périmètre."
+  },
+  "employee.account": {
+    "roles": [
+      "admin",
+      "rh",
+      "manager"
+    ],
+    "libelle": "Créer ou réinitialiser le compte d'un employé"
+  },
+  "project.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Gérer les projets"
+  },
+  "task.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Gérer les tâches"
+  },
+  "budget.line.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "director"
+    ],
+    "libelle": "Gérer les lignes budgétaires d'un projet"
+  },
+  "budget.transfer": {
+    "roles": [
+      "admin",
+      "director"
+    ],
+    "libelle": "Virer du budget entre lignes",
+    "portee": "Prérogative de gouvernance : volontairement plus étroite que la gestion des lignes."
+  },
+  "contract.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Gérer les contrats d'enseignement"
+  },
+  "invoice.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Gérer la facturation client"
+  },
+  "payroll.run": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Émettre la paie"
+  },
+  "varpay.pay.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Calculer, confirmer, corriger et exporter la paie variable"
+  },
+  "payrule.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Configurer les règles et activités de paie"
+  },
+  "absence.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Déclarer une absence et désigner un remplaçant",
+    "portee": "Une demande de congé pour soi-même relève d'un autre chemin, en libre-service."
+  },
+  "assignment.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Affecter les professeurs aux groupes",
+    "portee": "Un professeur tient ses propres disponibilités sans cette capacité."
+  },
+  "banking.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Opérations bancaires et trésorerie"
+  },
+  "accounting.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Tenir la comptabilité"
+  },
+  "accounting.govern": {
+    "roles": [
+      "admin",
+      "manager",
+      "director"
+    ],
+    "libelle": "Gouverner la comptabilité (périodes, exercices)"
+  },
+  "expense.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Saisir et suivre les dépenses"
+  },
+  "org.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Gérer le référentiel d'organisation (départements, établissements, professeurs)"
+  },
+  "people.link": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Rattacher un professeur à un employé et synchroniser les référentiels"
+  },
+  "calendar.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Tenir les calendriers (fériés, journées pédagogiques, événements)",
+    "portee": "Les journées pédagogiques entrent dans le calcul de paie : ce n'est pas un agenda."
+  },
+  "benefit.manage": {
+    "roles": [
+      "admin",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Gérer les avantages sociaux"
+  },
+  "integration.manage": {
+    "roles": [
+      "admin"
+    ],
+    "libelle": "Configurer les connecteurs et les statuts de groupe",
+    "portee": "Un statut de groupe bloque le calcul de paie : réservé à l'administration."
+  },
+  "procurement.manage": {
+    "roles": [
+      "admin",
+      "manager"
+    ],
+    "libelle": "Gérer l'approvisionnement"
+  },
+  "effectifs.configure": {
+    "roles": [
+      "admin"
+    ],
+    "libelle": "Paramétrer la gestion des effectifs",
+    "portee": "Référentiels datés, périmètres et règles : ce qui décide pour tous les autres."
+  },
+  "effectifs.manage": {
+    "roles": [
+      "admin",
+      "director",
+      "manager"
+    ],
+    "libelle": "Planifier et gérer les effectifs",
+    "portee": "Borné aux unités du périmètre de l'acteur (eff_perimetres), refus par défaut."
+  },
+  "horaire.rapporter": {
+    "roles": [
+      "admin",
+      "director",
+      "manager",
+      "rh"
+    ],
+    "libelle": "Composer des rapports sur les horaires cliniques"
+  },
+  "clients.manage": {
+    "roles": [
+      "admin",
+      "accountant"
+    ],
+    "libelle": "Tenir les fiches clients"
+  },
+  "clients.confidentiel": {
+    "roles": [
+      "admin"
+    ],
+    "libelle": "Lire les champs confidentiels d'un client (identité, date de naissance)"
+  },
+  "clients.risque": {
+    "roles": [
+      "admin",
+      "accountant"
+    ],
+    "libelle": "Lire la cote, la limite de crédit et les notes de risque d'un client"
+  },
+  "clients.recouvrement": {
+    "roles": [
+      "admin",
+      "accountant"
+    ],
+    "libelle": "Poser une relance, calculer une pénalité, transmettre au recouvrement"
+  }
+}

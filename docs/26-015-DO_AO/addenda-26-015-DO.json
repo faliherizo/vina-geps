@@ -1,0 +1,27 @@
+{
+  "note": "Modifications de la grille de conformité apportées par les addenda. Le texte d'origine reste dans exigences-26-015-DO.json (extrait du PDF) ; construire-couverture.py applique ces modifications par-dessus. À la réception de la grille v2 (Excel), reprendre ici son texte mot pour mot.",
+  "addenda": [
+    {
+      "numero": "06",
+      "date": "2026-11-10",
+      "source": "questions/reponses/addenda-01.md (contenu : addenda n° 06)",
+      "modifications": [
+        {
+          "id": "E-TN-9",
+          "reponse": "9",
+          "description": "L'adjudicataire devra assurer la haute disponibilité et la fiabilité de la Solution pour supporter une exploitation sur une base de 24 heures / 7 jours / 365 jours, avec un taux de disponibilité de 99,7 % (2.4 et 6.01)."
+        },
+        {
+          "id": "E-TN-11",
+          "reponse": "1, 10",
+          "description": "Le fournisseur doit être en mesure d'assurer le support technique de la solution de 5 h 00 à 23 h 00, 7 jours sur 7, 365 jours, selon les délais de réponse et de résolution de la clause 5.02.02 (obligations de résultat)."
+        },
+        {
+          "id": "E-TN-19",
+          "reponse": "12",
+          "description": "La solution doit provenir d'un fournisseur qui héberge ses serveurs et ses données au CANADA."
+        }
+      ]
+    }
+  ]
+}

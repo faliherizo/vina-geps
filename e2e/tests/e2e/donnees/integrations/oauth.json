@@ -1,0 +1,6 @@
+{
+  "clientDemo": "Client de démonstration",
+  "clientEssai": { "name": "Paie corporative (essai e2e)", "scopes": ["read"] },
+  "essaiAttendu": "jeton client_credentials obtenu pour cid_",
+  "ressource": { "sansJeton": 401, "jetonFaux": 401, "porteeInsuffisante": 403, "message": "Bienvenue : le jeton client_credentials est valide." }
+}

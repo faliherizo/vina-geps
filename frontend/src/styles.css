@@ -1,0 +1,1490 @@
+* { box-sizing: border-box; }
+:root {
+  /* La hauteur de l'en-tête sert deux fois : à le réserver, et à décaler la barre latérale
+     collante pour qu'elle ne passe **pas sous lui** — c'est la superposition la plus facile à
+     introduire, et la moins visible tant qu'on ne défile pas. */
+  /* Le plancher de la barre, dessiné avant le premier rendu. La hauteur **réelle** est posée dans
+     `--topbar-h` par `useHauteurBarre`, depuis la mesure : 52 px en dur laissait le menu glisser
+     de 16 px sous une barre qui en mesure 68. */
+  --topbar-min: 52px;
+  --topbar-h: var(--topbar-min);
+  /* ───── Palette des maquettes Santé Québec (P01–P72) ─────
+     Les **surfaces** sont celles de la maquette : fond bleuté très clair, panneaux blancs,
+     barre latérale et en-tête bleu marine, accents bleus.
+
+     Les **textes** en diffèrent, et c'est délibéré : mesurés, quatre tons de la maquette
+     passent sous le seuil de 4,5:1 exigé par la WCAG 1.4.3 — `#61758A` (4,46), `#0874D1`
+     (4,45), `#16875D` (4,23) et `#B66A00` (3,90) sur le fond clair. Ils sont repris une teinte
+     plus sombre, à l'identique à l'œil et conformes à la mesure. Une maquette se juge à l'œil ;
+     un contraste se calcule. */
+  --bg: #f5f8fb;
+  --panel: #ffffff;
+  --text: #18324b;           /* 12,34:1 sur le fond */
+  --muted: #566a80;          /* 5,23:1 — la maquette proposait #61758A, à 4,46 */
+  --border: #d7e3ee;
+  --border-strong: #b3c7dc;
+  --primary: #0a66b5;        /* 5,50:1 — la maquette proposait #0874D1, à 4,45 */
+  --primary-hover: #08528f;
+  --primary-soft: #eef6fc;
+  --danger: #b3303b;         /* 5,79:1 */
+  --danger-bg: #fdecee;
+  --success: #0f6e4b;        /* 5,88:1 — la maquette proposait #16875D, à 4,23 */
+  --success-bg: #e2f3ea;
+  --warning-bg: #fff3dd;
+  --warning: #8a5000;        /* 6,10:1 — la maquette proposait #B66A00, à 3,90 */
+  --sidebar: #073f70;        /* le bleu marine de P17, mesuré au pixel ; blanc dessus : 10,75:1 */
+  --sidebar-hover: #0f4c8f;
+  /* Ombres douces et étagées (profondeur discrète, rendu moderne) */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
+  --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.12);
+  --radius: 14px;
+  --radius-sm: 9px;
+  /* Anneau de focus cohérent (clavier) — visible sans être agressif */
+  --ring: 0 0 0 3px rgba(37, 99, 235, 0.28);
+  /* Échelle d'espacement (rythme vertical/horizontal homogène) */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+}
+/*
+ * `min-height` et non `height`.
+ *
+ * Avec `height: 100%`, `#root` était figé à la hauteur de la fenêtre : dès que le contenu la
+ * dépassait, `.app` débordait de son conteneur. Le document et son enfant annonçaient alors
+ * deux hauteurs différentes (700 px contre 1138 px), ce qui produisait un défilement qui
+ * continuait bien au-delà du contenu et laissait une large zone vide sous la page.
+ */
+html, body, #root { min-height: 100%; }
+/*
+ * Typographie **fluide**. Les tailles étaient figées en pixels, avec une réduction à 13 px sous
+ * 480 px : le texte devenait plus petit là où l'écran est déjà le plus contraint, et la mise à
+ * l'échelle se faisait par paliers brusques.
+ *
+ * `clamp(min, préféré, max)` fait varier le corps continûment avec la largeur, entre deux bornes
+ * lisibles. Les titres suivent la même logique, ce qui préserve la hiérarchie visuelle à toutes
+ * les tailles d'écran sans multiplier les points de rupture.
+ */
+body { font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; margin: 0; background: var(--bg); color: var(--text); font-size: clamp(15px, 0.92rem + 0.18vw, 17px); line-height: 1.55; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+/* Lisibilité du texte de contenu (WCAG 1.4.8/1.4.12) : taille ≥ 16px, interligne ≥ 1.5. */
+.page p, .card p, .subtitle, td, th, li { line-height: 1.5; }
+.muted, small.muted { color: var(--muted); }
+/* Les petits libellés secondaires restent lisibles (≥ 12.5px) et suffisamment contrastés. */
+small { font-size: 0.8125rem; }
+
+/*
+ * La colonne de la barre latérale est peinte par le **conteneur**, pas seulement par l'élément.
+ *
+ * `.sidebar` est en `position: sticky; height: 100vh` : elle ne peint donc qu'une hauteur
+ * d'écran. Dès que le contenu dépasse — et parce que `overflow-x: hidden` sur `html, body`
+ * perturbe le collage — la colonne cessait d'être colorée sous cette limite et laissait
+ * apparaître le fond clair de la page : une large bande grise au bas de l'écran.
+ *
+ * Le dégradé à arrêt net garantit que les 240 premiers pixels restent sombres sur toute la
+ * hauteur, quelle que soit la position de défilement.
+ */
+.app {
+  display: grid; grid-template-columns: 240px 1fr; min-height: 100vh;
+  background: linear-gradient(to right, var(--sidebar) 0 240px, var(--bg) 240px);
+}
+.app > * { min-width: 0; } /* évite l'expansion implicite des cellules grid */
+/*
+  **`clip` et non `hidden`.** `overflow-x: hidden` fait de `body` un conteneur de défilement : la
+  colonne de menu, `position: sticky`, collait alors à un conteneur qui ne défile jamais — c'est-à-
+  dire qu'elle ne collait pas. Elle défilait avec la page et passait **sous** la barre d'en-tête
+  (mesuré le 8 novembre 2026 : haut du menu à −332 px après 400 px de défilement). `clip` coupe le
+  débordement latéral sans créer de conteneur, et le collage fonctionne. Le dégradé de `.app`
+  ci-dessus réparait la peinture de la colonne ; ceci répare son comportement.
+*/
+html, body { overflow-x: clip; }
+/* Le défilement vers une ancre ou vers l'élément focalisé réserve la hauteur de la barre collante :
+   sans cela, le lien d'évitement et le focus posé sur <main> à chaque navigation atterrissaient
+   **sous** la barre (WCAG 2.4.11, focus non masqué). */
+html { scroll-padding-top: calc(var(--topbar-h) + 8px); }
+.sidebar {
+  background: var(--sidebar); color: white; display: flex; flex-direction: column;
+  padding: 16px 0; position: sticky; top: var(--topbar-h);
+  height: calc(100vh - var(--topbar-h)); overflow-y: auto;
+}
+.sidebar .brand { padding: 0 20px 16px; font-weight: 700; font-size: 18px; border-bottom: 1px solid var(--sidebar-hover); margin-bottom: 12px; }
+.sidebar nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
+/* Entrées alignées à gauche et libellés qui se replient : un menu se lit en colonne, et une vue
+   au nom long (« Absences et suppléance ») doit rester entière au second niveau, plus étroit. */
+.sidebar nav button { color: #cbd5e1; background: none; border: 0; padding: 10px 14px; border-radius: 9px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; justify-content: flex-start; white-space: normal; transition: background .13s ease, color .13s ease; }
+.sidebar nav button:hover { background: var(--sidebar-hover); color: white; }
+.sidebar nav button.active { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
+.sidebar nav button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255,255,255,.65); }
+/* Menus regroupés (sections repliables, rendu type QuickBooks) */
+/* Lien d'évitement (accessibilité WCAG : aller au contenu) */
+.skip-link { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--primary); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-weight: 600; }
+.skip-link:focus { left: 0; }
+.main:focus { outline: none; }
+.nav-groups { gap: 4px; }
+.nav-group { border: 0; }
+/* Une section d'une seule page : un lien direct, aligné sur les entrées des autres sections. */
+.nav-group-seul { list-style: none; margin: 0; padding: 0; }
+
+.nav-group > summary { list-style: none; cursor: pointer; color: #a8bace;   /* 5,41:1 sur la colonne #073f70 ; #94a3b8 n'y tenait que 4,19:1 */ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 10px 14px 4px; user-select: none; display: flex; align-items: center; gap: 6px; }
+.nav-group > summary::-webkit-details-marker { display: none; }
+.nav-group > summary::after { content: "▸"; margin-left: auto; font-size: 10px; transition: transform .15s ease; }
+.nav-group[open] > summary::after { transform: rotate(90deg); }
+.nav-group > summary:hover { color: #e2e8f0; }
+.nav-group > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+.nav-group ul { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.nav-group ul button { width: 100%; }
+/* Second niveau : la notion (Absences, Affectations, Paie…) en intertitre, ses vues en retrait.
+   Un intertitre, pas un bouton : il ne mène nulle part, il range. Le contraste du texte
+   (#cbd5e1 sur le fond du menu) reste ≥ 4,5:1. */
+.nav-concept { margin-top: 2px; }
+.nav-concept > summary { list-style: none; cursor: pointer; color: #cbd5e1; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 9px; display: flex; align-items: center; gap: 6px; user-select: none; }
+.nav-concept > summary::-webkit-details-marker { display: none; }
+.nav-concept > summary::after { content: "▸"; margin-left: auto; font-size: 10px; transition: transform .15s ease; }
+.nav-concept[open] > summary::after { transform: rotate(90deg); }
+.nav-concept > summary:hover { background: var(--sidebar-hover); color: white; }
+.nav-concept > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.nav-concept > ul { margin: 2px 0 6px; padding-left: 10px; border-left: 2px solid rgba(148, 163, 184, .35); margin-left: 16px; }
+.sidebar .footer { margin-top: auto; padding: 16px 20px; font-size: 12px; color: #a8bace;   /* 5,41:1 sur la colonne #073f70 ; #94a3b8 n'y tenait que 4,19:1 */ }
+/* Corps de l'application en **plein écran** : occupe toute la largeur disponible à côté du
+   menu latéral (plus de limite à 1600 px), pour exploiter les grands écrans. */
+/* La marge basse dégage la zone occupée par le bouton flottant : sans elle, le dernier
+   contrôle de la page se retrouve dessous, donc hors d'atteinte. */
+.main { padding: 28px clamp(18px, 3vw, 40px) 96px; width: 100%; max-width: none; min-width: 0; flex: 1; }
+
+.menu-btn { display: none; background: var(--sidebar); color: white; padding: 10px 14px; border: 0; border-radius: 8px; font-size: 16px; cursor: pointer; align-items: center; gap: 8px; }
+/* ───── En-tête permanent (maquettes P01 à P32 : « Aide · 🔔 · Profil ▾ » en haut à droite) ─────
+   Il n'existait qu'en petite largeur : sur poste de travail il n'y avait **aucun** en-tête, et
+   le sélecteur d'établissement comme l'aide contextuelle y étaient donc invisibles. Il occupe
+   maintenant la première rangée de la grille, sur toute la largeur. */
+.topbar {
+  display: flex; grid-column: 1 / -1;
+  /* **Blanc, souligné de bleu** : c'est l'en-tête des maquettes (P01 à P72). Il était sombre
+     comme la barre latérale, ce qui donnait à l'application un bandeau presque noir sur toute
+     la largeur — la première chose qu'on voit, et la seule que la maquette ne montre pas. */
+  background: var(--panel); color: var(--text);
+  border-bottom: 2px solid var(--primary);
+  padding: 10px 16px; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 20; min-height: var(--topbar-min);
+}
+.topbar .badge, .topbar label { color: var(--text); }
+.topbar .brand { font-weight: 700; }
+/* Le nom du produit est déjà en tête de la barre latérale : le répéter mangerait la largeur
+   utile de l'en-tête, où la maquette met le titre de la plateforme et les actions. */
+@media (min-width: 769px) { .topbar .brand { display: none; } }
+
+.container { max-width: 100%; margin: 0 auto; }
+h1 { margin: 0 0 10px; font-size: clamp(21px, 1.25rem + 0.85vw, 29px); letter-spacing: -0.015em; }
+h2 { margin: 24px 0 10px; font-size: clamp(18px, 1.05rem + 0.45vw, 22px); letter-spacing: -0.01em; }
+h3 { margin: 0 0 14px; font-size: clamp(15px, 0.95rem + 0.2vw, 17px); letter-spacing: -0.005em; }
+.subtitle { color: var(--muted); margin-bottom: 20px; font-size: 14px; max-width: 72ch; }
+.kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; }
+.kpi-grid > div { display: flex; flex-direction: column; gap: 4px; background: var(--bg, #f8fafc); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+.kpi-grid .muted { font-size: 12px; }
+.card { background: var(--panel); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); margin-bottom: 20px; border: 1px solid var(--border); min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.card + .card { margin-top: 0; }
+/* Rythme vertical dans une carte : un tableau, un formulaire, un panneau ou une barre d'actions
+   ne colle jamais à ce qui le précède — un bouton d'ouverture posé contre la bordure du tableau
+   en dessous se lit comme un chevauchement. Les marges de blocs voisins fusionnent : la règle
+   n'ajoute rien là où un paragraphe ou un formulaire espace déjà. */
+.card > * + .table-wrap, .card > * + form, .card > * + .fieldset, .card > * + details, .card > * + .actions, .card > * + .actions-row,
+.card > .table-wrap + *, .card > details + *, .card > form + *, .card > .fieldset + * { margin-top: 14px; }
+.card > button + button, .card > button + .btn, .card > .btn + button, .card > .btn + .btn { margin-left: 8px; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 18px; }
+.row-3 { display: grid; grid-template-columns: 3fr 1fr 1fr 1fr auto; gap: 10px; align-items: center; }
+.row-form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 18px; }
+label { display: block; font-size: 13px; font-weight: 400; color: #374151; margin-bottom: 6px; }
+/* Astérisque de champ obligatoire (rouge) — cohérent sur tous les formulaires. */
+.req-star { color: var(--danger); font-weight: 700; }
+input, select, textarea { width: 100%; max-width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: var(--radius-sm); font-size: 14px; font-family: inherit; min-width: 0; background: #fff; color: var(--text); transition: border-color .15s ease, box-shadow .15s ease; }
+input::placeholder, textarea::placeholder { color: #6b7280; opacity: 1; }
+input:hover:not(:disabled), select:hover:not(:disabled), textarea:hover:not(:disabled) { border-color: var(--border-strong); }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); box-shadow: var(--ring); }
+input:disabled, select:disabled, textarea:disabled { background: #f3f5f9; color: #6b7280; cursor: not-allowed; }
+textarea { min-height: 72px; resize: vertical; line-height: 1.5; }
+
+/*
+ * WCAG 2.2 — critère 2.5.8 « Taille de cible (minimum) » : toute cible de pointage doit mesurer
+ * au moins 24 × 24 px. Les cases à cocher et boutons radio natifs font environ 13 px : c'est la
+ * plus petite cible de l'application, et la plus difficile à atteindre pour une personne dont la
+ * motricité fine est limitée ou qui utilise un écran tactile.
+ *
+ * L'agrandissement porte sur l'élément lui-même, pas seulement sur son libellé : la zone
+ * cliquable réelle est ainsi conforme, quelle que soit la façon dont le libellé est associé.
+ */
+input[type="checkbox"], input[type="radio"] {
+  width: 24px; height: 24px;
+  min-width: 24px; min-height: 24px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+button { padding: 10px 16px; border: 1px solid transparent; border-radius: var(--radius-sm); cursor: pointer; font-weight: 600; font-size: 13.5px; line-height: 1.25; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .08s ease; white-space: nowrap; margin: 0em 0em 0.4em;}
+/* Le bouton ordinaire est blanc. `:where()` annule la spécificité des `:not()` : sans lui, cette
+   règle (0,5,1) l'emportait sur l'état actif des onglets (`.tabs > button[aria-selected]`) et du menu
+   latéral (`.sidebar nav button.active`), et un onglet courant restait gris partout sauf là où la
+   page posait elle-même la classe `primary` (demande du 14 sept. 2026 : « comme dans Administration »). */
+button:where(:not(.primary):not(.danger):not(.success):not(.danger-solid):not(.modal-close)) { background: white; color: var(--text); border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+button:where(:not(.primary):not(.danger):not(.success):not(.danger-solid):not(.modal-close)):hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+button.primary { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
+button.primary:hover { background: var(--primary-hover); box-shadow: var(--shadow-md); transform: translateY(-1px); }
+/* Liens stylés en boutons (`<a class="btn primary|secondary">`) — mêmes dimensions que <button>,
+   réutilisable partout (ex. liens Swagger/OpenAPI). Évite un lien non stylé quand `.primary`/
+   `.secondary` (réservés aux <button>) sont posés sur une ancre. */
+a.btn { padding: 10px 16px; border: 1px solid transparent; border-radius: var(--radius-sm); font-weight: 600; font-size: 13.5px; line-height: 1.25; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; transition: background .15s ease, border-color .15s ease, color .15s ease; }
+a.btn.primary { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
+a.btn.primary:hover { background: var(--primary-hover); }
+a.btn.secondary { background: white; color: var(--text); border-color: var(--border-strong); box-shadow: var(--shadow-sm); }
+a.btn.secondary:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+button.secondary { background: white; color: var(--text); border-color: var(--border-strong); }
+button.secondary:hover { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+button.danger { background: var(--danger-bg); color: var(--danger); border-color: transparent; }
+button.danger:hover { background: #fecaca; }
+button.success { background: var(--success-bg); color: var(--success); border-color: transparent; }
+button:active { transform: translateY(1px); box-shadow: var(--shadow-sm); }
+button:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+button:focus-visible { outline: none; box-shadow: var(--ring); }
+
+/* `position: relative` : un texte pour lecteur d'écran (`.sr-only`, positionné en absolu) placé dans
+   une cellule hors de la zone visible se positionnerait sinon par rapport à la page, et l'élargirait
+   (débordement horizontal 1.4.10) alors que le tableau, lui, défile bien dans son cadre. */
+.table-wrap { overflow-x: auto; border-radius: 10px; border: 1px solid var(--border); max-width: 100%; -webkit-overflow-scrolling: touch; position: relative; }
+table { width: 100%; border-collapse: collapse; background: white; font-size: 14px; }
+table th, table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+/* La carte coupe les mots « n'importe où » pour ne jamais déborder ; dans un tableau à
+   disposition automatique, cette règle réduit la largeur minimale de chaque colonne à un
+   caractère et hache les libellés (« PRIO RITY », « justificati f »). Ici, un mot ne se coupe
+   que s'il ne tient vraiment pas dans sa cellule ; le reste défile dans `.table-wrap`. */
+table th, table td { overflow-wrap: break-word; word-break: normal; }
+table th { background: #f9fafb; font-weight: 600; color: #374151; font-size: 12.5px; text-transform: uppercase; letter-spacing: .02em; }
+table thead th { white-space: nowrap; }
+table tbody tr { transition: background .12s ease; }
+table tbody tr:hover { background: #f8fafc; }
+table tbody tr:last-child td { border-bottom: 0; }
+
+.totals { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.totals .line { display: flex; gap: 24px; }
+.totals .label { color: var(--muted); }
+.totals .value { font-weight: 600; min-width: 120px; text-align: right; }
+.totals .grand { font-size: 18px; }
+.errors { background: var(--danger-bg); color: #991b1b; padding: 8px 12px; border-radius: 8px; margin: 8px 0; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+.muted { color: var(--muted); font-size: 13px; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge.active { background: var(--success-bg); color: var(--success); }
+.badge.terminated { background: var(--danger-bg); color: var(--danger); }
+.badge.on_leave { background: var(--warning-bg); color: var(--warning); }
+.badge.planned { background: #e0e7ff; color: #3730a3; }
+.badge.on_hold { background: var(--warning-bg); color: var(--warning); }
+.badge.in_progress { background: var(--warning-bg); color: var(--warning); }
+.badge.done, .badge.completed, .badge.submitted { background: var(--success-bg); color: var(--success); }
+.badge.cancelled, .badge.blocked { background: var(--danger-bg); color: var(--danger); }
+.badge.draft { background: var(--border); color: var(--text); }
+
+.tree-wrap { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+.tree { list-style: none; padding-left: 24px; margin: 0; position: relative; }
+.tree.root { padding-left: 0; }
+.tree li { margin: 8px 0; position: relative; }
+.tree:not(.root) > li::before {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: 18px;
+  width: 12px;
+  border-top: 2px solid var(--border);
+}
+.tree:not(.root) > li::after {
+  content: "";
+  position: absolute;
+  left: -16px;
+  top: -8px;
+  bottom: 50%;
+  border-left: 2px solid var(--border);
+}
+.tree:not(.root) > li:last-child::after { bottom: calc(50% - 0px); }
+.tree .node { background: white; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); display: inline-block; }
+
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 200px 1fr; background: linear-gradient(to right, var(--sidebar) 0 200px, var(--bg) 200px); }
+  .row-3 { grid-template-columns: 2fr 1fr 1fr 1fr auto; }
+}
+@media (max-width: 768px) {
+  /* Barre latérale hors écran : plus de colonne à peindre, le fond redevient uniforme. */
+  .app { grid-template-columns: 1fr; background: var(--bg); }
+  .sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 80%; max-width: 280px; transform: translateX(-100%); transition: transform .2s ease; z-index: 30; height: 100vh; }
+  .sidebar.open { transform: translateX(0); box-shadow: 0 0 30px rgba(0,0,0,.4); }
+  .menu-btn { display: inline-flex; }
+  .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 25; }
+  .row { grid-template-columns: 1fr; }
+  .row-3 { grid-template-columns: 1fr; }
+  .main { padding: 16px; }
+  h1 { font-size: 20px; }
+  .timesheet-toolbar .ts-toolbar-buttons button { flex: 1 1 calc(50% - 4px); justify-content: center; }
+  .timesheet-toolbar .ts-toolbar-buttons [data-testid="ts-back"] { flex: 1 1 100%; margin-right: 0; }
+  .timesheet-toolbar .ts-toolbar-group { width: 100%; justify-content: stretch; }
+  .timesheet-toolbar .ts-toolbar-group button { flex: 1 1 calc(50% - 4px); }
+}
+@media (max-width: 480px) {
+  .card { padding: 14px; }
+  .main { padding: 12px 12px 92px; }
+  /* Plancher de lisibilité : 14 px. Descendre à 13 px sur le plus petit écran allait à
+     l'encontre du besoin — c'est là que le texte doit rester le plus confortable. */
+  table th, table td { padding: 8px; font-size: 14px; }
+  button { padding: 10px 12px; font-size: 14px; }
+  .timesheet-toolbar .ts-toolbar-buttons button { flex: 1 1 100%; }
+  .modal-actions { flex-direction: column-reverse; }
+  .modal-actions button { width: 100%; }
+}
+
+/* ───── Modal ───── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100; padding: 16px;
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal {
+  background: var(--panel); border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  width: 100%; max-height: 90vh; overflow: auto;
+  animation: slideIn 0.18s ease;
+}
+.modal-sm { max-width: 420px; }
+.modal-md { max-width: 560px; }
+.modal-lg { max-width: 780px; }
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+.modal-header h3 { margin: 0; font-size: 16px; }
+/* WCAG 2.2 — 2.5.8 : la croix de fermeture est une cible d'au moins 24 × 24 px (32 ici) ; l'audit
+   géométrique l'a mesurée à 22 px de large le 13 sept. 2026, une fois les dialogues relevés. */
+.modal-close {
+  background: transparent; border: 0; font-size: 24px; line-height: 1;
+  color: var(--muted); cursor: pointer; padding: 0 4px; font-weight: 400;
+  min-width: 32px; min-height: 32px; display: inline-flex; align-items: center; justify-content: center;
+}
+.modal-close:hover { color: var(--text); }
+.modal-body { padding: 20px; }
+.modal-message { font-size: 14px; color: var(--text); margin-bottom: 16px; line-height: 1.5; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+.modal-actions button { min-width: 100px; }
+.modal .row-form { margin-bottom: 12px; }
+button.danger-solid { background: var(--danger); color: white; }
+button.danger-solid:hover { background: #991b1b; }
+
+/* ==== Feuille de temps (grille hebdomadaire SAGIR) ==== */
+.timesheet-toolbar { padding: 14px 16px; }
+.timesheet-toolbar .ts-toolbar-buttons {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  align-items: center;
+}
+.timesheet-toolbar .ts-toolbar-group {
+  display: inline-flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  padding: 4px 8px;
+  background: var(--bg);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.timesheet-toolbar .ts-toolbar-buttons button { flex: 0 0 auto; }
+/* Sépare visuellement le groupe « retour » du reste */
+.timesheet-toolbar .ts-toolbar-buttons [data-testid="ts-back"] {
+  margin-right: auto;
+}
+
+.timesheet-header { padding: 18px 20px; }
+.timesheet-header .ts-header-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 18px 24px;
+  align-items: start;
+}
+.timesheet-header .ts-label {
+  font-size: 11px; color: var(--muted); text-transform: uppercase;
+  letter-spacing: 0.6px; margin-bottom: 6px; font-weight: 600;
+}
+.timesheet-header .ts-value {
+  font-weight: 600; color: var(--text); margin-bottom: 6px; font-size: 14px;
+  min-height: 22px;
+}
+.timesheet-header .ts-sub {
+  font-size: 12px; color: var(--muted); margin-top: 4px;
+}
+.timesheet-header .ts-week-nav {
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 8px;
+}
+.timesheet-header .ts-week-nav input[type="date"] { flex: 1 1 130px; min-width: 130px; }
+.timesheet-header .ts-actions {
+  display: flex; flex-direction: column; gap: 8px;
+}
+.info-box {
+  background: var(--success-bg); color: var(--success);
+  padding: 10px 14px; margin-top: 10px; border-radius: var(--radius-sm); font-size: 14px;
+  border: 1px solid #a7f3d0;
+}
+
+table.ts-grid { font-size: 13px; }
+table.ts-grid thead th {
+  background: linear-gradient(180deg, #2d6cdf 0%, #1f4e79 100%);
+  color: white; padding: 8px 6px; text-align: center; font-weight: 600;
+  border: 1px solid #163a5a;
+}
+table.ts-grid thead th.day-col { min-width: 60px; }
+table.ts-grid thead th .day-num { font-size: 16px; font-weight: 700; }
+table.ts-grid tbody td {
+  padding: 6px 8px; border: 1px solid #d5dbe0; vertical-align: middle;
+}
+table.ts-grid td.mandat { min-width: 240px; }
+table.ts-grid td.mandat .muted { font-size: 12px; }
+table.ts-grid td.hour-cell { text-align: center; padding: 2px; }
+/* Jour barré par le calendrier de l'établissement (férié, journée pédagogique) : gris, champ désactivé,
+   et le mot « férié » dans l'en-tête — jamais la couleur seule (WCAG 1.4.1). */
+table.ts-grid thead th.day-barre { background: #e8ebf0; color: var(--muted); }
+table.ts-grid thead th .day-barre-mention { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+table.ts-grid td.hour-barre { background: repeating-linear-gradient(135deg, #e8ebf0 0 6px, #f3f4f6 6px 12px); }
+table.ts-grid td.hour-barre input[disabled] { background: transparent; border-color: transparent; cursor: not-allowed; }
+table.ts-grid td.hour-cell input {
+  width: 56px; text-align: center; padding: 4px;
+  border: 1px solid #c0c8d0; border-radius: 4px; background: #fff;
+}
+table.ts-grid td.hour-cell input:focus {
+  outline: 2px solid #2d6cdf; outline-offset: -1px;
+}
+table.ts-grid td.total {
+  text-align: right; background: #f4f6f8; min-width: 70px;
+}
+table.ts-grid tfoot tr.ts-total-row td {
+  background: #1f4e79; color: white; padding: 8px;
+  border: 1px solid #163a5a; font-weight: 600;
+}
+
+/* ============================================================================
+   MIFI — Page paie variable : sous-menus, design moderne, accessibilité
+   ============================================================================ */
+.mifi-page { display: flex; flex-direction: column; gap: 16px; }
+.mifi-header {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 16px;
+  flex-wrap: wrap;
+}
+.mifi-title { margin: 0; font-size: 22px; }
+.mifi-subtitle { margin: 4px 0 0; color: var(--muted); font-size: 13px; max-width: 720px; }
+.mifi-tenant-picker {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  background: var(--panel); padding: 8px 12px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+}
+.mifi-tenant-picker select { padding: 6px 10px; min-width: 260px; }
+
+/* Deux colonnes : menu à gauche, contenu à droite.
+   La déclaration manquait — `display: grid` sans `grid-template-columns` empilait le menu en
+   pleine largeur au-dessus du contenu, ce qui donnait à la page son allure de brouillon. */
+.mifi-layout {
+  display: grid; grid-template-columns: 264px minmax(0, 1fr); gap: 20px;
+  align-items: start;
+}
+.mifi-layout > * { min-width: 0; }
+
+.mifi-sidenav {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 14px 10px; box-shadow: var(--shadow-sm);
+  align-self: start; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+}
+/* Un filet sépare les groupes : il porte le regroupement sans ajouter de bloc. */
+.mifi-group + .mifi-group {
+  margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border);
+}
+.mifi-group-label {
+  display: flex; align-items: center; gap: 8px; margin: 0 0 6px;
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  color: var(--muted); letter-spacing: 0.06em; padding: 0 10px;
+}
+/* Largeur fixe, comme celle des onglets : les titres et les intitulés s'alignent alors sur
+   une même verticale, quelle que soit la largeur de chaque émoji. */
+.mifi-group-icon,
+.mifi-tab-icon {
+  flex: 0 0 1.25em; width: 1.25em; text-align: center; font-style: normal;
+}
+.mifi-group ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 2px; }
+.mifi-tab-btn {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; text-align: left;
+  /* ≥ 24 px de haut, cible de pointage WCAG 2.5.8 — 9 px + 9 px + la ligne de texte. */
+  padding: 9px 10px; border-radius: var(--radius-sm);
+  border: 0; border-left: 3px solid transparent;
+  background: transparent; color: var(--text); cursor: pointer;
+  font-size: 13px; line-height: 1.35;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.mifi-tab-label { min-width: 0; }
+.mifi-tab-btn:hover { background: var(--primary-soft); }
+.mifi-tab-btn:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+/* L'onglet courant se signale par **trois** marques et non par la seule couleur (WCAG 1.4.1) :
+   le fond plein, la graisse du texte, et le filet vertical à gauche. `aria-current` porte
+   l'information aux lecteurs d'écran. */
+.mifi-tab-btn.active {
+  background: var(--primary); color: #fff; font-weight: 600;
+  border-left-color: var(--primary-strong, var(--primary));
+}
+.mifi-tab-btn.active .mifi-tab-icon { filter: none; }
+
+.mifi-content { padding: 20px; min-height: 400px; }
+.mifi-empty {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 200px; color: var(--muted); font-style: italic;
+}
+
+.section-title {
+  margin: 0 0 4px; font-size: 17px; font-weight: 600;
+}
+.section-help {
+  margin: 0 0 14px; color: var(--muted); font-size: 13px; line-height: 1.5;
+}
+
+.banner {
+  padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.banner-error { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+.banner-success { background: var(--success-bg); color: var(--success); border: 1px solid #a7f3d0; }
+/* `.alert*` : même rendu que `.banner*`. Six écrans les utilisaient sans qu'aucune règle n'existe :
+   le message s'affichait en texte nu, sans cadre ni couleur — invisible au premier regard. */
+.alert { padding: 10px 14px; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 14px; }
+.alert-error { background: var(--danger-bg); color: var(--danger); border: 1px solid #fecaca; }
+.alert-success { background: var(--success-bg); color: var(--success); border: 1px solid #a7f3d0; }
+/* Regroupement de champs. `fieldset`/`legend` est la structure que les lecteurs d'écran
+   annoncent pour rattacher un ensemble de champs à son intitulé (WCAG 1.3.1) ; les styles par
+   défaut du navigateur jurent avec le reste de l'interface, d'où cette remise en forme. */
+.fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px 12px; margin: 0 0 16px; min-width: 0; background: #fbfcfe; }
+.fieldset > legend { font-weight: 600; font-size: 14px; padding: 0 6px; color: var(--text); }
+/* Un groupe posé dans une grille prend toute la ligne et reprend la grille pour ses champs. */
+.grid-form > .fieldset { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 18px; }
+.grid-form > .fieldset > legend { grid-column: 1 / -1; }
+.grid-form > .fieldset > button, .grid-form > .fieldset > .actions-row { grid-column: 1 / -1; justify-self: start; }
+
+/* Avertissement : ni erreur ni succès. Employé pour ce qui mérite un regard sans rien empêcher
+   (conflit d'affectation signalé, point à vérifier avant de confirmer une paie). */
+.banner-warn { background: var(--warning-bg); color: var(--warning); border: 1px solid #fde68a; align-items: flex-start; flex-direction: column; gap: 4px; }
+
+/* Bandeau « édition en cours » (impôt sur le revenu). */
+.edit-banner {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; margin: 0 0 12px; border-radius: var(--radius-sm);
+  background: var(--warning-bg); color: #92400e; border: 1px solid #fde68a;
+  font-size: 13.5px;
+}
+
+/* Assistant (wizard) « Impôt sur le revenu » : fil d'étapes + navigation Précédent/Suivant.
+   Les étapes **s'enroulent** (flex-wrap) pour rester TOUTES visibles (plus de défilement
+   horizontal qui masquait l'étape 7). */
+.itx-wizard { margin: 8px 0 14px; }
+.itx-steps { display: flex; flex-wrap: wrap; gap: 6px; }
+.itx-step {
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer;
+  background: white; color: var(--text); border: 1px solid var(--border-strong);
+  border-radius: 999px; padding: 5px 12px; font-size: 12.5px; font-weight: 600;
+}
+.itx-step .itx-step-n {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 18px; height: 18px; border-radius: 50%; font-size: 11px;
+  background: #e5e7eb; color: #374151;
+}
+.itx-step.current { border-color: var(--primary); background: var(--primary); color: white; }
+.itx-step.current .itx-step-n { background: white; color: var(--primary); }
+.itx-step.done { border-color: var(--success); color: var(--success); }
+.itx-step.done .itx-step-n { background: var(--success-bg); color: var(--success); }
+.itx-wizard-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 10px; }
+.itx-wizard-nav .itx-step-current { font-weight: 700; font-size: 13.5px; text-align: center; flex: 1; }
+@media (max-width: 640px) {
+  .itx-step .itx-step-label { display: none; } /* étapes compactes (numéros) sur mobile */
+  .itx-wizard-nav .itx-step-current { font-size: 12px; }
+}
+
+/* Mise en forme du formulaire « Impôt sur le revenu ». */
+[data-testid="payroll-income-tax"] .table-wrap { margin-top: 6px; }
+/* Décolle les boutons « ＋ Ajouter… » du bas du tableau. */
+[data-testid="payroll-income-tax"] .table-wrap + button { margin-top: 12px; }
+[data-testid="payroll-income-tax"] h4 { margin-top: 18px; margin-bottom: 6px; }
+/* Espace les pièces jointes (📎) du bouton supprimer (🗑️) dans la dernière colonne. */
+[data-testid="payroll-income-tax"] table td:last-child { white-space: nowrap; }
+[data-testid="payroll-income-tax"] table td:last-child .link-btn { padding: 2px 4px; margin-left: 2px; }
+/* Champs de formulaire : un peu d'air vertical entre les rangées. */
+[data-testid="payroll-income-tax"] .row-form { margin-top: 12px; }
+
+/* Pièces justificatives par champ : bouton « Joindre » + chips nommés (visualisables). */
+.pj-field { display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-left: 6px; vertical-align: middle; }
+.pj-attach {
+  cursor: pointer; white-space: nowrap; font-size: 11.5px; font-weight: 600;
+  color: var(--primary); background: var(--primary-soft); border: 1px solid #bfdbfe;
+  border-radius: 999px; padding: 2px 8px;
+}
+.pj-attach:hover { background: #dbeafe; }
+.pj-chip {
+  display: inline-flex; align-items: center; gap: 2px; max-width: 100%;
+  background: #f1f5f9; border: 1px solid var(--border); border-radius: 999px; padding: 1px 4px 1px 8px;
+}
+.pj-chip-pending { background: #fffbeb; border: 1px dashed #fcd34d; }
+.pj-chip .pj-name {
+  border: 0; background: none; cursor: pointer; padding: 1px 0; font-size: 11.5px; color: var(--text);
+  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.pj-chip .pj-name:hover { text-decoration: underline; color: var(--primary); }
+.pj-chip .pj-x { border: 0; background: none; cursor: pointer; color: var(--muted); font-size: 11px; padding: 0 2px; }
+.pj-chip .pj-x:hover { color: var(--danger); }
+
+/* Tableau « États financiers » de la vue comptable (modèle XLSX). */
+.fin-table td, .fin-table th { padding: 6px 12px; font-size: 13.5px; }
+.fin-table .fin-bold td { font-weight: 700; background: #f8fafc; }
+.fin-table .fin-section td { font-weight: 700; color: var(--primary); background: var(--primary-soft); text-transform: uppercase; font-size: 12px; letter-spacing: .03em; }
+
+.grid-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px 18px; margin: 16px 0;
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+/* Libellé lisible : 13 px en couleur de texte (et non en gris atténué à 12 px) — c'est le
+   premier élément qu'un œil fatigué ou une loupe d'écran rencontre. L'étoile de champ requis
+   reste rouge et hors du flux vocal (`aria-hidden`), le `required` du champ fait foi. */
+.field > span { font-size: 13px; color: var(--text); font-weight: 600; line-height: 1.3; }
+/* Texte d'aide sous un champ (relié par `aria-describedby`) : ce qu'il faut savoir avant de saisir. */
+.field .aide, .aide { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin: 0; font-weight: 400; }
+/* Erreur de champ : bordure et message rouges, jamais la couleur seule (WCAG 1.4.1) — le message dit quoi corriger. */
+.field.invalide input, .field.invalide select, .field.invalide textarea { border-color: var(--danger); box-shadow: 0 0 0 3px rgba(185, 28, 28, .15); }
+.field .erreur { font-size: 12.5px; color: var(--danger); font-weight: 600; margin: 0; }
+.field input, .field select, .field textarea {
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong); background: white;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; box-shadow: var(--ring); border-color: var(--primary);
+}
+.field-actions { justify-content: flex-end; align-self: end; }
+/* Sur téléphone, le bouton d'envoi prend la largeur : il est en bas d'un long formulaire, sous le pouce. */
+@media (max-width: 640px) {
+  .field-actions { align-self: stretch; }
+  .field-actions > button { width: 100%; }
+}
+/* Boutons dans un tableau : plus compacts que les boutons de formulaire, cible ≥ 24 px conservée (WCAG 2.5.8). */
+table td > button, table td .actions-row > button { padding: 6px 10px; font-size: 12.5px; min-height: 28px; }
+table td .actions-row { gap: 4px; }
+
+/* Barre d'action occupant toute la largeur de la grille.
+   `.field-actions` seul est une **cellule** de 190 px minimum : elle convient à un bouton court
+   (« Enregistrer »), mais un intitulé comme « 🔄 Resynchroniser depuis la feuille de temps » en
+   fait le triple et déborde sur les champs voisins. Dès qu'une barre porte plusieurs boutons ou
+   un intitulé long, elle prend sa propre ligne. */
+.field-actions-row {
+  grid-column: 1 / -1;
+  flex-direction: row; flex-wrap: wrap; align-items: center;
+  justify-content: flex-end; gap: 10px;
+  margin-top: 4px; padding-top: 12px; border-top: 1px solid var(--border);
+}
+/* Les boutons gardent leur largeur naturelle : étirés, ils deviendraient illisibles. */
+.field-actions-row > button { flex: 0 0 auto; }
+
+@media (max-width: 640px) {
+  /* En colonne étroite, on empile et on étire : deux boutons côte à côte y seraient trop serrés
+     pour rester des cibles de 24 px confortables. */
+  .field-actions-row { flex-direction: column; align-items: stretch; }
+}
+
+/* Jours de la semaine (chips dynamiques) */
+.field-days { grid-column: 1 / -1; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 12px; }
+.field-days legend { font-size: 12px; color: var(--muted); font-weight: 600; padding: 0 4px; }
+.day-toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.day-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px; border: 1px solid var(--border-strong); border-radius: 999px;
+  cursor: pointer; font-size: 13px; background: white; text-transform: capitalize;
+}
+.day-chip.on { background: var(--primary); color: white; border-color: var(--primary); }
+.day-chip input { accent-color: var(--primary); }
+.day-chip:focus-within { outline: 2px solid var(--primary); outline-offset: 1px; }
+
+.collapsible {
+  margin: 12px 0; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: #fafbfd;
+}
+.collapsible > summary {
+  padding: 10px 14px; cursor: pointer; font-weight: 600; font-size: 14px;
+  user-select: none;
+}
+.collapsible > summary:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: -2px;
+}
+.collapsible[open] > summary { border-bottom: 1px solid var(--border); }
+.collapsible > .grid-form { padding: 14px; margin: 0; }
+
+.filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+.filter-row button {
+  position: relative;
+  padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-strong);
+  background: white; color: var(--text); cursor: pointer; font-size: 13px;
+}
+.filter-row button.primary {
+  background: var(--primary); color: white; border-color: var(--primary);
+}
+.filter-row button:focus-visible {
+  outline: 2px solid var(--primary); outline-offset: 2px;
+}
+.count-badge {
+  display: inline-block; margin-left: 6px; padding: 0 6px;
+  border-radius: 999px; background: rgba(0, 0, 0, 0.12); font-size: 11px; font-weight: 600;
+}
+.filter-row button.primary .count-badge { background: rgba(255, 255, 255, 0.25); }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em;
+  background: var(--border); color: var(--text);
+}
+.badge-active, .badge-trial { background: var(--success-bg); color: var(--success); }
+.badge-suspended, .badge-draft { background: var(--warning-bg); color: var(--warning); }
+.badge-terminated, .badge-cancelled, .badge-closed { background: var(--danger-bg); color: var(--danger); }
+.badge-inactive { background: var(--border); color: var(--muted); }
+.badge-employee { background: #dbeafe; color: #1e40af; }
+.badge-teacher { background: #e9d5ff; color: #6b21a8; }
+.badge-both { background: #fce7f3; color: #9d174d; }
+.badge-export { background: #d1fae5; color: var(--success); margin-left: 4px; }
+.badge-rule { background: var(--primary-soft); color: var(--primary); text-transform: none; }
+/* Intertitre de groupe dans un tableau (la matrice « Mes notifications ») : une ligne de titre, pas une donnée. */
+.row-group th { background: var(--bg); font-size: 0.85em; letter-spacing: .02em; text-transform: uppercase; color: var(--muted); }
+/* Variantes d'état — réemploi des couleurs de statut, dont le contraste est déjà validé.
+   Le sens n'est jamais porté par la couleur seule (WCAG 1.4.1) : chaque pastille du produit
+   associe un libellé et un pictogramme. `badge-ok` était utilisé sans définition. */
+/* Message d'erreur attaché à un champ. La couleur ne porte pas seule le sens (WCAG 1.4.1) :
+   le texte énonce le problème, et le champ reçoit `aria-invalid`. */
+.field-error { display: block; margin-top: 4px; color: var(--danger); font-size: 12px; }
+
+.badge-ok { background: var(--success-bg); color: var(--success); }
+.badge-warn { background: var(--warning-bg); color: var(--warning); }
+.badge-error { background: var(--danger-bg); color: var(--danger); }
+.badge-muted { background: var(--border); color: var(--muted); }
+
+.actions-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.actions-row button, .actions-row select {
+  padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong);
+  background: white; color: var(--text); cursor: pointer; font-size: 12px;
+}
+/* Le bouton principal d'une rangée garde ses couleurs : la règle ci-dessus, de même spécificité et
+   déclarée plus loin, lui donnait un texte foncé que le fond de survol (bleu foncé) rendait illisible
+   — 1,26:1 sur « Enregistrer » de Mes disponibilités (WCAG 1.4.3, relevé le 12 nov. 2026). */
+.actions-row button.primary { background: var(--primary); color: white; border-color: var(--primary); }
+.actions-row button.primary:hover { background: var(--primary-hover); }
+button.danger { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; }
+button.danger:hover { background: #fecaca; }
+button[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+/* Un bouton-lien reste une cible de 24 px (WCAG 2.5.8) : le texte seul faisait 17 px de haut, une icône seule 16 px de large. */
+.link-btn {
+  background: transparent; border: 0; color: var(--primary); cursor: pointer;
+  padding: 2px 4px; font-weight: 600; text-decoration: underline;
+  display: inline-flex; align-items: center; gap: 4px; min-height: 24px; min-width: 24px;
+}
+.link-btn:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+.bullet-list { list-style: none; padding: 0; margin: 12px 0; }
+.bullet-list li {
+  padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+.bullet-list li:last-child { border-bottom: 0; }
+
+.empty-cell { text-align: center; color: var(--muted); font-style: italic; padding: 18px; }
+
+/* KPI inline (rapports : total + compteurs par statut) */
+.kpi-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 14px; }
+
+/* Sélecteur de destinataires (notifications) sous forme de puces cochables */
+.picker {
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 10px 12px; margin: 12px 0; display: flex; flex-wrap: wrap; gap: 8px;
+}
+.picker legend { font-weight: 600; font-size: 13px; padding: 0 6px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px;
+  background: var(--bg, #f8fafc); border: 1px solid var(--border);
+  border-radius: 999px; padding: 4px 10px; cursor: pointer;
+}
+.chip input { accent-color: var(--primary); }
+
+/* Toggle switch (accessibilité : input réel caché mais focusable) */
+.toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-slider {
+  position: absolute; inset: 0; background: var(--border-strong);
+  border-radius: 22px; transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: ""; position: absolute; height: 16px; width: 16px;
+  left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s;
+}
+.toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+.toggle-switch input:checked + .toggle-slider::before { transform: translateX(18px); }
+.toggle-switch input:focus-visible + .toggle-slider {
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ── Onglets / sous-menus (role=tablist) — accessibles & aérés ─────────────── */
+.tabs, .payroll-subtabs {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin: 4px 0 20px; padding: 0 0 2px;
+  border-bottom: 2px solid #e2e6ea;
+}
+.tabs > button, .payroll-subtabs > button {
+  appearance: none; background: #f4f6f8; color: #2c3542;
+  border: 1px solid #d5dbe1; border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  padding: 10px 18px; min-height: 44px;      /* cible tactile WCAG 2.5.5 */
+  font-size: 14px; font-weight: 600; line-height: 1.2;
+  cursor: pointer; white-space: nowrap;
+  /* Aucun fondu, dans un sens comme dans l'autre : l'onglet qui redevient inactif passait
+     150 ms en gris clair sur bleu pâle (3,6:1), et l'audit lancé au clic le voyait. */
+  transition: none;
+}
+.tabs > button:hover, .payroll-subtabs > button:hover { background: #e8edf2; }
+/* État actif : géré via aria-selected (onglets), aria-pressed (compat.), aria-current (navigation
+   de sections) ou la classe .active — un onglet actif est bleu partout, quel que soit l'attribut
+   que la page a choisi pour le dire (demande du 14 sept. 2026 : « comme dans Administration »). */
+.tabs > button[aria-selected="true"], .payroll-subtabs > button[aria-selected="true"],
+.tabs > button[aria-pressed="true"], .payroll-subtabs > button[aria-pressed="true"],
+.tabs > button[aria-current], .payroll-subtabs > button[aria-current],
+.tabs > button.active, .payroll-subtabs > button.active {
+  background: #1d6fb8; color: #fff; border-color: #1d6fb8;
+  box-shadow: 0 -2px 0 #14508a inset;
+}
+.tabs > button:focus-visible, .payroll-subtabs > button:focus-visible {
+  outline: 3px solid #ffbf47; outline-offset: 2px;  /* focus clavier visible (WCAG 2.4.7) */
+}
+/* Zone de tableau **défilable au clavier** (WCAG 2.1.1) : focusable + contour de focus visible. */
+.table-wrap { overflow-x: auto; }
+.table-wrap:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+/* Titres, libellés et TOUTES les balises porteuses de texte rendues
+   **focusables au clavier** (tabIndex=0) : contour de focus visible (WCAG 2.4.7). */
+h1[tabindex]:focus-visible, h2[tabindex]:focus-visible, h3[tabindex]:focus-visible,
+h4[tabindex]:focus-visible, h5[tabindex]:focus-visible, h6[tabindex]:focus-visible,
+p[tabindex]:focus-visible, label[tabindex]:focus-visible,
+li[tabindex]:focus-visible, dt[tabindex]:focus-visible, dd[tabindex]:focus-visible,
+small[tabindex]:focus-visible, span[tabindex]:focus-visible, div[tabindex]:focus-visible,
+strong[tabindex]:focus-visible, em[tabindex]:focus-visible, b[tabindex]:focus-visible,
+i[tabindex]:focus-visible, code[tabindex]:focus-visible, kbd[tabindex]:focus-visible,
+mark[tabindex]:focus-visible, abbr[tabindex]:focus-visible {
+  outline: 3px solid #ffbf47; outline-offset: 3px; border-radius: 4px;
+}
+/* Légende de tableau (accessibilité : décrit le tableau) */
+table > caption {
+  caption-side: top; text-align: left;
+  font-size: 13px; font-weight: 600; color: #4a5563;
+  padding: 6px 2px;
+}
+
+/* ── Calendrier mensuel éditable ─────────────────────────────────────────── */
+.cal-toolbar {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 12px 0;
+}
+.cal-month-label { font-size: 17px; text-transform: capitalize; min-width: 160px; text-align: center; }
+.cal-legend { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.cal-chip {
+  display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600;
+}
+.cal-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px;
+  background: var(--border); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 4px;
+}
+.cal-dow {
+  text-align: center; font-size: 12px; font-weight: 700; color: var(--muted);
+  padding: 6px 0; text-transform: uppercase;
+}
+.cal-cell {
+  background: white; border: 1px solid transparent; border-radius: 6px; min-height: 92px;
+  padding: 4px; display: flex; flex-direction: column; gap: 3px; cursor: pointer;
+  text-align: left; font: inherit; align-items: stretch;
+}
+.cal-cell:hover { border-color: var(--primary); }
+.cal-cell:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+.cal-cell-out { background: #f8fafc; opacity: 0.6; }
+.cal-cell-today { box-shadow: inset 0 0 0 2px var(--primary); }
+.cal-cell-selected { border-color: var(--primary); background: var(--primary-soft); }
+.cal-daynum { font-size: 12px; font-weight: 700; color: var(--text); }
+.cal-events { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
+.cal-event {
+  font-size: 10px; padding: 1px 5px; border-radius: 4px; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600;
+}
+.cal-more { font-size: 10px; color: var(--muted); }
+.cal-ev-holiday { background: #fee2e2; color: #991b1b; }
+.cal-ev-task { background: #dbeafe; color: #1e40af; }
+.cal-ev-pedagogical { background: #dcfce7; color: #166534; }
+.cal-editor { margin-top: 16px; padding: 16px; }
+
+/* Responsive : passage en colonne sur tablette/mobile */
+@media (max-width: 900px) {
+  .mifi-layout { grid-template-columns: 1fr; }
+  .mifi-sidenav {
+    position: static; max-height: none;
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  .mifi-group { flex: 1 1 auto; margin: 0; min-width: 160px; }
+  .mifi-group ul { display: flex; flex-direction: column; gap: 2px; }
+}
+@media (max-width: 600px) {
+  .mifi-header { flex-direction: column; }
+  .mifi-tenant-picker { width: 100%; }
+  .mifi-tenant-picker select { min-width: 0; width: 100%; }
+  .grid-form { grid-template-columns: 1fr; }
+  .cal-cell { min-height: 60px; }
+  .cal-event { font-size: 9px; }
+  .cal-legend { margin-left: 0; width: 100%; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Page « Mon compte » (Account)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.account-page .account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+.account-meta { margin: 0; display: grid; gap: 8px; }
+.account-meta > div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.account-meta dt { color: var(--muted); font-size: 13px; margin: 0; }
+.account-meta dd { margin: 0; font-weight: 600; }
+.account-meta-line { margin: 0 0 12px; }
+.field-full { grid-column: 1 / -1; }
+.mfa-methods {
+  display: flex; flex-wrap: wrap; gap: 10px; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 12px; margin: 0 0 12px;
+}
+.mfa-methods legend { font-size: 13px; font-weight: 600; padding: 0 6px; }
+.radio-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; cursor: pointer; }
+.radio-chip input { accent-color: var(--primary); width: 18px; height: 18px; }
+.totp-setup { margin-top: 8px; }
+.totp-secret {
+  display: inline-block; margin: 8px 0; padding: 8px 12px; background: var(--bg, #f1f5f9);
+  border: 1px dashed var(--border-strong); border-radius: var(--radius-sm);
+  font-size: 15px; letter-spacing: 1px; word-break: break-all;
+}
+.totp-qr {
+  display: inline-block; margin: 8px 0; padding: 10px; background: #fff;
+  border: 1px solid var(--border); border-radius: var(--radius-sm); line-height: 0;
+}
+.totp-qr svg { width: 200px; height: 200px; max-width: 100%; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Catalogue de modules : 1re colonne figée pour rester lisible au scroll horizontal
+   ═══════════════════════════════════════════════════════════════════════════ */
+.modules-table th:first-child,
+.modules-table td:first-child {
+  position: sticky; left: 0; z-index: 1;
+  background: var(--surface, #fff);
+  box-shadow: 1px 0 0 var(--border);
+  min-width: 150px;
+}
+.modules-table thead th:first-child { z-index: 2; }
+.modules-table th { white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Contrats — « Jours de la semaine » : grille régulière, cibles tactiles ≥ 44px
+   ═══════════════════════════════════════════════════════════════════════════ */
+.day-chip {
+  min-height: 40px;
+}
+@media (max-width: 600px) {
+  .day-toggles { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; }
+  .day-chip { justify-content: center; min-height: 44px; }
+  .account-page .account-grid { grid-template-columns: 1fr; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Tables « empilées » sur très petit écran (data-label) — feuille de temps & co.
+   La table garde son rendu classique ≥ 560px ; en dessous chaque ligne devient
+   une carte où chaque cellule affiche son intitulé (data-label).
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 560px) {
+  table.stacked thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  table.stacked tr {
+    display: block; border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: 10px; padding: 6px 10px; background: var(--surface, #fff);
+  }
+  table.stacked td {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 6px 0; border: 0; border-bottom: 1px dashed var(--border); text-align: right;
+  }
+  table.stacked tr td:last-child { border-bottom: 0; }
+  table.stacked td::before {
+    content: attr(data-label); font-weight: 600; color: var(--muted);
+    text-align: left; flex: 0 0 45%;
+  }
+}
+
+
+/* ============================================================
+   Assistant IA flottant (chat métier paie/comptabilité)
+   ============================================================ */
+/*
+ * Bouton flottant de l'assistant.
+ *
+ * Étant en `position: fixed`, il flotte au-dessus du contenu et peut **recouvrir un contrôle**
+ * de la page — constaté sur la feuille de temps en affichage mobile, où il masquait la
+ * navigation de semaine. Un bouton inaccessible parce qu'un autre le couvre est un manquement à
+ * WCAG 2.2 (2.5.8 et, s'il reçoit le focus, 2.4.11).
+ *
+ * Deux mesures : le contenu réserve une zone libre en bas de page (voir `.main`), et le bouton
+ * se fait plus discret sur petit écran, où la place manque le plus.
+ */
+.ai-fab {
+  position: fixed; right: 20px; bottom: 20px; z-index: 40;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: var(--primary); color: #fff; font-size: 24px; cursor: pointer;
+  box-shadow: var(--shadow-md); display: flex; align-items: center; justify-content: center;
+}
+.ai-fab:hover { background: var(--primary-hover); }
+/* Petit écran : bouton plus compact et plus proche du coin — c'est là que la place manque le
+   plus, et que le risque de masquer un contrôle est le plus élevé. Cette règle doit venir
+   **après** la déclaration de base, sinon elle est écrasée à spécificité égale. */
+@media (max-width: 768px) {
+  .ai-fab { width: 48px; height: 48px; font-size: 20px; right: 12px; bottom: 12px; }
+}
+.ai-panel {
+  position: fixed; right: 20px; bottom: 88px; z-index: 41;
+  width: min(400px, calc(100vw - 32px)); height: min(560px, calc(100vh - 140px));
+  background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden;
+}
+.ai-panel-head { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.ai-panel-head strong { flex: 0 0 auto; }
+.ai-panel-head .muted { margin-left: auto; }
+.ai-close { border: none; background: none; cursor: pointer; font-size: 15px; color: var(--muted); padding: 2px 6px; }
+.ai-body { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.ai-msg { padding: 8px 12px; border-radius: 12px; font-size: 13.5px; max-width: 90%; overflow-wrap: anywhere; white-space: pre-wrap; }
+.ai-msg-user { align-self: flex-end; background: var(--primary-soft); color: var(--text); border-bottom-right-radius: 4px; }
+.ai-msg-assistant { align-self: flex-start; background: var(--bg); border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.ai-actions { padding: 6px 12px; border-top: 1px solid var(--border); }
+.ai-actions button { width: 100%; }
+.ai-input { display: flex; gap: 6px; padding: 8px 12px 12px; }
+.ai-input input { flex: 1; }
+.ai-input button { flex: 0 0 auto; padding: 8px 14px; }
+
+/* ── Impression des horaires (exigence 9.3) ────────────────────────────────
+ *
+ * Mêmes données, présentation adaptée : pas de rendu séparé, qui divergerait de l'écran. Ce qui
+ * est masqué ici est ce qui n'a pas de sens sur papier — navigation, boutons, onglets inactifs.
+ *
+ * Aucune couleur ne porte de sens : une photocopie en noir et blanc doit rester lisible, et
+ * WCAG 1.4.1 vaut aussi sur papier.
+ */
+@media print {
+  .sidebar, .nav-group, .menu-btn, nav, .tabs,
+  form, button, .actions, .ai-assistant-launcher {
+    display: none !important;
+  }
+
+  .main, body {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+    color: #000;
+  }
+
+  /* Les tableaux larges se coupent proprement plutôt que de déborder de la page. */
+  .table-scroll { overflow: visible !important; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    page-break-inside: auto;
+  }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  th, td { border: 1px solid #000; padding: 4px 6px; }
+
+  /* L'en-tête du tableau se répète en haut de chaque page imprimée. */
+  thead { display: table-header-group; }
+
+  caption {
+    caption-side: top;
+    font-weight: 700;
+    text-align: left;
+    padding-bottom: 6px;
+  }
+
+  /* Une légende masquée à l'écran redevient utile sur papier : elle nomme le tableau. */
+  .sr-only {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    clip: auto !important;
+    white-space: normal !important;
+  }
+
+  a[href]::after { content: ""; }
+}
+
+/* ── Dossier d'employé et tuiles RH (lot RH-0) ──────────────────────────────
+   La structure suit celle qui a fait ses preuves : identité en tête, banques de temps en
+   tuiles, puis onglets. Les couleurs restent celles de l'application — copier une charte
+   ne rendrait pas l'écran meilleur, et rendrait le produit moins cohérent avec lui-même. */
+
+.dossier-entete {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+.dossier-entete h2 { margin: 0; }
+
+/* Le nom ouvre le dossier : un bouton, pas un lien — il ne navigue pas, il change de vue.
+   Rendu comme un lien pour que l'affordance soit lisible. */
+.lien-dossier {
+  appearance: none; background: none; border: none; padding: 0;
+  color: #1d6fb8; font: inherit; font-weight: 600;
+  text-decoration: underline; cursor: pointer;
+  min-height: 24px;                          /* cible de pointage ≥ 24 px (WCAG 2.5.8) */
+}
+.lien-dossier:hover { color: #14508a; }
+.lien-dossier:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+
+/* Tuiles : une donnée par tuile, la valeur en gros, la référence en dessous. */
+.tuiles {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+.tuile {
+  display: flex; flex-direction: column; gap: 2px;
+  padding: 14px 16px; border: 1px solid #d5dbe1; border-radius: 10px;
+  background: #f8fafc;
+}
+.tuile-libelle { font-size: 13px; color: #4a5563; font-weight: 600; }
+.tuile-valeur { font-size: 22px; line-height: 1.2; color: #16324f; }
+
+/* Onglets secondaires (Personnelles / Corporatives) : moins appuyés que les principaux,
+   pour que la hiérarchie de lecture reste évidente. */
+.tabs-secondaires { border-bottom-width: 1px; margin-bottom: 14px; }
+.tabs-secondaires > button {
+  border-radius: 999px; border-bottom: 1px solid #d5dbe1;
+  padding: 8px 16px; font-size: 13px;
+}
+.tabs-secondaires > button[aria-selected="true"] { box-shadow: none; }
+
+@media (max-width: 640px) {
+  /* La barre d'onglets défile plutôt que de casser la page (WCAG 1.4.10). */
+  .tabs { flex-wrap: nowrap; overflow-x: auto; }
+}
+
+/* Mur de reconnaissance — une liste de messages courts, sans puce ni chevauchement. */
+.liste-cartes { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.liste-cartes > li { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; background: var(--bg, #f8fafc); }
+.liste-cartes > li p { margin: 0 0 4px; overflow-wrap: anywhere; }
+
+/* ── Cockpit d'échéances (lot RH-6) ───────────────────────────────────────
+   Trois colonnes sur grand écran, une seule dès qu'on descend sous 1100 px :
+   un calendrier de sept colonnes ne se comprime pas sans devenir illisible. */
+.colonnes-cockpit { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; align-items: start; }
+.colonnes-cockpit > .card { margin-bottom: 0; }
+
+.liste-nue { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.liste-nue > li { overflow-wrap: anywhere; }
+
+.jauge { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; font-size: 12px; color: var(--muted); }
+.jauge-piste { display: block; height: 6px; border-radius: 3px; background: var(--border); overflow: hidden; }
+.jauge-remplie { display: block; height: 100%; background: var(--primary); }
+
+.calendrier { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.calendrier th { font-size: 11px; color: var(--muted); font-weight: 600; padding: 4px 0; }
+/* 32 px de côté : au-dessus des 24 px exigés par WCAG 2.5.8, marges comprises. */
+.calendrier td { height: 34px; text-align: center; vertical-align: top; font-size: 12px; padding: 3px 0; }
+.calendrier .jour-courant { background: var(--primary-soft); border-radius: 6px; font-weight: 700; }
+.pastille { display: inline-block; font-size: 9px; line-height: 1; margin: 1px; }
+.pastille-anniversaire { color: #9d174d; }
+.pastille-mouvement { color: #15803d; }
+.pastille-conge { color: #1d4ed8; }
+.legende { flex-direction: row; display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+
+/* ── Dossier : sommaire des sections d'informations (référence Folks) ─────
+   Le sommaire passe au-dessus du contenu sous 900 px : deux colonnes de
+   250 px et 1 fr sur un téléphone ne laissent pas de place au tableau. */
+.dossier-sections { display: grid; grid-template-columns: minmax(220px, 260px) 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .dossier-sections { grid-template-columns: 1fr; } }
+.sommaire-sections ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+.sommaire-sections button {
+  width: 100%; text-align: left; background: none; border: 0; border-left: 3px solid transparent;
+  /* 40 px de haut : bien au-delà des 24 px exigés par WCAG 2.5.8. */
+  padding: 11px 14px; font-size: 13px; color: var(--muted); cursor: pointer; border-radius: 0 8px 8px 0;
+}
+.sommaire-sections button:hover { background: var(--bg, #f8fafc); color: var(--text); }
+.sommaire-sections button.active { color: var(--text); font-weight: 600; border-left-color: var(--primary); background: var(--primary-soft); }
+
+/* L'en-tête d'une carte repliable : le titre à gauche, les actions à droite — et une marge sous
+   la rangée, sans quoi les boutons « Tout activer / Tout désactiver » se posaient sur le bord du
+   tableau qui suit (défaut vu le 13 sept. dans Superadmin › Modules & accès). */
+.entete-repliable { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.entete-repliable h3 { margin: 0; flex: 1 1 240px; min-width: 0; }
+.entete-repliable .actions-row { flex: 0 0 auto; margin-left: auto; }
+.entete-repliable .actions-row button { min-height: 32px; }
+.entete-repliable + .table-wrap { margin-top: 4px; }
+.tuile .jauge-piste { margin-top: 6px; }
+
+/* ── Champ « personne » : autocomplétion (combobox ARIA) ──────────────────
+   La liste flotte au-dessus du reste : `position: relative` sur le conteneur
+   ancre le flottant, sans quoi il se placerait par rapport à la page et
+   recouvrirait un champ voisin à la première largeur venue. */
+.champ-personne { position: relative; }
+.champ-personne-liste {
+  position: absolute; z-index: 30; left: 0; right: 0; margin: 2px 0 0; padding: 4px;
+  list-style: none; background: var(--panel); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm); box-shadow: var(--shadow-sm); max-height: 280px; overflow-y: auto;
+}
+/* 40 px de haut : bien au-delà des 24 px exigés par WCAG 2.5.8, au doigt comme à la souris. */
+.champ-personne-liste > li { display: flex; flex-direction: column; gap: 2px; padding: 8px 10px; min-height: 40px; border-radius: 6px; cursor: pointer; }
+.champ-personne-liste > li.survol { background: var(--primary-soft); }
+.champ-personne-liste .muted { font-size: 12px; }
+.champ-personne-indice { font-size: 12px; margin: 4px 0 0; }
+.champ-personne-jetons { list-style: none; display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; padding: 0; }
+.champ-personne-jeton { display: inline-flex; align-items: center; gap: 6px; background: var(--primary-soft); border-radius: 12px; padding: 4px 6px 4px 12px; font-size: 13px; margin: 2px 4px 2px 0; }
+.champ-personne-jetons > li { display: inline-flex; align-items: center; gap: 6px; background: var(--primary-soft); border-radius: 12px; padding: 4px 6px 4px 12px; font-size: 13px; }
+.jeton-retirer { min-width: 24px; min-height: 24px; border: 0; background: none; cursor: pointer; font-size: 16px; line-height: 1; color: var(--text); border-radius: 12px; }
+.jeton-retirer:hover { background: var(--border); }
+
+/* ── Catalogue des modules : la hiérarchie parent → enfant ────────────────
+   L'indentation dit la dépendance d'un coup d'œil ; elle est doublée d'un
+   texte pour lecteur d'écran, une hiérarchie visuelle seule n'existant pas
+   pour qui ne voit pas la page. */
+.module-enfant > th:first-child { padding-left: 28px; position: relative; }
+.module-enfant > th:first-child::before {
+  content: "└"; position: absolute; left: 10px; color: var(--muted); font-weight: 400;
+}
+
+/* ── Blocs de liste (sondages, besoins scolaires) ─────────────────────────
+   Un article par élément, séparé par un filet : une liste de cartes imbriquées
+   dans une carte ferait perdre la hiérarchie visuelle du titre de section. */
+.bloc { padding: 12px 0; border-top: 1px solid var(--border); }
+.bloc:first-of-type { border-top: 0; }
+.bloc h4 { margin: 0 0 6px; font-size: 15px; }
+.bloc .actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+
+/* Case ou bouton radio avec son libellé sur une ligne — le libellé porte la cible (≥ 24 px). */
+.field-inline { flex-direction: row; gap: 8px; min-height: 28px; cursor: pointer; margin-top: 2em;}
+.field-inline input[type="checkbox"], .field-inline input[type="radio"] { width: 20px; height: 20px; margin: 0; }
+
+/* Barre d'étapes d'un assistant (ÉC-6) : l'étape courante porte aria-current="step", jamais la seule couleur. */
+.etapes { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0 0 16px; counter-reset: etape; }
+.etapes li { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; font-size: 14px; background: var(--bg, #f8fafc); color: var(--text); min-height: 32px; }
+.etapes li .numero { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 50%; background: var(--border); font-weight: 700; font-size: 12px; }
+.etapes li[aria-current="step"] { border-color: var(--primary); font-weight: 700; }
+.etapes li[aria-current="step"] .numero { background: var(--primary); color: #fff; }
+.etapes li.faite { text-decoration: underline; text-decoration-style: dotted; }
+.etapes li.faite .numero { font-size: 0; background: var(--success, #16a34a); color: #fff; }
+.etapes li.faite .numero::after { content: "✓"; font-size: 12px; }
+
+/* Recherche globale (ÉC-9) : un champ dans la barre latérale, une liste de résultats groupés sous lui. */
+.recherche-globale { padding: 0 16px 8px; }
+.recherche-globale input[type="search"] { width: 100%; min-height: 36px; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--sidebar-hover); background: #0a4584; color: #fff; font-size: 14px; }
+.recherche-globale input[type="search"]::placeholder { color: #cbd5e1; }
+/* Dans le flux, jamais par-dessus le menu : la liste pousse la navigation, elle ne la recouvre pas (règle « aucun recouvrement »). */
+.recherche-resultats { margin-top: 6px; background: #fff; color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 8px; max-height: 40vh; overflow: auto; }
+.recherche-resultats ul { list-style: none; margin: 0; padding: 0; }
+.recherche-groupe { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--muted); padding: 6px 8px 2px; }
+.recherche-resultats [role="option"] { display: flex; flex-direction: column; gap: 2px; padding: 8px; min-height: 36px; border-radius: 6px; cursor: pointer; }
+.recherche-resultats [role="option"].actif, .recherche-resultats [role="option"]:hover { background: #e0e7ff; }
+.recherche-libelle { font-weight: 600; font-size: 14px; }
+.recherche-extrait { font-size: 12px; }
+.recherche-resultats > button { margin-top: 6px; }
+
+
+/* `hidden` l'emporte sur toute classe de disposition (grille, flex) : un élément caché l'est vraiment. */
+[hidden] { display: none !important; }
+
+/* ───── Aide contextuelle (grille 12) : un bouton par écran, cible ≥ 24 px, contraste ≥ 4,5:1 ───── */
+.topbar .aide-contextuelle {
+  margin-left: auto; min-height: 32px; padding: 4px 12px; border-radius: 999px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--border); font-weight: 600;
+}
+.topbar .aide-contextuelle:hover, .topbar .aide-contextuelle:focus-visible { background: var(--bg); }
+
+/* ───── Tuiles du tableau de bord (devis 2.4) ───── */
+.tuiles { list-style: none; padding: 0; margin: 12px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.tuile { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--panel); display: flex; flex-direction: column; gap: 4px; }
+.tuile-valeur { font-size: 28px; font-weight: 700; line-height: 1.1; }
+.tuile-libelle { color: var(--muted); font-size: 13px; }
+.tuile-alerte { border-color: #b45309; background: #fffbeb; }
+.tuile-alerte .tuile-valeur { color: #92400e; }
+.liste-compacte { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.checkbox-line { display: flex; align-items: center; gap: 8px; min-height: 24px; }
+.sidebar .aide-contextuelle-sidebar { width: 100%; margin-bottom: 10px; min-height: 32px; }
+
+/* ── Calendriers des suppléants (grille 13) : une lettre par demi-journée, jamais la couleur seule ── */
+.calendriers-grille th, .calendriers-grille td { padding: 6px 6px; text-align: center; }
+.calendriers-grille th:first-child, .calendriers-grille td:first-child { text-align: left; white-space: nowrap; }
+.calendriers-grille thead th { line-height: 1.2; font-size: 12px; }
+.calendriers-grille td.fin-de-semaine { background: #f3f4f6; }
+.demi-journee {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 22px; min-height: 22px; margin: 1px; border-radius: 6px;
+  font-size: 12px; font-weight: 700; font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  border: 1px solid var(--border-strong); background: #fff; color: #374151;   /* hors disponibilités : contour 3:1 */
+}
+.demi-journee[data-etat="affecte"] { background: #dbeafe; color: #1e3a8a; border-color: #1e3a8a; }
+.demi-journee[data-etat="disponible"] { background: var(--success-bg); color: #065f46; border-color: #065f46; }
+.demi-journee[data-etat="indisponible"] { background: var(--danger-bg); color: #991b1b; border-color: #991b1b; }
+.legende-etats { display: flex; flex-wrap: wrap; gap: 8px 18px; list-style: none; padding: 0; margin: 14px 0 0; }
+.legende-etats li { display: inline-flex; align-items: center; gap: 6px; min-height: 24px; }
+
+/* ── Soutien : pièces jointes, satisfaction, badge de l'onglet ────────────── */
+.pieces-liste { list-style: none; margin: 6px 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.pieces-liste li { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+/* Un bouton qui se lit comme un lien : la pièce se télécharge par script (session), pas par un href. */
+button.lien { background: none; border: 0; padding: 4px 2px; color: var(--primary); text-decoration: underline; font-weight: 500; box-shadow: none; min-height: 24px; }
+button.lien:hover { color: #14508a; background: none; }
+.satisfaction { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg, #f8fafc); max-width: 560px; }
+.satisfaction-notes { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.satisfaction-note { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; }
+.satisfaction-note input { width: 20px; height: 20px; margin: 2px; }
+/* Le compteur d'un onglet : lisible dans les deux états de l'onglet (blanc sur bleu, bleu sur blanc), jamais la couleur seule. */
+.badge-compteur { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 22px; padding: 0 6px; margin-left: 8px; border-radius: 11px; font-size: 12px; font-weight: 700; background: #b42318; color: #fff; }
+
+/* Kanban des tâches (fiche D.8 ★) : colonnes qui s'empilent sous 900 px ; la carte agit par son sélecteur, jamais par glisser-déposer seul. */
+.vue-bascule { display: inline-flex; gap: 6px; margin: 0 0 12px; }
+.kanban-avancement { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; max-width: 420px; }
+.kanban-avancement progress { width: 100%; height: 12px; accent-color: var(--primary); }
+.kanban { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.kanban-colonne { border: 1px solid var(--border); border-radius: var(--radius-sm); background: #fafbfd; padding: 10px; min-width: 0; }
+.kanban-colonne h4 { margin: 0 0 8px; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.kanban-cartes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.kanban-carte { background: white; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 8px 10px; display: flex; flex-direction: column; gap: 6px; }
+.kanban-carte-titre { font-weight: 600; }
+.kanban-carte select { width: 100%; }
+.kanban-vide { padding: 6px 2px; }
+
+/* Bandeau d'une session empruntée (ADR 0038) : il pousse la page, ne la recouvre pas ; contraste ≥ 4,5:1 ; deux tons, jamais la seule couleur. */
+.emprunt-bandeau { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; padding: 10px 14px; margin-bottom: 12px; border-radius: var(--radius-sm); background: var(--warning-bg); color: var(--warning); border: 1px solid var(--warning); }
+.emprunt-bandeau button { min-height: 32px; }
+/* Annonces à l'accueil (ADR 0039) : une liste, un titre par annonce, l'état « lue » écrit. */
+.liste-annonces { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.liste-annonces li { padding: 10px 12px; border: 1px solid var(--border, #d1d5db); border-radius: var(--radius-sm); }
+.liste-annonces h3 { margin: 0 0 6px; }
+
+/* Attributs de profil (lot E-5) : cases en ligne dans un formulaire, jetons à bascule sur une
+   ligne de suppléant — la cible reste ≥ 24 px, l'état pressé se lit (aria-pressed) et se voit. */
+.cases-en-ligne { display: flex; flex-wrap: wrap; gap: 8px 18px; grid-column: 1 / -1; }
+.cases-en-ligne .case { display: inline-flex; align-items: center; gap: 8px; min-height: 24px; cursor: pointer; }
+.jetons-attributs { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+.jeton-attribut { min-height: 28px; padding: 2px 10px; border-radius: 14px; font-size: 13px; }
+.brand-logo { max-height: 28px; max-width: 96px; margin-right: 8px; vertical-align: middle; object-fit: contain; }
+.org-logo-apercu { max-height: 64px; max-width: 200px; object-fit: contain; }
+/* ───── Avatar et menu « Profil » de l'en-tête (maquettes P04, P32) ─────
+   Cibles ≥ 32 px (WCAG 2.5.8 exige 24 ; l'en-tête sert à tous, on vise plus haut),
+   contraste du texte ≥ 4,5:1 sur `--panel`, et aucun recouvrement : le menu est en flux
+   absolu **sous** la barre, jamais par-dessus le bouton qui l'ouvre. */
+.avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; object-fit: cover; flex: 0 0 auto;
+  background: var(--primary-soft); color: var(--primary-hover);
+  border: 1px solid var(--border-strong); font-weight: 700; line-height: 1;
+}
+.avatar-initiales { letter-spacing: 0.02em; }
+
+.menu-profil { position: relative; margin-left: 8px; }
+.menu-profil > summary {
+  display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+  min-height: 32px; padding: 2px 10px 2px 2px; border-radius: 999px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--border);
+  font-weight: 600; list-style: none;
+}
+/* Le marqueur natif du `<details>` doublerait le chevron qu'on dessine nous-mêmes. */
+.menu-profil > summary::-webkit-details-marker { display: none; }
+.menu-profil > summary::marker { content: ""; }
+.menu-profil > summary:hover, .menu-profil > summary:focus-visible { background: var(--bg); }
+/* Le nom disparaît sous 480 px : l'avatar et le chevron suffisent, et la barre ne déborde pas. */
+.menu-profil-nom { max-width: 14ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 480px) { .menu-profil-nom { display: none; } }
+
+.menu-profil-liste {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 30;
+  margin: 0; padding: 6px; list-style: none; min-width: 240px;
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--border-strong); border-radius: 12px; box-shadow: var(--shadow-sm);
+}
+.menu-profil-liste button {
+  display: block; width: 100%; text-align: left; min-height: 36px; padding: 8px 12px;
+  background: transparent; color: var(--text); border: 0; border-radius: 8px; font: inherit;
+}
+.menu-profil-liste button:hover, .menu-profil-liste button:focus-visible { background: var(--primary-soft); }
+
+/* La rangée de la page « Mon compte » : l'aperçu à gauche, les gestes à droite, et elle
+   s'empile sous 520 px plutôt que de déborder. */
+.photo-profil-rangee { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.photo-profil-rangee > div { flex: 1 1 260px; min-width: 0; }
+
+/* ───── « Ce qui m'attend » : messagerie et avis, dans la barre du haut (P11) ─────
+ *
+ * Les panneaux sont en flux absolu **sous** la barre, jamais par-dessus le bouton qui les ouvre :
+ * un panneau qui recouvre sa propre commande se referme au clic suivant, et l'on croit à une
+ * panne. Les cibles font 32 px au moins — l'en-tête sert à tous, on vise au-dessus des 24 px
+ * exigés par WCAG 2.5.8. */
+.barre-avis { display: inline-flex; align-items: center; gap: 4px; margin-left: 8px; }
+
+.avis-menu { position: relative; }
+
+.avis-menu > summary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 2px;
+  min-width: 32px; min-height: 32px; padding: 0 6px; border-radius: 999px;
+  background: var(--panel); color: var(--text); border: 1px solid var(--border);
+  cursor: pointer; list-style: none; font-size: 15px;
+}
+.avis-menu > summary::-webkit-details-marker { display: none; }
+.avis-menu > summary:hover { background: var(--primary-soft); }
+
+/* Le compte, en chiffres : une pastille muette se devine, un nombre se lit (WCAG 1.4.1). */
+.avis-pastille {
+  min-width: 18px; padding: 0 5px; border-radius: 999px;
+  background: var(--primary); color: #fff;   /* 5,50:1 — mesuré avec --primary */
+  font-size: 11.5px; font-weight: 700; line-height: 18px; text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.avis-panneau {
+  position: absolute; inset-inline-end: 0; inset-block-start: calc(100% + 6px);
+  z-index: 40; width: min(22rem, calc(100vw - 2rem));
+  padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--panel); box-shadow: 0 10px 24px rgba(16, 42, 67, 0.16);
+}
+
+.avis-titre { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--text); }
+.avis-vide { margin: 0; color: var(--muted); font-size: 13.5px; }
+
+.avis-liste { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 60vh; overflow: auto; }
+
+.avis-liste button {
+  display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 8px;
+  border: 0; border-radius: 8px; background: none; font: inherit; color: inherit;
+  text-align: start; cursor: pointer;
+}
+.avis-liste button:hover { background: var(--primary-soft); }
+
+.avis-sujet { font-weight: 600; color: var(--text); overflow-wrap: anywhere; }
+.avis-extrait { color: var(--muted); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.avis-compte { color: var(--primary-hover); font-size: 12.5px; font-weight: 600; }
+
+/* Sous 480 px, la barre porte déjà le menu, l'établissement et l'aide : les panneaux prennent
+   toute la largeur utile plutôt que de déborder à droite (1.4.10, aucun défilement latéral). */
+@media (max-width: 480px) {
+  /*
+    Sous 480 px, le panneau prend toute la largeur utile plutôt que de déborder à droite
+    (1.4.10, aucun défilement latéral). Il quitte alors le flux pour se poser sous la barre :
+    ancré à la cloche, un panneau pleine largeur sortirait du cadre à droite.
+  */
+  .avis-panneau {
+    position: fixed; inset-inline-end: 8px; inset-block-start: calc(var(--topbar-h) + 6px);
+    width: calc(100vw - 1rem);
+  }
+}

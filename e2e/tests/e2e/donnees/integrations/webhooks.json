@@ -1,0 +1,6 @@
+{
+  "description": "Récepteur de démonstration",
+  "evenementEssai": "employe.cree",
+  "panne": 500,
+  "journalPage": { "titre": "Journal du récepteur de webhooks", "valide": "Valide" }
+}

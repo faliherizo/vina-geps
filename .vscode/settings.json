@@ -1,0 +1,17 @@
+{
+  // L'IDE compile en ecj et pose des $SWITCH_TABLE$ qu'ArchUnit refuse : Maven reste la référence
+  // (vider backend-java/target/classes avant `mvn verify`, voir CLAUDE.md).
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "files.exclude": {
+    "**/node_modules": true,
+    "backend-java/target": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "backend-java/target": true,
+    "perf/jmeter/rapports": true,
+    "perf/jmeter/resultats": true,
+    ".gitnexus": true
+  },
+  "playwright.env": { "E2E_NO_BACKEND": "1" }
+}

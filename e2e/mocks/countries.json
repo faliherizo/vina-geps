@@ -1,0 +1,9 @@
+{
+  "expectedCodes": ["CA", "FR", "MG", "US"],
+  "byCode": {
+    "CA": { "name": "Canada (Québec)", "currency": "CAD", "salesTaxLabel": "TPS + TVQ", "salesTaxOn100": 14.98 },
+    "FR": { "name": "France", "currency": "EUR", "salesTaxLabel": "TVA", "salesTaxOn100": 20 },
+    "MG": { "name": "Madagascar", "currency": "MGA", "salesTaxLabel": "TVA", "salesTaxOn100": 20 },
+    "US": { "name": "United States", "currency": "USD", "salesTaxLabel": "Sales tax (par État)", "salesTaxOn100": 7 }
+  }
+}

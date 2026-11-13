@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Gabarit GET — à copier-coller">
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables du plan">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+<TestFragmentController guiclass="TestFragmentControllerGui" testclass="TestFragmentController" testname="Gabarit GET : requête + assertions (code, durée SLO)"/>
+<hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /api/&lt;module&gt;/&lt;ressource&gt;">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.path">/api/&lt;module&gt;/&lt;ressource&gt;</stringProp><stringProp name="HTTPSampler.method">GET</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Durée ≤ SLO (seuil_lecture)"><stringProp name="DurationAssertion.duration">${seuil_lecture}</stringProp></DurationAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

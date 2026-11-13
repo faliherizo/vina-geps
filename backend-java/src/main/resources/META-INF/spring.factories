@@ -1,0 +1,1 @@
+org.springframework.boot.env.EnvironmentPostProcessor=ca.vina.nexu.partage.journal.infrastructure.ConfigurationJournal

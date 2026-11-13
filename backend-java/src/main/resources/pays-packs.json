@@ -1,0 +1,357 @@
+{
+  "defaultCountry": "CA",
+  "packs": [
+    {
+      "code": "CA",
+      "name": "Canada (Québec)",
+      "flag": "🇨🇦",
+      "currency": "CAD",
+      "locale": "fr-CA",
+      "accountingStandard": "NCECF/IFRS (privé) · PSAS (secteur public)",
+      "fiscalYearNote": "Exercice au choix (souvent 31 déc.) ; T2/CO-17 pour les sociétés",
+      "salesTaxLabel": "TPS + TVQ",
+      "salesTaxes": [
+        {
+          "code": "TPS",
+          "label": "Taxe sur les produits et services",
+          "rate": 0.05
+        },
+        {
+          "code": "TVQ",
+          "label": "Taxe de vente du Québec",
+          "rate": 0.09975
+        }
+      ],
+      "payrollContributions": [
+        {
+          "code": "RRQ",
+          "label": "Régime de rentes du Québec",
+          "employeeRate": 0.064,
+          "employerRate": 0.064,
+          "ceiling": 68500
+        },
+        {
+          "code": "AE",
+          "label": "Assurance-emploi",
+          "employeeRate": 0.0132,
+          "employerRate": 0.01848,
+          "ceiling": 63200
+        },
+        {
+          "code": "RQAP",
+          "label": "Régime québécois d'assurance parentale",
+          "employeeRate": 0.00494,
+          "employerRate": 0.00692,
+          "ceiling": 94000
+        },
+        {
+          "code": "FSS",
+          "label": "Fonds des services de santé (employeur)",
+          "employerRate": 0.0165,
+          "ceiling": null
+        }
+      ],
+      "corporateTaxRate": 0.265,
+      "personalIncomeTax": [
+        {
+          "upTo": 53255,
+          "rate": 0.14
+        },
+        {
+          "upTo": 106495,
+          "rate": 0.19
+        },
+        {
+          "upTo": 129590,
+          "rate": 0.24
+        },
+        {
+          "upTo": null,
+          "rate": 0.2575
+        }
+      ],
+      "remittanceAuthorities": [
+        {
+          "code": "RQ",
+          "label": "Revenu Québec",
+          "form": "TPZ-1015.R.14",
+          "note": "Retenues à la source (impôt QC, RRQ, RQAP, FSS)"
+        },
+        {
+          "code": "CRA",
+          "label": "ARC (Canada)",
+          "form": "PD7A",
+          "note": "Retenues fédérales (impôt, AE)"
+        }
+      ],
+      "remittanceEngine": true,
+      "notes": "Le moteur de paie et d'impôt Québec existant (retenues à la source, TPZ-1015/PD7A, calculateur d'impôt) EST l'implémentation du pack CA."
+    },
+    {
+      "code": "FR",
+      "name": "France",
+      "flag": "🇫🇷",
+      "currency": "EUR",
+      "locale": "fr-FR",
+      "accountingStandard": "Plan Comptable Général (PCG / ANC)",
+      "fiscalYearNote": "Exercice 12 mois (souvent année civile) ; liasse fiscale, IS + TVA (CA3)",
+      "salesTaxLabel": "TVA",
+      "salesTaxes": [
+        {
+          "code": "TVA20",
+          "label": "TVA taux normal",
+          "rate": 0.2
+        }
+      ],
+      "additionalRates": [
+        {
+          "code": "TVA10",
+          "label": "TVA taux intermédiaire",
+          "rate": 0.1
+        },
+        {
+          "code": "TVA5.5",
+          "label": "TVA taux réduit",
+          "rate": 0.055
+        },
+        {
+          "code": "TVA2.1",
+          "label": "TVA taux particulier",
+          "rate": 0.021
+        }
+      ],
+      "payrollContributions": [
+        {
+          "code": "SS_MAL",
+          "label": "Sécurité sociale — maladie (employeur)",
+          "employerRate": 0.13,
+          "ceiling": null
+        },
+        {
+          "code": "RETRAITE",
+          "label": "Assurance vieillesse (plafonnée)",
+          "employeeRate": 0.069,
+          "employerRate": 0.0855,
+          "ceiling": 46368
+        },
+        {
+          "code": "CSG_CRDS",
+          "label": "CSG/CRDS",
+          "employeeRate": 0.097,
+          "ceiling": null
+        },
+        {
+          "code": "CHOMAGE",
+          "label": "Assurance chômage (employeur)",
+          "employerRate": 0.0405,
+          "ceiling": 185472
+        }
+      ],
+      "corporateTaxRate": 0.25,
+      "personalIncomeTax": [
+        {
+          "upTo": 11294,
+          "rate": 0
+        },
+        {
+          "upTo": 28797,
+          "rate": 0.11
+        },
+        {
+          "upTo": 82341,
+          "rate": 0.3
+        },
+        {
+          "upTo": 177106,
+          "rate": 0.41
+        },
+        {
+          "upTo": null,
+          "rate": 0.45
+        }
+      ],
+      "remittanceAuthorities": [
+        {
+          "code": "URSSAF",
+          "label": "URSSAF",
+          "form": "DSN",
+          "note": "Cotisations sociales (salariales + patronales)"
+        },
+        {
+          "code": "DGFIP",
+          "label": "DGFiP",
+          "form": "CA3 / liasse fiscale",
+          "note": "TVA, impôt sur les sociétés (IS)"
+        }
+      ],
+      "remittanceEngine": false,
+      "notes": "Barème IR par parts (quotient familial) ; TVA déclarée en CA3 ; cotisations via DSN/URSSAF."
+    },
+    {
+      "code": "MG",
+      "name": "Madagascar",
+      "flag": "🇲🇬",
+      "currency": "MGA",
+      "locale": "fr-MG",
+      "accountingStandard": "Plan Comptable Général 2005 (PCG 2005, inspiration OHADA/IFRS)",
+      "fiscalYearNote": "Exercice au 31 déc. ; IR/IS + TVA mensuelle ; DGI",
+      "salesTaxLabel": "TVA",
+      "salesTaxes": [
+        {
+          "code": "TVA",
+          "label": "Taxe sur la valeur ajoutée",
+          "rate": 0.2
+        }
+      ],
+      "payrollContributions": [
+        {
+          "code": "CNAPS",
+          "label": "Caisse Nationale de Prévoyance Sociale",
+          "employeeRate": 0.01,
+          "employerRate": 0.13,
+          "ceiling": null
+        },
+        {
+          "code": "OSTIE",
+          "label": "Santé au travail (OSTIE/SMIE)",
+          "employeeRate": 0.01,
+          "employerRate": 0.05,
+          "ceiling": null
+        }
+      ],
+      "corporateTaxRate": 0.2,
+      "personalIncomeTax": [
+        {
+          "upTo": 350000,
+          "rate": 0
+        },
+        {
+          "upTo": 400000,
+          "rate": 0.05
+        },
+        {
+          "upTo": 500000,
+          "rate": 0.1
+        },
+        {
+          "upTo": 600000,
+          "rate": 0.15
+        },
+        {
+          "upTo": null,
+          "rate": 0.2
+        }
+      ],
+      "remittanceAuthorities": [
+        {
+          "code": "DGI",
+          "label": "DGI (Impôts)",
+          "form": "déclaration mensuelle",
+          "note": "IRSA, TVA, IR/IS"
+        },
+        {
+          "code": "CNAPS",
+          "label": "CNaPS",
+          "note": "Prévoyance sociale (part salariale + patronale)"
+        },
+        {
+          "code": "OSTIE",
+          "label": "OSTIE/SMIE",
+          "note": "Santé au travail"
+        }
+      ],
+      "remittanceEngine": false,
+      "notes": "Monnaie Ariary (MGA) ; IRSA prélevé à la source par l'employeur ; IR minimum applicable."
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "flag": "🇺🇸",
+      "currency": "USD",
+      "locale": "en-US",
+      "accountingStandard": "US GAAP (FASB)",
+      "fiscalYearNote": "Fiscal year variable ; federal 1120 (corp) / 1040 (individual) ; no federal VAT",
+      "salesTaxLabel": "Sales tax (par État)",
+      "salesTaxes": [
+        {
+          "code": "STATE",
+          "label": "State sales tax (à configurer)",
+          "rate": 0.07
+        }
+      ],
+      "payrollContributions": [
+        {
+          "code": "SS",
+          "label": "Social Security (FICA OASDI)",
+          "employeeRate": 0.062,
+          "employerRate": 0.062,
+          "ceiling": 168600
+        },
+        {
+          "code": "MEDICARE",
+          "label": "Medicare",
+          "employeeRate": 0.0145,
+          "employerRate": 0.0145,
+          "ceiling": null
+        },
+        {
+          "code": "FUTA",
+          "label": "Federal Unemployment (employer)",
+          "employerRate": 0.006,
+          "ceiling": 7000
+        }
+      ],
+      "corporateTaxRate": 0.21,
+      "personalIncomeTax": [
+        {
+          "upTo": 11600,
+          "rate": 0.1
+        },
+        {
+          "upTo": 47150,
+          "rate": 0.12
+        },
+        {
+          "upTo": 100525,
+          "rate": 0.22
+        },
+        {
+          "upTo": 191950,
+          "rate": 0.24
+        },
+        {
+          "upTo": 243725,
+          "rate": 0.32
+        },
+        {
+          "upTo": 609350,
+          "rate": 0.35
+        },
+        {
+          "upTo": null,
+          "rate": 0.37
+        }
+      ],
+      "remittanceAuthorities": [
+        {
+          "code": "IRS",
+          "label": "IRS (federal)",
+          "form": "Form 941",
+          "note": "Federal income tax withholding + FICA"
+        },
+        {
+          "code": "SSA",
+          "label": "Social Security Administration",
+          "note": "FICA (Social Security + Medicare)"
+        },
+        {
+          "code": "STATE",
+          "label": "State tax authority",
+          "note": "State income/withholding (varies by state)"
+        }
+      ],
+      "remittanceEngine": false,
+      "notes": "Sales tax et income tax d'État varient ; FICA plafonnée (Social Security) ; à compléter par État."
+    }
+  ]
+}

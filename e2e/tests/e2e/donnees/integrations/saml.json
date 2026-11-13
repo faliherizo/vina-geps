@@ -1,0 +1,6 @@
+{
+  "issuer": "urn:nexu-vina:idp-demonstration",
+  "compte": { "bouton": "saml-compte-admin", "courriel": "josee.tremblay@cssdc-demo.qc.ca", "role": "admin" },
+  "metadonnees": { "binding": "urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect", "element": "IDPSSODescriptor", "cle": "RSAKeyValue" },
+  "demandeIllisible": "%%%"
+}

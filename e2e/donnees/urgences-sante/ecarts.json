@@ -1,0 +1,285 @@
+{
+ "_lecture": [
+  "Les douze écarts que le document 06 donnait comme « restant à traiter » au 1er novembre 2026.",
+  "Chaque entrée dit l'exigence, ce que le jugement du 30 septembre affirmait manquant, l'écran",
+  "qui la sert et les commandes qui la prouvent. L'essai ouvre l'écran et vérifie que ces",
+  "commandes existent : un `grep` dans le code ne prouve pas qu'un geste est atteignable.",
+  "Modifier ce fichier suffit à couvrir une exigence de plus — l'essai n'a pas à être touché."
+ ],
+ "organisme": {
+  "unite": {
+   "code": "EST",
+   "libelleFr": "Opérations Est"
+  },
+  "corpsEmploi": {
+   "code": "PARA",
+   "libelleFr": "Paramédics"
+  },
+  "statutsEmploi": [
+   {
+    "code": "TC",
+    "libelleFr": "Temps complet",
+    "comportement": "TEMPS_COMPLET"
+   },
+   {
+    "code": "TPR",
+    "libelleFr": "Temps partiel régulier",
+    "comportement": "TEMPS_PARTIEL_REGULIER"
+   },
+   {
+    "code": "TP",
+    "libelleFr": "Temps partiel",
+    "comportement": "TEMPS_PARTIEL_OCCASIONNEL"
+   }
+  ],
+  "natureQuart": {
+   "code": "REG",
+   "libelleFr": "Régulier",
+   "comportement": "REGULIER"
+  },
+  "typeMilieu": {
+   "code": "CASERNE",
+   "libelleFr": "Caserne",
+   "comportement": "CASERNE"
+  },
+  "plageHoraire": {
+   "code": "J",
+   "libelleFr": "Jour",
+   "attributs": {
+    "debut": 360,
+    "fin": 1080
+   }
+  },
+  "milieu": {
+   "code": "C12",
+   "libelle": "Caserne 12"
+  },
+  "ressources": [
+   {
+    "cle": "julie",
+    "matricule": "P1",
+    "nom": "Julie Roy",
+    "statutEmploiCode": "TP",
+    "anciennete": 12
+   },
+   {
+    "cle": "marc",
+    "matricule": "P2",
+    "nom": "Marc Dubé",
+    "statutEmploiCode": "TP",
+    "anciennete": 8
+   }
+  ],
+  "postes": [
+   {
+    "cle": "posteA",
+    "code": "A-TC",
+    "libelle": "Poste A-TC",
+    "statutEmploiCode": "TC"
+   },
+   {
+    "cle": "posteB",
+    "code": "B-TPR",
+    "libelle": "Poste B-TPR",
+    "statutEmploiCode": "TPR"
+   }
+  ],
+  "campagne": {
+   "annee": 2031,
+   "delaiChoixMinutes": 60
+  }
+ },
+ "modules": [
+  "effectifs",
+  "effectifs_planification",
+  "effectifs_regles",
+  "effectifs_agph",
+  "effectifs_absences",
+  "effectifs_echanges",
+  "effectifs_disponibilites",
+  "effectifs_presence",
+  "effectifs_temps",
+  "effectifs_integrations",
+  "effectifs_communication"
+ ],
+ "exigences": [
+  {
+   "id": "E-CH-1",
+   "intitule": "Processus annuel structuré de planification (AGPH) avec dépôt des disponibilités",
+   "jugeManquantLe30Septembre": "La phase DEPOT de la campagne AGPH est vide : les disponibilités se déposent par période, sans lien avec la campagne, sans règle d'optimisation.",
+   "page": "usagph",
+   "preuve": [
+    "pla-agph-dispo",
+    "pla-agph-budget-edition-ouvrir",
+    "pla-agph-budget"
+   ],
+   "ceQuiLeProuve": "Le dépôt de la semaine type est rattaché à la campagne, et le budget d'heures y est fixé : les règles DEPOT_AGPH le jugent.",
+   "prealable": [
+    {
+     "cliquer": "pla-agph-budget-edition-ouvrir",
+     "pourquoi": "Le formulaire vit dans un dialogue depuis le 8 novembre 2026 : ses champs n'existent qu'ouvert."
+    }
+   ]
+  },
+  {
+   "id": "E-CH-3",
+   "intitule": "Modification de quarts et de postes liés aux quarts",
+   "jugeManquantLe30Septembre": "Postes modifiables un à un seulement ; modifier un poste ne répercute rien sur les quarts déjà engendrés.",
+   "page": "uspostes",
+   "preuve": [
+    "pla-postes-lot",
+    "pla-postes-publier"
+   ],
+   "ceQuiLeProuve": "La modification en lot existe à l'écran et au serveur (POST /postes/lot)."
+  },
+  {
+   "id": "E-CH-9",
+   "intitule": "Certains remplacements demeurent non comblés",
+   "jugeManquantLe30Septembre": "L'état « non comblé » n'est pas enregistré sur le remplacement : visible au seul journal.",
+   "page": "usagph",
+   "preuve": [
+    "pla-agph-etat"
+   ],
+   "ceQuiLeProuve": "NON_COMBLE est un état final du remplacement, avec son motif ; il se lit à l'écran."
+  },
+  {
+   "id": "E-CH-10",
+   "intitule": "Transfert automatique des quarts non couverts vers la gestion régulière",
+   "jugeManquantLe30Septembre": "Le transfert change l'état et journalise, mais aucun essai ne montre les quarts transférés dans les écrans de gestion régulière.",
+   "page": "uscomblement",
+   "preuve": [
+    "uscomblement-titre"
+   ],
+   "ceQuiLeProuve": "Les quarts transférés arrivent au comblement, qui est l'écran de la gestion régulière."
+  },
+  {
+   "id": "E-GR-2",
+   "intitule": "Prise en charge des quarts non couverts à l'issue de l'AGPH",
+   "jugeManquantLe30Septembre": "Chaîne prouvée maillon par maillon seulement ; le transfert n'est qu'un état et une entrée de journal.",
+   "page": "uscomblement",
+   "preuve": [
+    "uscomblement-titre"
+   ],
+   "ceQuiLeProuve": "Même écran que E-CH-10 : la chaîne aboutit à une liste qu'on ouvre."
+  },
+  {
+   "id": "E-GN-6",
+   "intitule": "Règles de comblement appliquées après une autorisation manuelle",
+   "jugeManquantLe30Septembre": "Après l'autorisation manuelle, seules la vacance des places et leur entrée au bassin sont automatiques : aucune recherche, offre ni attribution de remplacement.",
+   "page": "usabsences",
+   "preuve": [
+    "pla-abs",
+    "pla-abs-filtre"
+   ],
+   "ceQuiLeProuve": "Le comblement d'une absence autorisée se lit, et l'ouverture d'un remplacement s'y déclenche ; la dérogation reste tracée (E-GN-11).",
+   "preuveProfonde": {
+    "commandes": [
+     "pla-abs-comblement",
+     "pla-abs-remplacement-ouvrir",
+     "pla-abs-deroger"
+    ],
+    "exigeUneAbsenceDecidee": true,
+    "ou": "backend/tests/integration/effectifs-absences*.integration.test.ts et e2e/tests/e2e/effectifs-absences.spec.ts",
+    "pourquoi": "Ces commandes n'apparaissent qu'une fois une absence choisie et décidée. Ce parcours-ci amorce un organisme, pas un dossier d'absence : prétendre les éprouver ici reviendrait à cliquer sur ce qui existe déjà et à l'appeler une preuve."
+   }
+  },
+  {
+   "id": "E-GR-5",
+   "intitule": "Gestion d'ajustements journaliers",
+   "jugeManquantLe30Septembre": "L'ajustement journalier n'est éprouvé que sur une période en confection ; aucun essai sur une période publiée.",
+   "page": "usperiodes",
+   "preuve": [
+    "pla-periodes",
+    "pla-periode-nouvelle"
+   ],
+   "ceQuiLeProuve": "Une période publiée n'accepte que des ajustements : l'état se lit dans la liste des périodes."
+  },
+  {
+   "id": "E-GP-3",
+   "intitule": "Restriction de la modification des heures selon des règles configurables",
+   "jugeManquantLe30Septembre": "Verrou et motif codés en dur ; aucune règle configurable de délai, de rôle ou de fermeture de période.",
+   "page": "ustemps",
+   "preuve": [
+    "pla-tps",
+    "pla-tps-filtre"
+   ],
+   "ceQuiLeProuve": "La fenêtre de saisie a posteriori vient du profil de pointage ; une correction exige son motif et remplace sans écraser.",
+   "preuveProfonde": {
+    "commandes": [
+     "pla-tps-motif"
+    ],
+    "exigeUneFeuilleOuverte": true,
+    "ou": "backend/tests/integration/effectifs-temps-flux.integration.test.ts (E-GP-3, E-GP-6, E-RF-13)",
+    "pourquoi": "Le motif d'une correction se saisit sur une feuille ouverte ; la règle qui la restreint est le contexte MODIFICATION_HEURES, éprouvé au serveur."
+   }
+  },
+  {
+   "id": "E-GP-6",
+   "intitule": "Approbation des heures saisies selon des flux configurables",
+   "jugeManquantLe30Septembre": "Seul le nombre de paliers se configure : ni approbateur par palier, ni conditions de routage.",
+   "page": "ustemps",
+   "preuve": [
+    "feuilles-approbations-ouvrir",
+    "pla-tps-flux",
+    "pla-tps-flux-palier",
+    "pla-tps-flux-approbateur",
+    "pla-tps-flux-champ",
+    "pla-tps-flux-operateur"
+   ],
+   "ceQuiLeProuve": "Chaque palier porte son approbateur, et le routage se pose sur un champ, un opérateur et une valeur.",
+   "prealable": [
+    {
+     "cliquer": "feuilles-approbations-ouvrir",
+     "pourquoi": "Le formulaire vit dans un dialogue depuis le 8 novembre 2026 : ses champs n'existent qu'ouvert."
+    }
+   ]
+  },
+  {
+   "id": "E-RF-13",
+   "intitule": "Corrélation d'horodatages de sources multiples",
+   "jugeManquantLe30Septembre": "La corroboration n'est qu'un indicateur sur le pointage : non utilisée dans la feuille de temps.",
+   "page": "ustemps",
+   "preuve": [
+    "pla-tps",
+    "pla-tps-lire-rapport"
+   ],
+   "ceQuiLeProuve": "La tolérance, le sort d'un pointage non corroboré et celui de deux sources divergentes sont des paramètres de la feuille.",
+   "prealable": [
+    {
+     "cliquer": "feuilles-parametres-ouvrir",
+     "pourquoi": "Le formulaire vit dans un dialogue depuis le 8 novembre 2026 : ses champs n'existent qu'ouvert."
+    }
+   ]
+  },
+  {
+   "id": "E-GN-9",
+   "intitule": "Consignation horodatée de toute action ayant un impact",
+   "jugeManquantLe30Septembre": "Journal tenu par chaque écriture, mais aucun essai n'en prouve l'exhaustivité.",
+   "page": "usjournal",
+   "preuve": [
+    "jrn-ecran",
+    "jrn-filtrer",
+    "jrn-exporter"
+   ],
+   "ceQuiLeProuve": "Le journal se consulte, se filtre et s'exporte ; son exhaustivité est tenue par effectifs-journal-exhaustivite."
+  },
+  {
+   "id": "E-TN-7",
+   "intitule": "Intégration à d'autres applications par un bus d'entreprise (ESB)",
+   "jugeManquantLe30Septembre": "Relais du journal vers le bus déclenché à la main, format des messages supposé.",
+   "page": "usintegrations",
+   "preuve": [
+    "int-ecran",
+    "int-mode",
+    "int-enregistrer"
+   ],
+   "ceQuiLeProuve": "Le connecteur ESB se règle à l'écran ; les événements partent du journal à partir d'un curseur.",
+   "prealable": [
+    {
+     "cliquer": "int-c-ESB-configurer",
+     "pourquoi": "Le réglage d'un connecteur vit dans un tiroir : sans l'ouvrir, on n'éprouverait que la liste."
+    }
+   ]
+  }
+ ]
+}
