@@ -80,5 +80,5 @@ export function PageUrgencesSante({ cle }: { cle: string }) {
   return Page ? <Page /> : null;
 }
 
-export { CLES_US, ENTREES_US, MODULE_US, NOTIONS_US, moduleDeLaPageUs } from "./menu";
+export { CLES_US, ENCADREMENT, ENTREES_US, MODULE_US, NOTIONS_US, moduleDeLaPageUs } from "./menu";
 export type { EntreeUs, NotionUs } from "./menu";

@@ -11,6 +11,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -75,7 +76,7 @@ async function amorcer(tenantId: string, comptes: { julie: string; marc: string 
 }
 
 async function employe(browser: Browser, identifiant: string, tenantId: string) {
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
@@ -114,7 +115,7 @@ test("proposer un échange entre périodes, l'accepter, le faire valider par le 
   await marc.ctx.close();
 
   // ── Le chef valide ─────────────────────────────────────────────────────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-usechanges");
@@ -131,4 +132,60 @@ test("proposer un échange entre périodes, l'accepter, le faire valider par le 
   const quartsJulie = await (await sa.get(`${API}/api/effectifs/echanges/ressources/${ids.julie}/quarts`, { headers: { "X-Tenant-Id": tenantId } })).json();
   await sa.dispose();
   expect(quartsJulie.map((q: { placeId: string }) => q.placeId)).toEqual([ids.place_marc]);
+});
+
+/**
+ * **Créer un échange depuis la console** (E-GR-7 : « la demandeuse ou son planificateur »).
+ *
+ * Le chef ouvre « Proposer un échange pour une personne », choisit Julie, son quart à céder et le
+ * quart voulu de Marc. L'échange suit ensuite le même chemin qu'une proposition de Julie : Marc
+ * l'accepte, et le chef le tranche — ici, un **refus motivé**, l'autre issue de la console.
+ */
+test("le planificateur crée un échange pour une personne ; la destinataire l'accepte ; le chef le refuse, motif à l'appui", async ({ browser }) => {
+  test.setTimeout(240_000);
+  const comptes = { julie: uniq("julie").toLowerCase(), marc: uniq("marc").toLowerCase() };
+  const systeme = await superadminContext();
+  const tenantId = await createTenant(systeme, uniq("EffEchPour"));
+  await systeme.dispose();
+  const ids = await amorcer(tenantId, comptes);
+
+  // ── Le chef crée l'échange pour Julie ──────────────────────────────────────────────────
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
+  const chef = await ctxChef.newPage();
+  await selectTenant(chef, tenantId);
+  await ouvrirNav(chef, "nav-usechanges");
+  await chef.getByTestId("pla-ech-pour-ouvrir").click();
+  await expect(chef.getByTestId("pla-ech-pour-modal")).toBeVisible();
+  await expect(chef.getByTestId("pla-ech-pour-ressource").locator(`option[value="${ids.julie}"]`)).toHaveCount(1, { timeout: 30_000 });
+  await chef.getByTestId("pla-ech-pour-ressource").selectOption(ids.julie);
+  await expect(chef.getByTestId("pla-ech-pour-cede").locator(`option[value="${ids.place_julie}"]`)).toHaveCount(1, { timeout: 30_000 });
+  await chef.getByTestId("pla-ech-pour-cede").selectOption(ids.place_julie);
+  await expect(chef.getByTestId("pla-ech-pour-voulu").locator(`option[value="${ids.place_marc}"]`)).toHaveCount(1, { timeout: 30_000 });
+  await chef.getByTestId("pla-ech-pour-voulu").selectOption(ids.place_marc);
+  await expectNoA11yViolations(chef);
+  await chef.getByTestId("pla-ech-pour-proposer").click();
+  await expect(chef.getByTestId("pla-ech-bilan")).toContainText("Échange proposé pour Julie Roy avec Marc Dubé : Marc Dubé doit l'accepter.");
+
+  // ── Marc l'accepte, comme s'il venait de Julie ─────────────────────────────────────────
+  const marc = await employe(browser, comptes.marc, tenantId);
+  const accepter = marc.page.locator('[data-testid^="mec-"][data-testid$="-accepter"]');
+  await expect(accepter).toHaveCount(1);
+  await accepter.click();
+  await expect(marc.page.getByTestId("mec-info")).toContainText("Échange à valider par le chef.");
+  await marc.ctx.close();
+
+  // ── Le chef refuse, motif à l'appui ────────────────────────────────────────────────────
+  await chef.reload();
+  await chef.locator('[data-testid^="pla-ech-"][data-testid$="-trancher"]').click();
+  await chef.getByTestId("pla-ech-motif").fill("Effectif minimal non garanti le lundi");
+  await chef.getByTestId("pla-ech-rejeter").click();
+  await expect(chef.getByTestId("pla-ech-bilan")).toContainText("Échange entre Julie Roy et Marc Dubé :");
+  await expectNoA11yViolations(chef);
+  await ctxChef.close();
+
+  // Refusé : chacun garde son quart.
+  const sa = await superadminContext();
+  const quartsJulie = await (await sa.get(`${API}/api/effectifs/echanges/ressources/${ids.julie}/quarts`, { headers: { "X-Tenant-Id": tenantId } })).json();
+  await sa.dispose();
+  expect(quartsJulie.map((q: { placeId: string }) => q.placeId)).toEqual([ids.place_julie]);
 });

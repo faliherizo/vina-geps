@@ -545,10 +545,24 @@ const MODULES_AUDIT = {
 
 const PAGES = [
   { nom: "Tableau de bord", nav: "nav-dashboard",
+    onglets: ["tdb-onglet-couverture", "tdb-onglet-absences", "tdb-onglet-demandes", "tdb-onglet-anomalies"],
     // Lot E-4 : le bloc des annonces, avant et après « Marquer comme lue ».
     etats: [{ nom: "annonce marquée lue", agir: async (page) => {
       await page.getByTestId("annonce-lue-an-1").click();
       await page.getByTestId("annonce-an-1").waitFor({ state: "visible" });
+    } },
+    // Planche s01 : chaque sujet du jour, ouvert par sa tuile ou par son onglet, est un état à part.
+    { nom: "onglet « Absences à traiter » ouvert par sa tuile", agir: async (page) => {
+      await page.getByTestId("tdb-tuile-absences").click();
+      await page.getByTestId("tdb-panneau-absences").waitFor({ state: "visible" });
+    } },
+    { nom: "onglet « Demandes en attente »", agir: async (page) => {
+      await page.getByTestId("tdb-onglet-demandes").click();
+      await page.getByTestId("tdb-panneau-demandes").waitFor({ state: "visible" });
+    } },
+    { nom: "onglet « Anomalies de présence »", agir: async (page) => {
+      await page.getByTestId("tdb-onglet-anomalies").click();
+      await page.getByTestId("tdb-panneau-anomalies").waitFor({ state: "visible" });
     } }] },
   { nom: "Constructeur de rapports", nav: "nav-rapports",
     // Les colonnes, les filtres et le tableau de résultat ne se rendent qu'une source choisie.
@@ -711,7 +725,12 @@ const PAGES = [
     ] },
   { nom: "Appeler un collègue", nav: "nav-usappels" },
   { nom: "Listes de diffusion du personnel", nav: "nav-usdiffusion" },
-  { nom: "Mon horaire", nav: "nav-monhoraire" },
+  { nom: "Mon horaire", nav: "nav-monhoraire",
+    // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
+    etats: [{ nom: "liste de la semaine", agir: async (page) => {
+      await page.getByTestId("mho-vue-liste").click();
+      await page.getByTestId("mho-table").or(page.getByTestId("mho-vide")).first().waitFor({ state: "visible" });
+    } }] },
   { nom: "Ma feuille de temps", nav: "nav-matemps",
     etats: [{ nom: "correction d'un segment et ses versions", agir: async (page) => {
       await page.getByTestId("mft-s-sg-1-modifier").click();
@@ -869,10 +888,44 @@ const RELEVE = `() => {
     }
   }
 
+  /*
+    **Aucun élément interactif collé à un autre** (demande du 14 novembre 2026 : « Ajouter l'accès »
+    collé dans Périmètres, « Valider la définition » contre « Exécuter le rapport » dans Rapports).
+    Deux commandes voisines doivent garder au moins 4 px entre elles : collées, elles se lisent
+    comme une seule, et un doigt touche l'une pour l'autre. On mesure dans <main> seulement — le
+    menu latéral empile ses entrées pleine largeur, voulu — et l'on excuse les onglets d'une même
+    barre, qui se touchent par dessin.
+  */
+  const colles = [];
+  const nom = (el) => el.getAttribute("data-testid") || (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30) || el.tagName.toLowerCase();
+  // Un dialogue modal ouvert est une couche à part : on mesure **ses** commandes entre elles, pas
+  // leur superposition à la page qu'il couvre (ce n'est pas un collage, c'est une couche).
+  const modaux = [...document.querySelectorAll('[aria-modal="true"]')].filter(visible);
+  const portee = modaux.length ? modaux[modaux.length - 1] : document.querySelector("main");
+  const commandes = [...(portee ? portee.querySelectorAll(SELECTEUR) : [])]
+    .filter((el) => visible(el) && !(el.tagName === "A" && el.closest("p, li, figcaption, small, .muted, caption, td")))
+    .map((el) => ({ el, r: el.getBoundingClientRect() }));
+  const ECART_MIN = 4;
+  for (let i = 0; i < commandes.length; i++) {
+    for (let j = i + 1; j < commandes.length; j++) {
+      const a = commandes[i], b = commandes[j];
+      if (a.el.contains(b.el) || b.el.contains(a.el)) continue;
+      if (a.el.getAttribute("role") === "tab" && b.el.getAttribute("role") === "tab") continue;
+      const recouvreV = Math.min(a.r.bottom, b.r.bottom) - Math.max(a.r.top, b.r.top);
+      const recouvreH = Math.min(a.r.right, b.r.right) - Math.max(a.r.left, b.r.left);
+      const ecartH = Math.max(b.r.left - a.r.right, a.r.left - b.r.right);
+      const ecartV = Math.max(b.r.top - a.r.bottom, a.r.top - b.r.bottom);
+      const coteACote = recouvreV > 4 && ecartH > -2 && ecartH < ECART_MIN;
+      const dessusDessous = recouvreH > 4 && ecartV > -2 && ecartV < ECART_MIN;
+      if (coteACote || dessusDessous) colles.push({ quoi: nom(a.el), avec: nom(b.el), ecart: Math.round(coteACote ? ecartH : ecartV) });
+    }
+  }
+
   return {
     petites,
     recouverts,
     debordants,
+    colles,
     debordement: document.documentElement.scrollWidth - document.documentElement.clientWidth,
   };
 }`;
@@ -1064,9 +1117,11 @@ test.describe("Audit WCAG 2.2 — géométrie et mise en page", () => {
             petites: Array<{ quoi: string; largeur: number; hauteur: number }>;
             recouverts: Array<{ quoi: string; par: string }>;
             debordants: Array<{ quoi: string; de: number }>;
+            colles: Array<{ quoi: string; avec: string; ecart: number }>;
             debordement: number;
           };
           if (r.debordement > 2) manquements.push(`${etat} — débordement horizontal de ${r.debordement} px`);
+          for (const c of r.colles) manquements.push(`${etat} — « ${c.quoi} » collé à « ${c.avec} » (${c.ecart} px)`);
           for (const c of r.debordants) {
             manquements.push(`${etat} — la cellule « ${c.quoi} » déborde de sa rangée de ${c.de} px (cellule sortie du flux tabulaire)`);
           }

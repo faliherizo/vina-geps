@@ -14,7 +14,7 @@
  * ciblée qui décide, et une vue dont la page est masquée disparaît avec elle.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MODULE_US, NOTIONS_US } from "./urgencessante/menu";
+import { MODULE_US, NOTIONS_US, type NotionUs } from "./urgencessante/menu";
 
 /** Une vue : une page, éventuellement ouverte sur un onglet précis. */
 export interface Vue {
@@ -47,13 +47,11 @@ export interface Concept {
   vues: Vue[];
 }
 
-/** Un groupe du menu (section repliable) : des notions, ou des pages seules. */
+/** Une rubrique du menu (un titre, jamais replié) : des notions, ou des pages seules. */
 export interface GroupeNav {
   key: string;
   label: string;
   icon: string;
-  /** Module qui régit **toute** la section : désactivé, elle disparaît, en-tête compris. */
-  module?: string;
   entrees: Array<Concept | Vue>;
 }
 
@@ -67,49 +65,52 @@ export function testIdDe(v: Vue): string {
 }
 
 /**
- * **Le module Urgences-santé** (AO 26-015-DO) : neuf notions, **une page par entrée**.
+ * **Une notion du module devient une entrée du menu** (AO 26-015-DO) — une page par écran.
  *
- * Le groupe est construit depuis `urgencessante/menu.ts` — la liste des écrans n'est pas recopiée
- * ici. Les douze onglets de l'ancienne « Planification des effectifs » et les sept de l'ancien
- * « Paramétrage » sont devenus dix-neuf pages : un lien se partage, le retour arrière revient à
- * l'écran précédent, et un écran se charge seul.
+ * La liste des écrans vient de `urgencessante/menu.ts`, elle n'est pas recopiée ici. Chaque vue
+ * porte le **socle** du module (`effectifs`) : sans lui, tous les écrans du module disparaissent,
+ * alors que le tableau de bord, voisin dans la même rubrique, reste. Le sous-module de chaque page
+ * (`effectifs_planification`…) est jugé à part, par `PAGE_MODULE`.
+ *
+ * Une notion d'une seule vue est un **lien direct**, pas un intertitre : un titre qui ne regroupe
+ * rien n'aide pas à se repérer (et l'essai de navigation le refuse).
  */
-const GROUPE_URGENCES_SANTE: GroupeNav = {
-  key: "urgencessante",
-  label: "Urgences-santé",
-  icon: "🚑",
-  module: MODULE_US,
-  // Une notion d'une seule vue est un **lien direct**, pas un intertitre : un titre qui ne
-  // regroupe rien n'aide pas à se repérer (et l'essai de navigation le refuse).
-  entrees: NOTIONS_US.map((n) => (n.cle === null || n.entrees.length === 1
-    ? { page: n.entrees[0].cle, module: n.entrees[0].module }
-    : {
-      key: n.cle!,
-      i18nKey: `concept.${n.cle}`,
-      icon: n.icone,
-      vues: n.entrees.map((e) => ({ page: e.cle, module: e.module })),
-    })),
-};
+function entreeDuModule(n: NotionUs): Concept | Vue {
+  if (n.cle === null || n.entrees.length === 1) return { page: n.entrees[0].cle, module: MODULE_US };
+  return { key: n.cle, i18nKey: `concept.${n.cle}`, icon: n.icone, vues: n.entrees.map((e) => ({ page: e.cle, module: MODULE_US })) };
+}
 
+/** La notion du module qui se range sous « Administration » : elle paramètre, elle ne s'utilise pas au quotidien. */
+const NOTION_PARAMETRES_US = "usadministration";
+
+/**
+ * **Le menu de VINA GEPS** (planche s01, ADR 0073) — trois rubriques fixes, deux niveaux au plus.
+ *
+ * La rubrique est un **titre**, pas un accordéon : on atteignait un écran en trois clics (section,
+ * notion, vue), et le tableau de bord était une section qui ne contenait… que le tableau de bord.
+ * « Menu principal » suit la colonne des planches : le tableau de bord, puis les sujets du
+ * travail de tous les jours, puis les rapports. Le paramétrage du module rejoint l'administration
+ * de l'organisme : c'est le même public, et ce n'est pas le travail quotidien.
+ */
 export const NAVIGATION: GroupeNav[] = [
-  /**
-   * **Le tableau de bord est une section à lui seul, et la première** : l'écran sur lequel on
-   * arrive à la connexion se retrouve en un clic. Une section d'une seule page est une **vue**
-   * du menu, pas une notion : elle s'affiche comme un lien direct, sans intertitre à déplier.
-   */
-  { key: "pilotage", label: "Tableau de bord", icon: "📊", entrees: [{ page: "dashboard" }, { page: "rapports" }] },
-  GROUPE_URGENCES_SANTE,
-  { key: "space", label: "Mon espace", icon: "🏠", entrees: [
-    { page: "account" }, { page: "approvals" }, { page: "help" }, { page: "soutien" },
+  { key: "urgencessante", label: "Menu principal", icon: "🧭", entrees: [
+    { page: "dashboard" },
+    ...NOTIONS_US.filter((n) => n.cle !== NOTION_PARAMETRES_US).map(entreeDuModule),
+    { page: "rapports" },
+    { page: "approvals" },
   ] },
   { key: "admin", label: "Administration", icon: "🛠️", entrees: [
+    ...NOTIONS_US.filter((n) => n.cle === NOTION_PARAMETRES_US).map(entreeDuModule),
     { page: "admin" },
     { key: "access", i18nKey: "concept.access", icon: "🔒", vues: [
       { page: "access", i18nKey: "vue.access.objets", principale: true },
       { page: "access", onglet: "octrois", i18nKey: "vue.access.octrois" },
       { page: "access", onglet: "qui", i18nKey: "vue.access.qui" },
     ] },
-    { page: "notifications" }, { page: "apidocs" }, { page: "integrations" }, { page: "superadmin" },
+    { page: "notifications" }, { page: "integrations" }, { page: "apidocs" }, { page: "superadmin" },
+  ] },
+  { key: "space", label: "Aide et compte", icon: "🏠", entrees: [
+    { page: "account" }, { page: "help" }, { page: "soutien" },
   ] },
 ];
 

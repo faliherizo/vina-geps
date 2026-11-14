@@ -73,6 +73,20 @@ const RYTHME_MS = 3000;
  * `actif` permet de **ne pas interroger** quand le module n'est pas ouvert : un appel réseau
  * répété qui rend 403 toutes les trois secondes remplit la console et masque les vraies erreurs.
  */
+/**
+ * **Un appel vient d'être lancé** — d'un fil, de « Appeler un collègue » ou d'un autre écran.
+ *
+ * Le bandeau des appels vit en tête de `<main>`, dans sa propre instance du crochet : sans ce
+ * signal, il ne l'apprenait qu'à la relève suivante, plusieurs secondes plus tard, et l'appelant,
+ * resté au bas de son fil, croyait que le bouton « Appeler » ne faisait rien (relevé du
+ * 14 novembre 2026). Le signal fait relire le bandeau aussitôt et le ramène à l'écran.
+ */
+export const APPEL_LANCE = "vina:appel-lance";
+
+export function signalerAppelLance(): void {
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(APPEL_LANCE));
+}
+
 export function useAppels(actif: boolean) {
   const { apiFetch, user } = useAuth();
   const { tenantId } = useCurrentTenant();
@@ -111,7 +125,9 @@ export function useAppels(actif: boolean) {
     if (!actif) { setAppels([]); setGroupes([]); return; }
     void relire();
     const minuterie = setInterval(() => { void relire(); }, RYTHME_MS);
-    return () => clearInterval(minuterie);
+    const aussitot = () => { void relire(); };
+    window.addEventListener(APPEL_LANCE, aussitot);
+    return () => { clearInterval(minuterie); window.removeEventListener(APPEL_LANCE, aussitot); };
   }, [actif, relire]);
 
   const geste = useCallback(async (appelId: string, g: "decrocher" | "refuser" | "raccrocher") => {
@@ -127,6 +143,7 @@ export function useAppels(actif: boolean) {
         method: "POST", body: JSON.stringify({ appeleId, conversationId: conversationId ?? null }),
       });
       setRefus("");
+      signalerAppelLance();
     } catch (e) { setRefus((e as Error).message); }
     await relire();
   }, [appelerApi, relire]);
@@ -152,6 +169,22 @@ const autrui = (a: AppelServi) => (a.entrant ? a.appelantId : a.appeleId);
  */
 export function BandeauAppels({ actif }: { actif: boolean }) {
   const { appels, groupes, refus, geste, gesteGroupe } = useAppels(actif);
+  const bandeau = useRef<HTMLDivElement>(null);
+  /**
+   * Un appel lancé d'ici ramène le bandeau **à l'écran** — par défilement, sans y porter le focus :
+   * le geste « Raccrocher » doit être visible, mais l'appelant garde son curseur où il était.
+   */
+  const aMontrer = useRef(false);
+  useEffect(() => {
+    const noter = () => { aMontrer.current = true; };
+    window.addEventListener(APPEL_LANCE, noter);
+    return () => window.removeEventListener(APPEL_LANCE, noter);
+  }, []);
+  useEffect(() => {
+    if (!aMontrer.current || appels.length + groupes.length === 0) return;
+    aMontrer.current = false;
+    bandeau.current?.scrollIntoView?.({ block: "nearest" });
+  }, [appels, groupes]);
   /**
    * Un battement par seconde, **pour re-rendre** — et rien d'autre.
    *
@@ -170,7 +203,7 @@ export function BandeauAppels({ actif }: { actif: boolean }) {
   if (!actif || (appels.length === 0 && groupes.length === 0)) return null;
 
   return (
-    <div className="sq-appels-bandeau" data-testid="sq-appels-bandeau" role="alert" aria-live="assertive">
+    <div className="sq-appels-bandeau" data-testid="sq-appels-bandeau" role="alert" aria-live="assertive" ref={bandeau}>
       {refus && <p className="sq-appels-refus" data-testid="sq-appels-refus">{refus}</p>}
       {appels.map((a) => {
         const qui = autrui(a);

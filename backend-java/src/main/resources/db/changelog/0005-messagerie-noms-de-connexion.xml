@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **La messagerie nomme les personnes par leur nom de connexion** (14 novembre 2026).
+
+    La liste des membres d'un groupe rendait la clé technique `login@@organisme` : choisir « Marc » à
+    l'écran ouvrait donc un fil, lançait un appel ou posait une réponse privée au nom de
+    `marc.dube@@<organisme>`, alors que l'acteur de la messagerie est `marc.dube`. Marc ne voyait pas
+    le fil, et l'appel ne sonnait jamais chez lui. L'adaptateur est corrigé ; ce changeset ramène les
+    identifiants déjà écrits à leur nom de connexion.
+
+    Là où une contrainte d'unicité pourrait se heurter (la personne figure déjà sous les deux formes),
+    la ligne au nom technique est retirée : elle double celle qui porte le bon nom.
+  -->
+  <changeSet id="0005-messagerie-noms-de-connexion" author="messagerie-appels">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'msg_distributions'</sqlCheck>
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM pragma_table_info('msg_messages') WHERE name = 'supprimePar'</sqlCheck>
+    </preConditions>
+    <comment>Identifiants « login@@organisme » de la messagerie ramenés au nom de connexion.</comment>
+    <sql>UPDATE OR IGNORE msg_participants SET personId = substr(personId, 1, instr(personId, '@@') - 1) WHERE personId LIKE '%@@%'</sql>
+    <sql>DELETE FROM msg_participants WHERE personId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_appels SET appelantId = substr(appelantId, 1, instr(appelantId, '@@') - 1) WHERE appelantId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_appels SET appeleId = substr(appeleId, 1, instr(appeleId, '@@') - 1) WHERE appeleId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_appels SET termineParId = substr(termineParId, 1, instr(termineParId, '@@') - 1) WHERE termineParId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_brouillons SET auteurId = substr(auteurId, 1, instr(auteurId, '@@') - 1) WHERE auteurId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_conversations SET creePar = substr(creePar, 1, instr(creePar, '@@') - 1) WHERE creePar LIKE '%@@%'</sql>
+    <sql>UPDATE OR IGNORE msg_lectures SET personId = substr(personId, 1, instr(personId, '@@') - 1) WHERE personId LIKE '%@@%'</sql>
+    <sql>DELETE FROM msg_lectures WHERE personId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_liste_membres SET cible = substr(cible, 1, instr(cible, '@@') - 1) WHERE cible LIKE '%@@%'</sql>
+    <sql>UPDATE msg_listes SET creeePar = substr(creeePar, 1, instr(creeePar, '@@') - 1) WHERE creeePar LIKE '%@@%'</sql>
+    <sql>UPDATE msg_messages SET auteurId = substr(auteurId, 1, instr(auteurId, '@@') - 1) WHERE auteurId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_messages SET priveA = substr(priveA, 1, instr(priveA, '@@') - 1) WHERE priveA LIKE '%@@%'</sql>
+    <sql>UPDATE msg_messages SET supprimePar = substr(supprimePar, 1, instr(supprimePar, '@@') - 1) WHERE supprimePar LIKE '%@@%'</sql>
+    <sql>UPDATE OR IGNORE msg_reactions SET personId = substr(personId, 1, instr(personId, '@@') - 1) WHERE personId LIKE '%@@%'</sql>
+    <sql>DELETE FROM msg_reactions WHERE personId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_appels_groupe SET lanceParId = substr(lanceParId, 1, instr(lanceParId, '@@') - 1) WHERE lanceParId LIKE '%@@%'</sql>
+    <sql>UPDATE OR IGNORE msg_appels_groupe_participants SET personId = substr(personId, 1, instr(personId, '@@') - 1) WHERE personId LIKE '%@@%'</sql>
+    <sql>DELETE FROM msg_appels_groupe_participants WHERE personId LIKE '%@@%'</sql>
+    <sql>UPDATE OR IGNORE msg_distributions SET personId = substr(personId, 1, instr(personId, '@@') - 1) WHERE personId LIKE '%@@%'</sql>
+    <sql>DELETE FROM msg_distributions WHERE personId LIKE '%@@%'</sql>
+    <sql>UPDATE msg_journal SET acteurId = substr(acteurId, 1, instr(acteurId, '@@') - 1) WHERE acteurId LIKE '%@@%'</sql>
+  </changeSet>
+</databaseChangeLog>

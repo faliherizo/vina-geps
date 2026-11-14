@@ -1,8 +1,14 @@
-# Urgences-santé — gestion des effectifs
+# VINA GEPS — VINA Gestion des Personnels de la Santé
 
-Produit issu du module « Urgences-santé » de Nexu VINA (AO 26-015-DO, Corporation d'urgences-santé),
-séparé pour vivre dans son propre dépôt : un serveur **Java seul** (Spring Boot 4, Java 25), une
+**VINA GEPS** est la gestion des effectifs des personnels de la santé : horaires, disponibilités,
+absences, confection annuelle (AGPH), quarts, pointage, feuilles de temps et messagerie sécurisée.
+Son premier client est **Urgences-santé** (AO 26-015-DO, Corporation d'urgences-santé), dont il
+reprend le module né dans Nexu VINA, séparé pour vivre dans son propre dépôt : un serveur **Java seul** (Spring Boot 4, Java 25), une
 interface React, une console superadmin réduite, et leur outillage d'essai.
+
+Documents d'entrée :
+- [Maquette du gabarit, du menu par profil et du tableau de bord](docs/urgences-sante/maquettes/MAQUETTE-NAVIGATION-VINA-GEPS.md)
+- [Utilisateurs, profils, protocole d'authentification (OIDC Entra ID) et accès](docs/urgences-sante/UTILISATEURS-PROFILS-ACCES.md)
 
 ## Démarrer
 

@@ -45,7 +45,7 @@ class SchemaLiquibaseTest {
                 // La paie, la tarification et la facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(8);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(9);
     }
 
     @Test
@@ -59,6 +59,25 @@ class SchemaLiquibaseTest {
         assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe",
                 "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN");
+    }
+
+    @Test
+    @DisplayName("0005 : les identifiants « login@@organisme » de la messagerie redeviennent des noms de connexion, sans doublon")
+    void nomsDeConnexion(@TempDir Path dossier) throws Exception {
+        SingleConnectionDataSource ds = new SingleConnectionDataSource("jdbc:sqlite:" + dossier.resolve("noms.db"), true);
+        liquibase(ds).afterPropertiesSet();
+        JdbcClient jdbc = JdbcClient.create(ds);
+        // Un fil ouvert à l'écran avant le correctif : Marc y figure sous sa clé technique, Julie sous les deux formes.
+        jdbc.sql("INSERT INTO msg_participants (id, tenantId, conversationId, personId, role, depuis) VALUES "
+                 + "('p1', 'T', 'c1', 'marc.dube@@T', 'membre', 'x'), ('p2', 'T', 'c1', 'julie.roy', 'moderateur', 'x')").update();
+        jdbc.sql("INSERT INTO msg_appels (id, tenantId, appelantId, appeleId, conversationId, etat, lanceLe) VALUES ('a1', 'T', 'julie.roy', 'marc.dube@@T', 'c1', 'sonne', 'x')").update();
+        jdbc.sql("INSERT INTO msg_lectures (id, tenantId, messageId, personId, luLe) VALUES ('l1', 'T', 'm1', 'julie.roy', 'x'), ('l2', 'T', 'm1', 'julie.roy@@T', 'x')").update();
+        jdbc.sql("DELETE FROM DATABASECHANGELOG WHERE ID = '0005-messagerie-noms-de-connexion'").update();
+        liquibase(ds).afterPropertiesSet();
+        assertThat(jdbc.sql("SELECT personId FROM msg_participants ORDER BY personId").query(String.class).list()).containsExactly("julie.roy", "marc.dube");
+        assertThat(jdbc.sql("SELECT appeleId FROM msg_appels").query(String.class).single()).isEqualTo("marc.dube");
+        // La lecture au nom technique doublait celle au bon nom : elle est retirée, pas dupliquée.
+        assertThat(jdbc.sql("SELECT personId FROM msg_lectures").query(String.class).list()).containsExactly("julie.roy");
     }
 }

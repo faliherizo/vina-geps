@@ -11,9 +11,9 @@ messagerie et des avis par l'**ADR 0070**.
 
 | Planche | Écran livré | Comment l'ouvrir |
 |---|---|---|
-| **s01** Tableau de bord gestionnaire | Gestion des quarts › Comblement | `/uscomblement` |
+| **s01** Tableau de bord gestionnaire | **Tableau de bord** de l'encadrement (onglets, tuiles, quarts à couvrir), puis Gestion des quarts › Comblement — *refondu le 13 nov. 2026, ADR 0073* | `/dashboard`, `/uscomblement` |
 | **s02** Portail employé | Les sept écrans personnels du module | `/monhoraire`, `/mesdisponibilites`, `/monpointage`, `/matemps`, `/mesabsences`, `/mesechanges`, `/monagph` |
-| **s03** Mon horaire | **Mon horaire** — *écran créé pour cette planche* | `/monhoraire` |
+| **s03** Mon horaire | **Mon horaire** — *écran créé pour cette planche* ; calendrier du mois par défaut, liste de la semaine à un clic | `/monhoraire` |
 | **s04** Confection annuelle (AGPH) | Confection AGPH (console, et la vue de l'employé) | `/usagph`, `/monagph` |
 | **s05** Centre de couverture des quarts | Gestion des quarts › Comblement | `/uscomblement` |
 | **s06** Détail du quart | Gestion des quarts › Quarts et équipages | `/usequipages` |
@@ -41,6 +41,12 @@ essai l'exige écran par écran (`e2e/tests/e2e/urgences-sante-menu.spec.ts`), d
 trentième ne puisse pas s'en écarter par omission.
 
 ## Le menu, et l'organisme de démonstration
+
+> **Depuis le 13 novembre 2026 (ADR 0073)**, le chrome est celui de la planche s01 : barre marine
+> « VINA GEPS », colonne blanche à trois rubriques (« Menu principal », « Administration », « Aide
+> et compte »). Le détail, par profil, est dans
+> [MAQUETTE-NAVIGATION-VINA-GEPS.md](MAQUETTE-NAVIGATION-VINA-GEPS.md). Le texte ci-dessous décrit
+> la révision du 1er novembre, dont le découpage en notions est conservé.
 
 **Le menu suit les planches** (révision du 1er novembre, seconde passe) : les neuf écrans du
 module vivent sous une section « Urgences-santé » dont les entrées sont celles de la colonne

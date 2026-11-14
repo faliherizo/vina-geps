@@ -2,20 +2,20 @@
   "cookies": [
     {
       "name": "session",
-      "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c3ItMTc5NDU5NDA5ODkzNS0yNzE4OTMiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzk0NTk0MTAzLCJleHAiOjE3OTQ2MjI5MDN9.MRyLguwFyFt_ARWmr_PIWTG86A83ZTSlQ1kA-B0oapo",
+      "value": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ1c3ItMTc5NDY2NzI0NzkyNC00NzI0MDQiLCJ1c2VybmFtZSI6ImFkbWluIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzk0NjY3MjUyLCJleHAiOjE3OTQ2OTYwNTJ9.d94Xios2ctSIgdGwxWUuLl-DESJpPHOy7OfXqktGsN0",
       "domain": "localhost",
       "path": "/",
-      "expires": 1794622903,
+      "expires": 1794696052.103,
       "httpOnly": true,
       "secure": false,
       "sameSite": "Lax"
     },
     {
       "name": "csrf",
-      "value": "G-thPqmhQxxuC9rjLG1qrNdxczs_jfxu",
+      "value": "kBoTTzvQ2_DaYrButPlfTm1T7m53zMYI",
       "domain": "localhost",
       "path": "/",
-      "expires": 1794622903,
+      "expires": 1794696052.103,
       "httpOnly": false,
       "secure": false,
       "sameSite": "Lax"

@@ -218,6 +218,8 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     await connecter(page, "julie.roy", MDP);
     await ouvrirNav(page, "nav-monhoraire");
     await expect(page.getByTestId("mho-titre")).toBeVisible({ timeout: 30_000 });
+    // Le calendrier du mois est la vue par défaut : la table est celle de la liste de la semaine.
+    await page.getByTestId("mho-vue-liste").click();
     // Les colonnes de la planche s03 : jour, quart, site, poste, statut.
     await expect(page.getByTestId("mho-table").locator("thead th"))
       .toHaveText([/Jour/, /Quart/, /Site/, /Poste/, /Statut/]);

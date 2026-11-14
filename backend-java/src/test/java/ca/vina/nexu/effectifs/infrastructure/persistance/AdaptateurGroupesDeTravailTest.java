@@ -29,8 +29,10 @@ class AdaptateurGroupesDeTravailTest {
                 + "VALUES (?, ?, 'unites', ?, ?, NULL, '{}', ?, ?, 'x', 'adm')";
         jdbc.sql(unite).params("r-1", T, "EST", "Secteur Est", "2026-01-01", null).update();
         jdbc.sql(unite).params("r-2", T, "VIEUX", "Ancien secteur", "2020-01-01", "2025-12-31").update();
-        jdbc.sql("INSERT INTO users (id, username, tenantId, passwordHash, role, createdAt) VALUES ('u-roy', 'roy', ?, 'x', 'employee', 'x'), ('u-ngu', 'ngu', ?, 'x', 'employee', 'x')")
-                .params(T, T).update();
+        // La forme réelle d'un compte d'organisme : la clé technique « login@@organisme », et le nom de connexion à part.
+        jdbc.sql("INSERT INTO users (id, username, loginName, tenantId, passwordHash, role, createdAt) VALUES ('u-roy', 'roy@@T', 'roy', ?, 'x', 'employee', 'x'), "
+                 + "('u-ngu', 'ngu@@T', 'ngu', ?, 'x', 'employee', 'x'), ('u-ancien', 'ancien', NULL, ?, 'x', 'employee', 'x')")
+                .params(T, T, T).update();
         String ressource = "INSERT INTO eff_ressources (id, tenantId, matricule, nom, utilisateurId, uniteCode, corpsEmploiCode, titreEmploiCode, statutEmploiCode, conventionCode, actif, creeLe) "
                 + "VALUES (?, ?, ?, ?, ?, ?, 'PARA', 'TECH', 'TC', 'FSSS', ?, 'x')";
         jdbc.sql(ressource).params("rs-1", T, "P1", "Julie Roy", "u-roy", "EST", 1).update();
@@ -47,5 +49,11 @@ class AdaptateurGroupesDeTravailTest {
         assertThat(groupes.groupesDe(T, "roy")).containsExactly("EST");
         assertThat(groupes.groupesDe(T, "ngu")).isEmpty();
         assertThat(groupes.groupesDe(T, "personne")).isEmpty();
+        // Jamais la clé technique : c'est le nom que porte l'acteur de la messagerie qu'on rend et qu'on cherche.
+        assertThat(groupes.groupesDe(T, "roy@@T")).isEmpty();
+        // Un compte sans nom de connexion (antérieur à la colonne) garde sa clé comme nom.
+        jdbc.sql(ressource).params("rs-5", T, "P5", "Ancien compte", "u-ancien", "EST", 1).update();
+        assertThat(groupes.membres(T, "EST")).extracting(GroupesDeTravailPort.Membre::personId).containsExactly("ancien", "roy");
+        assertThat(groupes.groupesDe(T, "ancien")).containsExactly("EST");
     }
 }

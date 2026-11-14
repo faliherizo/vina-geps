@@ -128,7 +128,7 @@ export default function MonAgph() {
               <li key={r.id} data-testid={`agm-rlt-${r.id}`}>
                 Poste <strong>{r.posteCode}</strong>, du {r.debut} au {r.fin} — {LIBELLE_REMPLACEMENT[r.etat]}, manifestations jusqu'au {instant(r.finManifestation)}{" "}
                 <span className="eff-actions">
-                  <button type="button" data-testid={`agm-rlt-${r.id}-manifester`} onClick={() => void manifester(r, false)}>Manifester mon intérêt<span className="sr-only"> par le poste {r.posteCode}</span></button>
+                  <button type="button" data-testid={`agm-rlt-${r.id}-manifester`} onClick={() => void manifester(r, false)}>Manifester mon intérêt<span className="sr-only"> pour le poste {r.posteCode}</span></button>
                   <button type="button" className="secondary" data-testid={`agm-rlt-${r.id}-retirer`} onClick={() => void manifester(r, true)}>Retirer mon intérêt<span className="sr-only"> pour le poste {r.posteCode}</span></button>
                 </span>
               </li>

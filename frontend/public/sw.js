@@ -1,5 +1,5 @@
 /*
- * Service worker de Nexu VINA — deux rôles, rien de plus :
+ * Service worker de VINA GEPS — deux rôles, rien de plus :
  *  1. rendre l'application **installable** (devis 2.6 : notifications sans application native ;
  *     grille 10 : rien à installer — l'installation est proposée, jamais exigée) ;
  *  2. recevoir les **notifications poussées** (Web Push, RFC 8291) et les afficher, écran fermé.
@@ -10,7 +10,7 @@ self.addEventListener("install", () => { self.skipWaiting(); });
 self.addEventListener("activate", (e) => { e.waitUntil(self.clients.claim()); });
 
 self.addEventListener("push", (e) => {
-  let charge = { titre: "Nexu VINA", corps: "", url: "/admin/notifications" };
+  let charge = { titre: "VINA GEPS", corps: "", url: "/admin/notifications" };
   try { charge = { ...charge, ...e.data.json() }; } catch { charge.corps = e.data ? e.data.text() : ""; }
   e.waitUntil(self.registration.showNotification(charge.titre, {
     body: charge.corps, lang: "fr-CA", tag: charge.etiquette || "nexu-vina", renotify: true,

@@ -26,3 +26,29 @@ fieldset.eff-groupe { border: 1px solid var(--border-strong); border-radius: 6px
 .eff-table-compacte caption { text-align: left; font-weight: 600; padding-bottom: 4px; }
 .eff-table-compacte th, .eff-table-compacte td { text-align: left; padding: 4px 8px; border-bottom: 1px solid var(--border, #d0d7de); overflow-wrap: anywhere; }
 .eff-empreinte { overflow-wrap: anywhere; word-break: break-all; }
+
+/* ── Mon horaire en calendrier (planche s03) ─────────────────────────────────
+   Une case est un conteneur, pas un bouton : le curseur ne promet pas de geste. Un quart incertain
+   (échange en cours) le dit en mots ; le fond ambré ne fait que doubler la mention (WCAG 1.4.1). */
+.mho-bascule { margin: 4px 0 8px; }
+.mho-calendrier .cal-cell { cursor: default; min-height: 96px; }
+.mho-calendrier .cal-cell:hover { border-color: transparent; }
+.mho-cal-date { display: none; }
+.mho-cal-quarts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.mho-cal-quarts li { font-size: 12px; line-height: 1.3; padding: 3px 5px; border-radius: 4px; background: var(--primary-soft); color: var(--text); border-left: 3px solid var(--primary); overflow-wrap: anywhere; }
+.mho-cal-quarts li.mho-cal-incertain { background: var(--warning-bg); border-left-color: var(--warning); }
+.mho-cal-mention { font-weight: 700; color: var(--warning); }
+/* Sur téléphone, sept colonnes de 48 px ne se lisent pas : le mois devient un agenda des seuls
+   jours travaillés, chacun nommé en toutes lettres. Aucun débordement horizontal (1.4.10). */
+@media (max-width: 600px) {
+  /* Un mois sans quart masque toutes ses cases : la grille, focalisable, garde une cible lisible
+     (2.5.8) et dit en clair qu'il n'y a rien. */
+  .mho-calendrier .cal-grid { grid-template-columns: 1fr; min-height: 44px; }
+  .mho-calendrier .cal-grid:not(:has(.mho-cal-quarts))::after { content: "Aucun quart ce mois-ci."; padding: 10px; color: var(--muted); background: var(--panel); }
+  .mho-calendrier .cal-dow, .mho-calendrier .cal-cell-empty { display: none; }
+  .mho-calendrier .cal-cell:not(:has(.mho-cal-quarts)) { display: none; }
+  .mho-calendrier .cal-cell { min-height: 0; }
+  .mho-cal-num { display: none; }
+  .mho-cal-date { display: block; }
+}
+

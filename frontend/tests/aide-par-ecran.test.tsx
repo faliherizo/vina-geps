@@ -20,7 +20,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Help from "../src/Help";
-import { AIDE_PAR_PAGE, IDS_SECTIONS, SECTIONS_AIDE, sectionsVisibles, titreDeSection } from "../src/aideParEcran";
+import { AIDE_PAR_PAGE, IDS_SECTIONS, SECTIONS_AIDE, ancreConnue, sectionsVisibles, titreDeSection } from "../src/aideParEcran";
+import { FICHES, idFiche } from "../src/aide/fichesEcrans";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -88,6 +89,18 @@ describe("la page d'aide rend ce qu'elle annonce", () => {
     rendre();
     const liens = [...conteneur.querySelectorAll('nav a[href^="#"]')].map((a) => a.getAttribute("href")!.slice(1));
     expect(liens).toEqual(SECTIONS_AIDE.map((s) => s.id));
+  });
+
+  it("« Aide sur cet écran » ouvre la fiche de l'écran et lui donne le focus", () => {
+    rendre(idFiche("matemps"));
+    const fiche = conteneur.querySelector("#fiche-matemps") as HTMLDetailsElement;
+    expect(fiche.open).toBe(true);
+    expect(document.activeElement).toBe(fiche);
+    // La fiche montre l'exemple, champ par champ, dans un tableau à en-têtes.
+    expect(fiche.querySelector("table caption")!.textContent).toContain("Ma feuille de temps");
+    expect([...fiche.querySelectorAll("tbody th")].map((t) => t.textContent)).toContain("Début de la période");
+    // Les autres fiches restent repliées : le guide se parcourt d'un coup d'œil.
+    expect((conteneur.querySelector("#fiche-monhoraire") as HTMLDetailsElement).open).toBe(false);
   });
 
   it("atteint la section demandée et lui donne le focus, sans attendre un délai", () => {
@@ -173,5 +186,22 @@ describe("le guide se restreint aux modules souscrits", () => {
     const us = Object.entries(AIDE_PAR_PAGE).filter(([page]) => page.startsWith("us"));
     expect(us).toHaveLength(22);
     expect([...new Set(us.map(([, s]) => s))].sort()).toEqual(["communication", "effectifs-planification"]);
+  });
+});
+
+describe("une fiche par écran, avec un exemple de remplissage", () => {
+  it("chaque écran a sa fiche, et chaque fiche dit quoi faire et donne un exemple", () => {
+    const pages = Object.keys(AIDE_PAR_PAGE);
+    expect(Object.keys(FICHES).sort()).toEqual(pages.sort());
+    const pauvres = Object.entries(FICHES).filter(([, f]) => f.etapes.length === 0 || f.exemple.length === 0 || f.objet.length < 20 || f.resultat.length < 10)
+      .map(([p]) => p);
+    expect({ fichesSansContenu: pauvres }).toEqual({ fichesSansContenu: [] });
+  });
+
+  it("une ancre se reconnaît : section du guide, ou fiche d'un écran qui existe", () => {
+    expect(ancreConnue("communication")).toBe(true);
+    expect(ancreConnue("fiche-usechanges")).toBe(true);
+    expect(ancreConnue("fiche-inexistant")).toBe(false);
+    expect(ancreConnue("autre")).toBe(false);
   });
 });

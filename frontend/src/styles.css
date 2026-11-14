@@ -34,6 +34,9 @@
   --warning: #8a5000;        /* 6,10:1 — la maquette proposait #B66A00, à 3,90 */
   --sidebar: #073f70;        /* le bleu marine de P17, mesuré au pixel ; blanc dessus : 10,75:1 */
   --sidebar-hover: #0f4c8f;
+  /* VINA GEPS (planche s01, ADR 0073) : barre marine, colonne blanche, entrée courante bleu pâle. */
+  --marine: #13294b;         /* blanc dessus : 14,5:1 */
+  --nav-courant: #dbe8f7;    /* --text dessus : 10,6:1 */
   /* Ombres douces et étagées (profondeur discrète, rendu moderne) */
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.03);
   --shadow-md: 0 6px 16px rgba(15, 23, 42, 0.07), 0 2px 6px rgba(15, 23, 42, 0.04);
@@ -89,7 +92,7 @@ small { font-size: 0.8125rem; }
  */
 .app {
   display: grid; grid-template-columns: 240px 1fr; min-height: 100vh;
-  background: linear-gradient(to right, var(--sidebar) 0 240px, var(--bg) 240px);
+  background: linear-gradient(to right, var(--panel) 0 240px, var(--bg) 240px);
 }
 .app > * { min-width: 0; } /* évite l'expansion implicite des cellules grid */
 /*
@@ -106,7 +109,8 @@ html, body { overflow-x: clip; }
    **sous** la barre (WCAG 2.4.11, focus non masqué). */
 html { scroll-padding-top: calc(var(--topbar-h) + 8px); }
 .sidebar {
-  background: var(--sidebar); color: white; display: flex; flex-direction: column;
+  background: var(--panel); color: var(--text); display: flex; flex-direction: column;
+  border-right: 1px solid var(--border);
   padding: 16px 0; position: sticky; top: var(--topbar-h);
   height: calc(100vh - var(--topbar-h)); overflow-y: auto;
 }
@@ -114,47 +118,38 @@ html { scroll-padding-top: calc(var(--topbar-h) + 8px); }
 .sidebar nav { display: flex; flex-direction: column; gap: 2px; padding: 0 8px; }
 /* Entrées alignées à gauche et libellés qui se replient : un menu se lit en colonne, et une vue
    au nom long (« Absences et suppléance ») doit rester entière au second niveau, plus étroit. */
-.sidebar nav button { color: #cbd5e1; background: none; border: 0; padding: 10px 14px; border-radius: 9px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; justify-content: flex-start; white-space: normal; transition: background .13s ease, color .13s ease; }
-.sidebar nav button:hover { background: var(--sidebar-hover); color: white; }
-.sidebar nav button.active { background: var(--primary); color: white; box-shadow: var(--shadow-sm); }
-.sidebar nav button:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(255,255,255,.65); }
-/* Menus regroupés (sections repliables, rendu type QuickBooks) */
+.sidebar nav button { width: 100%; min-height: 44px; color: var(--text); background: none; border: 0; padding: 10px 14px; border-radius: 9px; font-size: 14px; font-weight: 500; cursor: pointer; text-align: left; justify-content: flex-start; white-space: normal; transition: background .13s ease, color .13s ease; }
+.sidebar nav button:hover { background: var(--primary-soft); color: var(--text); }
+/* L'entrée courante : fond bleu pâle **et** gras **et** filet à gauche — jamais la couleur seule (1.4.1). */
+.sidebar nav button.active { background: var(--nav-courant); color: var(--text); font-weight: 700; box-shadow: inset 3px 0 0 var(--primary); }
+.sidebar nav button:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+.nav-section { margin-bottom: 10px; }
+.nav-section > ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.nav-section-title { margin: 6px 0 4px; padding: 6px 14px 2px; color: var(--muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
 /* Lien d'évitement (accessibilité WCAG : aller au contenu) */
 .skip-link { position: absolute; left: -9999px; top: 0; z-index: 100; background: var(--primary); color: #fff; padding: 10px 16px; border-radius: 0 0 8px 0; font-weight: 600; }
 .skip-link:focus { left: 0; }
 .main:focus { outline: none; }
 .nav-groups { gap: 4px; }
-.nav-group { border: 0; }
-/* Une section d'une seule page : un lien direct, aligné sur les entrées des autres sections. */
-.nav-group-seul { list-style: none; margin: 0; padding: 0; }
-
-.nav-group > summary { list-style: none; cursor: pointer; color: #a8bace;   /* 5,41:1 sur la colonne #073f70 ; #94a3b8 n'y tenait que 4,19:1 */ font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 10px 14px 4px; user-select: none; display: flex; align-items: center; gap: 6px; }
-.nav-group > summary::-webkit-details-marker { display: none; }
-.nav-group > summary::after { content: "▸"; margin-left: auto; font-size: 10px; transition: transform .15s ease; }
-.nav-group[open] > summary::after { transform: rotate(90deg); }
-.nav-group > summary:hover { color: #e2e8f0; }
-.nav-group > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
-.nav-group ul { list-style: none; margin: 0 0 6px; padding: 0; display: flex; flex-direction: column; gap: 2px; }
-.nav-group ul button { width: 100%; }
 /* Second niveau : la notion (Absences, Affectations, Paie…) en intertitre, ses vues en retrait.
    Un intertitre, pas un bouton : il ne mène nulle part, il range. Le contraste du texte
    (#cbd5e1 sur le fond du menu) reste ≥ 4,5:1. */
 .nav-concept { margin-top: 2px; }
-.nav-concept > summary { list-style: none; cursor: pointer; color: #cbd5e1; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 9px; display: flex; align-items: center; gap: 6px; user-select: none; }
+.nav-concept > summary { list-style: none; cursor: pointer; color: var(--text); min-height: 44px; font-size: 14px; font-weight: 500; padding: 10px 14px; border-radius: 9px; display: flex; align-items: center; gap: 6px; user-select: none; }
 .nav-concept > summary::-webkit-details-marker { display: none; }
 .nav-concept > summary::after { content: "▸"; margin-left: auto; font-size: 10px; transition: transform .15s ease; }
 .nav-concept[open] > summary::after { transform: rotate(90deg); }
-.nav-concept > summary:hover { background: var(--sidebar-hover); color: white; }
+.nav-concept > summary:hover { background: var(--primary-soft); }
 .nav-concept > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
-.nav-concept > ul { margin: 2px 0 6px; padding-left: 10px; border-left: 2px solid rgba(148, 163, 184, .35); margin-left: 16px; }
-.sidebar .footer { margin-top: auto; padding: 16px 20px; font-size: 12px; color: #a8bace;   /* 5,41:1 sur la colonne #073f70 ; #94a3b8 n'y tenait que 4,19:1 */ }
+.nav-concept > ul { list-style: none; margin: 2px 0 6px 16px; padding-left: 8px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 2px; }
+.sidebar .footer { margin-top: auto; padding: 16px 20px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--border); }
 /* Corps de l'application en **plein écran** : occupe toute la largeur disponible à côté du
    menu latéral (plus de limite à 1600 px), pour exploiter les grands écrans. */
 /* La marge basse dégage la zone occupée par le bouton flottant : sans elle, le dernier
    contrôle de la page se retrouve dessous, donc hors d'atteinte. */
 .main { padding: 28px clamp(18px, 3vw, 40px) 96px; width: 100%; max-width: none; min-width: 0; flex: 1; }
 
-.menu-btn { display: none; background: var(--sidebar); color: white; padding: 10px 14px; border: 0; border-radius: 8px; font-size: 16px; cursor: pointer; align-items: center; gap: 8px; }
+.menu-btn { display: none; background: transparent; color: white; outline: 1px solid rgba(255,255,255,.6); padding: 10px 14px; border: 0; border-radius: 8px; font-size: 16px; cursor: pointer; align-items: center; gap: 8px; }
 /* ───── En-tête permanent (maquettes P01 à P32 : « Aide · 🔔 · Profil ▾ » en haut à droite) ─────
    Il n'existait qu'en petite largeur : sur poste de travail il n'y avait **aucun** en-tête, et
    le sélecteur d'établissement comme l'aide contextuelle y étaient donc invisibles. Il occupe
@@ -164,16 +159,18 @@ html { scroll-padding-top: calc(var(--topbar-h) + 8px); }
   /* **Blanc, souligné de bleu** : c'est l'en-tête des maquettes (P01 à P72). Il était sombre
      comme la barre latérale, ce qui donnait à l'application un bandeau presque noir sur toute
      la largeur — la première chose qu'on voit, et la seule que la maquette ne montre pas. */
-  background: var(--panel); color: var(--text);
-  border-bottom: 2px solid var(--primary);
+  /* **Marine** : la barre d'application de la planche s01 (ADR 0073). Les commandes qu'elle porte
+     (aide, messages, avis, profil) sont des pastilles à fond blanc : leur contraste ne dépend pas
+     de la barre. Seule la marque est écrite directement dessus, en blanc. */
+  background: var(--marine); color: #fff;
   padding: 10px 16px; align-items: center; gap: 10px;
   position: sticky; top: 0; z-index: 20; min-height: var(--topbar-min);
 }
 .topbar .badge, .topbar label { color: var(--text); }
-.topbar .brand { font-weight: 700; }
-/* Le nom du produit est déjà en tête de la barre latérale : le répéter mangerait la largeur
-   utile de l'en-tête, où la maquette met le titre de la plateforme et les actions. */
-@media (min-width: 769px) { .topbar .brand { display: none; } }
+.topbar .brand { display: inline-flex; align-items: baseline; gap: 12px; min-width: 0; color: #fff; }
+.brand-produit { font-weight: 800; font-size: 17px; letter-spacing: .04em; white-space: nowrap; }
+.brand-organisme { color: #d5e0ef; font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }   /* 10,9:1 sur --marine */
+@media (max-width: 600px) { .brand-organisme { display: none; } }
 
 .container { max-width: 100%; margin: 0 auto; }
 h1 { margin: 0 0 10px; font-size: clamp(21px, 1.25rem + 0.85vw, 29px); letter-spacing: -0.015em; }
@@ -306,7 +303,7 @@ table tbody tr:last-child td { border-bottom: 0; }
 .tree .node { background: white; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border); display: inline-block; }
 
 @media (max-width: 1024px) {
-  .app { grid-template-columns: 200px 1fr; background: linear-gradient(to right, var(--sidebar) 0 200px, var(--bg) 200px); }
+  .app { grid-template-columns: 200px 1fr; background: linear-gradient(to right, var(--panel) 0 200px, var(--bg) 200px); }
   .row-3 { grid-template-columns: 2fr 1fr 1fr 1fr auto; }
 }
 @media (max-width: 768px) {
@@ -1488,3 +1485,54 @@ button.lien:hover { color: #14508a; background: none; }
     width: calc(100vw - 1rem);
   }
 }
+
+/* ───── Tableau de bord gestionnaire (planche s01, ADR 0073) ─────
+   Onglets, puis quatre tuiles chiffrées, puis la table du sujet, puis l'action principale à
+   droite. Les tuiles se replient en deux colonnes, puis une, sans débordement (1.4.10). */
+.tdb .tabs { margin: 4px 0 12px; }
+.tdb-tuiles { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
+.tdb-panneau h2 { margin-top: 0; }
+.tdb-panneau .num { text-align: right; font-variant-numeric: tabular-nums; }
+.tdb-action { min-height: 32px; }
+.tdb-action-principale { display: flex; justify-content: flex-end; margin: 16px 0 0; }
+.tdb-action-principale .primary { min-height: 44px; padding: 10px 18px; }
+.acces-rapides-carte { margin-top: 16px; }
+
+/* ───── Guide : une fiche par écran ───── */
+.fiche-ecran { border-top: 1px solid var(--border); padding: 4px 0; }
+.fiche-ecran > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; list-style-position: inside; }
+.fiche-ecran > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.fiche-ecran-titre { display: inline; margin: 0; font-size: 1.0625rem; }
+.fiche-ecran h4 { margin: 12px 0 6px; font-size: 0.9375rem; }
+.fiche-exemple { width: 100%; border-collapse: collapse; margin: 4px 0 8px; }
+.fiche-exemple th, .fiche-exemple td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); vertical-align: top; overflow-wrap: anywhere; }
+.fiche-exemple tbody th { font-weight: 600; width: 40%; }
+.fiche-attention { background: var(--warning-bg); color: var(--text); padding: 8px 10px; border-radius: 6px; }
+
+/* ───── Rien de collé (14 novembre 2026) ─────
+   Deux commandes voisines gardent au moins 8 px entre elles : collées, elles se lisent comme une
+   seule, et un doigt touche l'une pour l'autre. L'audit géométrique (`audit-wcag22`, relevé
+   « collé à ») le mesure sur chaque écran, à chaque largeur.
+
+   1. Des boutons qui se suivent dans le flux du texte (`<p>`, `<fieldset>`, cellule…). Le sélecteur
+      est à spécificité nulle : une barre en `flex` avec `gap` garde son propre réglage. Les onglets
+      d'une même barre se touchent par dessin. */
+:where(button, .btn, a.btn):not([role="tab"]) + :where(button, .btn, a.btn):not([role="tab"]) { margin-inline-start: 8px; }
+:where(.tabs, [role="tablist"], .msg-filtres, .msg-reactions) > :where(button) + :where(button) { margin-inline-start: 0; }
+/* 2. Un tableau défilable est une zone focalisable : la commande qui le suit ne doit pas le toucher. */
+.table-wrap + :where(p, div, button, .eff-actions, .sq-actions, form) { margin-top: 12px; }
+.table-wrap { margin-bottom: 4px; }
+/* 3. Le constructeur de rapports : un champ par ligne, son libellé au-dessus ; une case à cocher et
+      son libellé sur la même ligne ; un filtre (champ, opérateur, valeur, retirer) en rangée. */
+.champ { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 10px; }
+.champ > label:not(.sr-only):has(+ :where(select, textarea, input:not([type="checkbox"]):not([type="radio"]))) { flex: 1 1 100%; margin: 0; }
+.champ > :where(select, textarea, input:not([type="checkbox"]):not([type="radio"])) { flex: 1 1 220px; min-width: 0; }
+.champ > input[type="checkbox"] { width: 24px; height: 24px; margin: 0; flex: 0 0 auto; }
+fieldset > button, fieldset > p > button { margin-top: 4px; }
+/* 4. Un formulaire en rangée, puis sa barre d'actions : la barre ne colle pas au dernier champ. */
+.row-form + .actions, .row-form + div > button:first-child { margin-top: 12px; }
+/* 5. Un champ dans son libellé (`.field`) ne déborde pas de lui : il touchait le bouton voisin. */
+.field > :where(input, select, textarea) { box-sizing: border-box; max-width: 100%; }
+/* 6. Les colonnes et regroupements du constructeur : une grille de cases, pas vingt lignes. */
+:where([data-testid="rap-colonnes"], [data-testid="rap-groupes"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); column-gap: 16px; }
+:where([data-testid="rap-colonnes"], [data-testid="rap-groupes"]) > .champ { margin-bottom: 6px; }

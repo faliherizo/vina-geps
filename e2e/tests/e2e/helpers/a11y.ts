@@ -15,6 +15,9 @@ import { expect, type Page } from "@playwright/test";
  */
 export const WCAG_AA_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] as const;
 
+/** Le plus long fondu de l'interface dure 300 ms : au-delà, une animation ne se terminera plus. */
+const ATTENTE_ANIMATIONS_MS = 1_500;
+
 export interface A11yViolation {
   id: string;
   impact: string | null | undefined;
@@ -27,9 +30,18 @@ export interface A11yViolation {
 export async function auditA11y(page: Page, selector?: string): Promise<A11yViolation[]> {
   // L'état mesuré est l'état stable : un tiroir qui entre en fondu (opacité 0 → 1) mesuré à
   // mi-parcours rend des couleurs mélangées, et un contraste qui n'existe pas à l'écran.
-  await page.evaluate(() => Promise.all(document.getAnimations()
-    .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
-    .map((a) => a.finished.catch(() => undefined)))).catch(() => undefined);
+  //
+  // **L'attente est bornée.** Une transition lancée sur un élément dont le sous-arbre cesse d'être
+  // rendu (une entrée de menu survolée, dans une notion qu'on vient de replier) ne finit jamais :
+  // l'audit attendait alors indéfiniment, et l'essai expirait cinq minutes plus tard sur une page
+  // parfaitement fonctionnelle (essai AGPH, 14 novembre 2026). Ce qui doit se stabiliser le fait
+  // en moins d'une seconde.
+  await page.evaluate((plafond) => Promise.race([
+    Promise.all(document.getAnimations()
+      .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity)
+      .map((a) => a.finished.catch(() => undefined))),
+    new Promise((fini) => setTimeout(fini, plafond)),
+  ]), ATTENTE_ANIMATIONS_MS).catch(() => undefined);
   let builder = new AxeBuilder({ page }).withTags([...WCAG_AA_TAGS]);
   if (selector) builder = builder.include(selector);
   const results = await builder.analyze();

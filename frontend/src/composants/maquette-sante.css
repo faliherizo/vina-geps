@@ -62,7 +62,6 @@
   --maquette-courant: #334e68;       /* 8,64:1 sur blanc · 7,98:1 sur le fond de page */
   --maquette-doux: #536980;          /* 5,68:1 blanc · 5,24:1 page · 4,91:1 sur la teinte active
                                   — la maquette proposait #627d98, à 4,28 / 3,95 / 3,70 */
-  --maquette-sur-marine: #d9e2ec;    /* 11,18:1 sur le bandeau marine */
 
   /* Accent sarcelle — la seule couleur vive des planches */
   --maquette-primaire: #0b6e69;      /* 6,09:1 avec du texte blanc */
@@ -86,16 +85,17 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem 1rem;
-  margin: 0 0 1rem;
-  padding: 0.75rem 1rem;
-  border-radius: 0.625rem;
-  background: var(--maquette-marine);
-  color: #ffffff;
+  /* **Un surtitre, plus un bandeau** (ADR 0073) : la barre d'application est devenue marine, comme
+     celle de la planche s01. Deux marines empilés se lisaient comme deux applications. Le surtitre
+     garde le nom du module et le contexte de l'écran, en texte. */
+  margin: 0 0 0.25rem;
+  padding: 0;
+  color: var(--maquette-doux);
 }
 
 .maquette-bandeau-nom {
   margin: 0;
-  font-size: 1rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -103,8 +103,8 @@
 
 .maquette-bandeau-contexte {
   margin: 0;
-  color: var(--maquette-sur-marine);
-  font-size: 0.9375rem;
+  color: var(--maquette-doux);
+  font-size: 0.8125rem;
 }
 
 /* ── Bandeau d'indicateurs (planches s01 à s12, quatre cartes) ────────────── */

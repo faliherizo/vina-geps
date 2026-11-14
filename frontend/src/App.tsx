@@ -23,7 +23,8 @@ import { CLES_US, ENTREES_US, PageUrgencesSante } from "./urgencessante";
 import { BandeauAppels } from "./santequebec/appels";
 import FrontiereErreur from "./FrontiereErreur";
 import { droitDeVoir } from "./droitsDeMenu";
-import { AIDE_PAR_PAGE, IDS_SECTIONS, titreDeSection } from "./aideParEcran";
+import { AIDE_PAR_PAGE, ancreConnue, titreDeSection } from "./aideParEcran";
+import { FICHES, idFiche } from "./aide/fichesEcrans";
 import { PAGE_MODULE } from "./modulesParPage";
 import Superadmin from "./Superadmin";
 import Account from "./Account";
@@ -68,6 +69,9 @@ const PAGE_DROIT_SERVEUR: Partial<Record<Page, "peutApprouver">> = {
   approvals: "peutApprouver",
 };
 
+/** Le nom du produit : VINA Gestion des Personnels de la Santé. L'organisme client se nomme à côté. */
+export const MARQUE = "VINA GEPS";
+
 const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // Les pages d'Urgences-santé sont déclarées par `urgencessante/menu.ts` : ajouter un écran
   // là-bas ne demande pas de modifier l'ossature de l'application.
@@ -110,7 +114,7 @@ function ongletFromUrl(): string | null {
 function sectionFromUrl(): string | null {
   if (typeof window === "undefined") return null;
   const s = new URLSearchParams(window.location.search).get("section");
-  return s && IDS_SECTIONS.has(s) ? s : null;
+  return s && ancreConnue(s) ? s : null;
 }
 
 /**
@@ -432,14 +436,15 @@ function AppShell() {
     return vue.repli && pageDe(vue.repli) ? vue.repli : null;
   }
   /**
-   * Le fil d'Ariane est le menu à plat : Section › Notion › Vue. La notion mène à sa première
-   * vue visible ; la section ouvre sa branche du menu. Une page ne peut plus « être ailleurs »
-   * que là où le menu la range (refonte visuelle, B.1).
+   * **Le fil d'Ariane part du tableau de bord** : « Tableau de bord › Notion › Écran ». La rubrique
+   * du menu n'y figure plus — c'est un titre, elle ne s'ouvre pas — et le tableau de bord n'a pas
+   * de fil : « Tableau de bord › Tableau de bord » était précisément le doublon relevé le
+   * 13 novembre 2026. La notion mène à sa première vue visible.
    */
   const filAriane = (): Maillon[] => {
-    if (!emplacement || !vueCourante) return [];
+    if (!emplacement || !vueCourante || page === "dashboard") return [];
     const groupe = NAVIGATION.find((g) => g.key === emplacement.groupe)!;
-    const maillons: Maillon[] = [{ libelle: groupe.label, testId: `fil-${groupe.key}`, onClick: () => setDeplie({ groupe: groupe.key, concept: null }) }];
+    const maillons: Maillon[] = [{ libelle: t("nav.dashboard"), testId: "fil-pilotage", onClick: () => go("dashboard") }];
     const concept = emplacement.concept ? (groupe.entrees.find((e) => estConcept(e) && e.key === emplacement.concept) as Concept | undefined) : undefined;
     if (concept) {
       const premiere = concept.vues.find((v) => pageDe(v));
@@ -450,7 +455,6 @@ function AppShell() {
     return maillons;
   };
 
-  const basculerGroupe = (key: string) => setDeplie((d) => (d.groupe === key ? { groupe: null, concept: null } : { groupe: key, concept: null }));
   const basculerConcept = (key: string) => setDeplie((d) => ({ groupe: d.groupe, concept: d.concept === key ? null : key }));
 
   const entreeMenu = (demandee: Vue) => {
@@ -485,7 +489,8 @@ function AppShell() {
    * retombent au bon endroit.
    */
   function ouvrirAide() {
-    setSectionAide(AIDE_PAR_PAGE[page]);
+    // La fiche de l'écran : ce qu'il sert à faire et un exemple de remplissage, ouverte et focalisée.
+    setSectionAide(idFiche(page));
     go("help");
   }
 
@@ -494,11 +499,16 @@ function AppShell() {
       <a href="#main-content" className="skip-link">{t("common.skipToContent")}</a>
       <div className="topbar" ref={barre}>
         <button className="menu-btn" data-testid="menu-toggle" aria-label={t("common.menu")} onClick={() => setOpen(true)}>☰ {t("common.menu")}</button>
-        <span className="brand">{charte?.nomAffiche ?? "Nexu VINA"}</span>
+        {/* La marque du produit, puis l'organisme (sa charte le nomme, P-TN-9) : la barre marine de la planche s01. */}
+        <span className="brand" data-testid="marque-produit">
+          {charte?.logo && <img src={charte.logo} alt="" className="brand-logo" />}
+          <span className="brand-produit">{MARQUE}</span>
+          {charte?.nomAffiche && <span className="brand-organisme">{charte.nomAffiche}</span>}
+        </span>
         <EstablishmentPicker />
         <EstablishmentBadge />
         <button type="button" className="aide-contextuelle" data-testid="aide-contextuelle-mobile" onClick={ouvrirAide}
-                aria-label={`Aide sur cet écran (guide, section « ${titreDeSection(AIDE_PAR_PAGE[page])} »)`} title="Aide sur cet écran">
+                aria-label={`Aide sur cet écran (guide, fiche « ${FICHES[page].titre} », section « ${titreDeSection(AIDE_PAR_PAGE[page])} »)`} title="Aide sur cet écran">
           <span aria-hidden="true">?</span> Aide
         </button>
         {/*
@@ -535,11 +545,9 @@ function AppShell() {
       {/* Décoratif : la barre latérale se referme aussi par navigation ou par le bouton de menu. */}
       {open && <div className="backdrop" aria-hidden="true" onClick={() => setOpen(false)} />}
       <aside className={`sidebar ${open ? "open" : ""}`} data-testid="sidebar">
-        <div className="brand">{charte?.logo && <img src={charte.logo} alt="" className="brand-logo" />}{charte?.nomAffiche ?? "Nexu VINA"}</div>
         <nav aria-label={t("common.menu")} className="nav-groups">
           {NAVIGATION.map((g) => {
-            if (!moduleCodeAllowed(g.module)) return null;
-            // Une notion sans vue visible n'apparaît pas ; une section sans entrée non plus.
+            // Une notion sans vue visible n'apparaît pas ; une rubrique sans entrée non plus.
             const rendu = g.entrees.map((e) => {
               if (!estConcept(e)) return entreeMenu(e);
               const vues = e.vues.map(entreeMenu).filter(Boolean);
@@ -559,37 +567,31 @@ function AppShell() {
             }).filter(Boolean);
             if (!rendu.length) return null;
             /**
-             * **Une section d'une seule page est un lien, pas un accordéon.**
+             * **Une rubrique est un titre, pas un accordéon** (planche s01, ADR 0073).
              *
-             * C'est la règle déjà appliquée aux notions (`navigation.tsx`), étendue aux sections :
-             * un intertitre qui ne regroupe rien n'aide pas à se repérer. Sans cela, « Tableau de
-             * bord » demandait deux clics — déplier la section, puis cliquer l'entrée — et
-             * affichait son libellé deux fois de suite.
+             * Le titre n'est pas un `<h2>` : la colonne précède `<main>`, et un `h2` s'y lirait
+             * avant le `h1` de l'écran. Un groupe nommé dit la même chose au lecteur d'écran sans
+             * casser la hiérarchie des titres.
              */
-            if (g.entrees.length === 1 && !estConcept(g.entrees[0])) {
-              return <ul key={g.key} className="nav-group-seul" data-testid={`nav-group-${g.key}`}>{rendu}</ul>;
-            }
             return (
-              <details key={g.key} className="nav-group" data-testid={`nav-group-${g.key}`} open={deplie.groupe === g.key}>
-                <summary className="nav-group-title" onClick={(ev) => { ev.preventDefault(); basculerGroupe(g.key); }}>
-                  <span aria-hidden="true">{g.icon}</span> {g.label}
-                </summary>
+              <div key={g.key} role="group" className="nav-section" data-testid={`nav-group-${g.key}`} aria-labelledby={`nav-titre-${g.key}`}>
+                <p className="nav-section-title" id={`nav-titre-${g.key}`}>{g.label}</p>
                 <ul>{rendu}</ul>
-              </details>
+              </div>
             );
           })}
         </nav>
         <div className="footer">
           <button type="button" className="secondary aide-contextuelle-sidebar" data-testid="aide-contextuelle" onClick={ouvrirAide}
-                  aria-label={`Aide sur cet écran (guide, section « ${titreDeSection(AIDE_PAR_PAGE[page])} »)`}>
+                  aria-label={`Aide sur cet écran (guide, fiche « ${FICHES[page].titre} », section « ${titreDeSection(AIDE_PAR_PAGE[page])} »)`}>
             <span aria-hidden="true">?</span> Aide sur cet écran
           </button>
           <div style={{ marginBottom: 8 }} data-testid="auth-user">
-            {user.username} <span style={{ opacity: 0.7 }}>({user.role})</span>
+            {user.username} <span>({user.role})</span>
           </div>
           <TenantDevBadge />
           <div style={{ marginBottom: 8 }}>
-            <div style={{ fontSize: 12, opacity: 0.8, marginBottom: 4 }}>
+            <div style={{ fontSize: 12, marginBottom: 4 }}>
               🌐 {t("common.language")}
             </div>
             <div data-testid="lang-select" role="group" aria-label={t("common.language")} style={{ display: "flex", gap: 4 }} tabIndex={0}>
@@ -612,7 +614,7 @@ function AppShell() {
           </div>
           <button className="secondary" data-testid="logout" onClick={logout} style={{ width: "100%" }}><Icone nom="sortie" /> {t("common.logout")}
           </button>
-          <div style={{ marginTop: 8, fontSize: 11, opacity: 0.7 }}>v2.0 — Phase 5</div>
+          <div style={{ marginTop: 8, fontSize: 11 }}>{MARQUE} v2.0</div>
         </div>
       </aside>
 
@@ -679,7 +681,7 @@ const TENANT_BADGE_VISIBLE =
  * porte donc sa couleur **calculée** sur `#255681`, et aucune n'est transparente.
  */
 /** 5,00:1 sur le fond composé du badge — vérifié par calcul, pas à l'œil. */
-const SECONDAIRE_BADGE = "#c2d2e4";
+const SECONDAIRE_BADGE = "var(--muted)";
 
 function TenantDevBadge() {
   const { tenantId, tenantName } = useCurrentTenant();
@@ -687,9 +689,9 @@ function TenantDevBadge() {
   return (
     <div data-testid="tenant-dev-badge" title="Tenant courant (validation Dev)"
       style={{ marginBottom: 8, padding: "6px 8px", borderRadius: 6,
-        background: "rgba(255,255,255,0.12)", border: "1px dashed rgba(255,255,255,0.45)" }}>
+        background: "var(--primary-soft)", border: "1px dashed var(--border-strong)" }}>
       <div style={{ fontSize: 10, letterSpacing: 0.5, color: SECONDAIRE_BADGE }}>DEV · TENANT</div>
-      <div style={{ fontWeight: 700, fontSize: 12, color: "#dce6f2" }} data-testid="tenant-dev-name">
+      <div style={{ fontWeight: 700, fontSize: 12, color: "var(--text)" }} data-testid="tenant-dev-name">
         {/* 6,10:1 sur le fond composé #255681. L'émoji décore : il ne porte aucune information. */}
         <span aria-hidden="true">🏫</span> {tenantId ? (tenantName ?? "…") : "Aucun organisme"}
       </div>

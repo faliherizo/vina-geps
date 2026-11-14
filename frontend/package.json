@@ -15,7 +15,8 @@
     "mobile:add:ios": "cap add ios",
     "mobile:android": "cap copy android && cap open android",
     "mobile:ios": "cap copy ios && cap open ios",
-    "testids": "node scripts/lister-testids.cjs"
+    "testids": "node scripts/lister-testids.cjs",
+    "guide:ecrans": "node scripts/generer-guide-ecrans.mjs"
   },
   "dependencies": {
     "exceljs": "^4.4.0",

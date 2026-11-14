@@ -177,14 +177,14 @@ const fr: Dict = {
   "vue.planification.disponibilites": "Disponibilités",
   "vue.planification.absences": "Absences et comblement",
   "concept.usdisponibilitesnotion": "Disponibilités",
-  "concept.usabsencesnotion": "Absences des effectifs",
+  "concept.usabsencesnotion": "Absences",
   "concept.usagphnotion": "Confection AGPH",
   "concept.usquarts": "Gestion des quarts",
-  "concept.uspointagenotion": "Pointage et présence",
+  "concept.uspointagenotion": "Pointage",
   "concept.ustempsnotion": "Feuilles de temps",
   "concept.usechangesnotion": "Demandes et échanges",
   "concept.uscommunication": "Communication",
-  "concept.usadministration": "Administration des effectifs",
+  "concept.usadministration": "Paramètres des effectifs",
   "vue.planification.comblement": "Comblement",
   "vue.planification.equipages": "Quarts et équipages",
   "vue.planification.postes": "Postes",
@@ -622,14 +622,14 @@ const en: Dict = {
   "vue.planification.disponibilites": "Availability",
   "vue.planification.absences": "Absences and coverage",
   "concept.usdisponibilitesnotion": "Availability",
-  "concept.usabsencesnotion": "Workforce absences",
+  "concept.usabsencesnotion": "Absences",
   "concept.usagphnotion": "Annual bid (AGPH)",
   "concept.usquarts": "Shift management",
-  "concept.uspointagenotion": "Punch and attendance",
+  "concept.uspointagenotion": "Punch",
   "concept.ustempsnotion": "Timesheets",
   "concept.usechangesnotion": "Requests and swaps",
   "concept.uscommunication": "Communication",
-  "concept.usadministration": "Workforce administration",
+  "concept.usadministration": "Workforce settings",
   "vue.planification.comblement": "Coverage",
   "vue.planification.equipages": "Shifts and crews",
   "vue.planification.postes": "Positions",
@@ -1363,9 +1363,9 @@ function detectInitial(): Lang {
   if (typeof window === "undefined") return "fr";
   const saved = localStorage.getItem("lang") as Lang | null;
   if (saved && DICTS[saved]) return saved;
-  const nav = (navigator.language || "fr").slice(0, 2).toLowerCase();
-  if (nav === "en") return "en";
-  if (nav === "mg") return "mg";
+  // **Le français d'abord, quelle que soit la langue du navigateur** (AO 26-015-DO, E-TN-21 :
+  // « La solution doit avoir une interface en français »). Un poste réglé en anglais ouvrait la
+  // connexion en anglais ; la personne choisit une autre langue d'un clic, et ce choix est retenu.
   return "fr";
 }
 

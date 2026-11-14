@@ -37,7 +37,6 @@ const accorde = (code?: string | null) => !code || MODULES_URGENCES_SANTE.has(co
 
 /** Les vues visibles d'une section, section et entrée et page gardées comme dans l'application. */
 function vuesVisibles(groupe: (typeof NAVIGATION)[number]): Vue[] {
-  if (!accorde(groupe.module)) return [];
   return groupe.entrees
     .flatMap((e) => (estConcept(e) ? e.vues : [e]))
     .filter((v) => accorde(v.module) && accorde(PAGE_MODULE[v.page as keyof typeof PAGE_MODULE]));
@@ -46,13 +45,15 @@ function vuesVisibles(groupe: (typeof NAVIGATION)[number]): Vue[] {
 const sectionsVisibles = () => NAVIGATION.filter((g) => vuesVisibles(g).length > 0).map((g) => g.key);
 
 describe("le menu d'un organisme d'Urgences-santé", () => {
-  it("les sections visibles sont le tableau de bord, le module, l'espace et l'administration — et rien d'autre", () => {
-    expect(sectionsVisibles()).toEqual(["pilotage", "urgencessante", "space", "admin"]);
+  it("les rubriques visibles sont le menu principal, l'administration, l'aide et le compte — et rien d'autre", () => {
+    expect(sectionsVisibles()).toEqual(["urgencessante", "admin", "space"]);
   });
 
   it("chaque écran du module porte son code, et un code retiré retire l'écran", () => {
     const us = NAVIGATION.find((g) => g.key === "urgencessante")!;
-    const pages = us.entrees.flatMap((e) => (estConcept(e) ? e.vues : [e])).map((v) => v.page);
+    // Les écrans du module : ceux qui portent son socle. Le tableau de bord et les rapports n'en sont pas.
+    const pages = us.entrees.flatMap((e) => (estConcept(e) ? e.vues : [e])).filter((v) => v.module === "effectifs").map((v) => v.page);
+    expect(pages.length).toBeGreaterThan(20);
     for (const page of pages) expect(PAGE_MODULE[page as keyof typeof PAGE_MODULE], page).toBeDefined();
     MODULES_URGENCES_SANTE.delete("effectifs_communication");
     try {
@@ -64,10 +65,15 @@ describe("le menu d'un organisme d'Urgences-santé", () => {
     }
   });
 
-  it("sans le socle du module, la section disparaît entière, en-tête compris", () => {
+  it("sans le socle du module, tous ses écrans disparaissent — le tableau de bord et les rapports restent", () => {
     MODULES_URGENCES_SANTE.delete("effectifs");
     try {
-      expect(sectionsVisibles()).toEqual(["pilotage", "space", "admin"]);
+      const principal = vuesVisibles(NAVIGATION.find((g) => g.key === "urgencessante")!).map((v) => v.page);
+      // « Approbations » a son propre module, que cet abonnement ne contient pas : seuls restent le
+      // tableau de bord et les rapports, qui n'appartiennent à aucun module d'effectifs.
+      expect(principal).toEqual(["dashboard", "rapports"]);
+      const admin = vuesVisibles(NAVIGATION.find((g) => g.key === "admin")!).map((v) => v.page);
+      expect(admin.filter((p) => p.startsWith("us"))).toEqual([]);
     } finally {
       MODULES_URGENCES_SANTE.add("effectifs");
     }

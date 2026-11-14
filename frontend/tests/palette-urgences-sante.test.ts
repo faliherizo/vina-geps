@@ -48,7 +48,7 @@ const BLANC = "#ffffff";
 describe("Palette Urgences-santé — calculée, jamais jugée à l'œil", () => {
   it("la feuille déclare bien ses jetons : sans cela l'essai passerait à vide", () => {
     for (const nom of ["fond", "surface", "marine", "teinte", "trait", "filet", "encre",
-                       "courant", "doux", "sur-marine", "primaire", "primaire-appui",
+                       "courant", "doux", "primaire", "primaire-appui",
                        "accent-texte", "trait-controle"]) {
       expect(T[nom], `jeton --maquette-${nom}`).toMatch(/^#[0-9a-f]{6}$/);
     }
@@ -73,7 +73,6 @@ describe("Palette Urgences-santé — calculée, jamais jugée à l'œil", () =>
   });
 
   it("le texte posé sur le marine et sur le sarcelle tient le seuil", () => {
-    expect(rapport(T["sur-marine"], T.marine)).toBeGreaterThanOrEqual(4.5);
     expect(rapport(BLANC, T.marine)).toBeGreaterThanOrEqual(4.5);
     // Bouton primaire : le texte blanc dessus, et le bouton lui-même reconnaissable sur la page.
     expect(rapport(BLANC, T.primaire)).toBeGreaterThanOrEqual(4.5);

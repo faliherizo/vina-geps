@@ -69,10 +69,12 @@ test.describe("26-015-DO — la section Urgences-santé et son réglage", () => 
 
     await seConnecterOrganisme(page, tenantId);
 
-    // La section elle-même : un en-tête qui nomme le client, et non la table.
+    // La rubrique elle-même (planche s01) : « Menu principal », le tableau de bord en tête. Le
+    // client se nomme dans la barre du haut, à côté de la marque VINA GEPS.
     const section = page.getByTestId("nav-group-urgencessante");
     await expect(section).toHaveCount(1);
-    await expect(section).toContainText("Urgences-santé");
+    await expect(section).toContainText("Menu principal");
+    await expect(page.getByTestId("marque-produit")).toContainText("VINA GEPS");
 
     // Une entrée de menu, une page : « Comblement » ouvre son écran, et non un onglet.
     await ouvrirNav(page, "nav-uscomblement");
@@ -140,6 +142,8 @@ test.describe("26-015-DO — la section Urgences-santé et son réglage", () => 
     await seConnecterOrganisme(page, tenantId);
     await ouvrirNav(page, "nav-monhoraire");
     await expect(page.getByTestId("mho-titre")).toBeVisible({ timeout: 30_000 });
+    // Le calendrier du mois est la vue par défaut : la table est celle de la liste de la semaine.
+    await page.getByTestId("mho-vue-liste").click();
     // Les cinq colonnes de la planche : jour, quart, site, poste, statut.
     const entetes = page.getByTestId("mho-table").locator("thead th");
     await expect(entetes).toHaveText([/Jour/, /Quart/, /Site/, /Poste/, /Statut/]);

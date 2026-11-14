@@ -20,7 +20,7 @@ import { Panneau, TableauDonnees, page, type ContexteSection, type Section } fro
 import { ChampMembre } from "../references";
 import { ChampPieces, tailleLisible, type PieceLocale, type LimitesPieces } from "../../SoutienPieces";
 import { downloadApiFile } from "../../FileViewerModal";
-import { AppelsSq } from "../appels";
+import { AppelsSq, signalerAppelLance } from "../appels";
 import Avatar from "../../composants/Avatar";
 import { useAuth } from "../../AuthContext";
 
@@ -104,7 +104,17 @@ const quand = (iso: string | null | undefined) => String(iso ?? "").replace("T",
 
 // ── Ouvrir une conversation ──────────────────────────────────────────────────
 
+/**
+ * **Un fil vient d'être ouvert : le montrer.** Les sections de l'écran sont indépendantes ; ce
+ * signal porte l'identifiant du fil créé jusqu'à la section « Lire et écrire », qui l'ouvre dès
+ * que la liste rechargée le contient. Sans lui, on lisait « choisissez-la dans la liste » — un
+ * second geste pour un fil qu'on venait de demander (relevé du 14 novembre 2026).
+ */
+const FIL_OUVERT = "vina:fil-ouvert";
+const signalerFilOuvert = (id: string) => window.dispatchEvent(new CustomEvent<string>(FIL_OUVERT, { detail: id }));
+
 function Ouvrir({ ctx }: { ctx: ContexteSection }) {
+  const { user } = useAuth();
   const [sujet, setSujet] = useState("");
   const [type, setType] = useState("groupe");
   const [participants, setParticipants] = useState("");
@@ -125,6 +135,7 @@ function Ouvrir({ ctx }: { ctx: ContexteSection }) {
         ctx.annoncer(`Conversation « ${sujet} » ouverte. Vous en êtes participant.`);
         setSujet(""); setParticipants("");
         ctx.recharger();
+        signalerFilOuvert(creee.id);
       }
     }}>
       <div className="sq-rangee">
@@ -141,7 +152,7 @@ function Ouvrir({ ctx }: { ctx: ContexteSection }) {
             <option value="individuelle">Individuelle</option>
           </select>
         </div>
-        <ChampMembre ctx={ctx} libelle="Premier participant" testId="sq-msg-participant"
+        <ChampMembre ctx={ctx} libelle="Premier participant" testId="sq-msg-participant" exclure={acteurDe(user)}
           valeur={participants} onChange={setParticipants} />
       </div>
       <div className="sq-actions">
@@ -161,6 +172,7 @@ function Ouvrir({ ctx }: { ctx: ContexteSection }) {
 function EcrireA({ ctx }: { ctx: ContexteSection }) {
   const [personne, setPersonne] = useState("");
   const nomDe = useNomsDuGroupe(ctx);
+  const { user } = useAuth();
 
   return (
     <form onSubmit={async (e) => {
@@ -169,17 +181,21 @@ function EcrireA({ ctx }: { ctx: ContexteSection }) {
         method: "POST", body: JSON.stringify({ personId: personne }),
       });
       if (fil?.id) {
-        ctx.annoncer(`Conversation avec ${nomDe(personne)} ouverte : choisissez-la dans la liste pour lui écrire.`);
+        ctx.annoncer(`Conversation avec ${nomDe(personne)} ouverte : écrivez-lui dans « Lire et écrire ».`);
         setPersonne("");
         ctx.recharger();
+        signalerFilOuvert(fil.id);
       }
     }}>
       <div className="sq-rangee">
-        <ChampMembre ctx={ctx} libelle="Personne" requis testId="sq-msg-directe-personne"
+        {/* On ne s'écrit pas à soi-même : la personne connectée n'est pas proposée. Sans `requis`,
+            l'option « — Choisir — » reste, et le bouton attend un vrai choix plutôt que d'afficher
+            le premier nom de la liste sans qu'il soit choisi. */}
+        <ChampMembre ctx={ctx} libelle="Personne" testId="sq-msg-directe-personne" exclure={acteurDe(user)}
           valeur={personne} onChange={setPersonne} />
       </div>
       <div className="sq-actions">
-        <button type="submit" data-testid="sq-msg-directe">Écrire à cette personne</button>
+        <button type="submit" data-testid="sq-msg-directe" disabled={!personne}>Écrire à cette personne</button>
       </div>
     </form>
   );
@@ -371,6 +387,17 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
 
   useEffect(() => { void charger(conversationId); }, [conversationId]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void rechargerFils(); }, [conversations.length]);     // eslint-disable-line react-hooks/exhaustive-deps
+  // Un fil tout juste ouvert ailleurs dans l'écran s'ouvre ici, dès que la liste le contient.
+  const [aOuvrir, setAOuvrir] = useState("");
+  useEffect(() => {
+    const noter = (e: Event) => setAOuvrir((e as CustomEvent<string>).detail);
+    window.addEventListener(FIL_OUVERT, noter);
+    return () => window.removeEventListener(FIL_OUVERT, noter);
+  }, []);
+  useEffect(() => {
+    if (!aOuvrir || !conversations.some((c) => c.id === aOuvrir)) return;
+    setConversationId(aOuvrir); setPriveA(""); setRepondA(""); setAOuvrir("");
+  }, [aOuvrir, conversations]);
 
   if (conversations.length === 0) {
     return <p className="sq-vide">Aucune conversation. Ouvrez-en une ci-dessus.</p>;
@@ -439,6 +466,7 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
         })
       : await ctx.appeler(`/api/communication/conversations/${encodeURIComponent(choisie.id)}/appel`, { method: "POST" });
     if (lance) {
+      signalerAppelLance();
       ctx.annoncer(autre
         ? `Appel lancé : ça sonne chez ${nomDe(autre.personId)}.`
         : `Appel de groupe lancé : ${actifs.length - 1} participant(s) invité(s).`);

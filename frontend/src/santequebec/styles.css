@@ -989,7 +989,10 @@ ul.sq-cartes {
   min-height: 44px; padding: 0.375rem 1rem; border-radius: 999px;
   border: 1px solid var(--sq-primaire); background: var(--sq-primaire); color: #fff; font: inherit; cursor: pointer;
 }
-.msg-appeler:hover { background: var(--sq-primaire-appui); }
+/* La couleur du texte est redite au survol : la règle commune des boutons (`button:hover`) pose
+   le bleu primaire sur le texte, ce qui donnait du bleu sur bleu foncé — un bouton qu'on croyait
+   désactivé au moment même de le cliquer (relevé du 14 novembre 2026). */
+.msg-appeler:hover, .msg-appeler:focus-visible { background: var(--sq-primaire-appui); border-color: var(--sq-primaire-appui); color: #fff; }
 
 /* Le séparateur de jour : un repère, pas un message — centré, en doux, entre deux traits. */
 .msg-jour {

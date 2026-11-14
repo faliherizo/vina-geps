@@ -31,6 +31,7 @@ export const SECTIONS_AIDE = [
   { id: "notifications", titre: "Notifications sur le téléphone (application installable)" },
   { id: "integrations", titre: "Intégrations : annuaires, textos, antivirus, API" },
   { id: "soutien", titre: "Soutien : ouvrir un billet, suivre la réponse" },
+  { id: "fiches", titre: "Écran par écran : aide et exemple de remplissage" },
 ] as const;
 
 export type SectionAide = (typeof SECTIONS_AIDE)[number]["id"];
@@ -97,6 +98,14 @@ export function sectionsVisibles(ouvert: (code?: string) => boolean): typeof SEC
   }
   const visees = new Set<string>(Object.values(AIDE_PAR_PAGE));
   return SECTIONS_AIDE.filter((s) => !visees.has(s.id) || ouvertes.has(s.id));
+}
+
+/**
+ * **Une ancre du guide** : une section, ou la fiche d'un écran (`fiche-<page>`). Le bouton « Aide
+ * sur cet écran » mène à la fiche ; une adresse partagée (`?section=`) peut viser l'une ou l'autre.
+ */
+export function ancreConnue(id: string): boolean {
+  return IDS_SECTIONS.has(id) || (id.startsWith("fiche-") && id.slice("fiche-".length) in AIDE_PAR_PAGE);
 }
 
 /** L'intitulé d'une section, pour l'annonce du bouton d'aide (« Aide sur cet écran, section … »). */

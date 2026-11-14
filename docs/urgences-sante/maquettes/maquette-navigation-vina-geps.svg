@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="system-ui,sans-serif" font-size="12" role="img" aria-labelledby="t d">
+<title id="t">VINA GEPS — gabarit d'écran et menu principal</title>
+<desc id="d">Barre marine en tête avec la marque VINA GEPS et le profil connecté ; colonne de gauche « Menu principal » à une entrée par sujet ; tableau de bord gestionnaire avec onglets, quatre tuiles chiffrées et la table des quarts à couvrir.</desc>
+<rect width="960" height="560" fill="#f3f6fa"/>
+<rect width="960" height="44" fill="#13294b"/>
+<text x="18" y="27" fill="#fff" font-weight="700" font-size="15">VINA GEPS</text>
+<text x="112" y="27" fill="#c9d6ea">Urgences-santé — démonstration</text>
+<text x="700" y="27" fill="#c9d6ea">✉ 2   🔔   ? Aide</text>
+<rect x="830" y="11" width="116" height="22" rx="11" fill="#244470"/><text x="845" y="26" fill="#fff">Claire N. ▾</text>
+<rect x="0" y="44" width="200" height="516" fill="#fff" stroke="#d5dde8"/>
+<text x="16" y="70" fill="#4a5a70" font-size="10" font-weight="700">MENU PRINCIPAL</text>
+<g fill="#1d2b3f">
+<rect x="8" y="80" width="184" height="24" rx="4" fill="#dbe8f7"/><text x="18" y="96" font-weight="700">Tableau de bord</text>
+<text x="18" y="122">Mon horaire</text><text x="18" y="146">Disponibilités ›</text><text x="18" y="170">Absences ›</text>
+<text x="18" y="194">Confection AGPH ›</text><text x="18" y="218">Gestion des quarts ›</text><text x="18" y="242">Pointage ›</text>
+<text x="18" y="266">Feuilles de temps ›</text><text x="18" y="290">Demandes et échanges ›</text><text x="18" y="314">Communication ›</text>
+<text x="18" y="338">Rapports</text><text x="18" y="362">Approbations</text>
+</g>
+<text x="16" y="392" fill="#4a5a70" font-size="10" font-weight="700">ADMINISTRATION</text>
+<g fill="#1d2b3f"><text x="18" y="414">Paramètres des effectifs ›</text><text x="18" y="438">Utilisateurs et rôles</text><text x="18" y="462">Accès ›</text><text x="18" y="486">Avis · Intégrations · API</text></g>
+<text x="16" y="516" fill="#4a5a70" font-size="10" font-weight="700">AIDE ET COMPTE</text>
+<text x="18" y="538" fill="#1d2b3f">Mon compte · Guide · Soutien</text>
+<text x="224" y="80" fill="#13294b" font-size="20" font-weight="700">Tableau de bord gestionnaire</text>
+<text x="224" y="100" fill="#4a5a70">Vue opérationnelle • vendredi 13 novembre 2026</text>
+<g font-size="11"><rect x="224" y="114" width="140" height="26" rx="4" fill="#13294b"/><text x="236" y="131" fill="#fff">Couverture des quarts</text>
+<rect x="370" y="114" width="130" height="26" rx="4" fill="#fff" stroke="#c4cfdd"/><text x="382" y="131">Absences à traiter</text>
+<rect x="506" y="114" width="140" height="26" rx="4" fill="#fff" stroke="#c4cfdd"/><text x="518" y="131">Demandes en attente</text>
+<rect x="652" y="114" width="160" height="26" rx="4" fill="#fff" stroke="#c4cfdd"/><text x="664" y="131">Anomalies de présence</text></g>
+<g><rect x="224" y="152" width="170" height="70" rx="6" fill="#fff" stroke="#c4cfdd"/><text x="238" y="186" font-size="24" font-weight="700" fill="#13294b">24</text><text x="238" y="208" fill="#4a5a70">Quarts aujourd'hui</text>
+<rect x="404" y="152" width="170" height="70" rx="6" fill="#fff" stroke="#c4cfdd"/><text x="418" y="186" font-size="24" font-weight="700" fill="#13294b">08</text><text x="418" y="208" fill="#4a5a70">Places à combler</text>
+<rect x="584" y="152" width="170" height="70" rx="6" fill="#fff" stroke="#c4cfdd"/><text x="598" y="186" font-size="24" font-weight="700" fill="#13294b">12</text><text x="598" y="208" fill="#4a5a70">Demandes en attente</text>
+<rect x="764" y="152" width="176" height="70" rx="6" fill="#fff" stroke="#c4cfdd"/><text x="778" y="186" font-size="24" font-weight="700" fill="#13294b">03</text><text x="778" y="208" fill="#4a5a70">Pointages à approuver</text></g>
+<rect x="224" y="236" width="716" height="250" rx="6" fill="#fff" stroke="#c4cfdd"/>
+<text x="240" y="262" font-weight="700" fill="#13294b" font-size="14">Quarts à couvrir aujourd'hui</text>
+<g fill="#4a5a70" font-weight="700"><text x="240" y="290">Heure</text><text x="370" y="290">Site</text><text x="520" y="290">Places requises</text><text x="640" y="290">Pourvues</text><text x="740" y="290">État</text><text x="860" y="290">Action</text></g>
+<line x1="240" y1="298" x2="924" y2="298" stroke="#d5dde8"/>
+<g fill="#1d2b3f"><text x="240" y="322">06:00–14:00</text><text x="370" y="322">Centre-ville</text><text x="520" y="322">4</text><text x="640" y="322">3 / 4</text><text x="740" y="322">⚠ Sous le minimum</text>
+<text x="240" y="352">14:00–22:00</text><text x="370" y="352">Nord</text><text x="520" y="352">3</text><text x="640" y="352">1 / 3</text><text x="740" y="352">⚠ Sous le minimum</text>
+<text x="240" y="382">22:00–06:00</text><text x="370" y="382">Sud</text><text x="520" y="382">2</text><text x="640" y="382">2 / 2</text><text x="740" y="382">✓ Opérationnel</text></g>
+<g font-size="11"><rect x="852" y="308" width="66" height="22" rx="4" fill="#0f6b66"/><text x="862" y="323" fill="#fff">Combler</text>
+<rect x="852" y="338" width="66" height="22" rx="4" fill="#0f6b66"/><text x="862" y="353" fill="#fff">Combler</text>
+<rect x="852" y="368" width="66" height="22" rx="4" fill="#fff" stroke="#0f6b66"/><text x="866" y="383" fill="#0f6b66">Détail</text></g>
+<rect x="790" y="500" width="150" height="32" rx="5" fill="#0f6b66"/><text x="806" y="521" fill="#fff" font-weight="700">Ouvrir le comblement</text>
+</svg>

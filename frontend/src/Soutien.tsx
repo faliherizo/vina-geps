@@ -242,7 +242,7 @@ export default function Soutien() {
                 <ListePieces ticketId={t.id} pieces={t.pieces ?? []} messageId={m.id} testId={`soutien-pieces-${m.id}`} signaler={setErreur} /></li>
             ))}</ul>
             {t.statut !== "ferme" && (
-              <div className="row-form" style={{ gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+              <div className="row-form" style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap" }}>
                 <label className="field" style={{ flex: 1, minWidth: 220 }}><span>Répondre</span>
                   <input value={ouvert === t.id ? reponse : ""} onChange={(e) => { if (ouvert !== t.id) setPiecesReponse([]); setOuvert(t.id); setReponse(e.target.value); }} data-testid={`soutien-reponse-${t.id}`} /></label>
                 <button type="button" className="secondary" data-testid={`soutien-envoyer-${t.id}`}

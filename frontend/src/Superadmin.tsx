@@ -579,7 +579,7 @@ export default function Superadmin() {
             <h3 id="sa-sso-titre"><Icone nom="banque" /> Fédération d'identité</h3>
             <p className="aide">
               L'administrateur de l'IdP (Entra, ADFS…) importe les métadonnées du fournisseur de service pour
-              déclarer Nexu VINA ; le bouton SAML n'apparaît au login qu'une fois l'IdP configuré côté serveur.
+              déclarer VINA GEPS ; le bouton SAML n'apparaît au login qu'une fois l'IdP configuré côté serveur.
             </p>
             <a className="btn secondary" data-testid="sa-saml-metadata" href="/api/auth/sso/saml/metadata" target="_blank" rel="noopener">
               Métadonnées SP SAML 2.0 (XML)

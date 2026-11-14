@@ -34,37 +34,38 @@ test.describe("Menu — une notion, une entrée", () => {
     await expect(page.getByTestId("nav-usmessages")).toHaveCount(0);
   });
 
-  test("accordéon : une section à la fois, une notion à la fois — et la page courante déplie la sienne", async ({ page, mock }) => {
+  test("rubriques à titre fixe, une notion dépliée à la fois — et la page courante déplie la sienne", async ({ page, mock }) => {
     await mock(MODULES);
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
-    const ouverts = () => page.locator("details.nav-group[open]").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
     const notionsOuvertes = () => page.locator("details.nav-concept[open]").evaluateAll((els) => els.map((e) => e.getAttribute("data-testid")));
 
-    // À l'arrivée sur le tableau de bord, aucune section n'est dépliée : c'est l'écran d'arrivée.
-    await expect.poll(ouverts).toEqual([]);
+    // Planche s01 : la rubrique est un titre, jamais un accordéon ; le tableau de bord est la
+    // première entrée du menu principal, et il n'existe plus de section qui ne contienne que lui.
+    await expect(page.locator("details.nav-group")).toHaveCount(0);
+    await expect(page.getByTestId("nav-group-urgencessante")).toContainText("Menu principal");
+    await expect(page.getByTestId("nav-group-urgencessante").locator("button").first()).toHaveAttribute("data-testid", "nav-dashboard");
+    await expect(page.getByTestId("nav-dashboard")).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("fil-ariane")).toHaveCount(0);
+    await expect.poll(notionsOuvertes).toEqual([]);
 
-    await page.locator('[data-testid="nav-group-urgencessante"] > summary').click();
-    await expect.poll(ouverts).toEqual(["nav-group-urgencessante"]);
     await page.locator('[data-testid="nav-concept-usquarts"] > summary').click();
     await expect(page.getByTestId("nav-uscomblement")).toBeVisible();
     await page.locator('[data-testid="nav-concept-usadministration"] > summary').click();
     await expect.poll(notionsOuvertes).toEqual(["nav-concept-usadministration"]);
     await expect(page.getByTestId("nav-uscomblement")).toBeHidden();
 
-    // Déplier une autre section replie la première.
-    await page.locator('[data-testid="nav-group-admin"] > summary').click();
-    await expect.poll(ouverts).toEqual(["nav-group-admin"]);
-
-    // Recliquer la section la replie, au clavier comme à la souris.
-    await page.locator('[data-testid="nav-group-admin"] > summary').focus();
+    // Recliquer la notion la replie, au clavier comme à la souris.
+    await page.locator('[data-testid="nav-concept-usadministration"] > summary').focus();
     await page.keyboard.press("Enter");
-    await expect.poll(ouverts).toEqual([]);
+    await expect.poll(notionsOuvertes).toEqual([]);
 
-    // Arriver par l'URL sur un onglet déplie sa section et sa notion — l'entrée courante est visible.
+    // Arriver par l'URL sur un onglet déplie sa notion ; le fil part du tableau de bord.
     await page.goto("/access?onglet=octrois");
-    await expect.poll(ouverts).toEqual(["nav-group-admin"]);
     await expect.poll(notionsOuvertes).toEqual(["nav-concept-access"]);
     await expect(page.getByTestId("nav-access-octrois")).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("fil-pilotage")).toHaveText("Tableau de bord");
+    await page.getByTestId("fil-pilotage").click();
+    await expect(page.getByTestId("dashboard-page")).toBeVisible();
   });
 });

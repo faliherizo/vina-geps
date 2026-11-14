@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VINA GEPS — Gestion des personnels de la santé</title>
+  <meta name="description" content="VINA GEPS : horaires, disponibilités, absences, confection annuelle, pointage, feuilles de temps et communications sécurisées du personnel de la santé. Hébergé au Québec, conforme Loi 25, accessible WCAG 2.2 AA." />
+  <meta name="theme-color" content="#13294b" />
+  <link rel="icon" href="/icones/icone-192.svg" type="image/svg+xml" />
+  <style>
+    /* Jetons : la palette de l'application (ADR 0073), contrastes calculés. */
+    :root {
+      --marine: #13294b; --fond: #f5f8fb; --surface: #ffffff; --texte: #18324b; --doux: #566a80;
+      --primaire: #0a66b5; --primaire-appui: #08528f; --trait: #d7e3ee; --sarcelle: #0f6b66; --sur-marine: #d5e0ef;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --fond: #0e1726; --surface: #16233a; --texte: #e6edf6; --doux: #b3c2d4; --trait: #2c3d57;
+        --primaire: #7cb8ff; --primaire-appui: #a8d0ff;
+      }
+    }
+    * { box-sizing: border-box; }
+    html { scroll-padding-top: 80px; }
+    body { margin: 0; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fond); color: var(--texte); overflow-x: clip; }
+    a { color: var(--primaire); }
+    .skip-link { position: absolute; left: -9999px; top: 0; background: var(--primaire); color: #fff; padding: 10px 16px; z-index: 10; }
+    .skip-link:focus { left: 0; }
+    :focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+    .conteneur { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+    header { background: var(--marine); color: #fff; position: sticky; top: 0; z-index: 5; }
+    header .conteneur { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; }
+    .marque { font-weight: 800; letter-spacing: .04em; font-size: 18px; color: #fff; text-decoration: none; }
+    header nav ul { list-style: none; display: flex; gap: 8px 18px; margin: 0; padding: 0; flex-wrap: wrap; }
+    header nav a { color: var(--sur-marine); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+    header nav a:hover { color: #fff; text-decoration: underline; }
+    .bouton { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+    .bouton-principal { background: var(--sarcelle); color: #fff; }
+    .bouton-principal:hover { background: #0b5753; }
+    .bouton-second { border: 2px solid currentColor; color: var(--primaire); }
+    header .bouton-principal { color: #fff; }
+    .heros { padding: 56px 0 40px; }
+    .heros h1 { font-size: clamp(28px, 1.4rem + 2.2vw, 46px); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; }
+    .heros p.chapeau { font-size: clamp(17px, 1rem + .4vw, 20px); color: var(--doux); max-width: 46rem; margin: 0 0 24px; }
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    section { padding: 40px 0; }
+    h2 { font-size: clamp(22px, 1.1rem + 1vw, 30px); margin: 0 0 16px; }
+    .cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; padding: 0; list-style: none; }
+    .carte { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 18px; }
+    .carte h3 { margin: 0 0 6px; font-size: 18px; }
+    .carte p { margin: 0; color: var(--doux); }
+    .video { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 16px; }
+    video { width: 100%; height: auto; border-radius: 8px; background: #000; display: block; }
+    details { margin-top: 12px; }
+    summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; }
+    .preuves { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; list-style: none; padding: 0; }
+    .preuves li { background: var(--surface); border: 1px solid var(--trait); border-left: 4px solid var(--sarcelle); border-radius: 8px; padding: 12px 14px; }
+    footer { background: var(--marine); color: var(--sur-marine); padding: 24px 0; margin-top: 24px; }
+    footer a { color: #fff; }
+  </style>
+</head>
+<body data-testid="vitrine-root">
+  <a class="skip-link" href="#contenu" data-testid="vitrine-skip-link">Aller au contenu principal</a>
+  <header data-testid="vitrine-header">
+    <div class="conteneur">
+      <a class="marque" href="/" aria-label="VINA GEPS, accueil">VINA GEPS</a>
+      <nav aria-label="Navigation principale" data-testid="vitrine-nav">
+        <ul>
+          <li><a href="#demo">Démonstration</a></li>
+          <li><a href="#fonctions">Fonctions</a></li>
+          <li><a href="#confiance">Sécurité et conformité</a></li>
+          <li><a class="bouton bouton-principal" href="/admin/login" data-testid="vitrine-nav-app">Accéder à l'application</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu" tabindex="-1">
+    <section class="heros" aria-labelledby="heros-titre" data-testid="vitrine-hero">
+      <div class="conteneur">
+        <h1 id="heros-titre">VINA GEPS — la gestion des personnels de la santé</h1>
+        <p class="chapeau">Horaires, disponibilités, absences, confection annuelle, pointage, feuilles de temps et communications sécurisées du personnel : une seule application, hébergée au Québec, pensée pour les équipes qui travaillent par quarts.</p>
+        <div class="actions">
+          <a class="bouton bouton-principal" href="/admin/login" data-testid="vitrine-cta-app">Accéder à l'application</a>
+          <a class="bouton bouton-second" href="#demo" data-testid="vitrine-cta-demo">Voir la démonstration</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="demo" aria-labelledby="demo-titre" data-testid="vitrine-video">
+      <div class="conteneur">
+        <h2 id="demo-titre">La démonstration filmée</h2>
+        <p>Chaque chapitre est un essai automatisé joué contre le serveur : il affirme ce qu'il montre, et le film ne peut pas montrer une fonction qui ne marche pas.</p>
+        <div class="video">
+          <video id="demo-video" controls preload="metadata" playsinline data-testid="vitrine-video-el"
+                 aria-describedby="demo-chapitres">
+            <source src="/vitrine/demo-vina-geps.webm" type="video/webm" />
+            <track kind="captions" src="/vitrine/demo-vina-geps.fr.vtt" srclang="fr" label="Chapitres (français)" default />
+            <p>Votre navigateur ne lit pas cette vidéo. <a href="/vitrine/demo-vina-geps.webm">Télécharger la démonstration (WebM)</a>.</p>
+          </video>
+          <details id="demo-chapitres" data-testid="vitrine-transcript">
+            <summary>Chapitres et ce qu'ils prouvent</summary>
+            <ol>
+              <li><strong>Écrire dans les écrans</strong> — l'employée remplit sa feuille de temps, dépose ses disponibilités, manifeste son intérêt pour un remplacement long terme, déclare un quart non pointé ; l'administration crée une unité, un type d'heure, un milieu et ses preuves de présence ; le planificateur définit un quota, crée un quart ad hoc, ouvre un remplacement, pose un profil de pointage et règle les seuils d'heures supplémentaires.</li>
+              <li><strong>Échanger un quart</strong> — Julie propose, Marc accepte, le chef valide ; puis le chef crée un échange pour une personne et le refuse, motif à l'appui.</li>
+              <li><strong>Messagerie et appels</strong> — Julie écrit à Marc, l'appelle : ça sonne chez lui, il décroche, elle raccroche ; un appel refusé ; un appel de groupe rejoint.</li>
+            </ol>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section id="fonctions" aria-labelledby="fonctions-titre" data-testid="vitrine-features">
+      <div class="conteneur">
+        <h2 id="fonctions-titre">Ce que fait VINA GEPS</h2>
+        <ul class="cartes">
+          <li class="carte"><h3>Mon horaire</h3><p>Le mois en calendrier, la semaine en liste, sur le téléphone comme au poste.</p></li>
+          <li class="carte"><h3>Disponibilités et absences</h3><p>Dépôts jugés par les règles de l'organisme ; absences acceptées d'office quand tout est respecté.</p></li>
+          <li class="carte"><h3>Confection annuelle (AGPH)</h3><p>Tour de rôle par ancienneté, budget d'heures, remplacements long terme.</p></li>
+          <li class="carte"><h3>Gestion des quarts</h3><p>Postes, périodes, équipages, quotas et comblement, avec le tableau de bord du matin.</p></li>
+          <li class="carte"><h3>Pointage et feuilles de temps</h3><p>Preuves de présence par milieu, feuilles approuvées palier par palier, lot de paie.</p></li>
+          <li class="carte"><h3>Communication sécurisée</h3><p>Messagerie à deux et en groupe, appels au numéro de l'organisme, listes de diffusion.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section id="confiance" aria-labelledby="confiance-titre" data-testid="vitrine-confiance">
+      <div class="conteneur">
+        <h2 id="confiance-titre">Sécurité et conformité</h2>
+        <ul class="preuves">
+          <li><strong>Données au Québec</strong> — hébergement et sauvegardes au Canada, conforme Loi 25.</li>
+          <li><strong>Microsoft Entra ID</strong> — connexion OIDC, groupes de l'annuaire traduits en rôles.</li>
+          <li><strong>Accessible</strong> — SGQRI 008 3.0 et WCAG 2.2 AA, vérifiés à chaque écran par des essais automatisés.</li>
+          <li><strong>Tracé</strong> — chaque décision des règles et chaque geste de l'encadrement au journal.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="conteneur">
+      <p>VINA GEPS — VINA Gestion des Personnels de la Santé. <a href="/admin/login">Accéder à l'application</a>.</p>
+    </div>
+  </footer>
+</body>
+</html>

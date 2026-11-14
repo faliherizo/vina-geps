@@ -64,27 +64,41 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     expect(ongletAdmis("page-hors-menu", "x", acces)).toBe(true);
   });
 
-  it("les écrans de l'AO 26-015-DO vivent sous « Urgences-santé », **une page par entrée**", () => {
+  it("le menu suit la planche s01 : trois rubriques, « Menu principal » en tête, **une page par entrée**", () => {
     // Ils étaient douze onglets d'un écran et sept d'un autre : une page à son adresse se partage
     // par un lien, revient par le bouton « retour », et se charge seule — ce qu'un onglet ne fait
-    // jamais. L'ordre et le découpage suivent les planches s01 à s12.
+    // jamais. Le 13 novembre 2026, les quatre sections repliables (dont une « Tableau de bord »
+    // qui ne contenait que le tableau de bord) sont devenues trois rubriques à titre fixe.
+    expect(NAVIGATION.map((g) => [g.key, g.label])).toEqual([
+      ["urgencessante", "Menu principal"], ["admin", "Administration"], ["space", "Aide et compte"],
+    ]);
     const section = NAVIGATION.find((g) => g.key === "urgencessante");
     expect(section).toBeDefined();
-    expect(section!.module).toBe("effectifs");
     expect(section!.entrees.filter(estConcept).map((c) => c.key)).toEqual([
       "usdisponibilitesnotion", "usabsencesnotion", "usagphnotion", "usquarts",
-      "uspointagenotion", "ustempsnotion", "usechangesnotion", "uscommunication", "usadministration",
+      "uspointagenotion", "ustempsnotion", "usechangesnotion", "uscommunication",
     ]);
-    // « Mon horaire » est une **vue directe** : une notion d'un seul élément n'est pas une structure.
-    expect(section!.entrees.filter((e) => !estConcept(e)).map((v) => (v as Vue).page)).toEqual(["monhoraire"]);
+    // Le tableau de bord en tête, puis « Mon horaire » ; les rapports et les approbations en fin
+    // de colonne — des **vues directes** : une notion d'un seul élément n'est pas une structure.
+    expect(section!.entrees.filter((e) => !estConcept(e)).map((v) => (v as Vue).page)).toEqual(["dashboard", "monhoraire", "rapports", "approvals"]);
+    expect((section!.entrees[0] as Vue).page).toBe("dashboard");
+
+    // Le paramétrage du module rejoint l'administration de l'organisme : même public, autre rythme.
+    const admin = NAVIGATION.find((g) => g.key === "admin")!;
+    expect(admin.entrees.filter(estConcept).map((c) => c.key)).toEqual(["usadministration", "access"]);
+
+    // Chaque écran du module porte le **socle** : sans lui, tous disparaissent, le tableau de bord reste.
+    const ecransDuModule = NAVIGATION.flatMap((g) => g.entrees).flatMap((e) => (estConcept(e) ? e.vues : [e]))
+      .filter((v) => v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page));
+    expect(ecransDuModule).toHaveLength(29);
+    expect(ecransDuModule.filter((v) => v.module !== "effectifs").map((v) => v.page)).toEqual([]);
+    expect((section!.entrees[0] as Vue).module).toBeUndefined();
 
     /**
      * **Aucun onglet** : chaque vue de la section est une page entière. C'est la demande du
      * 2 novembre — « un menu = une page » —, et c'est ce que les planches montrent.
      */
-    const vuesDeLaSection = section!.entrees.flatMap((e) => (estConcept(e) ? e.vues : [e]));
-    expect(vuesDeLaSection.filter((v) => v.onglet).map((v) => `${v.page}:${v.onglet}`)).toEqual([]);
-    expect(vuesDeLaSection).toHaveLength(29);
+    expect(ecransDuModule.filter((v) => v.onglet).map((v) => `${v.page}:${v.onglet}`)).toEqual([]);
 
     /**
      * **La communication du personnel** (2 novembre 2026) : trois vues reprises du module Santé

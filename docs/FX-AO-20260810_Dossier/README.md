@@ -15,6 +15,7 @@
 | `04_questions_client` | Questions de clarification et décisions attendues |
 | `05_maquettes` | Maquettes d'écrans en SVG éditable et PNG |
 | `06_gouvernance` | Hypothèses, risques, validation et critères d'acceptation |
+| `07_validation_vina_geps` | **Validation du dossier** contre les sources et contre VINA GEPS : conformité des 115 critères, écarts, ADR 0074 (module ou projet), feuille de route, stories et maquettes |
 
 ## Statut et limites
 Ce dossier est une **conception de référence** issue des deux PDF transmis. Il ne constitue ni une réponse fournisseur ni une architecture approuvée par Santé Québec. Les décisions dépendant de l'infrastructure, de la téléphonie, de l'identité, des politiques de sécurité ou des processus cliniques sont identifiées comme à confirmer.

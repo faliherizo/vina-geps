@@ -1,376 +1,903 @@
 {
-  "pourquoi": [
-    "Les parcours de `profils.json` prouvent qu'un écran est **atteignable** par la personne à qui il est destiné. Ils ne prouvent pas qu'on peut y **écrire**.",
-    "La différence n'est pas théorique : le parcours « l'employée ajoute un temps » constatait que `mft-segments` et `mft-totaux` étaient visibles — or ces deux commandes étaient déjà là avant le geste. L'essai aurait donc survécu à un ajout silencieusement perdu, tout en portant dans son motif « une saisie qui ne change aucun total n'a pas été prise ».",
-    "Chaque scénario ci-dessous **écrit** une donnée, puis la relit **par son contenu** : le message que le serveur a renvoyé, le total recalculé, la ligne qui porte l'heure saisie. Un attendu qui se contente d'une présence ne vaut rien ici.",
-    "`{jour:N}` est remplacé par la date de dans N jours : un fichier de données ne peut pas calculer, et une date figée ferait échouer l'essai le lendemain de son écriture.",
-    "Les scénarios sont **ordonnés et solidaires** : la feuille de temps se lit après son ajout, l'horaire après le dépôt. Les jouer dans un ordre quelconque demanderait une amorce par scénario, pour un même organisme semé une fois.",
-    "`prefixe:a-*-b` désigne une commande à l'identifiant engendré : « commence par a, finit par b ». Sans le joker, `prefixe:agm-rlt-` visait d'abord la ligne du remplacement, dont l'identifiant est un préfixe de celui de son bouton."
-  ],
-  "saisies": [
+ "pourquoi": [
+  "Les parcours de `profils.json` prouvent qu'un écran est **atteignable** par la personne à qui il est destiné. Ils ne prouvent pas qu'on peut y **écrire**.",
+  "La différence n'est pas théorique : le parcours « l'employée ajoute un temps » constatait que `mft-segments` et `mft-totaux` étaient visibles — or ces deux commandes étaient déjà là avant le geste. L'essai aurait donc survécu à un ajout silencieusement perdu, tout en portant dans son motif « une saisie qui ne change aucun total n'a pas été prise ».",
+  "Chaque scénario ci-dessous **écrit** une donnée, puis la relit **par son contenu** : le message que le serveur a renvoyé, le total recalculé, la ligne qui porte l'heure saisie. Un attendu qui se contente d'une présence ne vaut rien ici.",
+  "`{jour:N}` est remplacé par la date de dans N jours : un fichier de données ne peut pas calculer, et une date figée ferait échouer l'essai le lendemain de son écriture.",
+  "Les scénarios sont **ordonnés et solidaires** : la feuille de temps se lit après son ajout, l'horaire après le dépôt. Les jouer dans un ordre quelconque demanderait une amorce par scénario, pour un même organisme semé une fois.",
+  "`prefixe:a-*-b` désigne une commande à l'identifiant engendré : « commence par a, finit par b ». Sans le joker, `prefixe:agm-rlt-` visait d'abord la ligne du remplacement, dont l'identifiant est un préfixe de celui de son bouton."
+ ],
+ "saisies": [
+  {
+   "id": "matemps-ajout",
+   "titre": "l'employée ajoute un temps à sa feuille, et le total le dit",
+   "profil": "paramedic",
+   "ecran": "matemps",
+   "exigences": [
+    "E-RF-2",
+    "E-RF-3",
+    "E-GP-8"
+   ],
+   "gestes": [
     {
-      "id": "matemps-ajout",
-      "titre": "l'employée ajoute un temps à sa feuille, et le total le dit",
-      "profil": "paramedic",
-      "ecran": "matemps",
-      "exigences": [
-        "E-RF-2",
-        "E-RF-3",
-        "E-GP-8"
-      ],
-      "gestes": [
-        {
-          "absent": "mft-sans-ressource",
-          "pourquoi": "Son compte est relié à un dossier : l'état vide ne doit pas paraître."
-        },
-        {
-          "choisir": "mft-feuille",
-          "pourquoi": "La feuille préparée pour la semaine écoulée — celle que l'amorce a bâtie depuis l'horaire publié."
-        },
-        {
-          "texte": "mft-totaux",
-          "valeur": "REG",
-          "pourquoi": "Le total existe **avant** la saisie : c'est la référence à laquelle le total d'après sera comparé."
-        },
-        {
-          "pourquoi": "L'ajout est un dialogue : la feuille qu'on relit reste en place derrière lui.",
-          "cliquer": "mft-ajouter-ouvrir"
-        },
-        {
-          "remplir": "mft-a-date",
-          "valeur": "{jour:-3}",
-          "pourquoi": "Un jour de la période couverte par la feuille : hors période, le serveur refuse — et il a raison."
-        },
-        {
-          "remplir": "mft-a-debut",
-          "valeur": "08:00",
-          "pourquoi": "Le début du temps saisi."
-        },
-        {
-          "remplir": "mft-a-fin",
-          "valeur": "12:00",
-          "pourquoi": "La fin : quatre heures exactement, pour que le total d'après soit calculable de tête."
-        },
-        {
-          "choisir": "mft-a-type",
-          "valeur": "REG",
-          "pourquoi": "Du temps régulier — le type décide du code de paie."
-        },
-        {
-          "cliquer": "mft-a-envoyer",
-          "pourquoi": "L'ajout part au serveur, qui le juge par les règles de l'organisme."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "mft-info",
-          "valeur": "ajouté",
-          "pourquoi": "Le serveur a rendu la feuille : sans cela le message ne s'affiche pas, et un échec serait resté muet."
-        },
-        {
-          "texte": "mft-segments",
-          "valeur": "4 h 00",
-          "pourquoi": "La durée du segment saisi est à l'écran : la ligne existe vraiment, et pas seulement le tableau qui l'héberge."
-        },
-        {
-          "visible": "mft-soumettre",
-          "pourquoi": "La feuille reste ouverte après l'ajout : elle se soumet encore."
-        }
-      ]
+     "absent": "mft-sans-ressource",
+     "pourquoi": "Son compte est relié à un dossier : l'état vide ne doit pas paraître."
     },
     {
-      "id": "mesdisponibilites-depot",
-      "titre": "l'employée dépose une plage, après avoir lu la règle qui la juge",
-      "profil": "paramedic",
-      "ecran": "mesdisponibilites",
-      "exigences": [
-        "E-GN-13",
-        "E-GN-15",
-        "E-GN-16",
-        "E-GR-11"
-      ],
-      "gestes": [
-        {
-          "absent": "mdi-sans-ressource",
-          "pourquoi": "Son compte est relié : l'état vide ne doit pas paraître."
-        },
-        {
-          "texte": "mdi-regles",
-          "valeur": "deux quarts par semaine",
-          "pourquoi": "La règle est annoncée **avant** le dépôt (E-GN-16). Elle ne se lisait qu'au refus : on déposait, on était refusé, on corrigeait."
-        },
-        {
-          "cliquer": "mdi-ajouter",
-          "pourquoi": "Une plage se compose ligne à ligne ; le dépôt vide n'aurait rien à juger."
-        },
-        {
-          "choisir": "mdi-plage-0-date",
-          "pourquoi": "Un jour de la période en collecte : la liste n'offre que ceux-là."
-        },
-        {
-          "remplir": "mdi-plage-0-debut",
-          "valeur": "06:00",
-          "pourquoi": "Le début de sa disponibilité."
-        },
-        {
-          "remplir": "mdi-plage-0-fin",
-          "valeur": "18:00",
-          "pourquoi": "Douze heures : un quart entier, pas une bribe."
-        },
-        {
-          "choisir": "mdi-plage-0-type",
-          "valeur": "DISPONIBLE",
-          "pourquoi": "Disponible, et non « de préférence » : le type change le classement au bassin."
-        },
-        {
-          "cliquer": "mdi-deposer",
-          "pourquoi": "Le dépôt part au serveur, qui le confronte aux règles."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "mdi-confirme",
-          "valeur": "Dépôt enregistré",
-          "pourquoi": "Le serveur a accepté : c'est le seul endroit où l'employée l'apprend."
-        },
-        {
-          "texte": "mdi-conformite",
-          "valeur": "Conforme",
-          "pourquoi": "L'état du dépôt est affiché après coup — conforme, ou conforme avec l'avertissement de la règle annoncée."
-        },
-        {
-          "visible": "mdi-plage-0",
-          "pourquoi": "La plage déposée revient de la base : l'écran repart du dépôt enregistré, pas de ce qui était tapé."
-        }
-      ]
+     "choisir": "mft-feuille",
+     "pourquoi": "La feuille préparée pour la semaine écoulée — celle que l'amorce a bâtie depuis l'horaire publié."
     },
     {
-      "id": "monhoraire-semaine",
-      "titre": "l'employée change de semaine, et l'horaire suit",
-      "profil": "paramedic",
-      "ecran": "monhoraire",
-      "exigences": [
-        "s03",
-        "E-GP-8"
-      ],
-      "gestes": [
-        {
-          "texte": "mho-fenetre",
-          "valeur": "1 quart",
-          "pourquoi": "La semaine courante porte le quart attribué par l'amorce : c'est le témoin que la fenêtre par défaut est bien la semaine en cours."
-        },
-        {
-          "cliquer": "mho-semaine-precedente",
-          "pourquoi": "Le geste que l'écran n'avait pas : la lecture était figée à « aujourd'hui et après »."
-        },
-        {
-          "texte": "mho-fenetre",
-          "valeur": "Aucun quart",
-          "pourquoi": "La semaine d'avant n'a pas de quart : la fenêtre pilote donc vraiment la requête, et le serveur honore `du`/`au`."
-        },
-        {
-          "cliquer": "mho-semaine-courante",
-          "pourquoi": "Retour à la semaine en cours, sans recharger la page."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "mho-fenetre",
-          "valeur": "1 quart",
-          "pourquoi": "Le retour rend l'horaire d'origine : une navigation qui ne revient pas est pire que pas de navigation."
-        },
-        {
-          "visible": "mho-table",
-          "pourquoi": "Ses quarts, et non un état vide."
-        },
-        {
-          "visible": "mho-proposer-echange",
-          "pourquoi": "L'action principale de la planche s03 : une porte vers « Mes échanges », seul foyer du geste (ADR 0034)."
-        }
-      ]
+     "texte": "mft-totaux",
+     "valeur": "REG",
+     "pourquoi": "Le total existe **avant** la saisie : c'est la référence à laquelle le total d'après sera comparé."
     },
     {
-      "id": "monagph-interet",
-      "titre": "l'employée se manifeste pour un remplacement long terme",
-      "profil": "paramedic",
-      "ecran": "monagph",
-      "exigences": [
-        "E-CH-8",
-        "P-CH-9"
-      ],
-      "gestes": [
-        {
-          "absent": "agm-sans-ressource",
-          "pourquoi": "Son compte est relié : l'état vide ne doit pas paraître."
-        },
-        {
-          "visible": "prefixe:agm-rang-",
-          "pourquoi": "Son rang au tour de rôle, parce que l'amorce a **démarré** la campagne. L'attendu acceptait avant « aucune campagne » — il passait donc sans donnée."
-        },
-        {
-          "cliquer": "prefixe:agm-rlt-*-manifester",
-          "pourquoi": "Se manifester est le seul geste de cet écran qui ne dépende pas du rang : il demande le même corps d'emploi, pas d'être à son tour. Le joker désigne le **bouton** et non la ligne — leurs identifiants se partagent le même préfixe, et un clic sur la ligne ne lève rien tout en n'agissant pas."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "agm-info",
-          "valeur": "Intérêt enregistré",
-          "pourquoi": "Le serveur a consigné sa manifestation ; sans cela, le bouton aurait pu ne rien faire du tout."
-        },
-        {
-          "visible": "prefixe:agm-rlt-",
-          "pourquoi": "Le remplacement reste à l'écran après le geste : s'y manifester ne le fait pas disparaître."
-        }
-      ]
+     "pourquoi": "L'ajout est un dialogue : la feuille qu'on relit reste en place derrière lui.",
+     "cliquer": "mft-ajouter-ouvrir"
     },
     {
-      "id": "monpointage-declarer",
-      "titre": "l'employée déclare après coup un quart qu'elle n'a pas pu pointer, dans le dialogue prévu pour cela",
-      "profil": "paramedic",
-      "ecran": "monpointage",
-      "exigences": [
-        "E-GP-15",
-        "P-GP-1"
-      ],
-      "gestes": [
-        {
-          "cliquer": "mpo-declarer-ouvrir",
-          "pourquoi": "La déclaration est un dialogue depuis le 8 novembre 2026 : elle n'est plus repliée au milieu des pointages qu'elle complète."
-        },
-        {
-          "remplir": "mpo-s-date",
-          "valeur": "{jour:-1}",
-          "pourquoi": "Hier : dans la fenêtre qu'un profil par défaut admet."
-        },
-        {
-          "remplir": "mpo-s-entree",
-          "valeur": "08:00",
-          "pourquoi": "L'heure d'arrivée qu'elle n'a pas pu pointer."
-        },
-        {
-          "remplir": "mpo-s-sortie",
-          "valeur": "12:00",
-          "pourquoi": "Sa sortie."
-        },
-        {
-          "remplir": "mpo-s-justification",
-          "valeur": "Borne hors service ce matin-là",
-          "pourquoi": "La justification est exigée : une déclaration après coup se motive."
-        },
-        {
-          "cliquer": "mpo-s-envoyer",
-          "pourquoi": "La déclaration part au serveur, qui la juge et la met en attente d'approbation."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "mpo-info",
-          "valeur": "déclaré",
-          "pourquoi": "Le serveur a accepté la déclaration : le message ne paraît que sur sa réponse."
-        },
-        {
-          "absent": "mpo-declarer-modal",
-          "pourquoi": "Le dialogue se referme sur l'enregistrement : resté ouvert, il ferait croire que rien n'est parti."
-        }
-      ]
+     "remplir": "mft-a-date",
+     "valeur": "{jour:-3}",
+     "pourquoi": "Un jour de la période couverte par la feuille : hors période, le serveur refuse — et il a raison."
     },
     {
-      "id": "usagph-campagne",
-      "titre": "la planificatrice crée une campagne annuelle",
-      "profil": "planificateur",
-      "ecran": "usagph",
-      "exigences": [
-        "E-CH-1",
-        "P-CH-4"
-      ],
-      "gestes": [
-        {
-          "cliquer": "pla-agph-creer",
-          "pourquoi": "Le formulaire de création est replié : la vue courante est le suivi d'une campagne existante."
-        },
-        {
-          "choisir": "pla-agph-unite",
-          "pourquoi": "Son unité : hors périmètre, le serveur refuse — et une liste vide dirait que son périmètre manque."
-        },
-        {
-          "choisir": "pla-agph-corps",
-          "pourquoi": "Le corps d'emploi dont les postes seront offerts."
-        },
-        {
-          "remplir": "pla-agph-annee",
-          "valeur": "2033",
-          "pourquoi": "Une année libre : l'amorce en a déjà semé une, et deux campagnes de même unité, corps et année se refusent."
-        },
-        {
-          "remplir": "pla-agph-delai",
-          "valeur": "45",
-          "pourquoi": "Le délai d'un tour de rôle, en minutes : c'est lui qui fait avancer la campagne sans intervention."
-        },
-        {
-          "cliquer": "pla-agph-creer-envoyer",
-          "pourquoi": "La création part au serveur."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "pla-agph-campagne",
-          "valeur": "2033",
-          "pourquoi": "La campagne créée est dans la liste : c'est la seule preuve qu'elle existe côté serveur."
-        },
-        {
-          "visible": "pla-agph-etat",
-          "pourquoi": "Son état est affiché : une campagne sans état ne se pilote pas."
-        }
-      ]
+     "remplir": "mft-a-debut",
+     "valeur": "08:00",
+     "pourquoi": "Le début du temps saisi."
     },
     {
-      "id": "uscomblement-combler",
-      "titre": "la planificatrice comble un quart sous son minimum, depuis le tableau du matin",
-      "profil": "planificateur",
-      "ecran": "uscomblement",
-      "exigences": [
-        "E-GR-1",
-        "E-GR-4",
-        "E-GN-2",
-        "s01",
-        "s05"
-      ],
-      "gestes": [
-        {
-          "choisir": "pla-periode",
-          "libelle": "Semaine publiée",
-          "pourquoi": "La période par défaut est la première non close, c'est-à-dire la collecte en cours ; le quart sous minimum est dans la semaine publiée. Choisir par libellé : la valeur est un identifiant de semis."
-        },
-        {
-          "texte": "pla-tuile-sous-minimum",
-          "valeur": "1 quart",
-          "pourquoi": "Le quart semé à deux places et zéro pourvue est bien compté sous son minimum : c'est la ligne que l'on va combler."
-        },
-        {
-          "cliquer": "prefixe:pla-sous-minimum-*-combler",
-          "pourquoi": "Le geste que l'écran n'avait pas : les planches s01 et s05 portent une colonne « Action » par quart, l'écran livré n'en avait aucune."
-        },
-        {
-          "choisir": "pla-att-ressource",
-          "pourquoi": "Le tiroir d'attribution de « Quarts et équipages », ouvert sur la place vacante : il n'offre que le corps d'emploi de la place."
-        },
-        {
-          "cliquer": "pla-att-attribuer",
-          "pourquoi": "L'attribution part au serveur, jugée par les mêmes règles qu'ailleurs."
-        }
-      ],
-      "attendu": [
-        {
-          "texte": "pla-comblement-succes",
-          "valeur": "Place attribuée",
-          "pourquoi": "Le serveur a attribué la place : le message ne paraît que sur sa réponse."
-        },
-        {
-          "absent": "pla-attribution",
-          "pourquoi": "Le tiroir se referme sur l'attribution, et le tableau est relu derrière lui."
-        }
-      ]
+     "remplir": "mft-a-fin",
+     "valeur": "12:00",
+     "pourquoi": "La fin : quatre heures exactement, pour que le total d'après soit calculable de tête."
+    },
+    {
+     "choisir": "mft-a-type",
+     "valeur": "REG",
+     "pourquoi": "Du temps régulier — le type décide du code de paie."
+    },
+    {
+     "cliquer": "mft-a-envoyer",
+     "pourquoi": "L'ajout part au serveur, qui le juge par les règles de l'organisme."
     }
-  ]
+   ],
+   "attendu": [
+    {
+     "texte": "mft-info",
+     "valeur": "ajouté",
+     "pourquoi": "Le serveur a rendu la feuille : sans cela le message ne s'affiche pas, et un échec serait resté muet."
+    },
+    {
+     "texte": "mft-segments",
+     "valeur": "4 h 00",
+     "pourquoi": "La durée du segment saisi est à l'écran : la ligne existe vraiment, et pas seulement le tableau qui l'héberge."
+    },
+    {
+     "visible": "mft-soumettre",
+     "pourquoi": "La feuille reste ouverte après l'ajout : elle se soumet encore."
+    }
+   ]
+  },
+  {
+   "id": "mesdisponibilites-depot",
+   "titre": "l'employée dépose une plage, après avoir lu la règle qui la juge",
+   "profil": "paramedic",
+   "ecran": "mesdisponibilites",
+   "exigences": [
+    "E-GN-13",
+    "E-GN-15",
+    "E-GN-16",
+    "E-GR-11"
+   ],
+   "gestes": [
+    {
+     "absent": "mdi-sans-ressource",
+     "pourquoi": "Son compte est relié : l'état vide ne doit pas paraître."
+    },
+    {
+     "texte": "mdi-regles",
+     "valeur": "deux quarts par semaine",
+     "pourquoi": "La règle est annoncée **avant** le dépôt (E-GN-16). Elle ne se lisait qu'au refus : on déposait, on était refusé, on corrigeait."
+    },
+    {
+     "cliquer": "mdi-ajouter",
+     "pourquoi": "Une plage se compose ligne à ligne ; le dépôt vide n'aurait rien à juger."
+    },
+    {
+     "choisir": "mdi-plage-0-date",
+     "pourquoi": "Un jour de la période en collecte : la liste n'offre que ceux-là."
+    },
+    {
+     "remplir": "mdi-plage-0-debut",
+     "valeur": "06:00",
+     "pourquoi": "Le début de sa disponibilité."
+    },
+    {
+     "remplir": "mdi-plage-0-fin",
+     "valeur": "18:00",
+     "pourquoi": "Douze heures : un quart entier, pas une bribe."
+    },
+    {
+     "choisir": "mdi-plage-0-type",
+     "valeur": "DISPONIBLE",
+     "pourquoi": "Disponible, et non « de préférence » : le type change le classement au bassin."
+    },
+    {
+     "cliquer": "mdi-deposer",
+     "pourquoi": "Le dépôt part au serveur, qui le confronte aux règles."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "mdi-confirme",
+     "valeur": "Dépôt enregistré",
+     "pourquoi": "Le serveur a accepté : c'est le seul endroit où l'employée l'apprend."
+    },
+    {
+     "texte": "mdi-conformite",
+     "valeur": "Conforme",
+     "pourquoi": "L'état du dépôt est affiché après coup — conforme, ou conforme avec l'avertissement de la règle annoncée."
+    },
+    {
+     "visible": "mdi-plage-0",
+     "pourquoi": "La plage déposée revient de la base : l'écran repart du dépôt enregistré, pas de ce qui était tapé."
+    }
+   ]
+  },
+  {
+   "id": "monhoraire-semaine",
+   "titre": "l'employée change de semaine, et l'horaire suit",
+   "profil": "paramedic",
+   "ecran": "monhoraire",
+   "exigences": [
+    "s03",
+    "E-GP-8"
+   ],
+   "gestes": [
+    {
+     "cliquer": "mho-vue-liste",
+     "pourquoi": "Le calendrier du mois est la vue par défaut : la navigation par semaine appartient à la liste."
+    },
+    {
+     "texte": "mho-fenetre",
+     "valeur": "1 quart",
+     "pourquoi": "La semaine courante porte le quart attribué par l'amorce : c'est le témoin que la fenêtre par défaut est bien la semaine en cours."
+    },
+    {
+     "cliquer": "mho-semaine-precedente",
+     "pourquoi": "Le geste que l'écran n'avait pas : la lecture était figée à « aujourd'hui et après »."
+    },
+    {
+     "texte": "mho-fenetre",
+     "valeur": "Aucun quart",
+     "pourquoi": "La semaine d'avant n'a pas de quart : la fenêtre pilote donc vraiment la requête, et le serveur honore `du`/`au`."
+    },
+    {
+     "cliquer": "mho-semaine-courante",
+     "pourquoi": "Retour à la semaine en cours, sans recharger la page."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "mho-fenetre",
+     "valeur": "1 quart",
+     "pourquoi": "Le retour rend l'horaire d'origine : une navigation qui ne revient pas est pire que pas de navigation."
+    },
+    {
+     "visible": "mho-table",
+     "pourquoi": "Ses quarts, et non un état vide."
+    },
+    {
+     "visible": "mho-proposer-echange",
+     "pourquoi": "L'action principale de la planche s03 : une porte vers « Mes échanges », seul foyer du geste (ADR 0034)."
+    }
+   ]
+  },
+  {
+   "id": "monagph-interet",
+   "titre": "l'employée se manifeste pour un remplacement long terme",
+   "profil": "paramedic",
+   "ecran": "monagph",
+   "exigences": [
+    "E-CH-8",
+    "P-CH-9"
+   ],
+   "gestes": [
+    {
+     "absent": "agm-sans-ressource",
+     "pourquoi": "Son compte est relié : l'état vide ne doit pas paraître."
+    },
+    {
+     "visible": "prefixe:agm-rang-",
+     "pourquoi": "Son rang au tour de rôle, parce que l'amorce a **démarré** la campagne. L'attendu acceptait avant « aucune campagne » — il passait donc sans donnée."
+    },
+    {
+     "cliquer": "prefixe:agm-rlt-*-manifester",
+     "pourquoi": "Se manifester est le seul geste de cet écran qui ne dépende pas du rang : il demande le même corps d'emploi, pas d'être à son tour. Le joker désigne le **bouton** et non la ligne — leurs identifiants se partagent le même préfixe, et un clic sur la ligne ne lève rien tout en n'agissant pas."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "agm-info",
+     "valeur": "Intérêt enregistré",
+     "pourquoi": "Le serveur a consigné sa manifestation ; sans cela, le bouton aurait pu ne rien faire du tout."
+    },
+    {
+     "visible": "prefixe:agm-rlt-",
+     "pourquoi": "Le remplacement reste à l'écran après le geste : s'y manifester ne le fait pas disparaître."
+    }
+   ]
+  },
+  {
+   "id": "monpointage-declarer",
+   "titre": "l'employée déclare après coup un quart qu'elle n'a pas pu pointer, dans le dialogue prévu pour cela",
+   "profil": "paramedic",
+   "ecran": "monpointage",
+   "exigences": [
+    "E-GP-15",
+    "P-GP-1"
+   ],
+   "gestes": [
+    {
+     "cliquer": "mpo-declarer-ouvrir",
+     "pourquoi": "La déclaration est un dialogue depuis le 8 novembre 2026 : elle n'est plus repliée au milieu des pointages qu'elle complète."
+    },
+    {
+     "remplir": "mpo-s-date",
+     "valeur": "{jour:-1}",
+     "pourquoi": "Hier : dans la fenêtre qu'un profil par défaut admet."
+    },
+    {
+     "remplir": "mpo-s-entree",
+     "valeur": "08:00",
+     "pourquoi": "L'heure d'arrivée qu'elle n'a pas pu pointer."
+    },
+    {
+     "remplir": "mpo-s-sortie",
+     "valeur": "12:00",
+     "pourquoi": "Sa sortie."
+    },
+    {
+     "remplir": "mpo-s-justification",
+     "valeur": "Borne hors service ce matin-là",
+     "pourquoi": "La justification est exigée : une déclaration après coup se motive."
+    },
+    {
+     "cliquer": "mpo-s-envoyer",
+     "pourquoi": "La déclaration part au serveur, qui la juge et la met en attente d'approbation."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "mpo-info",
+     "valeur": "déclaré",
+     "pourquoi": "Le serveur a accepté la déclaration : le message ne paraît que sur sa réponse."
+    },
+    {
+     "absent": "mpo-declarer-modal",
+     "pourquoi": "Le dialogue se referme sur l'enregistrement : resté ouvert, il ferait croire que rien n'est parti."
+    }
+   ]
+  },
+  {
+   "id": "usagph-campagne",
+   "titre": "la planificatrice crée une campagne annuelle",
+   "profil": "planificateur",
+   "ecran": "usagph",
+   "exigences": [
+    "E-CH-1",
+    "P-CH-4"
+   ],
+   "gestes": [
+    {
+     "cliquer": "pla-agph-creer",
+     "pourquoi": "Le formulaire de création est replié : la vue courante est le suivi d'une campagne existante."
+    },
+    {
+     "choisir": "pla-agph-unite",
+     "pourquoi": "Son unité : hors périmètre, le serveur refuse — et une liste vide dirait que son périmètre manque."
+    },
+    {
+     "choisir": "pla-agph-corps",
+     "pourquoi": "Le corps d'emploi dont les postes seront offerts."
+    },
+    {
+     "remplir": "pla-agph-annee",
+     "valeur": "2033",
+     "pourquoi": "Une année libre : l'amorce en a déjà semé une, et deux campagnes de même unité, corps et année se refusent."
+    },
+    {
+     "remplir": "pla-agph-delai",
+     "valeur": "45",
+     "pourquoi": "Le délai d'un tour de rôle, en minutes : c'est lui qui fait avancer la campagne sans intervention."
+    },
+    {
+     "cliquer": "pla-agph-creer-envoyer",
+     "pourquoi": "La création part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pla-agph-campagne",
+     "valeur": "2033",
+     "pourquoi": "La campagne créée est dans la liste : c'est la seule preuve qu'elle existe côté serveur."
+    },
+    {
+     "visible": "pla-agph-etat",
+     "pourquoi": "Son état est affiché : une campagne sans état ne se pilote pas."
+    }
+   ]
+  },
+  {
+   "id": "uscomblement-combler",
+   "titre": "la planificatrice comble un quart sous son minimum, depuis le tableau du matin",
+   "profil": "planificateur",
+   "ecran": "uscomblement",
+   "exigences": [
+    "E-GR-1",
+    "E-GR-4",
+    "E-GN-2",
+    "s01",
+    "s05"
+   ],
+   "gestes": [
+    {
+     "choisir": "pla-periode",
+     "libelle": "Semaine publiée",
+     "pourquoi": "La période par défaut est la première non close, c'est-à-dire la collecte en cours ; le quart sous minimum est dans la semaine publiée. Choisir par libellé : la valeur est un identifiant de semis."
+    },
+    {
+     "texte": "pla-tuile-sous-minimum",
+     "valeur": "1 quart",
+     "pourquoi": "Le quart semé à deux places et zéro pourvue est bien compté sous son minimum : c'est la ligne que l'on va combler."
+    },
+    {
+     "cliquer": "prefixe:pla-sous-minimum-*-combler",
+     "pourquoi": "Le geste que l'écran n'avait pas : les planches s01 et s05 portent une colonne « Action » par quart, l'écran livré n'en avait aucune."
+    },
+    {
+     "choisir": "pla-att-ressource",
+     "pourquoi": "Le tiroir d'attribution de « Quarts et équipages », ouvert sur la place vacante : il n'offre que le corps d'emploi de la place."
+    },
+    {
+     "cliquer": "pla-att-attribuer",
+     "pourquoi": "L'attribution part au serveur, jugée par les mêmes règles qu'ailleurs."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pla-comblement-succes",
+     "valeur": "Place attribuée",
+     "pourquoi": "Le serveur a attribué la place : le message ne paraît que sur sa réponse."
+    },
+    {
+     "absent": "pla-attribution",
+     "pourquoi": "Le tiroir se referme sur l'attribution, et le tableau est relu derrière lui."
+    }
+   ]
+  },
+  {
+   "id": "usreferentiels-unite",
+   "titre": "l'administration crée une unité datée, puis la ferme à une date future",
+   "profil": "administration",
+   "ecran": "usreferentiels",
+   "exigences": [
+    "E-GN-7"
+   ],
+   "gestes": [
+    {
+     "choisir": "ref-type",
+     "valeur": "unites",
+     "pourquoi": "Les unités : postes, règles et quotas s'y rattachent."
+    },
+    {
+     "cliquer": "ref-ajouter",
+     "pourquoi": "Une valeur se crée datée, elle ne s'écrase pas."
+    },
+    {
+     "remplir": "ref-form-code",
+     "valeur": "NORD",
+     "pourquoi": "Le code, que les autres écrans citent."
+    },
+    {
+     "remplir": "ref-form-libelleFr",
+     "valeur": "Opérations Nord",
+     "pourquoi": "Le libellé lisible."
+    },
+    {
+     "remplir": "ref-form-date",
+     "valeur": "{jour:0}",
+     "pourquoi": "En vigueur aujourd'hui : visible au filtre « en vigueur le » du jour."
+    },
+    {
+     "cliquer": "ref-form-enregistrer",
+     "pourquoi": "La valeur part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "ref-tableau",
+     "valeur": "Opérations Nord",
+     "pourquoi": "La nouvelle unité est relue dans la liste en vigueur."
+    },
+    {
+     "cliquer": "ref-fermer-NORD",
+     "pourquoi": "Fermer plutôt que supprimer : l'historique reste juste."
+    },
+    {
+     "remplir": "ref-fermeture-date",
+     "valeur": "{jour:30}",
+     "pourquoi": "Dernier jour exclu, dans un mois."
+    },
+    {
+     "cliquer": "ref-fermeture-confirmer",
+     "pourquoi": "La fermeture est datée."
+    },
+    {
+     "visible": "ref-succes",
+     "pourquoi": "L'écran confirme la fermeture."
+    }
+   ]
+  },
+  {
+   "id": "usreferentiels-type-heure",
+   "titre": "l'administration crée un type d'heure avec son comportement et son code de paie",
+   "profil": "administration",
+   "ecran": "usreferentiels",
+   "exigences": [
+    "E-RF-6"
+   ],
+   "gestes": [
+    {
+     "choisir": "ref-type",
+     "valeur": "types_heure",
+     "pourquoi": "Les types d'heures ventilent les totaux de la feuille."
+    },
+    {
+     "cliquer": "ref-ajouter",
+     "pourquoi": "Un nouveau type."
+    },
+    {
+     "remplir": "ref-form-code",
+     "valeur": "NUIT",
+     "pourquoi": "Le code du type."
+    },
+    {
+     "remplir": "ref-form-libelleFr",
+     "valeur": "Prime de nuit",
+     "pourquoi": "Le libellé."
+    },
+    {
+     "choisir": "ref-form-comportement",
+     "valeur": "SUPPLEMENTAIRE",
+     "pourquoi": "Le comportement décide du traitement dans la feuille."
+    },
+    {
+     "remplir": "ref-form-attr-codePaie",
+     "valeur": "PFT-215",
+     "pourquoi": "Le code transmis à la paie."
+    },
+    {
+     "remplir": "ref-form-date",
+     "valeur": "{jour:0}",
+     "pourquoi": "En vigueur aujourd'hui."
+    },
+    {
+     "cliquer": "ref-form-enregistrer",
+     "pourquoi": "Le type part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "ref-tableau",
+     "valeur": "Prime de nuit",
+     "pourquoi": "Le type est relu dans la liste."
+    }
+   ]
+  },
+  {
+   "id": "usmilieux-creer",
+   "titre": "l'administration ajoute un milieu avec ses coordonnées et règle ses preuves de présence",
+   "profil": "administration",
+   "ecran": "usmilieux",
+   "exigences": [
+    "E-GN-17",
+    "E-GP-10",
+    "E-GP-12"
+   ],
+   "gestes": [
+    {
+     "cliquer": "mil-ajouter",
+     "pourquoi": "Un nouveau lieu de travail."
+    },
+    {
+     "remplir": "mil-form-code",
+     "valeur": "C27",
+     "pourquoi": "Le code du milieu."
+    },
+    {
+     "remplir": "mil-form-libelle",
+     "valeur": "Caserne 27",
+     "pourquoi": "Son nom."
+    },
+    {
+     "choisir": "mil-form-type",
+     "valeur": "CASERNE",
+     "pourquoi": "Son type."
+    },
+    {
+     "choisir": "mil-form-unite",
+     "valeur": "EST",
+     "pourquoi": "Son unité : le quart planifié s'y rattache."
+    },
+    {
+     "remplir": "mil-form-adresse",
+     "valeur": "6700, rue Saint-Denis, Montréal",
+     "pourquoi": "Son adresse."
+    },
+    {
+     "remplir": "mil-form-latitude",
+     "valeur": "45.5361",
+     "pourquoi": "Latitude."
+    },
+    {
+     "remplir": "mil-form-longitude",
+     "valeur": "-73.6011",
+     "pourquoi": "Longitude."
+    },
+    {
+     "remplir": "mil-form-rayon",
+     "valeur": "200",
+     "pourquoi": "Hors de ce rayon, un pointage est un écart d'emplacement."
+    },
+    {
+     "cliquer": "mil-form-enregistrer",
+     "pourquoi": "Le milieu part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "mil-tableau",
+     "valeur": "Caserne 27",
+     "pourquoi": "Le milieu est relu dans la liste."
+    },
+    {
+     "cliquer": "mil-preuves-C27",
+     "pourquoi": "Les preuves se règlent milieu par milieu."
+    },
+    {
+     "cliquer": "mil-preuve-GEOREPERAGE",
+     "pourquoi": "La position est acceptée."
+    },
+    {
+     "cliquer": "mil-exige-GEOREPERAGE",
+     "pourquoi": "Et exigée."
+    },
+    {
+     "cliquer": "mil-preuves-enregistrer",
+     "pourquoi": "Les preuves s'enregistrent — aucun code à toucher."
+    },
+    {
+     "visible": "mil-succes",
+     "pourquoi": "L'écran confirme l'enregistrement."
+    }
+   ]
+  },
+  {
+   "id": "usquotas-definir",
+   "titre": "le planificateur définit un quota, distinct par unité et nature",
+   "profil": "planificateur",
+   "ecran": "usquotas",
+   "exigences": [
+    "E-GR-8"
+   ],
+   "gestes": [
+    {
+     "cliquer": "pla-quota-definir",
+     "pourquoi": "Un quota se définit dans son tiroir."
+    },
+    {
+     "choisir": "pla-quo-uniteCode",
+     "valeur": "EST",
+     "pourquoi": "L'unité."
+    },
+    {
+     "choisir": "pla-quo-natureCode",
+     "valeur": "REG",
+     "pourquoi": "La nature : la clé distingue les quotas."
+    },
+    {
+     "remplir": "pla-quo-quota",
+     "valeur": "4",
+     "pourquoi": "Équipages opérationnels visés par jour."
+    },
+    {
+     "remplir": "pla-quo-depuis",
+     "valeur": "{jour:1}",
+     "pourquoi": "À partir de demain : jamais en arrière."
+    },
+    {
+     "cliquer": "pla-quo-enregistrer",
+     "pourquoi": "Le quota part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pla-quotas-tableau",
+     "valeur": "4",
+     "pourquoi": "Le quota est relu, avec sa valeur."
+    }
+   ]
+  },
+  {
+   "id": "usequipages-adhoc",
+   "titre": "le planificateur crée un quart ad hoc à deux corps d'emploi",
+   "profil": "planificateur",
+   "ecran": "usequipages",
+   "exigences": [
+    "E-GN-1"
+   ],
+   "gestes": [
+    {
+     "choisir": "pla-periode",
+     "libelle": "Semaine publiée",
+     "pourquoi": "La période publiée par l'amorce, qui contient le jour du quart."
+    },
+    {
+     "cliquer": "pla-eq-adhoc",
+     "pourquoi": "La composition se définit dans le tiroir de création."
+    },
+    {
+     "remplir": "pla-ah-date",
+     "valeur": "{jour:2}",
+     "pourquoi": "Un jour de la période publiée par l'amorce."
+    },
+    {
+     "remplir": "pla-ah-debut",
+     "valeur": "10:00",
+     "pourquoi": "Début."
+    },
+    {
+     "remplir": "pla-ah-fin",
+     "valeur": "16:00",
+     "pourquoi": "Fin."
+    },
+    {
+     "choisir": "pla-ah-nature",
+     "valeur": "REG",
+     "pourquoi": "Nature."
+    },
+    {
+     "choisir": "pla-ah-milieu",
+     "libelle": "Caserne 12",
+     "pourquoi": "Le milieu."
+    },
+    {
+     "choisir": "pla-ah-corps-0",
+     "valeur": "PARA",
+     "pourquoi": "Premier corps d'emploi."
+    },
+    {
+     "remplir": "pla-ah-nombre-0",
+     "valeur": "2",
+     "pourquoi": "Deux places."
+    },
+    {
+     "cliquer": "pla-ah-creer",
+     "pourquoi": "Le quart part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "remplir": "pla-eq-date",
+     "valeur": "{jour:2}",
+     "pourquoi": "La liste se lit jour par jour : celui du quart créé."
+    },
+    {
+     "texte": "pla-eq-tableau",
+     "valeur": "10:00",
+     "pourquoi": "Le quart ad hoc est relu dans la liste, à son heure."
+    }
+   ]
+  },
+  {
+   "id": "usagph-rlt",
+   "titre": "le planificateur ouvre un remplacement long terme avec sa date limite",
+   "profil": "planificateur",
+   "ecran": "usagph",
+   "exigences": [
+    "E-CH-7"
+   ],
+   "gestes": [
+    {
+     "cliquer": "pla-rlt-ouvrir",
+     "pourquoi": "Le remplacement s'ouvre dans un dialogue."
+    },
+    {
+     "choisir": "pla-rlt-poste",
+     "libelle": "A-TC",
+     "pourquoi": "Le poste à remplacer."
+    },
+    {
+     "choisir": "pla-rlt-origine",
+     "valeur": "POSTE_VACANT",
+     "pourquoi": "L'origine."
+    },
+    {
+     "remplir": "pla-rlt-debut",
+     "valeur": "{jour:40}",
+     "pourquoi": "Début de la fenêtre."
+    },
+    {
+     "remplir": "pla-rlt-fin",
+     "valeur": "{jour:70}",
+     "pourquoi": "Fin de la fenêtre."
+    },
+    {
+     "remplir": "pla-rlt-limite",
+     "valeur": "{jour:10}T17:00",
+     "pourquoi": "Date limite pour se manifester."
+    },
+    {
+     "cliquer": "pla-rlt-envoyer",
+     "pourquoi": "Le remplacement part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pla-agph-info",
+     "valeur": "ouvert aux manifestations",
+     "pourquoi": "L'écran confirme l'ouverture du remplacement."
+    }
+   ]
+  },
+  {
+   "id": "uspresence-profil",
+   "titre": "le planificateur pose un profil de pointage : pauses admises et présence préalable payée",
+   "profil": "planificateur",
+   "ecran": "uspresence",
+   "exigences": [
+    "E-GP-2",
+    "E-GP-9"
+   ],
+   "gestes": [
+    {
+     "deployer": "pfl-panneau",
+     "pourquoi": "Les profils vivent dans leur panneau."
+    },
+    {
+     "remplir": "pfl-code",
+     "valeur": "PARA-JOUR",
+     "pourquoi": "Le code du profil."
+    },
+    {
+     "remplir": "pfl-libelle",
+     "valeur": "Paramédics de jour",
+     "pourquoi": "Son libellé."
+    },
+    {
+     "cliquer": "pfl-nature-PAUSE",
+     "pourquoi": "La pause est une nature de temps non payé admise."
+    },
+    {
+     "remplir": "pfl-prealable",
+     "valeur": "15",
+     "pourquoi": "Quinze minutes de présence préalable rémunérée."
+    },
+    {
+     "cliquer": "pfl-poser",
+     "pourquoi": "Le profil part au serveur."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pfl-table",
+     "valeur": "Paramédics de jour",
+     "pourquoi": "Le profil est relu dans la liste."
+    }
+   ]
+  },
+  {
+   "id": "uspresence-audit",
+   "titre": "le planificateur filtre les pointages par site et lit l'audit des localisations",
+   "profil": "planificateur",
+   "ecran": "uspresence",
+   "exigences": [
+    "E-GP-7",
+    "E-GP-4",
+    "E-GP-14"
+   ],
+   "gestes": [
+    {
+     "choisir": "pla-pre-site",
+     "libelle": "Caserne 12",
+     "pourquoi": "Les pointages d'un site : plusieurs sites coexistent."
+    },
+    {
+     "deployer": "pla-pre-audit",
+     "pourquoi": "L'audit des localisations."
+    },
+    {
+     "cliquer": "pla-pre-audit-charger",
+     "pourquoi": "Charger l'audit."
+    }
+   ],
+   "attendu": [
+    {
+     "visible": "pla-pre-audit-resultat",
+     "pourquoi": "La localisation consignée se lit à l'écran."
+    },
+    {
+     "texte": "pla-pre-audit",
+     "valeur": "CSV",
+     "pourquoi": "Et s'exporte en CSV : le bouton le dit."
+    }
+   ]
+  },
+  {
+   "id": "ustemps-parametres",
+   "titre": "l'administration règle les seuils d'heures supplémentaires, puis lit le relevé",
+   "profil": "administration",
+   "ecran": "ustemps",
+   "exigences": [
+    "E-RF-5",
+    "E-RF-7"
+   ],
+   "gestes": [
+    {
+     "cliquer": "feuilles-parametres-ouvrir",
+     "pourquoi": "Les paramètres sont un dialogue."
+    },
+    {
+     "remplir": "pla-tps-p-seuilJourHeures",
+     "valeur": "12",
+     "pourquoi": "Au-delà de 12 h par jour, le temps est reclassé en supplémentaire."
+    },
+    {
+     "remplir": "pla-tps-p-seuilSemaineHeures",
+     "valeur": "40",
+     "pourquoi": "Et au-delà de 40 h par semaine."
+    },
+    {
+     "cliquer": "pla-tps-p-enregistrer",
+     "pourquoi": "Les seuils s'enregistrent."
+    }
+   ],
+   "attendu": [
+    {
+     "texte": "pla-tps-p-info",
+     "valeur": "Paramètres enregistrés",
+     "pourquoi": "L'écran confirme en mots que les seuils sont pris."
+    },
+    {
+     "deployer": "pla-tps-rapports",
+     "pourquoi": "Les relevés vivent dans leur repli."
+    },
+    {
+     "choisir": "pla-tps-regroupement",
+     "valeur": "typeHeure",
+     "pourquoi": "Le relevé regroupé par type d'heure."
+    },
+    {
+     "remplir": "pla-tps-debut",
+     "valeur": "{jour:-7}",
+     "pourquoi": "Le relevé porte sur une période : la semaine écoulée."
+    },
+    {
+     "remplir": "pla-tps-fin",
+     "valeur": "{jour:0}",
+     "pourquoi": "Jusqu'à aujourd'hui."
+    },
+    {
+     "cliquer": "pla-tps-lire-rapport",
+     "pourquoi": "Afficher le relevé opérationnel."
+    },
+    {
+     "texte": "pla-tps-rapports",
+     "valeur": "feuille",
+     "pourquoi": "Le relevé de la période est lu et dit ce qu'il contient — ses feuilles, ou qu'il n'y en a aucune."
+    }
+   ]
+  }
+ ]
 }

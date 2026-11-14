@@ -22,11 +22,15 @@
  * déjà travaillé. Mais c'est au moment où sa feuille de temps lui demande de vérifier le
  * *planifié* de la semaine écoulée que l'employée a besoin de cet horaire, et il avait disparu.
  *
+ * **Le mois en calendrier, la semaine en liste** (13 novembre 2026). Personne ne lit son horaire
+ * comme une table : la planche s03 le montre en calendrier, et c'est désormais la vue par défaut.
+ * La liste hebdomadaire reste à un clic — elle se lit mieux au lecteur d'écran et s'imprime.
+ *
  * **Une seule porte vers l'échange.** Le geste appartient à « Mes échanges » (ADR 0034) : la
  * planche demande une action principale, pas un second formulaire qui divergerait du premier.
  */
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BadgeStatut, EnTeteEcran, EtatVide, Message, Tableau, type Colonne } from "./composants";
+import { BadgeStatut, Calendrier, EnTeteEcran, EtatVide, Message, Tableau, type Colonne, type JourCalendrier } from "./composants";
 import { heure, useApiEffectifs } from "./effectifs/api";
 import { lienVersPage } from "./navigation";
 import { useModuleAllowed } from "./moduleAccess";
@@ -66,6 +70,17 @@ export function semaineDe(aujourdhui: string, semaines = 0): Fenetre {
   return { du: iso(lundi), au: iso(new Date(lundi.getTime() + 6 * JOUR_MS)) };
 }
 
+/** Le mois qui contient `date`, du premier au dernier jour : le calendrier le lit en un seul appel. */
+export function moisDe(premier: Date): Fenetre {
+  const fin = new Date(premier.getFullYear(), premier.getMonth() + 1, 0);
+  const deux = (n: number) => String(n).padStart(2, "0");
+  const jour = (d: Date) => `${d.getFullYear()}-${deux(d.getMonth() + 1)}-${deux(d.getDate())}`;
+  return { du: jour(new Date(premier.getFullYear(), premier.getMonth(), 1)), au: jour(fin) };
+}
+
+/** Les deux lectures de l'horaire : le mois en calendrier (par défaut), la semaine en liste. */
+type Vue = "calendrier" | "liste";
+
 const COLONNES: ReadonlyArray<Colonne<QuartEchangeable>> = [
   { id: "jour", libelle: "Jour", tri: (q) => q.date },
   { id: "quart", libelle: "Quart" },
@@ -82,7 +97,9 @@ export default function MonHoraire() {
   const [quarts, setQuarts] = useState<QuartEchangeable[]>([]);
   const [enEchange, setEnEchange] = useState<Set<string>>(new Set());
   const [semaines, setSemaines] = useState(0);
-  const fenetre = useMemo(() => semaineDe(iso(new Date()), semaines), [semaines]);
+  const [vue, setVue] = useState<Vue>("calendrier");
+  const [mois, setMois] = useState(() => { const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), 1); });
+  const fenetre = useMemo(() => (vue === "calendrier" ? moisDe(mois) : semaineDe(iso(new Date()), semaines)), [vue, mois, semaines]);
 
   const charger = useCallback(async () => {
     const m = await lire<{ ressource: Ressource | null; quarts: QuartEchangeable[] }>(
@@ -113,50 +130,18 @@ export default function MonHoraire() {
       )}
       {moi && (
         <>
-          <div className="eff-barre">
-            {/* Un groupe nommé : trois boutons côte à côte sans libellé commun se lisent au clavier
-                comme trois commandes sans rapport. */}
-            <div role="group" aria-label="Semaine affichée" className="eff-actions">
-              <button type="button" className="secondary" data-testid="mho-semaine-precedente" onClick={() => setSemaines((n) => n - 1)}>
-                Semaine précédente
-              </button>
-              <button type="button" className="secondary" data-testid="mho-semaine-courante" disabled={semaines === 0} onClick={() => setSemaines(0)}>
-                Cette semaine
-              </button>
-              <button type="button" className="secondary" data-testid="mho-semaine-suivante" onClick={() => setSemaines((n) => n + 1)}>
-                Semaine suivante
-              </button>
-            </div>
-            {/* `role="status"` : la semaine change sans rechargement, et un lecteur d'écran doit
-                l'entendre — sans que le focus quitte le bouton qu'on vient d'actionner. */}
-            <p role="status" data-testid="mho-fenetre">
-              {quarts.length === 0 ? "Aucun quart" : `${quarts.length} quart${quarts.length > 1 ? "s" : ""}`} du {jourEnMots(fenetre.du)} au {jourEnMots(fenetre.au)}
-            </p>
-          </div>
-          <Tableau
-            colonnes={COLONNES}
-            lignes={quarts}
-            legende="Mes quarts publiés de la semaine affichée"
-            testId="mho-table"
-            vide={<EtatVide titre="Aucun quart publié cette semaine-là" compact testId="mho-vide">
-              Changez de semaine, ou attendez la publication de la période.
-            </EtatVide>}
-            rendre={(q) => (
-              <tr key={q.placeId} data-testid={`mho-${q.placeId}`}>
-                <td>{jourEnMots(q.date)}</td>
-                <td>{heure(q.debut)}–{heure(q.fin)}</td>
-                {/* Jamais de site deviné : « — » dit l'absence, un nom supposé enverrait au mauvais garage. */}
-                <td>{q.milieu ?? "—"}</td>
-                <td>{q.corpsEmploiCode}</td>
-                <td>
-                  {/* Le mot, pas la seule couleur (WCAG 1.4.1) : un badge se lit aussi dans un export. */}
-                  {enEchange.has(q.placeId)
-                    ? <BadgeStatut statut="en_attente">Échange en cours</BadgeStatut>
-                    : <BadgeStatut statut="approuvee">Confirmé</BadgeStatut>}
-                </td>
-              </tr>
-            )}
-          />
+          <BasculeVue vue={vue} changer={setVue} />
+          {vue === "calendrier" ? (
+            <>
+              <p role="status" data-testid="mho-fenetre">{resumeDuMois(quarts.length, mois)}</p>
+              <div className="mho-calendrier">
+                <Calendrier mois={mois} onMois={setMois} libelle="Mon horaire" testId="mho-cal"
+                            rendreJour={(jour) => <JourDHoraire jour={jour} quarts={quarts} enEchange={enEchange} />} />
+              </div>
+            </>
+          ) : (
+            <ListeDeLaSemaine quarts={quarts} enEchange={enEchange} fenetre={fenetre} semaines={semaines} changerSemaines={setSemaines} />
+          )}
           {/* La porte, pas une seconde maison : proposer un échange appartient à « Mes échanges »
               (ADR 0034). Un lien, parce qu'il mène ailleurs — un bouton promettrait un geste ici. */}
           {avecEchanges && quarts.length > 0 && (
@@ -167,5 +152,105 @@ export default function MonHoraire() {
         </>
       )}
     </PageMaquette>
+  );
+}
+
+/** La bascule entre les deux lectures : deux boutons à bascule, groupés et nommés. */
+function BasculeVue({ vue, changer }: { vue: Vue; changer: (v: Vue) => void }) {
+  return (
+    <div role="group" aria-label="Affichage de l'horaire" className="eff-actions mho-bascule">
+      <button type="button" className={vue === "calendrier" ? "primary" : "secondary"} aria-pressed={vue === "calendrier"}
+              data-testid="mho-vue-calendrier" onClick={() => changer("calendrier")}>Calendrier du mois</button>
+      <button type="button" className={vue === "liste" ? "primary" : "secondary"} aria-pressed={vue === "liste"}
+              data-testid="mho-vue-liste" onClick={() => changer("liste")}>Liste de la semaine</button>
+    </div>
+  );
+}
+
+/** « 12 quarts en novembre 2026 » — le mois change sans rechargement, le lecteur d'écran l'entend. */
+export function resumeDuMois(nombre: number, mois: Date): string {
+  const nom = mois.toLocaleDateString("fr-CA", { month: "long", year: "numeric" });
+  return nombre === 0 ? `Aucun quart publié en ${nom}` : `${nombre} quart${nombre > 1 ? "s" : ""} en ${nom}`;
+}
+
+/** Une case du calendrier : son numéro, puis ses quarts — l'heure, le site (jamais deviné) et l'incertitude en mots. */
+function JourDHoraire({ jour, quarts, enEchange }: { jour: JourCalendrier; quarts: QuartEchangeable[]; enEchange: Set<string> }) {
+  const duJour = quarts.filter((q) => q.date === jour.date);
+  return (
+    <>
+      {/* Le numéro sur grand écran ; la date en mots quand le calendrier devient un agenda (téléphone). */}
+      <span className="cal-daynum mho-cal-num">{Number(jour.date.slice(8))}</span>
+      <span className="cal-daynum mho-cal-date">{jourEnMots(jour.date)}</span>
+      {duJour.length > 0 && (
+        <ul className="mho-cal-quarts">
+          {duJour.map((q) => (
+            <li key={q.placeId} data-testid={`mho-cal-${q.placeId}`} className={enEchange.has(q.placeId) ? "mho-cal-incertain" : undefined}>
+              <strong>{heure(q.debut)}–{heure(q.fin)}</strong> {q.milieu ?? "—"} · {q.corpsEmploiCode}
+              {enEchange.has(q.placeId) && <span className="mho-cal-mention"> — Échange en cours</span>}
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
+interface PropsListe {
+  quarts: QuartEchangeable[];
+  enEchange: Set<string>;
+  fenetre: Fenetre;
+  semaines: number;
+  changerSemaines: (n: number | ((n: number) => number)) => void;
+}
+
+/** La semaine en liste : la lecture d'avant le calendrier, gardée pour le lecteur d'écran et l'impression. */
+function ListeDeLaSemaine({ quarts, enEchange, fenetre, semaines, changerSemaines: setSemaines }: PropsListe) {
+  return (
+    <>
+      <div className="eff-barre">
+        {/* Un groupe nommé : trois boutons côte à côte sans libellé commun se lisent au clavier
+            comme trois commandes sans rapport. */}
+        <div role="group" aria-label="Semaine affichée" className="eff-actions">
+          <button type="button" className="secondary" data-testid="mho-semaine-precedente" onClick={() => setSemaines((n) => n - 1)}>
+            Semaine précédente
+          </button>
+          <button type="button" className="secondary" data-testid="mho-semaine-courante" disabled={semaines === 0} onClick={() => setSemaines(0)}>
+            Cette semaine
+          </button>
+          <button type="button" className="secondary" data-testid="mho-semaine-suivante" onClick={() => setSemaines((n) => n + 1)}>
+            Semaine suivante
+          </button>
+        </div>
+        {/* `role="status"` : la semaine change sans rechargement, et un lecteur d'écran doit
+            l'entendre — sans que le focus quitte le bouton qu'on vient d'actionner. */}
+        <p role="status" data-testid="mho-fenetre">
+          {quarts.length === 0 ? "Aucun quart" : `${quarts.length} quart${quarts.length > 1 ? "s" : ""}`} du {jourEnMots(fenetre.du)} au {jourEnMots(fenetre.au)}
+        </p>
+      </div>
+      <Tableau
+        colonnes={COLONNES}
+        lignes={quarts}
+        legende="Mes quarts publiés de la semaine affichée"
+        testId="mho-table"
+        vide={<EtatVide titre="Aucun quart publié cette semaine-là" compact testId="mho-vide">
+          Changez de semaine, ou attendez la publication de la période.
+        </EtatVide>}
+        rendre={(q) => (
+          <tr key={q.placeId} data-testid={`mho-${q.placeId}`}>
+            <td>{jourEnMots(q.date)}</td>
+            <td>{heure(q.debut)}–{heure(q.fin)}</td>
+            {/* Jamais de site deviné : « — » dit l'absence, un nom supposé enverrait au mauvais garage. */}
+            <td>{q.milieu ?? "—"}</td>
+            <td>{q.corpsEmploiCode}</td>
+            <td>
+              {/* Le mot, pas la seule couleur (WCAG 1.4.1) : un badge se lit aussi dans un export. */}
+              {enEchange.has(q.placeId)
+                ? <BadgeStatut statut="en_attente">Échange en cours</BadgeStatut>
+                : <BadgeStatut statut="approuvee">Confirmé</BadgeStatut>}
+            </td>
+          </tr>
+        )}
+      />
+    </>
   );
 }

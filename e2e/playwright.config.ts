@@ -34,7 +34,17 @@ export default defineConfig({
   use: {
     baseURL: BASE_URL,
     trace: "on-first-retry",
-    video: (process.env.E2E_VIDEO as "on" | "off" | "retain-on-failure") ?? "retain-on-failure",
+    // Sans taille donnée, Playwright réduit le film à 800 px de large : illisible à la vitrine.
+    video: process.env.E2E_VIDEO_LARGEUR
+      ? { mode: "on", size: { width: Number(process.env.E2E_VIDEO_LARGEUR), height: Math.round(Number(process.env.E2E_VIDEO_LARGEUR) * 9 / 16) } }
+      : (process.env.E2E_VIDEO as "on" | "off" | "retain-on-failure") ?? "retain-on-failure",
+    // **Le film de la vitrine** (`scripts/monter-video-vitrine.sh`) : une image lisible demande un
+    // geste lisible. `E2E_RALENTI` (ms) ralentit chaque action, et `E2E_VIDEO_LARGEUR` fixe la taille.
+    ...(process.env.E2E_RALENTI ? { launchOptions: { slowMo: Number(process.env.E2E_RALENTI) } } : {}),
+    ...(process.env.E2E_VIDEO_LARGEUR ? {
+      viewport: { width: Number(process.env.E2E_VIDEO_LARGEUR), height: Math.round(Number(process.env.E2E_VIDEO_LARGEUR) * 9 / 16) },
+      locale: "fr-CA", timezoneId: "America/Toronto",
+    } : {}),
     screenshot: "only-on-failure",
     storageState: "./.auth/admin.json",
   },

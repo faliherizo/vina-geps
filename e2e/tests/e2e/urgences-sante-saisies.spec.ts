@@ -39,7 +39,10 @@ interface Saisie {
 }
 
 const PROFILS = profils.profils as Profil[];
-const SAISIES = jeu.saisies as Saisie[];
+const TOUTES = jeu.saisies as Saisie[];
+/** `SAISIES_FILTRE=usmilieux|usquotas` rejoue seulement les scénarios visés : la mise au point d'une saisie ne demande pas les seize. */
+const FILTRE = process.env.SAISIES_FILTRE ? new RegExp(process.env.SAISIES_FILTRE) : null;
+const SAISIES = FILTRE ? TOUTES.filter((s) => FILTRE.test(s.id)) : TOUTES;
 
 /**
  * `{jour:N}` → la date de dans N jours.
@@ -47,11 +50,12 @@ const SAISIES = jeu.saisies as Saisie[];
  * Un fichier de données ne calcule pas, et une date figée ferait échouer l'essai le lendemain de
  * son écriture — l'échec le plus déroutant qui soit, puisque rien n'a changé dans le code.
  */
-const JOUR_RELATIF = /^\{jour:(-?\d+)\}$/;
+// Une heure peut suivre (`{jour:10}T17:00`) : un champ date-heure refuse une date seule, en silence.
+const JOUR_RELATIF = /^\{jour:(-?\d+)\}(T\d{2}:\d{2})?$/;
 
 export function valeurRendue(valeur: string | undefined): string | undefined {
   const m = valeur === undefined ? null : JOUR_RELATIF.exec(valeur);
-  return m ? jour(Number(m[1])) : valeur;
+  return m ? jour(Number(m[1])) + (m[2] ?? "") : valeur;
 }
 
 test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouver", () => {
@@ -89,7 +93,16 @@ test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouv
       // et le distinguer par un second mécanisme aurait fait deux copies à corriger.
       for (const g of [...s.gestes, ...s.attendu]) {
         try { await poser(page, { ...g, valeur: valeurRendue(g.valeur) }); }
-        catch (e) { echecs.push(`${s.id} (${profil!.nom}) — « ${g.pourquoi} » : ${(e as Error).message.split("\n")[0]}`); }
+        catch (e) {
+          const echec = `${s.id} (${profil!.nom}) — « ${g.pourquoi} » : ${(e as Error).message.split("\n")[0]}`;
+          echecs.push(echec);
+          // Dit tout de suite : si l'essai expire, les échecs déjà vus ne sont pas perdus.
+          console.log(`✗ ${echec}`);
+          // L'écran au moment de l'échec, joint au rapport : un message seul ne dit pas ce qu'on voyait.
+          await page.screenshot({ path: test.info().outputPath(`${s.id}.png`), fullPage: true }).catch(() => {});
+          // Un geste raté rend les suivants du même scénario sans objet : on passe au scénario suivant.
+          break;
+        }
       }
 
       const fautes = await auditA11y(page);
@@ -103,12 +116,12 @@ test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouv
 
   test("le fichier de données se tient : chaque saisie écrit, puis relit un contenu", () => {
     const cles = new Set(PROFILS.map((p) => p.cle));
-    expect(SAISIES.filter((s) => !cles.has(s.profil)).map((s) => s.id)).toEqual([]);
+    expect(TOUTES.filter((s) => !cles.has(s.profil)).map((s) => s.id)).toEqual([]);
 
     // **Un scénario sans écriture n'est pas une saisie** : il ferait doublon avec les parcours, et
     // le nom du fichier mentirait sur ce qu'il mesure.
     const ecrit = (g: Geste) => !!(g.cliquer || g.remplir || g.choisir);
-    expect(SAISIES.filter((s) => !s.gestes.some(ecrit)).map((s) => s.id)).toEqual([]);
+    expect(TOUTES.filter((s) => !s.gestes.some(ecrit)).map((s) => s.id)).toEqual([]);
 
     /*
       **Et un attendu qui ne lit aucun contenu ne prouve pas l'écriture.**
@@ -117,18 +130,19 @@ test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouv
       rempli un formulaire ne dit rien, puisque le tableau était là avant. Chaque scénario doit
       donc porter au moins un attendu `texte`.
     */
-    expect(SAISIES.filter((s) => !s.attendu.some((a) => a.texte)).map((s) => s.id)).toEqual([]);
+    expect(TOUTES.filter((s) => !s.attendu.some((a) => a.texte)).map((s) => s.id)).toEqual([]);
 
     // Chaque geste dit **pourquoi**, et chaque scénario nomme les exigences qu'il sert.
-    expect(SAISIES.flatMap((s) => [...s.gestes, ...s.attendu].filter((g) => !g.pourquoi).map(() => s.id))).toEqual([]);
-    expect(SAISIES.filter((s) => !s.exigences?.length).map((s) => s.id)).toEqual([]);
-    expect(SAISIES.filter((s) => new Set(SAISIES.map((x) => x.id)).size !== SAISIES.length).map((s) => s.id)).toEqual([]);
+    expect(TOUTES.flatMap((s) => [...s.gestes, ...s.attendu].filter((g) => !g.pourquoi).map(() => s.id))).toEqual([]);
+    expect(TOUTES.filter((s) => !s.exigences?.length).map((s) => s.id)).toEqual([]);
+    expect(TOUTES.filter((s) => new Set(TOUTES.map((x) => x.id)).size !== TOUTES.length).map((s) => s.id)).toEqual([]);
   });
 
   test("`{jour:N}` se rend en date, et le reste passe tel quel", () => {
     expect(valeurRendue("{jour:0}")).toBe(jour(0));
     expect(valeurRendue("{jour:-3}")).toBe(jour(-3));
     expect(valeurRendue("08:00")).toBe("08:00");
+    expect(valeurRendue("{jour:0}T17:00")).toBe(`${jour(0)}T17:00`);
     expect(valeurRendue(undefined)).toBeUndefined();
     // Un gabarit mal écrit passe tel quel plutôt que de devenir une date surprise : il échouera
     // à la saisie, là où le message nomme le champ.
