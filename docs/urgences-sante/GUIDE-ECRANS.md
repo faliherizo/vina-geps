@@ -545,8 +545,8 @@ Envoyer une alerte priorisée à des groupes ou à des personnes, avec les répo
 **Comment faire**
 
 1. Choisir un « Modèle » au besoin : il remplit le titre, le message, la priorité et les réponses ; tout reste modifiable.
-2. Écrire le « Titre » et le « Message », puis choisir la « Priorité ». Une alerte critique part sur tous les canaux, quelles que soient les préférences.
-3. Choisir les destinataires : « Tout le groupe … », ou des personnes, par leur nom, dans « Choisir des personnes dans un groupe ».
+2. Écrire le « Titre » et le « Message », puis choisir la « Priorité ». Une alerte critique part sur tous les canaux, quelles que soient les préférences ; elle est réservée à qui en a le droit (direction, administration, ou un droit accordé par l'organisme).
+3. Choisir les destinataires : « Tout le groupe … » (une unité ou un groupe transverse, comme une garde), « La liste … » (une liste de distribution), ou des personnes, par leur nom, dans « Choisir des personnes dans un groupe ».
 4. Cocher les « Réponses proposées », puis « Envoyer l'alerte ».
 
 **Exemple de remplissage**
@@ -562,7 +562,7 @@ Envoyer une alerte priorisée à des groupes ou à des personnes, avec les répo
 
 **Résultat :** « Alerte … envoyée à N personne(s) » ; les destinataires sont figés à l'envoi, et « Suivre les réponses » ouvre le suivi.
 
-> **Attention :** Vous n'êtes jamais destinataire de votre propre alerte, même si vous êtes dans le groupe visé.
+> **Attention :** Vous n'êtes jamais destinataire de votre propre alerte, même si vous êtes dans le groupe visé. Sans le droit du critique, la priorité « Critique » est grisée, et les modèles critiques ne vous sont pas proposés.
 
 ### Suivi des alertes
 
@@ -572,19 +572,23 @@ Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pr
 
 **Comment faire**
 
-1. Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.
-2. « Détail » ouvre les destinataires : lue le, état, répondu le.
-3. « Actualiser » relit les réponses arrivées depuis.
+1. Filtrer au besoin : « Du », « Au », « Priorité », « État » (prise en charge, sans prise en charge, pas encore lue de tous), « Expéditeur », puis « Filtrer ».
+2. Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.
+3. « Détail » ouvre les destinataires : lue le, état, répondu le.
+4. « Exporter » le même suivi, au même filtre : CSV, Excel, PDF ou JSON. « Actualiser » relit les réponses arrivées depuis.
 
 **Exemple de remplissage**
 
 | Champ | Valeur saisie |
 |---|---|
+| Du | 2026-11-01 |
+| État | Sans prise en charge |
 | Alerte | Code bleu chambre 512 |
 | Lues | 12 / 15 |
 | Prise en charge | Julie Roy, 2026-11-14 14:03 |
+| Format d'export | Excel (XLSX) |
 
-**Résultat :** Lecture seule : le suivi ne change rien aux alertes.
+**Résultat :** Lecture seule : le suivi ne change rien aux alertes ; l'export est une pièce datée, à archiver.
 
 ### Mes alertes
 
@@ -738,8 +742,11 @@ Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
 **Comment faire**
 
 1. « Nouvelle réponse » : un libellé et ce qu'il veut dire (prise en charge, refus, information).
-2. « Nouveau modèle » : titre, texte, priorité et réponses proposées.
-3. « Désactiver » retire une réponse ou un modèle des choix ; rien ne s'efface.
+2. « Nouveau modèle » : titre, texte, priorité, réponses proposées, et son « Périmètre » (les groupes dont les expéditeurs le voient ; aucun coché : tout l'organisme).
+3. « Modifier » un modèle en fait une nouvelle version ; « Versions » montre chaque version, qui l'a faite et quand.
+4. « Désactiver » retire une réponse ou un modèle des choix ; rien ne s'efface.
+5. Réglages : cocher « Envoyer aussi une copie par courriel » pour que chacun reçoive l'alerte par courriel en plus de ses canaux.
+6. Groupes transverses : « Nouveau groupe » (nom, nature : garde, spécialité, comité), puis « Gérer » pour inscrire une personne par son nom, pour une période, comme membre ou modératrice.
 
 **Exemple de remplissage**
 
@@ -749,8 +756,11 @@ Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
 | Ce qu'elle veut dire | Prise en charge |
 | Modèle — Titre | Code bleu |
 | Priorité | Critique |
+| Périmètre | Garde de nuit |
+| Groupe transverse | Garde de nuit (garde) |
+| Personne à inscrire | Julie Roy, du 2026-12-21 au 2026-12-27 |
 
-**Résultat :** La réponse ou le modèle est proposé dès la prochaine alerte ; les alertes passées gardent ce qu'elles ont proposé.
+**Résultat :** La réponse, le modèle ou le groupe est proposé dès la prochaine alerte ; les alertes passées gardent ce qu'elles ont proposé, et la version du modèle dont elles sont parties.
 
 ### Référentiels
 

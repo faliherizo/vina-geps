@@ -345,9 +345,17 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS msg_message_versions (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, messageId TEXT NOT NULL, version INTEGER NOT NULL, corps TEXT NOT NULL, ecritLe TEXT NOT NULL, remplaceLe TEXT NOT NULL, UNIQUE (tenantId, messageId, version))",
             // Communications cliniques (changeset 0006, ADR 0074).
             "CREATE TABLE IF NOT EXISTS alr_reponses (id TEXT NOT NULL, tenantId TEXT NOT NULL, libelle TEXT NOT NULL, semantique TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
-            "CREATE TABLE IF NOT EXISTS alr_modeles (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, actif INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_modeles (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, actif INTEGER NOT NULL DEFAULT 1, version INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
             "CREATE TABLE IF NOT EXISTS alr_modele_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, rang))",
-            "CREATE TABLE IF NOT EXISTS alr_alertes (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, expediteurId TEXT NOT NULL, envoyeeLe TEXT NOT NULL, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_alertes (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, expediteurId TEXT NOT NULL, envoyeeLe TEXT NOT NULL, modeleId TEXT, modeleVersion INTEGER, PRIMARY KEY (tenantId, id))",
+            // 0009 — R1-bis : versions et périmètre des modèles, réglages d'organisme.
+            "CREATE TABLE IF NOT EXISTS alr_modele_versions (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, version INTEGER NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, creeLe TEXT NOT NULL, creePar TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, version))",
+            "CREATE TABLE IF NOT EXISTS alr_modele_version_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, version INTEGER NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, version, rang))",
+            "CREATE TABLE IF NOT EXISTS alr_modele_groupes (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, groupeId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, groupeId))",
+            "CREATE TABLE IF NOT EXISTS alr_reglages (tenantId TEXT NOT NULL PRIMARY KEY, copieCourriel INTEGER NOT NULL DEFAULT 0)",
+            // 0010 — ST-G09 : groupes transverses.
+            "CREATE TABLE IF NOT EXISTS msg_groupes_transverses (id TEXT NOT NULL, tenantId TEXT NOT NULL, nom TEXT NOT NULL, nature TEXT NOT NULL, actif INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS msg_groupe_membres (tenantId TEXT NOT NULL, groupeId TEXT NOT NULL, personId TEXT NOT NULL, nom TEXT NOT NULL, depuis TEXT, jusqua TEXT, moderateur INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (tenantId, groupeId, personId))",
             "CREATE TABLE IF NOT EXISTS alr_alerte_reponses (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, libelle TEXT NOT NULL, semantique TEXT NOT NULL, PRIMARY KEY (tenantId, alerteId, rang))",
             "CREATE TABLE IF NOT EXISTS alr_remises (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, personId TEXT NOT NULL, nom TEXT NOT NULL, compteAvis TEXT, envoyeeLe TEXT NOT NULL, lueLe TEXT, reponseId TEXT, reponduLe TEXT, PRIMARY KEY (tenantId, alerteId, personId))",
             // Refonte de la messagerie (changeset 0003) : réactions et appels de groupe.

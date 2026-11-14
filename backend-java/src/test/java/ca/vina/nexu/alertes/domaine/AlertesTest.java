@@ -111,10 +111,10 @@ class AlertesTest {
         assertThat(r.avecActive(false).active()).isFalse();
         refus(() -> ReponsePredefinie.nouvelle("x", "x".repeat(61), Semantique.REFUS), RefusAlerte.Nature.INVALIDE, "60 caractères");
         refus(() -> ReponsePredefinie.nouvelle("x", "Ok", null), RefusAlerte.Nature.INVALIDE, "« semantique » est requis");
-        Modele m = Modele.nouveau("m1", "Code bleu", "Chambre {{chambre}}", Priorite.CRITIQUE, List.of("r1"));
+        Modele m = Modele.nouveau("m1", new Alertes.ContenuModele("Code bleu", "Chambre {{chambre}}", Priorite.CRITIQUE, List.of("r1"), List.of()));
         assertThat(m.actif()).isTrue();
         assertThat(m.avecActif(false).actif()).isFalse();
-        refus(() -> Modele.nouveau("m", "Titre", "x".repeat(2_001), Priorite.URGENTE, List.of()), RefusAlerte.Nature.INVALIDE, "2000 caractères");
+        refus(() -> Modele.nouveau("m", new Alertes.ContenuModele("Titre", "x".repeat(2_001), Priorite.URGENTE, List.of(), List.of())), RefusAlerte.Nature.INVALIDE, "2000 caractères");
     }
 
     @Test
@@ -129,5 +129,36 @@ class AlertesTest {
         assertThat(Semantique.de("prise_en_charge")).contains(Semantique.PRISE_EN_CHARGE);
         assertThat(Semantique.de("oui")).isEmpty();
         assertThat(Semantique.REFUS.code()).isEqualTo("refus");
+    }
+
+    @Test
+    @DisplayName("ST-G03 : l'état du suivi se lit sur l'alerte — non lue, puis lue, puis prise en charge ; les codes se convertissent et se refusent")
+    void etatsDuSuivi() {
+        assertThat(java.util.Arrays.stream(EtatSuivi.values()).map(EtatSuivi::code).toList())
+                .containsExactly("prise_en_charge", "sans_prise_en_charge", "non_lue");
+        assertThat(java.util.Arrays.stream(EtatSuivi.values()).map(e -> EtatSuivi.de(e.code()).orElseThrow()).toList()).containsExactly(EtatSuivi.values());
+        assertThat(EtatSuivi.de("perdue")).isEmpty();
+        Alerte a = alerte();
+        assertThat(List.of(EtatSuivi.NON_LUE.decrit(a), EtatSuivi.PRISE_EN_CHARGE.decrit(a), EtatSuivi.SANS_PRISE_EN_CHARGE.decrit(a))).containsExactly(true, false, true);
+        Alerte lue = a.lue("julie", "x").lue("marc", "x");
+        assertThat(EtatSuivi.NON_LUE.decrit(lue)).isFalse();
+        Alerte prise = lue.repondue("julie", "r1", "y");
+        assertThat(List.of(EtatSuivi.PRISE_EN_CHARGE.decrit(prise), EtatSuivi.SANS_PRISE_EN_CHARGE.decrit(prise))).containsExactly(true, false);
+    }
+
+    @Test
+    @DisplayName("ST-G01/G02 : un modèle se versionne et se borne à son périmètre ; la priorité critique exige le droit ; les réglages ont un défaut")
+    void modelesEtDroits() {
+        Modele m = Modele.nouveau("m1", new Alertes.ContenuModele(" Code bleu ", "Chambre", Priorite.URGENTE, List.of("r1", "r1"), List.of("EST", "EST")));
+        assertThat(List.of(m.version(), m.reponseIds(), m.contenu().groupeIds(), m.titre())).containsExactly(1, List.of("r1"), List.of("EST"), "Code bleu");
+        Modele v2 = m.avecActif(false).modifie(new Alertes.ContenuModele("Code bleu — 5e", "Chambre 512", Priorite.CRITIQUE, List.of(), List.of()));
+        assertThat(List.of(v2.version(), v2.actif(), v2.priorite(), v2.reference())).containsExactly(2, false, Priorite.CRITIQUE, new Alertes.ReferenceModele("m1", 2));
+        assertThat(List.of(m.visiblePour(List.of("EST")), m.visiblePour(List.of("OUEST")), v2.visiblePour(List.of()))).containsExactly(true, false, true);
+        refus(() -> m.modifie(new Alertes.ContenuModele(" ", "x", Priorite.URGENTE, List.of(), List.of())), RefusAlerte.Nature.INVALIDE, "« titre » est requis");
+        refus(() -> Alertes.exigerDroit(Priorite.CRITIQUE, false), RefusAlerte.Nature.INTERDIT, "alertes.critique");
+        Alertes.exigerDroit(Priorite.CRITIQUE, true);
+        Alertes.exigerDroit(Priorite.URGENTE, false);
+        assertThat(Alertes.Reglages.DEFAUT.copieCourriel()).isFalse();
+        assertThat(new Composition("T", "C", Priorite.URGENTE, List.of()).modele()).isNull();
     }
 }

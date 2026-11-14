@@ -47,3 +47,9 @@ La CI (`.github/workflows/ci.yml`) joue les quatre premières portes et les parc
 Copie du 13 novembre 2026 depuis `~/Projects/freelance-invoicing`, branche `features/urgence-sante`,
 commit `52087a5` (« Finalisation: urgence sante et front end »), sans l'historique Git (décision D4).
 Le dépôt d'origine n'a pas été modifié ; le sort du module là-bas (décision D5) reste à trancher.
+
+## Reindexer gitnexus
+
+FX
+
+

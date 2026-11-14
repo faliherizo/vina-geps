@@ -1,18 +1,46 @@
 package ca.vina.nexu.alertes.infrastructure.web;
 
+import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
+import ca.vina.nexu.alertes.domaine.Alertes;
+import ca.vina.nexu.alertes.domaine.EtatSuivi;
+import ca.vina.nexu.alertes.domaine.LectureAlertesPort;
 import ca.vina.nexu.alertes.domaine.Priorite;
 import ca.vina.nexu.alertes.domaine.RefusAlerte;
 import ca.vina.nexu.alertes.domaine.Semantique;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
- * La frontière : un corps JSON devient des valeurs typées, <strong>une fois</strong>. Un code inconnu
- * (priorité, sémantique) ou un champ de mauvais type répond 400 en le nommant — jamais une erreur 500
+ * La frontière : un corps JSON ou une requête deviennent des valeurs typées, <strong>une fois</strong>. Un code inconnu
+ * (priorité, sémantique, état, format) ou un champ de mauvais type répond 400 en le nommant — jamais une erreur 500
  * sur un corps incomplet.
  */
 final class SaisiesAlertes {
+
+    private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
+
+    /** Les formats d'export du suivi : ceux du sérialiseur partagé. */
+    enum FormatExport {
+        CSV("csv"), XLSX("xlsx"), PDF("pdf"), JSON("json");
+
+        private final String code;
+
+        FormatExport(String code) {
+            this.code = code;
+        }
+
+        String code() {
+            return code;
+        }
+
+        static FormatExport de(String code) {
+            return Arrays.stream(values()).filter(f -> f.code.equals(code)).findFirst()
+                    .orElseThrow(() -> RefusAlerte.invalide("« format » : csv, xlsx, pdf ou json"));
+        }
+    }
 
     private SaisiesAlertes() {
     }
@@ -57,5 +85,32 @@ final class SaisiesAlertes {
         String code = texte(c, "semantique");
         return Semantique.de(code == null ? "" : code)
                 .orElseThrow(() -> RefusAlerte.invalide("« semantique » : prise_en_charge, refus ou information"));
+    }
+
+    /** Le contenu d'un modèle : texte, priorité, réponses proposées et périmètre. */
+    static Alertes.ContenuModele contenuModele(Map<String, Object> c) {
+        return new Alertes.ContenuModele(texte(c, "titre"), texte(c, "corps"), priorite(c), textes(c, "reponseIds"), textes(c, "groupeIds"));
+    }
+
+    /** Le filtre du suivi, lu dans la requête ; un paramètre vide vaut « sans borne ». */
+    static LectureAlertes.Filtre filtre(Map<String, String> q) {
+        Priorite priorite = present(q, "priorite") == null ? null
+                : Priorite.de(q.get("priorite")).orElseThrow(() -> RefusAlerte.invalide("« priorite » : information, urgente ou critique"));
+        EtatSuivi etat = present(q, "etat") == null ? null
+                : EtatSuivi.de(q.get("etat")).orElseThrow(() -> RefusAlerte.invalide("« etat » : prise_en_charge, sans_prise_en_charge ou non_lue"));
+        return new LectureAlertes.Filtre(new LectureAlertesPort.Critere(date(q, "du"), date(q, "au"), priorite, present(q, "expediteur")), etat);
+    }
+
+    private static String present(Map<String, String> q, String cle) {
+        String v = q.get(cle);
+        return v == null || v.isBlank() ? null : v.strip();
+    }
+
+    private static String date(Map<String, String> q, String cle) {
+        String v = present(q, cle);
+        if (v != null && !DATE.matcher(v).matches()) {
+            throw RefusAlerte.invalide("« " + cle + " » : une date AAAA-MM-JJ");
+        }
+        return v;
     }
 }

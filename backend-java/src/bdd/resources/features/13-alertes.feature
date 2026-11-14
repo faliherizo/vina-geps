@@ -25,14 +25,14 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
     Quand chef envoie POST /api/alertes avec :
       """json
       { "titre": "Code bleu chambre 512", "corps": "5e étage, répondez à la prise en charge",
-        "priorite": "critique", "reponseIds": ["{{arrive}}", "{{indispo}}"],
+        "priorite": "urgente", "reponseIds": ["{{arrive}}", "{{indispo}}"],
         "personnes": ["{{n_julie}}", "{{n_marc}}", "{{n_chef}}"] }
       """
     Alors la réponse a le statut 201
     # L'expéditeur n'est pas destinataire de sa propre alerte (R2).
     Et la réponse contient :
       """json
-      { "priorite": "critique", "bilan": { "destinataires": 2, "lues": 0, "repondues": 0 } }
+      { "priorite": "urgente", "bilan": { "destinataires": 2, "lues": 0, "repondues": 0 } }
       """
     Et je retiens "id" sous le nom "alerte"
     Quand julie envoie GET /api/alertes/recues
@@ -105,3 +105,19 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
       """
     Alors la réponse a le statut 400
     Et la réponse correspond à "n'existe pas ou n'est plus active"
+
+  Scénario: La priorité critique se réserve à qui en a le droit (ST-G01, critère 7)
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu chambre 512", "corps": "5e étage", "priorite": "critique", "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 403
+    Quand directeur envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu chambre 512", "corps": "5e étage", "priorite": "critique", "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "priorite": "critique", "bilan": { "destinataires": 1 } }
+      """

@@ -12,6 +12,7 @@
 | [04_architecture_solution.md](04_architecture_solution.md) | ADR 0074 proposé : un contexte `alertes` dans VINA GEPS, modules par organisme, ports, options écartées |
 | [05_roadmap_et_stories.md](05_roadmap_et_stories.md) | Feuille de route R0-R7, stories ST-G01 à ST-G13 avec critères d'acceptation |
 | [07_analyse_metier_socle_alertes.md](07_analyse_metier_socle_alertes.md) | Analyse métier du socle implanté : acteurs, glossaire, règles R1 à R10, cas d'utilisation |
+| [08_plan_implantation.md](08_plan_implantation.md) | Plan d'exécution à partir de l'état réel du code : phases R0 à R7, tâches par couche, briques réutilisées, jalons, risques (environ 19 semaines jusqu'au pilote) |
 | [06_maquettes_ecrans.md](06_maquettes_ecrans.md) | Maquettes : menu, console d'alerte, suivi, fiche, mobile, modèles, politiques, groupes, superadmin, tableau de bord, rapports |
 
 **En une phrase.** Un module « Communications cliniques » activable par organisme dans VINA GEPS

@@ -109,9 +109,18 @@ const MODULES_AUDIT = {
   */
   // Communications cliniques (ADR 0074).
   "GET /api/alertes/reponses": [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }, { id: "rp-2", libelle: "Indisponible", semantique: "refus", active: false }],
-  "GET /api/alertes/modeles": [{ id: "mo-1", titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], actif: true }],
+  "GET /api/alertes/modeles/mo-1/versions": [
+    { version: 2, titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], creeLe: "2031-01-15T14:00:00.000Z", creePar: "admin" },
+    { version: 1, titre: "Code bleu (ancien)", corps: "Chambre", priorite: "critique", reponseIds: [], creeLe: "reprise", creePar: "reprise" }],
+  "GET /api/alertes/modeles": [{ id: "mo-1", titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], groupeIds: ["gt-1"], version: 2, actif: true }],
+  // R1-bis : droits de l'écran, listes de distribution, réglages d'organisme, groupes transverses (ST-G01, ST-G02, ST-G09).
+  "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: true },
+  "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit — liste" }],
+  "GET /api/alertes/reglages": { copieCourriel: true },
+  "GET /api/communication/groupes-transverses": [{ id: "gt-1", nom: "Garde de nuit", nature: "garde", actif: true,
+    membres: [{ personId: "julie", nom: "Julie Roy", depuis: "2031-01-13", jusqua: "2031-01-19", moderateur: true }, { personId: "marc", nom: "Marc Dubé", depuis: null, jusqua: null, moderateur: false }] }],
   "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
-  "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }],
+  "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }, { id: "gt-1", nom: "Garde de nuit" }],
   "GET /api/alertes/envoyees": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], bilan: { destinataires: 2, lues: 1, repondues: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2030-03-04T14:03:00Z" },
     remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: "2030-03-04T14:03:00Z", reponseId: "rp-1", reponduLe: "2030-03-04T14:03:00Z" }, { personId: "marc", nom: "Marc Dubé", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null }] }],
   "GET /api/alertes/recues": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], maRemise: { personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null } }],
@@ -788,6 +797,7 @@ const PAGES = [
       await page.getByTestId("aln-critique").waitFor({ state: "visible" });
       await page.getByTestId("aln-groupe-personnes").selectOption("EST");
       await page.getByTestId("aln-pers-julie").waitFor({ state: "visible" });
+      await page.getByTestId("aln-l-l-garde").waitFor({ state: "visible" });
     } }] },
   { nom: "Suivi des alertes", nav: "nav-alsuivi",
     etats: [{ nom: "détail des destinataires", agir: async (page) => {
@@ -809,7 +819,19 @@ const PAGES = [
     { nom: "dialogue « Nouveau modèle »", agir: async (page) => {
       await page.getByTestId("alp-modele-ouvrir").click();
       await page.getByTestId("alp-m-titre").waitFor({ state: "visible" });
-    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } },
+    { nom: "modifier un modèle : nouvelle version, périmètre coché", agir: async (page) => {
+      await page.getByTestId("alp-modele-mo-1-modifier").click();
+      await page.getByTestId("alp-m-g-gt-1").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-modification-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "versions d'un modèle", agir: async (page) => {
+      await page.getByTestId("alp-modele-mo-1-versions").click();
+      await page.getByTestId("alp-versions-table").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-versions-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "groupe transverse : membres et inscription", agir: async (page) => {
+      await page.getByTestId("alp-gt-gt-1-gerer").click();
+      await page.getByTestId("alp-gt-membres").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-gt-gestion-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mon horaire", nav: "nav-monhoraire",
     // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {

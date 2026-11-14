@@ -3,6 +3,8 @@ package ca.vina.nexu.alertes.infrastructure.persistance;
 import ca.vina.nexu.alertes.domaine.Alertes.Destinataire;
 import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
+import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
+import ca.vina.nexu.communication.domaine.ListesDistribution;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
 import java.util.List;
@@ -25,10 +27,12 @@ public class AdaptateurAnnuaireAlertes implements AnnuaireAlertes {
             + "WHERE u.tenantId = ? AND u.active = 1 AND " + NOM_DE_CONNEXION + " = ? GROUP BY u.id";
 
     private final GroupesDeTravailPort groupes;
+    private final LectureListesDistributionPort listes;
     private final JdbcClient jdbc;
 
-    public AdaptateurAnnuaireAlertes(GroupesDeTravailPort groupes, JdbcClient jdbc) {
+    public AdaptateurAnnuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes, JdbcClient jdbc) {
         this.groupes = groupes;
+        this.listes = listes;
         this.jdbc = jdbc;
     }
 
@@ -47,5 +51,27 @@ public class AdaptateurAnnuaireAlertes implements AnnuaireAlertes {
     public Optional<Destinataire> personne(String tenantId, String personId) {
         return jdbc.sql(PERSONNE).params(tenantId, personId)
                 .query((rs, i) -> new Destinataire(rs.getString("personId"), rs.getString("nom"), rs.getString("compte"))).optional();
+    }
+
+    @Override
+    public List<String> groupesDe(String tenantId, String personId) {
+        return groupes.groupesDe(tenantId, personId);
+    }
+
+    /** Les listes de la messagerie que l'acteur voit : partagées, ou les siennes (BF-033). */
+    @Override
+    public List<Liste> listes(String tenantId, String acteurId) {
+        return listes.visibles(tenantId, acteurId).stream().map(l -> new Liste(l.id(), l.nom())).toList();
+    }
+
+    /**
+     * Une liste dépliée à l'envoi, comme la messagerie la déplie : ses personnes, et les membres actifs de ses groupes.
+     * Une liste privée d'un autre n'existe pas pour l'acteur.
+     */
+    @Override
+    public Optional<List<Destinataire>> membresDeListe(String tenantId, String acteurId, String listeId) {
+        return listes.lire(tenantId, listeId).filter(l -> l.partagee() || acteurId.equals(l.creeePar()))
+                .map(l -> ListesDistribution.destinataires(l.membres(), g -> listes.membresActifsDuGroupe(tenantId, g)).stream()
+                        .map(p -> personne(tenantId, p).orElse(new Destinataire(p, p, null))).toList());
     }
 }

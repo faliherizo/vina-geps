@@ -9,6 +9,7 @@ import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.ControleurAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.GardeAlertes;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
+import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
 import ca.vina.nexu.partage.avis.domaine.PublicationAvis;
 import ca.vina.nexu.partage.modules.ModulesActives;
 import ca.vina.nexu.partage.web.GardeAcces;
@@ -29,8 +30,8 @@ public class ConfigurationAlertes {
     }
 
     @Bean
-    public AdaptateurAnnuaireAlertes annuaireAlertes(GroupesDeTravailPort groupes, JdbcClient jdbc) {
-        return new AdaptateurAnnuaireAlertes(groupes, jdbc);
+    public AdaptateurAnnuaireAlertes annuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes, JdbcClient jdbc) {
+        return new AdaptateurAnnuaireAlertes(groupes, listes, jdbc);
     }
 
     @Bean
@@ -42,7 +43,7 @@ public class ConfigurationAlertes {
     public ControleurAlertes.Cas casAlertes(DepotAlertes depot, AdaptateurAnnuaireAlertes annuaire, PublicationAvis avis, Clock horloge) {
         // L'identifiant est tiré ici, à la frontière : le domaine le reçoit, il ne le tire jamais.
         java.util.function.Supplier<String> ids = () -> UUID.randomUUID().toString();
-        return new ControleurAlertes.Cas(new GestionnaireParametresAlertes(depot, depot, ids),
+        return new ControleurAlertes.Cas(new GestionnaireParametresAlertes(new GestionnaireParametresAlertes.Dependances(depot, depot, annuaire, horloge), ids),
                 new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, avis), ids, horloge),
                 new GestionnaireReceptionAlertes(depot, depot, horloge), new LectureAlertes(depot, annuaire));
     }

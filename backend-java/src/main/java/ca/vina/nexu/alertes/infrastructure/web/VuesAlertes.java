@@ -6,6 +6,7 @@ import ca.vina.nexu.alertes.domaine.Alertes.Modele;
 import ca.vina.nexu.alertes.domaine.Alertes.Remise;
 import ca.vina.nexu.alertes.domaine.Alertes.ReponsePredefinie;
 import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
+import ca.vina.nexu.alertes.domaine.LectureAlertesPort;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,7 +26,37 @@ final class VuesAlertes {
     }
 
     static Map<String, Object> modele(Modele m) {
-        return Map.of("id", m.id(), "titre", m.titre(), "corps", m.corps(), "priorite", m.priorite().code(), "reponseIds", m.reponseIds(), "actif", m.actif());
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("id", m.id());
+        v.put("titre", m.titre());
+        v.put("corps", m.contenu().corps());
+        v.put("priorite", m.priorite().code());
+        v.put("reponseIds", m.reponseIds());
+        v.put("groupeIds", m.contenu().groupeIds());
+        v.put("version", m.version());
+        v.put("actif", m.actif());
+        return v;
+    }
+
+    /** Une version d'un modèle : ce qu'il disait, qui l'a fait, et quand (ST-G02). */
+    static Map<String, Object> version(LectureAlertesPort.VersionModele v) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("version", v.modele().version());
+        m.put("titre", v.modele().titre());
+        m.put("corps", v.modele().contenu().corps());
+        m.put("priorite", v.modele().priorite().code());
+        m.put("reponseIds", v.modele().reponseIds());
+        m.put("creeLe", v.creeLe());
+        m.put("creePar", v.creePar());
+        return m;
+    }
+
+    static Map<String, Object> liste(AnnuaireAlertes.Liste l) {
+        return Map.of("id", l.id(), "nom", l.nom());
+    }
+
+    static Map<String, Object> reglages(ca.vina.nexu.alertes.domaine.Alertes.Reglages r) {
+        return Map.of("copieCourriel", r.copieCourriel());
     }
 
     static Map<String, Object> personne(ca.vina.nexu.alertes.domaine.Alertes.Destinataire d) {
@@ -45,6 +76,8 @@ final class VuesAlertes {
         m.put("expediteurId", a.expediteurId());
         m.put("envoyeeLe", a.envoyeeLe());
         m.put("reponses", a.reponses().stream().map(VuesAlertes::reponse).toList());
+        m.put("modeleId", a.modele() == null ? null : a.modele().id());
+        m.put("modeleVersion", a.modele() == null ? null : a.modele().version());
         return m;
     }
 
@@ -83,5 +116,33 @@ final class VuesAlertes {
 
     static List<Map<String, Object>> recues(List<Alerte> l, String personId) {
         return l.stream().map(a -> recue(a, personId)).toList();
+    }
+
+    /** Une ligne de l'export du suivi : une alerte et son bilan, à plat. */
+    static Map<String, Object> ligneExport(Alerte a, boolean csv) {
+        Bilan b = a.bilan();
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("envoyeeLe", a.envoyeeLe());
+        m.put("titre", cellule(a.titre(), csv));
+        m.put("priorite", a.priorite().code());
+        m.put("expediteur", cellule(a.expediteurId(), csv));
+        m.put("modele", a.modele() == null ? "" : a.modele().id() + " v" + a.modele().version());
+        m.put("destinataires", b.destinataires());
+        m.put("lues", b.lues());
+        m.put("reponses", b.repondues());
+        m.put("priseEnChargePar", cellule(b.premierePriseEnCharge().map(r -> r.destinataire().nom()).orElse(""), csv));
+        m.put("priseEnChargeLe", b.premierePriseEnCharge().map(Remise::reponduLe).orElse(""));
+        return m;
+    }
+
+    /**
+     * Un texte saisi par un usager qui commence par « = », « + », « - », « @ » ou une tabulation s'exécuterait comme une
+     * formule à l'ouverture du CSV dans un tableur : il est précédé d'une apostrophe, qui le garde texte.
+     */
+    static String cellule(String texte, boolean csv) {
+        if (!csv || texte == null || texte.isEmpty()) {
+            return texte;
+        }
+        return "=+-@\t\r".indexOf(texte.charAt(0)) >= 0 ? "'" + texte : texte;
     }
 }

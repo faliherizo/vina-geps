@@ -109,7 +109,7 @@ describe("Paramètres des alertes", () => {
     await cliquer("alp-m-r-r1");
     await cliquer("alp-m-r-r1");
     await act(async () => { ($("alp-m-creer") as HTMLButtonElement).form!.requestSubmit(); }); await attendre();
-    expect(envoisVers("/api/alertes/modeles").at(-1)!.corps).toEqual({ titre: "Remplacement", corps: "Qui prend la nuit ?", priorite: "critique", reponseIds: ["r1"] });
+    expect(envoisVers("/api/alertes/modeles").at(-1)!.corps).toEqual({ titre: "Remplacement", corps: "Qui prend la nuit ?", priorite: "critique", reponseIds: ["r1"], groupeIds: [] });
   });
 
   it("sans réponse ni modèle, l'écran dit quoi faire ; un refus du serveur s'affiche", async () => {
@@ -133,6 +133,8 @@ describe("Nouvelle alerte", () => {
     "GET /api/alertes/reponses": [ARRIVE, INDISPO],
     "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
     "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }],
+    "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit" }],
+    "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: false },
     "POST /api/alertes": { ...ALERTE, bilan: { destinataires: 3, lues: 0, repondues: 0, priseEnChargePar: null, priseEnChargeLe: null }, remises: [] },
   };
 
@@ -160,11 +162,28 @@ describe("Nouvelle alerte", () => {
     expect($("aln-critique")).toBeNull();
     await cliquer("aln-envoyer");
     expect(envoisVers("/api/alertes").at(-1)!.corps).toEqual({
-      titre: "Code bleu", corps: "Chambre 512", priorite: "urgente", reponseIds: ["r1"], groupes: ["EST"], personnes: ["marc"],
+      titre: "Code bleu", corps: "Chambre 512", priorite: "urgente", reponseIds: ["r1"], groupes: ["EST"], listes: [], personnes: ["marc"],
     });
     expect($("aln-envoyee")!.textContent).toContain("envoyée à 3 personne(s)");
     await saisir("aln-groupe-personnes", "");
     expect($("aln-pers-marc")).toBeNull();
+  });
+
+  it("ST-G01/G02 : une liste de distribution se vise ; le modèle choisi part avec l'alerte ; sans le droit, la critique est inactive et l'écran dit pourquoi", async () => {
+    api.etat.routes = { ...routes, "GET /api/alertes/droits": { envoyer: true, critique: false, configurer: false },
+      "GET /api/alertes/modeles": [...routes["GET /api/alertes/modeles"], { id: "m3", titre: "Relève", corps: "Qui prend la nuit ?", priorite: "urgente", reponseIds: [], actif: true }] };
+    await rendre(<NouvelleAlerte />);
+    // Le modèle critique n'est pas proposé à qui n'a pas le droit du critique.
+    expect([...conteneur.querySelectorAll('[data-testid="aln-modele"] option')].map((o) => o.textContent)).toEqual(["— Aucun —", "Relève"]);
+    expect(($("aln-p-critique") as HTMLInputElement).disabled).toBe(true);
+    expect($("aln-p-critique")!.getAttribute("aria-describedby")).toBe("aln-critique-refusee");
+    expect($("aln-critique-refusee")!.textContent).toContain("réservée");
+    await saisir("aln-modele", "m3");
+    await cliquer("aln-l-l-garde");
+    expect(($("aln-envoyer") as HTMLButtonElement).disabled).toBe(false);
+    await cliquer("aln-envoyer");
+    expect(envoisVers("/api/alertes").at(-1)!.corps).toMatchObject({ listes: ["l-garde"], modeleId: "m3", groupes: [], personnes: [] });
+    await cliquer("aln-l-l-garde");
   });
 
   it("sans modèle ni réponse, l'écran reste utilisable ; un refus s'affiche", async () => {

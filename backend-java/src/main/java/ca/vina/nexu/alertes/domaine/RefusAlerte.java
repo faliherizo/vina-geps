@@ -13,7 +13,9 @@ public final class RefusAlerte extends RuntimeException {
         /** L'objet visé n'existe pas, ou n'est pas lisible par cette personne (jamais « interdit » : ce serait avouer qu'il existe). */
         INTROUVABLE,
         /** L'état courant empêche le geste. */
-        CONFLIT
+        CONFLIT,
+        /** L'acteur n'a pas le droit de ce geste-là (la priorité critique sans la capacité qui l'ouvre). */
+        INTERDIT
     }
 
     private final Nature nature;
@@ -37,5 +39,9 @@ public final class RefusAlerte extends RuntimeException {
 
     public static RefusAlerte conflit(String message) {
         return new RefusAlerte(Nature.CONFLIT, message);
+    }
+
+    public static RefusAlerte interdit(String message) {
+        return new RefusAlerte(Nature.INTERDIT, message);
     }
 }

@@ -1,6 +1,7 @@
 package ca.vina.nexu.alertes.domaine;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,19 +48,79 @@ public final class Alertes {
         }
     }
 
-    /** Ce que l'administration prépare pour qu'une alerte se compose en un geste. */
-    public record Modele(String id, String titre, String corps, Priorite priorite, List<String> reponseIds, boolean actif) {
-
-        public Modele {
+    /**
+     * Ce qu'un modèle dit : son texte, sa priorité, les réponses qu'il propose, et son <strong>périmètre</strong> — les
+     * groupes dont les expéditeurs le voient ; vide, tout l'organisme le voit (ST-G02).
+     */
+    public record ContenuModele(String titre, String corps, Priorite priorite, List<String> reponseIds, List<String> groupeIds) {
+        public ContenuModele {
             reponseIds = List.copyOf(reponseIds);
+            groupeIds = List.copyOf(groupeIds);
         }
 
-        public static Modele nouveau(String id, String titre, String corps, Priorite priorite, List<String> reponseIds) {
-            return new Modele(id, texte("titre", titre, TITRE_MAX), texte("corps", corps, CORPS_MAX), exiger(priorite, "priorite"), reponseIds, true);
+        ContenuModele valide() {
+            return new ContenuModele(texte("titre", titre, TITRE_MAX), texte("corps", corps, CORPS_MAX), exiger(priorite, "priorite"),
+                    reponseIds.stream().distinct().toList(), groupeIds.stream().distinct().toList());
+        }
+    }
+
+    /**
+     * Ce que l'administration prépare pour qu'une alerte se compose en un geste. Chaque modification en fait une
+     * <strong>version</strong> nouvelle : une alerte garde la version qu'elle a envoyée (ST-G02, critère 32).
+     */
+    public record Modele(String id, ContenuModele contenu, int version, boolean actif) {
+
+        public static Modele nouveau(String id, ContenuModele contenu) {
+            return new Modele(id, contenu.valide(), 1, true);
         }
 
-        public Modele avecActif(boolean actif) {
-            return new Modele(id, titre, corps, priorite, reponseIds, actif);
+        /** La version suivante ; l'état actif ne change pas. */
+        public Modele modifie(ContenuModele nouveau) {
+            return new Modele(id, nouveau.valide(), version + 1, actif);
+        }
+
+        public Modele avecActif(boolean a) {
+            return new Modele(id, contenu, version, a);
+        }
+
+        /** Un modèle sans périmètre vaut pour tous ; sinon, pour les membres d'un de ses groupes. */
+        public boolean visiblePour(Collection<String> groupesDeLExpediteur) {
+            return contenu.groupeIds().isEmpty() || contenu.groupeIds().stream().anyMatch(groupesDeLExpediteur::contains);
+        }
+
+        public String titre() {
+            return contenu.titre();
+        }
+
+        public Priorite priorite() {
+            return contenu.priorite();
+        }
+
+        public List<String> reponseIds() {
+            return contenu.reponseIds();
+        }
+
+        public ReferenceModele reference() {
+            return new ReferenceModele(id, version);
+        }
+    }
+
+    /** Le modèle et la version dont une alerte est partie. */
+    public record ReferenceModele(String id, int version) {
+    }
+
+    /** Les réglages de l'organisme : {@code copieCourriel} envoie aussi une copie par courriel à chaque destinataire (critère 8). */
+    public record Reglages(boolean copieCourriel) {
+        public static final Reglages DEFAUT = new Reglages(false);
+    }
+
+    /**
+     * La priorité critique force tous les canaux de chacun : elle se réserve à qui en a reçu le droit
+     * ({@code alertes.critique}), pour qu'une alerte d'information ne réveille pas tout un service (ST-G01).
+     */
+    public static void exigerDroit(Priorite priorite, boolean critiqueAutorisee) {
+        if (priorite == Priorite.CRITIQUE && !critiqueAutorisee) {
+            throw RefusAlerte.interdit("la priorité critique est réservée aux personnes qui en ont le droit (alertes.critique)");
         }
     }
 
@@ -88,7 +149,7 @@ public final class Alertes {
      * (le snapshot des destinataires, R2).
      */
     public record Alerte(String id, String tenantId, String titre, String corps, Priorite priorite, String expediteurId,
-                         String envoyeeLe, List<ReponsePredefinie> reponses, List<Remise> remises) {
+                         String envoyeeLe, List<ReponsePredefinie> reponses, List<Remise> remises, ReferenceModele modele) {
 
         public Alerte {
             reponses = List.copyOf(reponses);
@@ -134,15 +195,19 @@ public final class Alertes {
             for (Remise r : remises) {
                 l.add(r.destinataire().personId().equals(nouvelle.destinataire().personId()) ? nouvelle : r);
             }
-            return new Alerte(id, tenantId, titre, corps, priorite, expediteurId, envoyeeLe, reponses, l);
+            return new Alerte(id, tenantId, titre, corps, priorite, expediteurId, envoyeeLe, reponses, l, modele);
         }
     }
 
-    /** Ce qu'il faut pour composer une alerte, avant résolution des destinataires. */
-    public record Composition(String titre, String corps, Priorite priorite, List<String> reponseIds) {
-
+    /** Ce qu'il faut pour composer une alerte, avant résolution des destinataires ; {@code modele} nul : composée librement. */
+    public record Composition(String titre, String corps, Priorite priorite, List<String> reponseIds, ReferenceModele modele) {
         public Composition {
             reponseIds = List.copyOf(reponseIds);
+        }
+
+        /** Une composition libre, sans modèle. */
+        public Composition(String titre, String corps, Priorite priorite, List<String> reponseIds) {
+            this(titre, corps, priorite, reponseIds, null);
         }
     }
 
@@ -159,7 +224,7 @@ public final class Alertes {
         if (remises.isEmpty()) {
             throw RefusAlerte.invalide("aucun destinataire : choisissez au moins une personne ou un groupe qui compte des membres");
         }
-        return new Alerte(id, tenantId, titre, corps, priorite, expediteurId, instant, reponsesProposees(c.reponseIds(), catalogue), remises);
+        return new Alerte(id, tenantId, titre, corps, priorite, expediteurId, instant, reponsesProposees(c.reponseIds(), catalogue), remises, c.modele());
     }
 
     private static List<Remise> remises(List<Destinataire> resolus, String expediteurId, String instant) {

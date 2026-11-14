@@ -268,5 +268,13 @@
       "admin"
     ],
     "libelle": "Tenir les réponses prédéfinies et les modèles d'alerte"
+  },
+  "alertes.critique": {
+    "roles": [
+      "admin",
+      "director"
+    ],
+    "libelle": "Envoyer une alerte de priorité critique",
+    "portee": "La priorité critique force tous les canaux de chaque destinataire ; un organisme peut l'ouvrir à d'autres rôles (FX-AO-20260810, ST-G01)."
   }
 }

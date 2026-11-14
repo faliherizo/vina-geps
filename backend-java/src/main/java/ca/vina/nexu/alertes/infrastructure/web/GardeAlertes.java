@@ -23,6 +23,8 @@ public class GardeAlertes {
     public static final String MODULE = "alertes";
     public static final String CAPACITE_ENVOI = "alertes.envoyer";
     public static final String CAPACITE_CONFIGURATION = "alertes.configure";
+    /** La priorité critique force tous les canaux de chacun : elle se réserve (ST-G01). */
+    public static final String CAPACITE_CRITIQUE = "alertes.critique";
     private static final int INTERDIT = 403;
     private static final int INVALIDE = 400;
 
@@ -51,6 +53,11 @@ public class GardeAlertes {
         return v.refuse() ? v : garde.exigerCapacite(requete, capacite);
     }
 
+    /** L'acteur a-t-il ce droit ? Une question, pas une garde : la réponse règle ce qu'on lui montre ou permet ensuite. */
+    public boolean peut(HttpServletRequest requete, String capacite) {
+        return !garde.exigerCapacite(requete, capacite).refuse();
+    }
+
     /** L'acteur est le nom de connexion : c'est lui que portent les remises. */
     static Acteur acteur(HttpServletRequest requete, GardeAcces.Verdict v) {
         ContexteRequete c = GardeAcces.contexte(requete);
@@ -74,6 +81,7 @@ public class GardeAlertes {
             case INVALIDE -> INVALIDE;
             case INTROUVABLE -> 404;
             case CONFLIT -> 409;
+            case INTERDIT -> INTERDIT;
         };
     }
 }

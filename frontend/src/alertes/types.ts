@@ -21,11 +21,28 @@ export const libelleSemantique = (s: string) => SEMANTIQUES.find((x) => x.code =
 export const tonPriorite = (p: string) => (p === "critique" ? "refusee" : p === "urgente" ? "en_attente" : "ouvert");
 
 export interface Reponse { id: string; libelle: string; semantique: Semantique; active: boolean }
-export interface Modele { id: string; titre: string; corps: string; priorite: Priorite; reponseIds: string[]; actif: boolean }
+/** Un modèle : chaque modification en fait une version ; son périmètre (groupes) borne qui le voit, vide = tout l'organisme. */
+export interface Modele { id: string; titre: string; corps: string; priorite: Priorite; reponseIds: string[]; groupeIds?: string[]; version?: number; actif: boolean }
+export interface VersionModele { version: number; titre: string; corps: string; priorite: Priorite; reponseIds: string[]; creeLe: string; creePar: string }
+export interface Liste { id: string; nom: string }
+/** Ce que l'écran doit offrir à la personne connectée (ST-G01). */
+export interface Droits { envoyer: boolean; critique: boolean; configurer: boolean }
+export interface Reglages { copieCourriel: boolean }
+
+/** Les états du suivi, tels que le serveur les filtre (ST-G03). */
+export type EtatSuivi = "prise_en_charge" | "sans_prise_en_charge" | "non_lue";
+export const ETATS: ReadonlyArray<{ code: EtatSuivi; libelle: string }> = [
+  { code: "prise_en_charge", libelle: "Prise en charge" },
+  { code: "sans_prise_en_charge", libelle: "Sans prise en charge" },
+  { code: "non_lue", libelle: "Pas encore lue de tous" },
+];
 export interface Groupe { id: string; nom: string }
 export interface Personne { personId: string; nom: string }
 export interface Remise { personId: string; nom: string; envoyeeLe: string; lueLe: string | null; reponseId: string | null; reponduLe: string | null }
-export interface AlerteBase { id: string; titre: string; corps: string; priorite: Priorite; expediteurId: string; envoyeeLe: string; reponses: Reponse[] }
+export interface AlerteBase {
+  id: string; titre: string; corps: string; priorite: Priorite; expediteurId: string; envoyeeLe: string; reponses: Reponse[];
+  modeleId?: string | null; modeleVersion?: number | null;
+}
 export interface AlerteSuivie extends AlerteBase {
   bilan: { destinataires: number; lues: number; repondues: number; priseEnChargePar: string | null; priseEnChargeLe: string | null };
   remises: Remise[];
