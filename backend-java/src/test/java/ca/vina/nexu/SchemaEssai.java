@@ -343,6 +343,13 @@ public final class SchemaEssai {
             // Cycle de vie des messages (changeset 0004) : réception, versions.
             "CREATE TABLE IF NOT EXISTS msg_distributions (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, messageId TEXT NOT NULL, personId TEXT NOT NULL, recuLe TEXT NOT NULL, UNIQUE (tenantId, messageId, personId))",
             "CREATE TABLE IF NOT EXISTS msg_message_versions (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, messageId TEXT NOT NULL, version INTEGER NOT NULL, corps TEXT NOT NULL, ecritLe TEXT NOT NULL, remplaceLe TEXT NOT NULL, UNIQUE (tenantId, messageId, version))",
+            // Communications cliniques (changeset 0006, ADR 0074).
+            "CREATE TABLE IF NOT EXISTS alr_reponses (id TEXT NOT NULL, tenantId TEXT NOT NULL, libelle TEXT NOT NULL, semantique TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_modeles (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, actif INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_modele_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, rang))",
+            "CREATE TABLE IF NOT EXISTS alr_alertes (id TEXT NOT NULL, tenantId TEXT NOT NULL, titre TEXT NOT NULL, corps TEXT NOT NULL, priorite TEXT NOT NULL, expediteurId TEXT NOT NULL, envoyeeLe TEXT NOT NULL, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_alerte_reponses (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, libelle TEXT NOT NULL, semantique TEXT NOT NULL, PRIMARY KEY (tenantId, alerteId, rang))",
+            "CREATE TABLE IF NOT EXISTS alr_remises (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, personId TEXT NOT NULL, nom TEXT NOT NULL, compteAvis TEXT, envoyeeLe TEXT NOT NULL, lueLe TEXT, reponseId TEXT, reponduLe TEXT, PRIMARY KEY (tenantId, alerteId, personId))",
             // Refonte de la messagerie (changeset 0003) : réactions et appels de groupe.
             "CREATE TABLE IF NOT EXISTS msg_reactions (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, messageId TEXT NOT NULL, personId TEXT NOT NULL, reaction TEXT NOT NULL, poseeLe TEXT NOT NULL, UNIQUE (tenantId, messageId, personId, reaction))",
             "CREATE TABLE IF NOT EXISTS msg_appels_groupe (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, conversationId TEXT NOT NULL, lanceParId TEXT NOT NULL, etat TEXT NOT NULL, lanceLe TEXT NOT NULL, debuteLe TEXT, termineLe TEXT)",

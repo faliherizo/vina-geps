@@ -17,7 +17,7 @@ import { Message } from "../../composants";
 import { useApiEffectifs } from "../api";
 
 type ObjetFlux = "FEUILLE" | "POINTAGE";
-type TypeApprobateur = "PERIMETRE" | "ROLE" | "PERSONNE";
+type TypeApprobateur = "PERIMETRE" | "ROLE" | "PERSONNE" | "SUPERIEUR";
 interface Champ { code: string; libelle: string; type: "nombre" | "texte" }
 interface RegleFlux {
   id: string; objet: ObjetFlux; palier: number; champ: string; operateur: string; valeur: number | string;
@@ -28,7 +28,7 @@ interface Compte { id: string; username: string; loginName?: string | null; role
 
 const OBJETS: Record<ObjetFlux, string> = { FEUILLE: "Feuilles de temps", POINTAGE: "Pointages en attente" };
 const OPERATEURS: Record<string, string> = { gte: "≥", lte: "≤", eq: "=", neq: "≠" };
-const TYPES: Record<TypeApprobateur, string> = { PERIMETRE: "Niveau de périmètre de l'unité", ROLE: "Rôle", PERSONNE: "Personne désignée" };
+const TYPES: Record<TypeApprobateur, string> = { PERIMETRE: "Niveau de périmètre de l'unité", ROLE: "Rôle", PERSONNE: "Personne désignée", SUPERIEUR: "Supérieur hiérarchique" };
 const NIVEAUX = ["GESTION", "PLANIFICATION", "LECTURE"] as const;
 const VIDE = { objet: "FEUILLE" as ObjetFlux, palier: "1", champ: "toujours", operateur: "eq", valeur: "1", type: "PERIMETRE" as TypeApprobateur, approbateur: "GESTION" };
 
@@ -50,7 +50,8 @@ export default function FluxApprobation() {
 
   const nom = (id: string) => { const c = comptes.find((x) => x.id === id); return c ? (c.loginName ?? c.username) : id; };
   const approbateurEnMots = (r: RegleFlux) => r.approbateur.type === "PERIMETRE" ? `niveau ${r.approbateur.valeur} de l'unité`
-    : r.approbateur.type === "ROLE" ? `rôle « ${r.approbateur.valeur} »` : `${nom(r.approbateur.valeur)} (personne désignée)`;
+    : r.approbateur.type === "ROLE" ? `rôle « ${r.approbateur.valeur} »`
+      : r.approbateur.type === "SUPERIEUR" ? "supérieur hiérarchique de la personne" : `${nom(r.approbateur.valeur)} (personne désignée)`;
   const champDe = (o: ObjetFlux, code: string) => flux?.champs[o]?.find((c) => c.code === code);
   const conditionEnMots = (r: RegleFlux) => r.champ === "toujours" ? "Toujours" : `${champDe(r.objet, r.champ)?.libelle ?? r.champ} ${OPERATEURS[r.operateur] ?? r.operateur} ${r.valeur}`;
 
@@ -141,7 +142,11 @@ export default function FluxApprobation() {
                 {(Object.keys(TYPES) as TypeApprobateur[]).map((t) => <option key={t} value={t}>{TYPES[t]}</option>)}
               </select>
             </p>
-            <p>
+            {/* Le supérieur se lit dans l'organigramme à la soumission : il n'y a rien à choisir ici. */}
+            {saisie.type === "SUPERIEUR" && (
+              <p data-testid="pla-tps-flux-superieur">La personne que l'organigramme désigne comme supérieur de celle qui soumet. Il se désigne dans « Supérieurs hiérarchiques » ; sans supérieur connu, le palier revient au niveau GESTION de l'unité.</p>
+            )}
+            {saisie.type !== "SUPERIEUR" && <p>
               {saisie.type === "ROLE"
                 ? (
                   <>
@@ -159,7 +164,7 @@ export default function FluxApprobation() {
                     </select>
                   </>
                 )}
-            </p>
+            </p>}
             <p><button type="submit" data-testid="pla-tps-flux-ajouter">Ajouter le palier</button></p>
           </div>
         </form>

@@ -15,6 +15,8 @@ import { FormulaireModal } from "../../Modal";
 import { useReferentiels } from "../planification/useReferentiels";
 import DetailFeuille from "./DetailFeuille";
 import FluxApprobation from "./FluxApprobation";
+import SuperieursHierarchiques from "./SuperieursHierarchiques";
+import { champsAffiches, ParametresChamps, useChampsFeuille } from "./ChampsFeuille";
 import { duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
 
 const COLONNES: ReadonlyArray<Colonne<Feuille>> = [
@@ -41,6 +43,7 @@ export default function TempsPlanification() {
   const [lot, setLot] = useState<Lot | null>(null);
   const [regroupement, setRegroupement] = useState<keyof typeof REGROUPEMENTS>("unite");
   const [rapport, setRapport] = useState<LigneRapport[] | null>(null);
+  const { champs, recharger: rechargerChamps } = useChampsFeuille();
   const [parametres, setParametres] = useState<Record<string, number | string> | null>(null);
   const [parametresInfo, setParametresInfo] = useState("");
   useEffect(() => { void lire<Record<string, number | string>>("/api/effectifs/temps/parametres").then((p) => setParametres(objet<Record<string, number | string>>(p))); }, [lire]);
@@ -72,6 +75,8 @@ export default function TempsPlanification() {
 
   const ouvrir = async (f: Feuille) => {
     setErreur(""); setMotif("");
+    // Les champs ont pu changer depuis le dialogue « Champs de la feuille » : la fiche les relit.
+    void rechargerChamps();
     setFiche({ ...f, segments: [], totaux: {}, heuresSupplementaires: { parJour: {}, total: 0 }, ecarts: [], anomalies: [], decisions: [] });
     setFiche(await lire<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${f.id}`));
   };
@@ -151,7 +156,7 @@ export default function TempsPlanification() {
         {fiche && (
           <>
             <p>Du {fiche.debut} au {fiche.fin} — {statutEnMots(fiche)}.</p>
-            <DetailFeuille f={fiche} prefixe="pla-tps-fiche" avecSegments />
+            <DetailFeuille f={fiche} prefixe="pla-tps-fiche" avecSegments champs={champsAffiches(champs, fiche.segments)} />
             {fiche.decisions.length > 0 && (
               <ul aria-label="Décisions">{fiche.decisions.map((d, i) => <li key={i}>Palier {d.palier} : {d.decision === "APPROUVER" ? "approuvé" : "retourné"}{d.motif ? ` — ${d.motif}` : ""}</li>)}</ul>
             )}
@@ -221,6 +226,13 @@ export default function TempsPlanification() {
         </FormulaireModal>
         <FormulaireModal libelle="Flux d'approbation" titre="Flux d'approbation des heures" testId="feuilles-approbations" icone="⚙" className="secondary">
           <FluxApprobation />
+        </FormulaireModal>
+        <FormulaireModal libelle="Supérieurs hiérarchiques" titre="Supérieurs hiérarchiques" testId="feuilles-superieurs" icone="⚙" className="secondary">
+          <SuperieursHierarchiques />
+        </FormulaireModal>
+        {/* Les champs propres à l'organisme : la feuille s'adapte à l'emploi sans code par emploi. */}
+        <FormulaireModal libelle="Champs de la feuille" titre="Champs de la feuille de temps" testId="feuilles-champs" icone="⚙" className="secondary">
+          <ParametresChamps />
         </FormulaireModal>
       </div>
       {parametresInfo && <p role="status" data-testid="pla-tps-p-info">{parametresInfo}</p>}

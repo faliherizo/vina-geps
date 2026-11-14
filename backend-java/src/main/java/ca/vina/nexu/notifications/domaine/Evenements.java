@@ -67,13 +67,15 @@ public final class Evenements {
         }
     }
 
-    public static final Map<String, String> LIBELLE_MODULE = Map.of("effectifs", "Urgences-santé", "notifications", "Encadrement");
+    public static final Map<String, String> LIBELLE_MODULE = Map.of("effectifs", "Urgences-santé", "notifications", "Encadrement", "alertes", "Communications cliniques");
 
     public static final List<Evenement> TOUS = List.of(
             new Evenement("remplacement.attribue", "Remplacement confirmé", "effectifs", "la ressource retenue", new Canaux(true, true, true), false),
             new Evenement("quart.offert", "Quart disponible offert", "effectifs", "les ressources admissibles au quart", new Canaux(true, true, true), false),
             new Evenement("quart.attribue", "Quart vacant attribué d'office", "effectifs", "la ressource prioritaire retenue", new Canaux(true, true, true), false),
-            new Evenement("message.direct", "Message de l'encadrement", "notifications", "la personne visée", new Canaux(true, true, true), true));
+            new Evenement("message.direct", "Message de l'encadrement", "notifications", "la personne visée", new Canaux(true, true, true), true),
+            // Essentiel : une personne ne ferme pas tous ses canaux écrits à une alerte clinique (ADR 0074).
+            new Evenement("alerte.recue", "Alerte clinique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true));
 
     public static Optional<Evenement> parCode(String code) {
         return TOUS.stream().filter(e -> e.code().equals(code)).findFirst();

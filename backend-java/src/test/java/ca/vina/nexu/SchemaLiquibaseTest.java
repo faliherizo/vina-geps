@@ -41,11 +41,12 @@ class SchemaLiquibaseTest {
         JdbcClient jdbc = JdbcClient.create(ds);
         assertThat(tables(jdbc)).hasSizeGreaterThan(120)
                 .contains("users", "tenants", "tenant_quotas", "eff_ressources", "eff_postes", "eff_absences", "msg_conversations", "msg_journal", "hab_objets", "soutien_engagements",
-                        "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe", "msg_distributions", "msg_message_versions")
+                        "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe", "msg_distributions", "msg_message_versions",
+                        "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs")
                 // La paie, la tarification et la facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(9);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(12);
     }
 
     @Test
@@ -57,9 +58,10 @@ class SchemaLiquibaseTest {
         liquibase(ds).afterPropertiesSet();
         // Les évolutions qui créent une table s'appliquent ; celle qui modifie `msg_messages`, absente d'une reprise, est constatée.
         assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe",
-                "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions");
+                "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions",
+                "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN");
     }
 
     @Test

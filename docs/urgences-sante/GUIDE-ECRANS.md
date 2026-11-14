@@ -407,8 +407,9 @@ Préparer sa feuille d'une période à partir de ses quarts, la corriger segment
 **Comment faire**
 
 1. « Préparer ma feuille » avec le « Début de la période » et la « Fin de la période » : les segments viennent des quarts et des pointages.
-2. Vérifier chaque segment ; « Ajouter un segment » pour un temps manquant (jour, de, heures, type d'heure, motif), ou modifier un segment et « Enregistrer la correction ».
-3. « Soumettre ma feuille » : elle part au premier palier d'approbation.
+2. Vérifier chaque segment : la ressource (nom et matricule), les heures, le type d'heure, les « Tâches » et les champs propres à votre organisme.
+3. « Ajouter un segment » pour un temps manquant (jour, de, à, type d'heure), avec la « Description des tâches » et les champs demandés (ex. Véhicule) ; ou modifier un segment et « Enregistrer la correction ».
+4. « Soumettre ma feuille » : elle part au premier palier d'approbation — souvent votre supérieur hiérarchique. « En attente de » dit chez qui elle est.
 
 **Exemple de remplissage**
 
@@ -418,13 +419,14 @@ Préparer sa feuille d'une période à partir de ses quarts, la corriger segment
 | Fin de la période | 2026-11-15 |
 | Ajouter un segment — Jour | 2026-11-12 |
 | De | 18:00 |
-| Heures | 1,5 |
+| À | 19:30 |
 | Type d'heure | SUPP — Supplémentaire |
-| Motif | Transport prolongé, appel 412 |
+| Description des tâches | Transport prolongé, appel 412 |
+| Véhicule (obligatoire) | A-12 |
 
-**Résultat :** La feuille passe à « Soumise » ; chaque correction garde ses versions, et une anomalie est nommée avec ce qu'il faut corriger.
+**Résultat :** La feuille passe à « Soumise » et affiche « En attente de : … » ; chaque correction garde ses versions, sa description et ses champs, et une anomalie est nommée avec ce qu'il faut corriger.
 
-> **Attention :** Une feuille retournée par le planificateur porte son motif : corriger puis soumettre à nouveau.
+> **Attention :** Une feuille retournée porte son motif : corriger puis soumettre à nouveau. Un champ marqué « obligatoire » doit être rempli pour que le segment soit accepté.
 
 ### Feuilles de temps (console)
 
@@ -437,7 +439,9 @@ Préparer les feuilles d'une période, les approuver palier par palier, lire les
 1. « Préparer les feuilles » pour une unité et une période.
 2. Ouvrir une feuille soumise : approuver, ou retourner avec un motif obligatoire.
 3. « Afficher le relevé » (regroupé par personne, unité ou type d'heure) et l'exporter ; « Produire le lot » puis « Télécharger le lot (CSV) ».
-4. Régler le « Flux d'approbation des heures » : paliers, rôle approbateur et conditions.
+4. Régler le « Flux d'approbation des heures » : paliers, conditions et approbateur — niveau de l'unité, rôle, personne désignée ou « Supérieur hiérarchique ».
+5. « Supérieurs hiérarchiques » : choisir une « Personne » puis « Son supérieur hiérarchique », et « Enregistrer ». C'est ce que lit l'approbateur « Supérieur hiérarchique ».
+6. « Champs de la feuille » (administration) : ajouter ce que chaque segment doit dire selon vos emplois — libellé, code, type (texte, nombre, oui ou non, liste), obligatoire ; « Désactiver » un champ qui ne sert plus.
 
 **Exemple de remplissage**
 
@@ -447,8 +451,16 @@ Préparer les feuilles d'une période, les approuver palier par palier, lire les
 | Début de la période | 2026-11-09 |
 | Fin | 2026-11-15 |
 | Motif (obligatoire pour retourner) | Segment du 12 sans preuve de transport |
+| Champ — Libellé | Véhicule |
+| Code | vehicule |
+| Type | Liste de choix |
+| Choix offerts | A-12, B-07 |
+| Personne | Julie Roy |
+| Son supérieur hiérarchique | Marc Lavoie |
 
-**Résultat :** Les feuilles approuvées entrent au lot de paie, transmis par l'intégration de paie.
+**Résultat :** Les feuilles approuvées entrent au lot de paie ; une feuille routée au supérieur lui apparaît même hors de son périmètre, avec « En attente de ».
+
+> **Attention :** Sans supérieur désigné, une feuille routée au « Supérieur hiérarchique » revient au niveau GESTION de l'unité. Un champ se désactive, jamais ne s'efface : les valeurs déjà saisies restent lisibles.
 
 ### Mes échanges
 
@@ -495,6 +507,79 @@ Suivre les échanges de quarts de son périmètre, en créer un pour une personn
 **Résultat :** « Échange proposé pour Julie Roy avec Marc Dubé : Marc Dubé doit l'accepter. » ; validé, les quarts changent de mains ; rejeté, chacun garde le sien.
 
 > **Attention :** L'échange est jugé dans les deux sens : un quart qui créerait un conflit chez l'un ou l'autre est refusé, avec la règle nommée.
+
+### Nouvelle alerte
+
+*Adresse : `/admin/alnouvelle` — Administration, direction et planificateurs (capacité « alertes.envoyer »).*
+
+Envoyer une alerte priorisée à des groupes ou à des personnes, avec les réponses qu'elles pourront donner d'un geste.
+
+**Comment faire**
+
+1. Choisir un « Modèle » au besoin : il remplit le titre, le message, la priorité et les réponses ; tout reste modifiable.
+2. Écrire le « Titre » et le « Message », puis choisir la « Priorité ». Une alerte critique part sur tous les canaux, quelles que soient les préférences.
+3. Choisir les destinataires : « Tout le groupe … », ou des personnes, par leur nom, dans « Choisir des personnes dans un groupe ».
+4. Cocher les « Réponses proposées », puis « Envoyer l'alerte ».
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Modèle | Code bleu |
+| Titre | Code bleu chambre 512 |
+| Message | 5e étage, répondez à la prise en charge |
+| Priorité | Critique |
+| Destinataires | Tout le groupe Opérations Est ; Julie Roy |
+| Réponses proposées | J'arrive (prise en charge) · Indisponible (refus) |
+
+**Résultat :** « Alerte … envoyée à N personne(s) » ; les destinataires sont figés à l'envoi, et « Suivre les réponses » ouvre le suivi.
+
+> **Attention :** Vous n'êtes jamais destinataire de votre propre alerte, même si vous êtes dans le groupe visé.
+
+### Suivi des alertes
+
+*Adresse : `/admin/alsuivi` — Administration, direction et planificateurs : le suivi est partagé entre expéditeurs.*
+
+Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pris en charge.
+
+**Comment faire**
+
+1. Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.
+2. « Détail » ouvre les destinataires : lue le, état, répondu le.
+3. « Actualiser » relit les réponses arrivées depuis.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Alerte | Code bleu chambre 512 |
+| Lues | 12 / 15 |
+| Prise en charge | Julie Roy, 2026-11-14 14:03 |
+
+**Résultat :** Lecture seule : le suivi ne change rien aux alertes.
+
+### Mes alertes
+
+*Adresse : `/admin/mesalertes` — Tout compte de l'organisme.*
+
+Lire les alertes qui vous visent et y répondre d'un geste.
+
+**Comment faire**
+
+1. Les non lues sont en tête, marquées « Non lue ».
+2. Ouvrir une alerte la marque lue.
+3. Répondre par un bouton (« J'arrive », « Indisponible ») : une seule réponse par alerte.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Alerte | Critique — Code bleu chambre 512 |
+| Réponse | J'arrive |
+
+**Résultat :** « Réponse … envoyée » ; l'expéditeur voit votre réponse dans son suivi.
+
+> **Attention :** Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis.
 
 ### Messagerie du personnel
 
@@ -615,6 +700,29 @@ Trancher les demandes qui vous sont adressées, régler les règles d'approbatio
 > **Attention :** On n'approuve jamais sa propre demande : c'est la séparation des tâches.
 
 ## Administration
+
+### Paramètres des alertes
+
+*Adresse : `/admin/alparametres` — Administration (capacité « alertes.configure »).*
+
+Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
+
+**Comment faire**
+
+1. « Nouvelle réponse » : un libellé et ce qu'il veut dire (prise en charge, refus, information).
+2. « Nouveau modèle » : titre, texte, priorité et réponses proposées.
+3. « Désactiver » retire une réponse ou un modèle des choix ; rien ne s'efface.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Libellé | J'arrive |
+| Ce qu'elle veut dire | Prise en charge |
+| Modèle — Titre | Code bleu |
+| Priorité | Critique |
+
+**Résultat :** La réponse ou le modèle est proposé dès la prochaine alerte ; les alertes passées gardent ce qu'elles ont proposé.
 
 ### Référentiels
 

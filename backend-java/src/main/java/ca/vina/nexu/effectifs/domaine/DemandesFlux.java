@@ -97,6 +97,7 @@ public final class DemandesFlux {
             case PERIMETRE -> "le niveau " + a.valeur() + " de l'unité";
             case ROLE -> "le rôle « " + a.valeur() + " »";
             case PERSONNE -> nomDe.apply(a.valeur()) + " (personne désignée)";
+            case SUPERIEUR -> "le supérieur hiérarchique de la personne";
         };
     }
 
@@ -109,6 +110,8 @@ public final class DemandesFlux {
             case PERIMETRE -> Arrays.stream(Perimetres.Niveau.values()).anyMatch(n -> n.name().equals(a.valeur()) && acteur.niveauSur().test(n));
             case ROLE -> acteur.role().equals(a.valeur());
             case PERSONNE -> acteur.id().equals(a.valeur());
+            // Une étape vivante ne porte jamais le marqueur : il est remplacé par la personne à l'ouverture du flux.
+            case SUPERIEUR -> false;
         };
     }
 

@@ -1536,3 +1536,8 @@ fieldset > button, fieldset > p > button { margin-top: 4px; }
 /* 6. Les colonnes et regroupements du constructeur : une grille de cases, pas vingt lignes. */
 :where([data-testid="rap-colonnes"], [data-testid="rap-groupes"]) { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); column-gap: 16px; }
 :where([data-testid="rap-colonnes"], [data-testid="rap-groupes"]) > .champ { margin-bottom: 6px; }
+
+/* ───── Mes alertes : une carte par alerte, le résumé est la cible (44 px) ───── */
+.mal-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.mal-liste details > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.mal-reponses .primary, .mal-reponses .secondary { min-height: 44px; }

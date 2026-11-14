@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Une feuille de temps qui s'adapte à l'emploi** (14 novembre 2026,
+    docs/urgences-sante/ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md).
+
+    Chaque segment porte une description des tâches et les valeurs des champs que l'organisme définit
+    (véhicule, projet, patient transporté…) ; les champs se tiennent dans `eff_temps_champs`. Les
+    colonnes se constatent par `pragma_table_info` : `columnExists` échoue sur SQLite quand la base
+    compte beaucoup de tables (voir 0004).
+  -->
+  <changeSet id="0007-feuille-champs" author="feuille-dynamique">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_temps_champs'</sqlCheck>
+    </preConditions>
+    <comment>Les champs de la feuille propres à l'organisme.</comment>
+    <sql>
+      CREATE TABLE eff_temps_champs (
+        tenantId TEXT NOT NULL,
+        code TEXT NOT NULL,
+        libelle TEXT NOT NULL,
+        type TEXT NOT NULL,
+        valeurs TEXT,
+        requis INTEGER NOT NULL DEFAULT 0,
+        actif INTEGER NOT NULL DEFAULT 1,
+        ordre INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (tenantId, code)
+      )
+    </sql>
+  </changeSet>
+
+  <changeSet id="0007-segment-description" author="feuille-dynamique">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_segments_temps'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('eff_segments_temps') WHERE name = 'description'</sqlCheck>
+    </preConditions>
+    <comment>La description des tâches et les valeurs des champs, par segment.</comment>
+    <sql>ALTER TABLE eff_segments_temps ADD COLUMN description TEXT</sql>
+    <sql>ALTER TABLE eff_segments_temps ADD COLUMN attributs TEXT</sql>
+  </changeSet>
+</databaseChangeLog>

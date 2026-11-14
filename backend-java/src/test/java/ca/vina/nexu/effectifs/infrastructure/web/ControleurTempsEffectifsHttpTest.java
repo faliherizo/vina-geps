@@ -559,6 +559,55 @@ class ControleurTempsEffectifsHttpTest {
         assertThat(TempsEffectifs.StatutFeuille.valueOf(JsonPath.read(feuille("P9"), "$.statut"))).isEqualTo(TempsEffectifs.StatutFeuille.RETOURNEE);
     }
 
+
+    @Test
+    @DisplayName("les champs de l'organisme : l'administration les définit ; la saisie les vérifie ; la correction garde la description")
+    void champsEtTaches() throws Exception {
+        preparation();
+        http.post(TP + "/champs", JULIE, "{\"code\":\"vehicule\",\"libelle\":\"Véhicule\",\"type\":\"liste\",\"valeurs\":[\"A-12\"]}")
+                .andExpect(status().isForbidden());
+        http.post(TP + "/champs", ADMIN, "{\"code\":\"vehicule\",\"libelle\":\"Véhicule\",\"type\":\"liste\",\"valeurs\":[\"A-12\",\"B-07\"],\"requis\":true}")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.ordre").value(0)).andExpect(jsonPath("$.actif").value(true));
+        http.post(TP + "/champs", ADMIN, "{\"code\":\"km\",\"libelle\":\"Kilomètres\",\"type\":\"nombre\"}").andExpect(status().isCreated());
+        http.post(TP + "/champs", ADMIN, "{\"code\":\"km\",\"libelle\":\"Encore\",\"type\":\"nombre\"}").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("le champ « km » existe déjà : désactivez-le plutôt que de le redéfinir"));
+        http.post(TP + "/champs", ADMIN, "{\"code\":\"X\",\"libelle\":\"x\",\"type\":\"texte\"}").andExpect(status().is(422));
+        http.get(TP + "/champs", JULIE).andExpect(status().isOk()).andExpect(jsonPath("$[*].code", Matchers.contains("vehicule", "km")))
+                .andExpect(jsonPath("$[0].valeurs", Matchers.contains("A-12", "B-07")));
+
+        String s = TP + "/feuilles/" + ids.get("f_P1") + "/segments";
+        String seg = "{\"date\":\"2031-01-17\",\"debut\":\"2031-01-17T13:00:00Z\",\"fin\":\"2031-01-17T17:00:00Z\",\"typeHeureCode\":\"REG\"";
+        http.post(s, JULIE, seg + "}").andExpect(status().is(422)).andExpect(jsonPath("$.errors[0]").value("« Véhicule » est requis"));
+        http.post(s, JULIE, seg + ",\"attributs\":{\"vehicule\":\"Z-99\"}}").andExpect(jsonPath("$.errors[0]").value("« Véhicule » : l'un de A-12, B-07"));
+        http.post(s, JULIE, seg + ",\"attributs\":{\"vehicule\":\"A-12\",\"inconnu\":1}}")
+                .andExpect(jsonPath("$.errors[0]").value("« attributs.inconnu » : champ inconnu ou désactivé"));
+        http.post(s, JULIE, seg + ",\"attributs\":{\"vehicule\":\"A-12\",\"km\":\"dix\"}}").andExpect(jsonPath("$.errors[0]").value("« Kilomètres » : un nombre"));
+        http.post(s, JULIE, seg + ",\"description\":\"" + "x".repeat(501) + "\",\"attributs\":{\"vehicule\":\"A-12\"}}")
+                .andExpect(jsonPath("$.errors[0]").value("« description » : 500 caractères au plus"));
+        String cree = corps(http.post(s, JULIE, seg + ",\"description\":\" Transport inter-hospitalier \",\"attributs\":{\"vehicule\":\"A-12\",\"km\":42}}")
+                .andExpect(status().isCreated()));
+        Map<String, Object> ajoute = JsonPath.<List<Map<String, Object>>>read(cree, "$.segments[?(@.date == '2031-01-17')]").getFirst();
+        assertThat(List.of(ajoute.get("description"), ajoute.get("attributs"))).containsExactly("Transport inter-hospitalier", Map.of("vehicule", "A-12", "km", 42));
+
+        // La correction sans valeurs garde celles de la version remplacée ; avec des valeurs, elle les remplace.
+        String corrige = corps(http.put(s + "/" + ajoute.get("id"), JULIE, "{\"fin\":\"2031-01-17T16:00:00Z\"}").andExpect(status().isOk()));
+        Map<String, Object> v2 = JsonPath.<List<Map<String, Object>>>read(corrige, "$.segments[?(@.remplaceId == '" + ajoute.get("id") + "')]").getFirst();
+        assertThat(List.of(v2.get("description"), v2.get("attributs"))).containsExactly("Transport inter-hospitalier", Map.of("vehicule", "A-12", "km", 42));
+        String encore = corps(http.put(s + "/" + v2.get("id"), JULIE, "{\"description\":\"Retour à la base\",\"attributs\":{\"vehicule\":\"B-07\"}}")
+                .andExpect(status().isOk()));
+        Map<String, Object> v3 = JsonPath.<List<Map<String, Object>>>read(encore, "$.segments[?(@.remplaceId == '" + v2.get("id") + "')]").getFirst();
+        assertThat(List.of(v3.get("description"), v3.get("attributs"))).containsExactly("Retour à la base", Map.of("vehicule", "B-07"));
+
+        // Désactiver : le champ ne s'exige plus, ni ne s'accepte ; ce qui est saisi reste lisible.
+        http.patch(TP + "/champs/vehicule", ADMIN, "{\"actif\":\"non\"}").andExpect(status().is(422)).andExpect(jsonPath("$.errors[0]").value("« actif » : vrai ou faux"));
+        http.patch(TP + "/champs/absent", ADMIN, "{\"actif\":false}").andExpect(status().isNotFound());
+        http.patch(TP + "/champs/vehicule", JULIE, "{\"actif\":false}").andExpect(status().isForbidden());
+        http.patch(TP + "/champs/vehicule", ADMIN, "{\"actif\":false}").andExpect(status().isOk()).andExpect(jsonPath("$.actif").value(false));
+        http.post(s, JULIE, "{\"date\":\"2031-01-18\",\"debut\":\"2031-01-18T13:00:00Z\",\"fin\":\"2031-01-18T14:00:00Z\",\"typeHeureCode\":\"REG\"}")
+                .andExpect(status().isCreated());
+        http.get(TP + "/feuilles/" + ids.get("f_P1"), JULIE).andExpect(jsonPath("$.segments[?(@.date == '2031-01-17')].attributs.vehicule", Matchers.contains("B-07")));
+    }
+
     @Test
     @DisplayName("le module coupé ferme tout")
     void moduleCoupe() throws Exception {

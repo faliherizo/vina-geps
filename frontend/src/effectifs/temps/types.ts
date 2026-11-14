@@ -11,7 +11,22 @@ export interface Segment {
   placeId: string | null; version: number; remplaceId: string | null; motif: string | null;
   /** E-RF-13 : la source tierce d'un temps proposé, s'il attend une confirmation, et ce qui confirme un temps pointé. */
   sourceExterne?: string | null; aConfirmer?: boolean; corrobore?: boolean | null; sourcesCorroborantes?: string[];
+  /** Ce à quoi le temps a servi : la description des tâches, et les valeurs des champs de l'organisme. */
+  description?: string | null; attributs?: Record<string, ValeurChamp> | null;
 }
+
+/** Un champ de la feuille défini par l'organisme (ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md). Le serveur rend le type en majuscules. */
+export type TypeChamp = "texte" | "nombre" | "booleen" | "liste";
+export type ValeurChamp = string | number | boolean;
+export interface ChampFeuille { code: string; libelle: string; type: string; valeurs: string[]; requis: boolean; actif: boolean; ordre: number }
+export const typeDe = (c: ChampFeuille) => c.type.toLowerCase() as TypeChamp;
+
+/** Une valeur de champ en mots : jamais « true ». */
+export const valeurEnMots = (v: ValeurChamp | undefined) => v === undefined || v === "" ? "—" : v === true ? "Oui" : v === false ? "Non" : String(v);
+
+/** Qui doit agir maintenant sur une feuille soumise : le libellé du palier courant du circuit. */
+export const enAttenteDe = (f: { statut: StatutFeuille; flux?: Flux | null }) =>
+  f.statut !== "SOUMISE" ? null : f.flux?.etapes.find((e) => e.palier === f.flux?.palierCourant && e.statut === "EN_ATTENTE")?.libelle ?? null;
 
 /** Ce que deux sources tierces disent l'une de l'autre, un jour donné (E-RF-13). */
 export interface CorrelationSources { date: string; sources: [string, string]; concordants: number; divergents: number }

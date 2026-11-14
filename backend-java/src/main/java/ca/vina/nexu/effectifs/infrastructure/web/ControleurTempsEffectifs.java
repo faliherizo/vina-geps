@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -83,6 +84,23 @@ public class ControleurTempsEffectifs {
     @GetMapping("/parametres")
     public ResponseEntity<Object> parametres(HttpServletRequest r) {
         return garde.repondre(r, module(r), 200, ctx -> lire.feuilles().parametres(ctx.tenantId()));
+    }
+
+    // ── Champs de la feuille propres à l'organisme (ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md) ──
+
+    @GetMapping("/champs")
+    public ResponseEntity<Object> champs(HttpServletRequest r) {
+        return garde.repondre(r, module(r), 200, ctx -> agir.parametres().champs(ctx));
+    }
+
+    @PostMapping("/champs")
+    public ResponseEntity<Object> definirChamp(HttpServletRequest r, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, configurer(r), 201, ctx -> agir.parametres().definirChamp(ctx, corps(c)));
+    }
+
+    @PatchMapping("/champs/{code}")
+    public ResponseEntity<Object> activerChamp(HttpServletRequest r, @PathVariable String code, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, configurer(r), 200, ctx -> agir.parametres().activerChamp(ctx, code, corps(c)));
     }
 
     @PutMapping("/parametres")

@@ -5,6 +5,7 @@ import ca.vina.nexu.effectifs.application.requetes.FeuilleDetailleeTemps;
 import ca.vina.nexu.effectifs.application.requetes.LectureFeuillesTemps;
 import ca.vina.nexu.effectifs.domaine.ConflitException;
 import ca.vina.nexu.effectifs.domaine.Contexte;
+import ca.vina.nexu.effectifs.domaine.ChampsFeuille;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort.NouveauSegment;
 import ca.vina.nexu.effectifs.domaine.EffectifsInvalideException;
@@ -75,16 +76,29 @@ public class GestionnaireSegmentsTemps {
         Ouverte o = ouvrir(ctx, feuilleId);
         TempsEffectifs.SegmentSaisi s = TempsEffectifs.segmentSaisi(entree);
         verifier(ctx, o.feuille(), s);
+        EcritureFeuillesTempsPort.Complement complement = complement(ctx, entree, null);
         String motif = TempsEffectifs.motifDeCorrection(entree.get("motif"), !o.soi());
         exigerModification(ctx, o, new Touche(OperationModification.AJOUT, s.date(), s.fin(), TempsEffectifs.Source.SAISIE, feuilleId));
         NouveauSegment nouveau = new NouveauSegment(null, s.date(), s.debut(), s.fin(), s.typeHeureCode(), TempsEffectifs.Source.SAISIE);
         calcul.jugerJournee(ctx, o.feuille(), null, nouveau);
         String id = ecrire.sequence().suivant("eseg");
         ecrire.depot().insererSegment(ctx, feuilleId, nouveau, new EcritureFeuillesTempsPort.Filiation(id, 1, null, motif));
+        ecrire.depot().poserComplement(ctx.tenantId(), id, complement);
         Map<String, Object> apres = saisi(s);
         apres.put("motif", motif);
         ecrire.journal().ecrire(ctx, JournalEffectifs.Consignation.de("temps.segment.ajoute", "segment", id, o.feuille().uniteCode(), null, apres));
         return calcul.lire(ctx, feuilleId);
+    }
+
+    /**
+     * La description des tâches et les valeurs des champs de l'organisme, vérifiées contre les champs actifs
+     * (ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md). Une correction qui ne les donne pas garde celles de la version remplacée.
+     */
+    private EcritureFeuillesTempsPort.Complement complement(Contexte ctx, Map<String, Object> entree, SegmentStocke avant) {
+        String description = entree.containsKey("description") || avant == null ? ChampsFeuille.description(entree.get("description")) : avant.description();
+        Map<String, Object> attributs = entree.containsKey("attributs") || avant == null
+                ? ChampsFeuille.valeurs(lecture.depot().champs(ctx.tenantId()), entree.get("attributs")) : avant.attributs();
+        return new EcritureFeuillesTempsPort.Complement(description, attributs);
     }
 
     private static Map<String, Object> saisi(TempsEffectifs.SegmentSaisi s) {
@@ -112,6 +126,7 @@ public class GestionnaireSegmentsTemps {
         fusion.putAll(entree);
         TempsEffectifs.SegmentSaisi s = TempsEffectifs.segmentSaisi(fusion);
         verifier(ctx, o.feuille(), s);
+        EcritureFeuillesTempsPort.Complement complement = complement(ctx, entree, avant);
         String motif = TempsEffectifs.motifDeCorrection(entree.get("motif"), !o.soi() || avant.source() == TempsEffectifs.Source.POINTAGE);
         exigerModification(ctx, o, new Touche(OperationModification.CORRECTION, avant.date(), avant.fin(), avant.source(), avant.id()));
         NouveauSegment nouveau = new NouveauSegment(avant.placeId(), s.date(), s.debut(), s.fin(), s.typeHeureCode(), avant.source(), avant.sourceExterne());
@@ -121,6 +136,7 @@ public class GestionnaireSegmentsTemps {
         // Corriger un temps proposé par une source tierce, c'est l'avoir relu : la correction le confirme (E-RF-13).
         ecrire.depot().insererSegment(ctx, feuilleId, nouveau, new EcritureFeuillesTempsPort.Filiation(id, avant.version() + 1, avant.id(), motif,
                 avant.source() == TempsEffectifs.Source.EXTERNE));
+        ecrire.depot().poserComplement(ctx.tenantId(), id, complement);
         journaliserCorrection(ctx, new Correction(id, o.feuille().uniteCode(), avant, s, motif));
         return calcul.lire(ctx, feuilleId);
     }

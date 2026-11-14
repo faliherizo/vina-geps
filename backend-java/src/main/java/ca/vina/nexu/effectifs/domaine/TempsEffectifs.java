@@ -190,7 +190,7 @@ public final class TempsEffectifs {
     /** Un segment lu avec sa filiation de versions : la forme du contrat HTTP. */
     public record SegmentLu(String id, String date, String debut, String fin, String typeHeureCode, TypeHeure comportement, Source source,
                             String placeId, int version, String remplaceId, String motif, String creeLe, String creePar, String sourceExterne,
-                            String confirmeLe, String confirmePar) implements SegmentDeTemps { }
+                            String confirmeLe, String confirmePar, String description, Map<String, Object> attributs) implements SegmentDeTemps { }
 
     public record SegmentSaisi(String date, String debut, String fin, String typeHeureCode) { }
 

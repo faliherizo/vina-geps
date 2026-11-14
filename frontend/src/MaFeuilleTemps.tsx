@@ -16,17 +16,22 @@ import { BadgeStatut, EnTeteEcran, EtatVide, Message, Tableau, Tiroir, type Colo
 import { useApiEffectifs } from "./effectifs/api";
 import { SansDossierEffectif, useMaRessource } from "./effectifs/maRessource";
 import DetailFeuille from "./effectifs/temps/DetailFeuille";
+import { champsAffiches, COMPLEMENT_VIDE, complementAEnvoyer, SaisieChamps, useChampsFeuille, valeurDe, type Complement } from "./effectifs/temps/ChampsFeuille";
 import {
-  duree, heureDe, hhmmDe, instantDe, origineEnMots, preuveEnMots, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type Segment,
+  duree, heureDe, hhmmDe, instantDe, origineEnMots, preuveEnMots, statutEnMots, TON_STATUT, type ChampFeuille, type Feuille, type FeuilleDetaillee, type Segment,
 } from "./effectifs/temps/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
 import { FormulaireModal } from "./Modal";
 
-const COLONNES: ReadonlyArray<Colonne<Segment>> = [
+/** Les colonnes suivent les champs de l'organisme : une feuille de paramédic et une feuille administrative n'ont pas les mêmes. */
+const colonnes = (champs: ChampFeuille[]): ReadonlyArray<Colonne<Segment>> => [
+  { id: "ressource", libelle: "Ressource" },
   { id: "date", libelle: "Jour", tri: (s) => s.debut },
   { id: "heures", libelle: "Heures" },
   { id: "type", libelle: "Type", tri: (s) => s.typeHeureCode },
+  { id: "taches", libelle: "Tâches" },
+  ...champs.map((c) => ({ id: `champ-${c.code}`, libelle: c.libelle })),
   { id: "source", libelle: "Origine", tri: (s) => s.source },
   { id: "preuve", libelle: "Preuve tierce" },
   { id: "actions", libelle: "Actions", actions: true },
@@ -50,6 +55,8 @@ export default function MaFeuilleTemps() {
   const [info, setInfo] = useState("");
   const [edition, setEdition] = useState<Segment | null>(null);
   const [saisie, setSaisie] = useState<Saisie>(VIDE);
+  const [complement, setComplement] = useState<Complement>(COMPLEMENT_VIDE);
+  const { champs } = useChampsFeuille();
   const [versions, setVersions] = useState<Segment[] | null>(null);
   const voirVersions = async (s: Segment) => { setVersions(liste<Segment>(await lire<Segment[]>(`/api/effectifs/temps/feuilles/${choisie}/segments/${s.id}/historique`))); };
 
@@ -75,7 +82,7 @@ export default function MaFeuilleTemps() {
 
   const apres = async (r: FeuilleDetaillee | null, message: string) => {
     if (!r) return false;
-    setF(r); setInfo(message); setEdition(null); setSaisie(VIDE);
+    setF(r); setInfo(message); setEdition(null); setSaisie(VIDE); setComplement(COMPLEMENT_VIDE);
     await chargerListe();
     return true;
   };
@@ -84,7 +91,7 @@ export default function MaFeuilleTemps() {
     e.preventDefault();
     setInfo("");
     const r = await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${choisie}/segments`,
-      { date: saisie.date, debut: instantDe(saisie.date, saisie.debut), fin: instantDe(saisie.date, saisie.fin), typeHeureCode: saisie.typeHeureCode, motif: saisie.motif || undefined });
+      { date: saisie.date, debut: instantDe(saisie.date, saisie.debut), fin: instantDe(saisie.date, saisie.fin), typeHeureCode: saisie.typeHeureCode, motif: saisie.motif || undefined, ...complementAEnvoyer(complement) });
     // Refusé, le formulaire reste ouvert avec ses valeurs : le motif du refus se corrige là où il a été saisi.
     if (await apres(r, `Segment du ${saisie.date} ajouté.`)) fermer();
   };
@@ -93,7 +100,7 @@ export default function MaFeuilleTemps() {
     e.preventDefault();
     if (!edition) return;
     const r = await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${choisie}/segments/${edition.id}`,
-      { debut: instantDe(edition.date, saisie.debut), fin: instantDe(edition.date, saisie.fin), typeHeureCode: saisie.typeHeureCode, motif: saisie.motif || undefined }, "PUT");
+      { debut: instantDe(edition.date, saisie.debut), fin: instantDe(edition.date, saisie.fin), typeHeureCode: saisie.typeHeureCode, motif: saisie.motif || undefined, ...complementAEnvoyer(complement) }, "PUT");
     await apres(r, `Segment du ${edition.date} corrigé.`);
   };
 
@@ -121,6 +128,7 @@ export default function MaFeuilleTemps() {
   if (!feuilles) return erreur ? <Message variante="erreur" testId="mft-erreur">{erreur}</Message> : null;
   const ouverte = f && (f.statut === "BROUILLON" || f.statut === "RETOURNEE");
   const champ = (cle: keyof Saisie) => ({ value: saisie[cle], onChange: (e: { target: { value: string } }) => setSaisie((s) => ({ ...s, [cle]: e.target.value })) });
+  const affiches = champsAffiches(champs, f?.segments ?? []);
   const optionsTypes = [<option key="" value="">— choisir —</option>, ...types.map((t) => <option key={t.code} value={t.code}>{t.code} — {t.libelleFr}</option>)];
 
   return (
@@ -165,14 +173,18 @@ export default function MaFeuilleTemps() {
         <div data-testid="mft-feuille-detail">
           <p><BadgeStatut statut={TON_STATUT[f.statut]} testId="mft-statut">{statutEnMots(f)}</BadgeStatut></p>
           {f.decisions.filter((d) => d.decision === "RETOURNER").slice(-1).map((d) => <Message key={d.decideLe} variante="info" testId="mft-retour">Retournée : {d.motif}</Message>)}
+          <p data-testid="mft-ressource">Ressource : <strong>{f.nom}</strong> (matricule {f.matricule}) — unité {f.uniteCode}</p>
           <DetailFeuille f={f} prefixe="mft" />
-          <Tableau colonnes={COLONNES} lignes={f.segments} legende="Segments de temps de la feuille" testId="mft-segments"
+          <Tableau colonnes={colonnes(affiches)} lignes={f.segments} legende="Segments de temps de la feuille" testId="mft-segments"
             vide={<EtatVide titre="Aucun segment" compact testId="mft-segments-vide">Aucun quart publié ni pointage sur cette période.</EtatVide>}
             rendre={(s) => (
               <tr key={s.id} data-testid={`mft-s-${s.id}`}>
+                <td>{f.nom} ({f.matricule})</td>
                 <td>{s.date}</td>
                 <td>{heureDe(s.debut)}–{heureDe(s.fin)} ({duree(Math.round((Date.parse(s.fin) - Date.parse(s.debut)) / 60_000))})</td>
                 <td>{s.typeHeureCode}</td>
+                <td data-testid={`mft-s-${s.id}-taches`}>{s.description || "—"}</td>
+                {affiches.map((c) => <td key={c.code}>{valeurDe(s, c)}</td>)}
                 <td>{origineEnMots(s)}{s.version > 1 ? ` · corrigé (v${s.version})` : ""}</td>
                 <td>{preuveEnMots(s)}</td>
                 <td><div className="eff-actions">
@@ -183,7 +195,8 @@ export default function MaFeuilleTemps() {
                   )}
                   {ouverte && (
                     <button type="button" className="secondary" data-testid={`mft-s-${s.id}-modifier`}
-                      onClick={() => { setErreur(""); setVersions(null); setEdition(s); setSaisie({ date: s.date, debut: hhmmDe(s.debut), fin: hhmmDe(s.fin), typeHeureCode: s.typeHeureCode, motif: "" }); }}>
+                      onClick={() => { setErreur(""); setVersions(null); setEdition(s); setSaisie({ date: s.date, debut: hhmmDe(s.debut), fin: hhmmDe(s.fin), typeHeureCode: s.typeHeureCode, motif: "" });
+                        setComplement({ description: s.description ?? "", attributs: { ...(s.attributs ?? {}) } }); }}>
                       Modifier<span className="sr-only"> le segment du {s.date} de {heureDe(s.debut)}</span>
                     </button>
                   )}
@@ -204,6 +217,7 @@ export default function MaFeuilleTemps() {
                       <p><label htmlFor="mft-a-debut">De</label><input id="mft-a-debut" type="time" required data-testid="mft-a-debut" {...champ("debut")} /></p>
                       <p><label htmlFor="mft-a-fin">À</label><input id="mft-a-fin" type="time" required data-testid="mft-a-fin" {...champ("fin")} /></p>
                       <p><label htmlFor="mft-a-type">Type d'heure</label><select id="mft-a-type" required data-testid="mft-a-type" {...champ("typeHeureCode")}>{optionsTypes}</select></p>
+                      <SaisieChamps champs={champs} valeur={complement} onChange={setComplement} prefixe="mft-a" />
                       {erreur && <Message variante="erreur" testId="mft-a-erreur">{erreur}</Message>}
                       <p><button type="submit" data-testid="mft-a-envoyer">Ajouter</button></p>
                     </form>
@@ -216,13 +230,14 @@ export default function MaFeuilleTemps() {
         </div>
       )}
 
-      <Tiroir ouvert={!!edition} onFermer={() => setEdition(null)} titre={edition ? `Segment du ${edition.date}` : "Segment"} testId="mft-edition">
+      <Tiroir ouvert={!!edition} onFermer={() => { setEdition(null); setComplement(COMPLEMENT_VIDE); }} titre={edition ? `Segment du ${edition.date}` : "Segment"} testId="mft-edition">
         {edition && (
           <form onSubmit={(e) => void corriger(e)}>
             <p>Origine : {origineEnMots(edition)}. Corriger un temps pointé exige un motif ; l'ancienne version reste à l'historique.{edition.source === "EXTERNE" ? " Corriger un temps proposé par une source tierce le confirme." : ""}</p>
             <p><label htmlFor="mft-e-debut">De</label><input id="mft-e-debut" type="time" required data-testid="mft-e-debut" {...champ("debut")} /></p>
             <p><label htmlFor="mft-e-fin">À</label><input id="mft-e-fin" type="time" required data-testid="mft-e-fin" {...champ("fin")} /></p>
             <p><label htmlFor="mft-e-type">Type d'heure</label><select id="mft-e-type" required data-testid="mft-e-type" {...champ("typeHeureCode")}>{optionsTypes}</select></p>
+            <SaisieChamps champs={champs} valeur={complement} onChange={setComplement} prefixe="mft-e" />
             <p><label htmlFor="mft-e-motif">Motif</label><textarea id="mft-e-motif" rows={2} maxLength={500} data-testid="mft-e-motif" {...champ("motif")} /></p>
             {edition.version > 1 && (
               versions

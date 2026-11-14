@@ -41,7 +41,7 @@ export const DEFAULT_MODULES = [
   "approvals", "notifications", "integrations", "confidentialite",
   "effectifs", "effectifs_regles", "effectifs_planification", "effectifs_disponibilites",
   "effectifs_absences", "effectifs_echanges", "effectifs_agph", "effectifs_presence",
-  "effectifs_temps", "effectifs_communication", "effectifs_integrations",
+  "effectifs_temps", "effectifs_communication", "effectifs_integrations", "alertes",
 ];
 
 /** Doublures minimales pour que l'application démarre et affiche sa navigation. */

@@ -107,6 +107,14 @@ const MODULES_AUDIT = {
     jamais mesurés. Un écran ajouté sans son contrôle est une livraison incomplète ; un contrôle
     qui mesure l'état vide d'un écran l'est autant.
   */
+  // Communications cliniques (ADR 0074).
+  "GET /api/alertes/reponses": [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }, { id: "rp-2", libelle: "Indisponible", semantique: "refus", active: false }],
+  "GET /api/alertes/modeles": [{ id: "mo-1", titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], actif: true }],
+  "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
+  "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }],
+  "GET /api/alertes/envoyees": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], bilan: { destinataires: 2, lues: 1, repondues: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2030-03-04T14:03:00Z" },
+    remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: "2030-03-04T14:03:00Z", reponseId: "rp-1", reponduLe: "2030-03-04T14:03:00Z" }, { personId: "marc", nom: "Marc Dubé", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null }] }],
+  "GET /api/alertes/recues": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], maRemise: { personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null } }],
   "GET /api/effectifs/mon-horaire": { ressource: { id: "rs-1", matricule: "P1", nom: "Julie Roy", uniteCode: "EST", corpsEmploiCode: "PARA",
     titreEmploiCode: null, statutEmploiCode: null, conventionCode: null, anciennete: 3, actif: true },
     quarts: [
@@ -288,7 +296,8 @@ const MODULES_AUDIT = {
   "GET /api/effectifs/temps/feuilles": [{ id: "ef-1", ressourceId: "rs-1", nom: "Julie Roy", matricule: "P1", uniteCode: "EST", debut: "2031-01-13", fin: "2031-01-19", statut: "SOUMISE", palier: 1, paliersRequis: 2, soumiseLe: "2031-01-20T10:00:00.000Z", approuveeLe: null }],
   "GET /api/effectifs/temps/feuilles/ef-1": { ...{ id: "ef-1", ressourceId: "rs-1", nom: "Julie Roy", matricule: "P1", uniteCode: "EST", debut: "2031-01-13", fin: "2031-01-19", statut: "SOUMISE", palier: 1, paliersRequis: 2, soumiseLe: "2031-01-20T10:00:00.000Z", approuveeLe: null }, statut: "RETOURNEE", palier: 0,
     segments: [{ id: "sg-1", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:00:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 2, remplaceId: "sg-0", motif: "Sortie pointée en retard",
-      corrobore: true, sourcesCorroborantes: ["BORNE"], aConfirmer: false, sourceExterne: null },
+      corrobore: true, sourcesCorroborantes: ["BORNE"], aConfirmer: false, sourceExterne: null,
+      description: "Transport inter-hospitalier, retour à la base", attributs: { vehicule: "A-12", km: 42, garde: true, ancien: "valeur conservée" } },
     // E-RF-13 : un temps proposé par une source tierce seule, à confirmer (le bouton « Confirmer » est mesuré).
     { id: "sg-2", date: "2031-01-16", debut: "2031-01-16T11:00:00.000Z", fin: "2031-01-16T23:00:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "EXTERNE", placeId: "pl-2", version: 1, remplaceId: null, motif: null,
       corrobore: null, sourcesCorroborantes: [], aConfirmer: true, sourceExterne: "BORNE" }],
@@ -304,6 +313,15 @@ const MODULES_AUDIT = {
     { id: "sg-1", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:00:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 2, remplaceId: "sg-0", motif: "Sortie pointée en retard" },
     { id: "sg-0", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:10:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 1, remplaceId: null, motif: null },
   ],
+  // L'organigramme que lit l'approbateur « supérieur hiérarchique » : Julie relève de Marc.
+  "GET /api/personnel/hierarchie": [{ id: "e-chef", nom: "Marc Lavoie", superieurId: null }, { id: "e-julie", nom: "Julie Roy", superieurId: "e-chef" }],
+  // La feuille qui s'adapte à l'emploi : un champ de chaque type, et un désactivé qui garde sa valeur (colonne conservée).
+  "GET /api/effectifs/temps/champs": [
+    { code: "vehicule", libelle: "Véhicule", type: "LISTE", valeurs: ["A-12", "B-07"], requis: true, actif: true, ordre: 0 },
+    { code: "km", libelle: "Kilomètres", type: "NOMBRE", valeurs: [], requis: false, actif: true, ordre: 1 },
+    { code: "garde", libelle: "De garde", type: "BOOLEEN", valeurs: [], requis: false, actif: true, ordre: 2 },
+    { code: "note", libelle: "Note", type: "TEXTE", valeurs: [], requis: false, actif: true, ordre: 3 },
+    { code: "ancien", libelle: "Ancien champ", type: "TEXTE", valeurs: [], requis: false, actif: false, ordre: 4 }],
   "GET /api/effectifs/temps/parametres": { seuilJourHeures: 8, seuilSemaineHeures: 40, paliersApprobation: 2, toleranceEcartMinutes: 15,
     toleranceCorroborationMinutes: 5, actionNonCorrobore: "SIGNALER", actionSourcesDivergentes: "BLOQUER" },
   // E-GP-6 : le flux d'approbation paramétré (paliers, conditions, approbateurs) dans Paramètres des feuilles.
@@ -660,7 +678,25 @@ const PAGES = [
   { nom: "Demandes et échanges", nav: "nav-usechanges" },
   { nom: "Confection annuelle (AGPH)", nav: "nav-usagph" },
   { nom: "Pointage et présence (console)", nav: "nav-uspresence" },
-  { nom: "Feuilles de temps (console)", nav: "nav-ustemps" },
+  { nom: "Feuilles de temps (console)", nav: "nav-ustemps",
+    etats: [{ nom: "fiche ouverte : ressource, tâches et champs de l'organisme", agir: async (page) => {
+      await page.getByTestId("pla-tps-filtre").selectOption("");
+      await page.getByTestId("pla-tps-ef-1-ouvrir").click();
+      await page.getByTestId("pla-tps-fiche-segments").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }, { nom: "flux : approbateur « supérieur hiérarchique »", agir: async (page) => {
+      await page.getByTestId("feuilles-approbations-ouvrir").click();
+      await page.getByTestId("pla-tps-flux-type").selectOption("SUPERIEUR");
+      await page.getByTestId("pla-tps-flux-superieur").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }, { nom: "supérieurs hiérarchiques : une personne choisie", agir: async (page) => {
+      await page.getByTestId("feuilles-superieurs-ouvrir").click();
+      await expect(page.getByTestId("pla-tps-sup-personne").locator("option", { hasText: "Julie Roy" })).toHaveCount(1);
+      await page.getByTestId("pla-tps-sup-personne").selectOption("e-julie");
+      await page.getByTestId("pla-tps-sup-table").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }, { nom: "champs de la feuille : définir une liste", agir: async (page) => {
+      await page.getByTestId("feuilles-champs-ouvrir").click();
+      await page.getByTestId("pla-tps-champ-type").selectOption("liste");
+      await page.getByTestId("pla-tps-champ-valeurs").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Postes", nav: "nav-uspostes" },
   { nom: "Périodes", nav: "nav-usperiodes" },
   { nom: "Ressources", nav: "nav-usressources" },
@@ -725,6 +761,35 @@ const PAGES = [
     ] },
   { nom: "Appeler un collègue", nav: "nav-usappels" },
   { nom: "Listes de diffusion du personnel", nav: "nav-usdiffusion" },
+  // Communications cliniques (ADR 0074) : chaque écran, et ses états — dialogues ouverts, détail, alerte dépliée.
+  { nom: "Nouvelle alerte", nav: "nav-alnouvelle",
+    etats: [{ nom: "modèle appliqué, personnes d'un groupe proposées, priorité critique annoncée", agir: async (page) => {
+      await page.getByTestId("aln-modele").selectOption("mo-1");
+      await page.getByTestId("aln-critique").waitFor({ state: "visible" });
+      await page.getByTestId("aln-groupe-personnes").selectOption("EST");
+      await page.getByTestId("aln-pers-julie").waitFor({ state: "visible" });
+    } }] },
+  { nom: "Suivi des alertes", nav: "nav-alsuivi",
+    etats: [{ nom: "détail des destinataires", agir: async (page) => {
+      await page.getByTestId("als-alerte-al-1-detail").click();
+      await page.getByTestId("als-fiche").waitFor({ state: "visible" });
+    } }] },
+  { nom: "Mes alertes", nav: "nav-mesalertes",
+    etats: [{ nom: "alerte dépliée, réponses offertes", agir: async (page) => {
+      // L'audit a peut-être déjà déplié les replis de la page : cliquer le résumé replierait l'alerte.
+      const repli = page.getByTestId("mal-alerte-al-1").locator("details");
+      if (!(await repli.evaluate((d) => (d as HTMLDetailsElement).open))) await page.getByTestId("mal-alerte-al-1-resume").click();
+      await page.getByTestId("mal-alerte-al-1-reponse-rp-1").waitFor({ state: "visible" });
+    } }] },
+  { nom: "Paramètres des alertes", nav: "nav-alparametres",
+    etats: [{ nom: "dialogue « Nouvelle réponse »", agir: async (page) => {
+      await page.getByTestId("alp-reponse-ouvrir").click();
+      await page.getByTestId("alp-r-libelle").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } },
+    { nom: "dialogue « Nouveau modèle »", agir: async (page) => {
+      await page.getByTestId("alp-modele-ouvrir").click();
+      await page.getByTestId("alp-m-titre").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Mon horaire", nav: "nav-monhoraire",
     // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {
@@ -741,6 +806,8 @@ const PAGES = [
       // relevé des `…-ouvrir` ; cet état le mesure **rempli**, ce que l'ouverture ne montre pas.
       if (!(await page.getByTestId("mft-ajouter-modal").isVisible().catch(() => false))) await page.getByTestId("mft-ajouter-ouvrir").click();
       await page.getByTestId("mft-a-date").fill("2031-01-14");
+      await page.getByTestId("mft-a-description").fill("Formation donnée à l'équipe de nuit");
+      await page.getByTestId("mft-a-champ-vehicule").selectOption("B-07");
       await page.getByTestId("mft-a-date").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Mon pointage", nav: "nav-monpointage",
@@ -1018,7 +1085,7 @@ const SANS_FORMULAIRE_EN_LIGNE = new Set([
   "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges",
   "nav-uscomblement", "nav-usequipages", "nav-usdisponibilites", "nav-usabsences", "nav-usechanges", "nav-usagph", "nav-uspresence",
   "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-usregles",
-  "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal",
+  "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal", "nav-alparametres",
 ]);
 const NATURES_EN_LIGNE = ["requete", "en-place"];
 

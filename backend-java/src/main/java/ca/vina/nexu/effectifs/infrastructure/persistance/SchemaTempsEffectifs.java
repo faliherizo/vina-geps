@@ -27,7 +27,10 @@ public class SchemaTempsEffectifs {
             "CREATE INDEX IF NOT EXISTS idx_eff_segments_feuille ON eff_segments_temps (tenantId, feuilleId, actif)",
             "CREATE TABLE IF NOT EXISTS eff_feuille_decisions (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, feuilleId TEXT NOT NULL, palier INTEGER NOT NULL, "
                     + "decision TEXT NOT NULL, motif TEXT, decideLe TEXT NOT NULL, decidePar TEXT NOT NULL)",
-            "CREATE INDEX IF NOT EXISTS idx_eff_feuille_decisions ON eff_feuille_decisions (tenantId, feuilleId)");
+            "CREATE INDEX IF NOT EXISTS idx_eff_feuille_decisions ON eff_feuille_decisions (tenantId, feuilleId)",
+            // Les champs propres à l'organisme (changeset 0007) : la feuille s'adapte à l'emploi sans code par emploi.
+            "CREATE TABLE IF NOT EXISTS eff_temps_champs (tenantId TEXT NOT NULL, code TEXT NOT NULL, libelle TEXT NOT NULL, type TEXT NOT NULL, "
+                    + "valeurs TEXT, requis INTEGER NOT NULL DEFAULT 0, actif INTEGER NOT NULL DEFAULT 1, ordre INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (tenantId, code))");
 
     /**
      * Les colonnes ajoutées après coup (E-RF-13) — {@code CREATE TABLE IF NOT EXISTS} ne les ajoute pas à une table existante :
@@ -35,6 +38,9 @@ public class SchemaTempsEffectifs {
      * d'une source tierce porte son nom et sa confirmation.
      */
     static final List<Colonne> AJOUTS = List.of(
+            // La description des tâches et les valeurs des champs de l'organisme, par segment (changeset 0007).
+            new Colonne("eff_segments_temps", "description", "TEXT"),
+            new Colonne("eff_segments_temps", "attributs", "TEXT"),
             new Colonne("eff_temps_parametres", "toleranceCorroborationMinutes", "INTEGER NOT NULL DEFAULT 5"),
             new Colonne("eff_temps_parametres", "actionNonCorrobore", "TEXT NOT NULL DEFAULT 'SIGNALER'"),
             new Colonne("eff_temps_parametres", "actionSourcesDivergentes", "TEXT NOT NULL DEFAULT 'BLOQUER'"),

@@ -87,7 +87,9 @@ public class GestionnaireFluxApprobations {
      */
     public Flux ouvrir(Contexte ctx, ObjetFlux objet, String documentId, Map<String, Object> contexte, Demande demande) {
         List<RegleApprobation> configurees = moteur().regles(ctx.tenantId(), objet);
-        List<RegleApprobation> regles = moteur().sAppliquent(configurees, contexte) ? configurees : FluxApprobation.fluxParDefaut(demande.paliersParDefaut());
+        List<RegleApprobation> choisies = moteur().sAppliquent(configurees, contexte) ? configurees : FluxApprobation.fluxParDefaut(demande.paliersParDefaut());
+        // Le supérieur hiérarchique se résout ici, pour ce demandeur : la règle configurée vaut pour tous.
+        List<RegleApprobation> regles = FluxApprobation.resoudreSuperieur(choisies, comptes.superieurDe(ctx.tenantId(), demande.demandeurId()));
         return DemandesFlux.vue(moteur().ouvrir(ctx.tenantId(), new FluxApprobationsPort.NouvelleDemande(objet, documentId, contexte,
                 demande.demandeurId(), regles)), lecture::nomDuCompte);
     }

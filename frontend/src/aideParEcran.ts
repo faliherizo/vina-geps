@@ -26,6 +26,7 @@ export const SECTIONS_AIDE = [
   { id: "approbations", titre: "Approbations : règles, demandes, délégation" },
   { id: "effectifs-planification", titre: "Effectifs : horaires, quarts, disponibilités" },
   { id: "communication", titre: "Communication : messages, appels, listes de diffusion" },
+  { id: "alertes", titre: "Communications cliniques : alertes, réponses, suivi" },
   { id: "exploitation", titre: "Exploitation : administration, sauvegardes, journal" },
   { id: "accessibilite", titre: "Accessibilité & navigation clavier" },
   { id: "notifications", titre: "Notifications sur le téléphone (application installable)" },
@@ -61,6 +62,7 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
   usreferentiels: "effectifs-planification", usregles: "effectifs-planification", usmilieux: "effectifs-planification", usperimetres: "effectifs-planification",
   usintegrations: "effectifs-planification", usretention: "effectifs-planification", usjournal: "effectifs-planification",
   usmessages: "communication", usappels: "communication", usdiffusion: "communication",
+  alnouvelle: "alertes", alsuivi: "alertes", mesalertes: "alertes", alparametres: "alertes",
 
   // Encadrement et exploitation
   approvals: "approbations", access: "organisation",

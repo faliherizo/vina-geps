@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Communications cliniques — le socle** (ADR 0074, 14 novembre 2026).
+
+    Des réponses prédéfinies et des modèles, tenus par organisme ; des alertes dont les réponses
+    proposées sont **copiées** à l'envoi (une réponse désactivée ensuite ne change pas ce qu'une alerte a
+    proposé) ; une remise par destinataire, figée à l'envoi avec son nom (le snapshot : l'alerte dit qui
+    elle visait, même si le groupe change). Les listes se rangent en tables, jamais en JSON dans une colonne.
+  -->
+  <changeSet id="0006-alertes" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <tableExists tableName="users"/>
+      <not><tableExists tableName="alr_alertes"/></not>
+    </preConditions>
+    <comment>Réponses prédéfinies, modèles, alertes et remises.</comment>
+    <sql>
+      CREATE TABLE alr_reponses (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        libelle TEXT NOT NULL,
+        semantique TEXT NOT NULL,
+        active INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_modeles (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        titre TEXT NOT NULL,
+        corps TEXT NOT NULL,
+        priorite TEXT NOT NULL,
+        actif INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_modele_reponses (
+        tenantId TEXT NOT NULL,
+        modeleId TEXT NOT NULL,
+        rang INTEGER NOT NULL,
+        reponseId TEXT NOT NULL,
+        PRIMARY KEY (tenantId, modeleId, rang)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_alertes (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        titre TEXT NOT NULL,
+        corps TEXT NOT NULL,
+        priorite TEXT NOT NULL,
+        expediteurId TEXT NOT NULL,
+        envoyeeLe TEXT NOT NULL,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_alerte_reponses (
+        tenantId TEXT NOT NULL,
+        alerteId TEXT NOT NULL,
+        rang INTEGER NOT NULL,
+        reponseId TEXT NOT NULL,
+        libelle TEXT NOT NULL,
+        semantique TEXT NOT NULL,
+        PRIMARY KEY (tenantId, alerteId, rang)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_remises (
+        tenantId TEXT NOT NULL,
+        alerteId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        nom TEXT NOT NULL,
+        compteAvis TEXT,
+        envoyeeLe TEXT NOT NULL,
+        lueLe TEXT,
+        reponseId TEXT,
+        reponduLe TEXT,
+        PRIMARY KEY (tenantId, alerteId, personId)
+      )
+    </sql>
+    <sql>CREATE INDEX idx_alr_remises_personne ON alr_remises (tenantId, personId)</sql>
+    <sql>CREATE INDEX idx_alr_alertes_envoi ON alr_alertes (tenantId, envoyeeLe)</sql>
+  </changeSet>
+</databaseChangeLog>

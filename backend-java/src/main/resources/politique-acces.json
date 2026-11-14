@@ -253,5 +253,20 @@
       "accountant"
     ],
     "libelle": "Poser une relance, calculer une pénalité, transmettre au recouvrement"
+  },
+  "alertes.envoyer": {
+    "roles": [
+      "admin",
+      "director",
+      "manager"
+    ],
+    "libelle": "Envoyer une alerte et suivre les alertes de l'organisme",
+    "portee": "Le suivi est partagé entre expéditeurs autorisés (FX-AO-20260810, critère 12)."
+  },
+  "alertes.configure": {
+    "roles": [
+      "admin"
+    ],
+    "libelle": "Tenir les réponses prédéfinies et les modèles d'alerte"
   }
 }

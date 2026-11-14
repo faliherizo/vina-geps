@@ -17,15 +17,15 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 13 | 12 | 6 | 0 | 1 |
+| Fonctionnel | 1-32 | 17 | 10 | 4 | 0 | 1 |
 | Technique (postes, bureautique, réseau) | 33-49 | 13 | 1 | 1 | 2 | 0 |
 | Architecture et hébergement | 50-63 | 5 | 2 | 0 | 7 | 0 |
 | Sauvegarde, surveillance | 64-70 | 5 | 1 | 0 | 1 | 0 |
 | Sécurité, identité, audit | 71-93 | 12 | 4 | 1 | 6 | 0 |
 | Performance, fournisseur, soutien | 94-115 | 2 | 1 | 0 | 19 | 0 |
-| **Total** | **115** | **50** | **21** | **8** | **35** | **1** |
+| **Total** | **115** | **54** | **19** | **6** | **35** | **1** |
 
-Sur les **32 critères fonctionnels**, 13 sont acquis, 12 partiels, 6 à bâtir et 1 à clarifier.
+Sur les **32 critères fonctionnels**, 17 sont acquis, 10 partiels, 4 à bâtir et 1 à clarifier, depuis le socle du module alertes (14 novembre 2026, ADR 0074). Il était de 13 acquis, 12 partiels et 6 à bâtir.
 Les 18 critères partiels ou à bâtir forment le module « Communications cliniques » : modèles et
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
@@ -34,16 +34,16 @@ critiques.
 
 | # | Critère (résumé) | Statut | Preuve dans VINA GEPS | Écart, story |
 |---|---|---|---|---|
-| 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | 🟡 | Messagerie, avis par événement (ADR 0029) : courriel, texto, poussée ; préférences par personne | Une **console d'alerte** dédiée (priorité, modèle, ciblage, suivi) — ST-G01 |
+| 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | ✅ | **Nouvelle alerte** (ADR 0074) : priorité, modèle, groupes et personnes ; canaux selon les préférences, tous imposés si critique | — |
 | 2 | Note au dossier des destinataires | ❓ | Fiche de ressource (effectifs) | Q-DOS ; si c'est une note interne : ST-G12 |
 | 3 | Recherche de destinataire par nom et prénom | ✅ | Champ personne avec autocomplétion à 3 caractères ; membres nommés | — |
 | 4 | Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés | ✅ | Messagerie du personnel : fils à deux et de groupe, réponse privée (ADR 0072) | Réponse **par texto** au message reçu (texto entrant) — ST-G05 |
 | 5 | Envoi à une personne, à plusieurs ou à un groupe configurable | ✅ | Fil à deux, fil de groupe, listes de diffusion (personnes et groupes recalculés) | — |
-| 6 | Messages prédéfinis pour les expéditeurs | 🔴 | — | Modèles de message — ST-G02 |
+| 6 | Messages prédéfinis pour les expéditeurs | ✅ | **Modèles d'alerte** (Paramètres des alertes, `/api/alertes/modeles`, ADR 0074) | — |
 | 7 | Alertes en temps réel | 🟡 | Poussée web et native, texto, cloche ; relève toutes les quelques secondes | Diffusion d'alerte avec priorité — ST-G01 |
 | 8 | Copie courriel si configurée par l'organisme | 🟡 | Canal courriel des avis, journal des courriels | Copie d'un message d'alerte, par organisme — ST-G01 |
 | 9 | Confirmation de réception, lecture ou prise en charge, simple et automatisée | 🟡 | Accusé reçu et lu automatique (ADR 0072, décision 5) | « Prise en charge » d'un geste — ST-G03 |
-| 10 | Réponses prédéfinies, configurées par l'administration | 🔴 | Réactions fermées (4), non configurables | Réponses prédéfinies — ST-G02 |
+| 10 | Réponses prédéfinies, configurées par l'administration | ✅ | **Réponses prédéfinies** à sémantique fermée (prise en charge, refus, information), `/api/alertes/reponses` | — |
 | 11 | Statut d'envoi, réception, lecture, réponse, relance, vu par l'expéditeur | 🟡 | Acheminement « Envoyé / Reçu par N / Lu par N » | Réponse et relance — ST-G03, ST-G04 |
 | 12 | Historique et statuts partagés entre expéditeurs | 🟡 | Historique des versions d'un message ; fil partagé | Suivi d'alerte partagé entre expéditeurs autorisés — ST-G03 |
 | 13 | Confirmer la réception d'un retour d'appel | 🟡 | Appel à deux tracé (sonne, en cours, terminé, manqué) | Lier un retour d'appel à l'alerte — ST-G06 |
@@ -64,7 +64,7 @@ critiques.
 | 28 | Cloisonner les utilisateurs dans un ou plusieurs groupes | ✅ | Périmètres par unité, refus par défaut | — |
 | 29 | Coordonnées confidentielles | ✅ | Appel et texto au numéro de l'organisme : le numéro personnel n'est jamais montré (ADR 0022) | — |
 | 30 | Comptes utilisateur et administrateur, profils plus fins | ✅ | 7 rôles, rôles propres à l'organisme, capacités (E-TN-5) | — |
-| 31 | Écran de visionnement des messages envoyés et des statuts | 🟡 | Acheminement par message | Écran « Suivi des communications » — ST-G03 |
+| 31 | Écran de visionnement des messages envoyés et des statuts | ✅ | **Suivi des alertes** : lues, réponses, première prise en charge, détail par destinataire | — |
 | 32 | L'administration configure modèles, réponses, relances, groupes, cascades, droits, disponibilité | 🔴 | Droits et groupes, oui | Modèles, réponses, relances, cascades — ST-G02, ST-G04 |
 
 ## 2. Technique (33 à 49)

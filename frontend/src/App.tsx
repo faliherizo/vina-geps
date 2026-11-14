@@ -4,6 +4,10 @@ import { objet } from "./formeRecue";
 import { Icone } from "./composants";
 import Dashboard from "./Dashboard";
 import ConstructeurRapports from "./ConstructeurRapports";
+import NouvelleAlerte from "./alertes/NouvelleAlerte";
+import SuiviAlertes from "./alertes/SuiviAlertes";
+import MesAlertes from "./alertes/MesAlertes";
+import ParametresAlertes from "./alertes/ParametresAlertes";
 import ApiDocs from "./ApiDocs";
 import MaintenanceBanner from "./MaintenanceBanner";
 import { EmpruntBandeau } from "./admin/EmpruntIdentite";
@@ -40,7 +44,7 @@ import { I18nProvider, useT, LANGUAGES, Lang } from "./i18n";
  * (AO 2027-005) : elles sont déclarées par `santequebec/menu.ts` et rendues par son registre.
  * L'union tient sur une seule ligne — un garde-fou du dépôt la lit ainsi.
  */
-export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences";
+export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres";
 type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant" | "director";
 
 /**
@@ -77,6 +81,11 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // là-bas ne demande pas de modifier l'ossature de l'application.
   ...ENTREES_US.map((e) => ({ key: e.cle as Page, i18nKey: `nav.${e.cle}`, icon: e.icone, roles: e.roles as Role[] })),
   { key: "dashboard", i18nKey: "nav.dashboard", icon: "📊", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  // Communications cliniques (ADR 0074) : envoyer et suivre exigent la capacité au serveur ; recevoir est à tous.
+  { key: "alnouvelle", i18nKey: "nav.alnouvelle", icon: "🚨", roles: ["admin", "manager", "director"] },
+  { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
+  { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "alparametres", i18nKey: "nav.alparametres", icon: "⚙️", roles: ["admin"] },
   { key: "rapports", i18nKey: "nav.rapports", icon: "📑", roles: ["admin", "manager"] },
   { key: "account", i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee"] },
   { key: "help", i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
@@ -634,6 +643,10 @@ function AppShell() {
         <FrontiereErreur cle={page}>
         {page === "dashboard" && <Dashboard />}
         {page === "rapports" && <ConstructeurRapports />}
+        {page === "alnouvelle" && <NouvelleAlerte />}
+        {page === "alsuivi" && <SuiviAlertes />}
+        {page === "mesalertes" && <MesAlertes />}
+        {page === "alparametres" && <ParametresAlertes />}
         {page === "apidocs" && <ApiDocs />}
         {page === "integrations" && <Integrations />}
         {page === "notifications" && <Notifications />}

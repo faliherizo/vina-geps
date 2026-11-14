@@ -30,12 +30,14 @@ public record FeuilleDetailleeTemps(String id, String ressourceId, String uniteC
     public record SegmentDetaille(String id, String date, String debut, String fin, String typeHeureCode, Comportements.TypeHeure comportement,
                                   TempsEffectifs.Source source, String placeId, int version, String remplaceId, String motif, String creeLe, String creePar,
                                   String sourceExterne, String confirmeLe, String confirmePar, Boolean corrobore, List<String> sourcesCorroborantes,
-                                  boolean aConfirmer) implements CorroborationTemps.SegmentProuve, TempsEffectifs.SegmentDeTemps {
+                                  boolean aConfirmer, String description, java.util.Map<String, Object> attributs)
+            implements CorroborationTemps.SegmentProuve, TempsEffectifs.SegmentDeTemps {
 
         static SegmentDetaille de(TempsEffectifs.SegmentLu s, CorroborationTemps.Corroboration c) {
             return new SegmentDetaille(s.id(), s.date(), s.debut(), s.fin(), s.typeHeureCode(), s.comportement(), s.source(), s.placeId(), s.version(),
                     s.remplaceId(), s.motif(), s.creeLe(), s.creePar(), s.sourceExterne(), s.confirmeLe(), s.confirmePar(), c == null ? null : c.corrobore(),
-                    c == null ? List.of() : c.sources(), s.source() == TempsEffectifs.Source.EXTERNE && s.confirmeLe() == null);
+                    c == null ? List.of() : c.sources(), s.source() == TempsEffectifs.Source.EXTERNE && s.confirmeLe() == null, s.description(),
+                    s.attributs());
         }
     }
 

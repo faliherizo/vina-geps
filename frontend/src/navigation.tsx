@@ -96,11 +96,16 @@ export const NAVIGATION: GroupeNav[] = [
   { key: "urgencessante", label: "Menu principal", icon: "🧭", entrees: [
     { page: "dashboard" },
     ...NOTIONS_US.filter((n) => n.cle !== NOTION_PARAMETRES_US).map(entreeDuModule),
+    // Communications cliniques (ADR 0074) : la vue de l'expéditeur et celle du destinataire, sous une notion.
+    { key: "alertesnotion", i18nKey: "concept.alertesnotion", icon: "🚨", vues: [
+      { page: "alnouvelle", module: "alertes" }, { page: "alsuivi", module: "alertes" }, { page: "mesalertes", module: "alertes" },
+    ] },
     { page: "rapports" },
     { page: "approvals" },
   ] },
   { key: "admin", label: "Administration", icon: "🛠️", entrees: [
     ...NOTIONS_US.filter((n) => n.cle === NOTION_PARAMETRES_US).map(entreeDuModule),
+    { page: "alparametres", module: "alertes" },
     { page: "admin" },
     { key: "access", i18nKey: "concept.access", icon: "🔒", vues: [
       { page: "access", i18nKey: "vue.access.objets", principale: true },

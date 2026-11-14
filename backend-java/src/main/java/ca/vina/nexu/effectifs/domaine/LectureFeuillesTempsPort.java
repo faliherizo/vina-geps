@@ -13,7 +13,7 @@ public interface LectureFeuillesTempsPort {
     /** Un segment tel que la base le garde, toutes versions confondues. */
     record SegmentStocke(String id, String tenantId, String feuilleId, String placeId, String date, String debut, String fin, String typeHeureCode,
                          TempsEffectifs.Source source, int version, String remplaceId, boolean actif, String motif, String creeLe, String creePar,
-                         String sourceExterne, String confirmeLe, String confirmePar) { }
+                         String sourceExterne, String confirmeLe, String confirmePar, String description, java.util.Map<String, Object> attributs) { }
 
     record DecisionFeuille(int palier, TempsEffectifs.Decision decision, String motif, String decideLe, String decidePar) { }
 
@@ -40,4 +40,7 @@ public interface LectureFeuillesTempsPort {
 
     /** Les décisions, dans l'ordre où elles ont été prises. */
     List<DecisionFeuille> decisions(String tenantId, String feuilleId);
+
+    /** Les champs de la feuille propres à l'organisme, actifs et désactivés, dans leur ordre. */
+    List<ChampsFeuille.ChampFeuille> champs(String tenantId);
 }

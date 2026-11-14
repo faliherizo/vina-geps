@@ -113,7 +113,7 @@ public class LectureFeuillesTemps {
         Map<String, Comportements.TypeHeure> comportements = parCode(types);
         return depot.segmentsActifs(ctx.tenantId(), feuilleId).stream().map(s -> new TempsEffectifs.SegmentLu(s.id(), s.date(), s.debut(), s.fin(),
                 s.typeHeureCode(), comportementDe(comportements, s.typeHeureCode()), s.source(), s.placeId(), s.version(), s.remplaceId(), s.motif(),
-                s.creeLe(), s.creePar(), s.sourceExterne(), s.confirmeLe(), s.confirmePar())).toList();
+                s.creeLe(), s.creePar(), s.sourceExterne(), s.confirmeLe(), s.confirmePar(), s.description(), s.attributs())).toList();
     }
 
     // ── Listes ───────────────────────────────────────────────────────────────

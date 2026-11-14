@@ -83,7 +83,7 @@ class ArchitectureTest {
      * La liste ne rétrécit jamais (cliquet, ADR 0025) : un contexte y entre quand sa refonte est
      * finie, et la règle interdit dès lors à ses contrôleurs de toucher un dépôt.
      */
-    static final java.util.Set<String> CONTEXTES_CQRS = java.util.Set.of("approbations", "communication", "effectifs", "exploitation", "ordonnanceur", "organisation", "organisme", "pays", "securite", "soutien", "superadmin", "personnel", "habilitations");
+    static final java.util.Set<String> CONTEXTES_CQRS = java.util.Set.of("alertes", "approbations", "communication", "effectifs", "exploitation", "ordonnanceur", "organisation", "organisme", "pays", "securite", "soutien", "superadmin", "personnel", "habilitations");
 
     @Test
     @DisplayName("dans un contexte conforme, un contrôleur ne parle qu'aux gestionnaires de l'application")

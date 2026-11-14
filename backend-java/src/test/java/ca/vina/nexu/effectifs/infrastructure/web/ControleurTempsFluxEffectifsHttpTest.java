@@ -343,6 +343,37 @@ class ControleurTempsFluxEffectifsHttpTest {
         periodeFermee();
     }
 
+    /**
+     * <strong>Le supérieur hiérarchique</strong> (14 novembre 2026) : une règle qui ne nomme personne d'avance, résolue à la
+     * soumission depuis l'organigramme. Julie relève de « rh » : sa feuille va à rh, et au niveau GESTION personne d'autre ne
+     * la décide. Marc n'a pas de supérieur connu : sa feuille revient au niveau GESTION, jamais sans approbateur.
+     */
+    @Test
+    @DisplayName("supérieur hiérarchique : la feuille va au gestionnaire de l'organigramme ; sans lui, au niveau GESTION de l'unité")
+    void superieurHierarchique() throws Exception {
+        for (String[] e : new String[][]{{"e-rh", null}, {"e-julie", "e-rh"}, {"e-marc", null}}) {
+            jdbc.sql("INSERT INTO employees (id, firstName, lastName, tenantId, managerId) VALUES (?, 'x', 'y', ?, ?)").params(e[0], T, e[1]).update();
+            jdbc.sql("UPDATE users SET employeeId = ? WHERE id = ?").params(e[0], "usr-" + e[0].substring(2)).update();
+        }
+        String superieur = "{\"type\":\"SUPERIEUR\"}";
+        String r = corps(poser(regleFlux("FEUILLE", 1, "toujours", "eq", "1", superieur), ADMIN).andExpect(status().isCreated()));
+        assertThat(r).contains("\"approbateur\":{\"type\":\"SUPERIEUR\",\"valeur\":\"direct\"}");
+        http.get(TP + "/flux", compte("chef")).andExpect(jsonPath("$.regles[0].approbateur.type").value("SUPERIEUR"));
+        http.post(TP + "/feuilles/preparer", ADMIN, "{\"uniteCode\":\"EST\",\"debut\":\"2031-03-10\",\"fin\":\"2031-03-16\"}").andExpect(status().isCreated());
+        List<Map<String, Object>> liste = JsonPath.read(corps(http.get(TP + "/feuilles?debut=2031-03-10", ADMIN)), "$");
+        liste.forEach(f -> ids.put("f_" + f.get("matricule"), (String) f.get("id")));
+
+        http.post(TP + "/feuilles/" + ids.get("f_P2") + "/soumettre", compte("marc"), null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.flux.etapes[*].libelle", Matchers.contains("le niveau GESTION de l'unité")));
+        // La feuille d'une ressource dont le compte relève de rh par l'organigramme : rh la porte nommément, le niveau GESTION non.
+        jdbc.sql("UPDATE users SET employeeId = 'e-julie' WHERE id = 'usr-chef2'").update();
+        jdbc.sql("UPDATE eff_ressources SET utilisateurId = 'usr-chef2' WHERE id = ?").param(ids.get("P4")).update();
+        http.post(TP + "/feuilles/" + ids.get("f_P4") + "/soumettre", compte("chef2"), null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.flux.etapes[*].libelle", Matchers.contains("rh (personne désignée)")));
+        http.post(decider("P4", "approuver"), compte("chef"), null).andExpect(status().isForbidden());
+        http.post(decider("P4", "approuver"), compte("rh"), null).andExpect(status().isOk()).andExpect(jsonPath("$.statut").value("APPROUVEE"));
+    }
+
     /** Sans pointage, une source tierce propose le temps, à confirmer ; deux sources se corrèlent entre elles (E-RF-13). */
     private void sourcesTierces() throws Exception {
         http.post(TP + "/feuilles/preparer", ADMIN, "{\"uniteCode\":\"EST\",\"debut\":\"2031-03-10\",\"fin\":\"2031-03-16\"}").andExpect(status().isCreated())

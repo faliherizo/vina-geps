@@ -36,6 +36,14 @@ public interface EcritureFeuillesTempsPort {
 
     void insererSegment(Contexte ctx, String feuilleId, NouveauSegment s, Filiation f);
 
+    /** Ce qu'un segment dit de son travail : la description des tâches et les valeurs des champs de l'organisme. */
+    record Complement(String description, java.util.Map<String, Object> attributs) { }
+
+    void poserComplement(String tenantId, String segmentId, Complement complement);
+
+    /** Un champ de la feuille, créé ou remplacé (désactiver = le réécrire inactif). */
+    void enregistrerChamp(String tenantId, ChampsFeuille.ChampFeuille champ);
+
     void desactiverSegment(String tenantId, String id);
 
     /** Confirme un temps tiré d'un horodatage externe, au nom et à l'heure du contexte ; rien d'autre ne change. */

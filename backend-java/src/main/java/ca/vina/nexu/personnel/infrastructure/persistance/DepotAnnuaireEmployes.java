@@ -1,6 +1,7 @@
 package ca.vina.nexu.personnel.infrastructure.persistance;
 
 import ca.vina.nexu.personnel.domaine.AnnuaireEmployes;
+import ca.vina.nexu.personnel.domaine.Hierarchie;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
@@ -9,9 +10,9 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/** L'annuaire lu dans {@code employees} : quatre colonnes, l'établissement toujours en filtre. */
+/** L'annuaire lu dans {@code employees} : quatre colonnes, l'établissement toujours en filtre ; le supérieur s'y écrit. */
 @Repository
-public class DepotAnnuaireEmployes implements AnnuaireEmployes {
+public class DepotAnnuaireEmployes implements AnnuaireEmployes, Hierarchie.Ecriture {
 
     private static final String COLONNES = "SELECT id, firstName, lastName, managerId FROM employees WHERE tenantId = ?";
 
@@ -33,5 +34,10 @@ public class DepotAnnuaireEmployes implements AnnuaireEmployes {
     @Override
     public List<Fiche> tous(String tenantId) {
         return jdbc.sql(COLONNES + " ORDER BY lastName, firstName").param(tenantId).query(DepotAnnuaireEmployes::fiche).list();
+    }
+
+    @Override
+    public void designerSuperieur(String tenantId, String id, String superieurId) {
+        jdbc.sql("UPDATE employees SET managerId = ? WHERE tenantId = ? AND id = ?").params(superieurId, tenantId, id).update();
     }
 }

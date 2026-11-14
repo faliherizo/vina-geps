@@ -31,6 +31,7 @@ public final class CatalogueModules {
             new Famille("coeur", "Cœur du produit"),
             // Le nom du client et celui de l'avis sont ce qu'un superadmin tape dans le filtre.
             new Famille("effectifs", "Santé — Urgences-santé (AO 26-015-DO)"),
+            new Famille("communications", "Santé — communications cliniques (AO FX-AO-20260810)"),
             new Famille("infrastructure", "Infrastructure et options"));
 
     private static Definition m(String code, String label, String famille, String debloque) {
@@ -57,6 +58,7 @@ public final class CatalogueModules {
             m("effectifs_temps", "Urgences-santé — feuilles de temps", "effectifs", "effectifs_presence", "Menu Mon espace › Ma feuille de temps et Urgences-santé › Feuilles de temps (console) : feuille générée depuis l'horaire publié et les pointages, segments typés et versionnés, écart planifié / déclaré, anomalies par règles en temps réel, heures supplémentaires par seuils (jour, semaine), approbation à paliers, verrouillage, lot de paie codé et signé, relevés regroupés (routes /api/effectifs/temps)"),
             m("effectifs_communication", "Urgences-santé — communication du personnel", "effectifs", "effectifs", "Menu Urgences-santé › Communication (Messagerie du personnel, Appeler un collègue, Listes de distribution) : messagerie sécurisée — fil de conversation, réponse privée, pièces jointes, appels, diffusions (routes /api/communication)"),
             m("effectifs_integrations", "Urgences-santé — intégrations", "effectifs", "effectifs_temps", "Menu Urgences-santé › Administration des effectifs › Intégrations : connecteurs RAO, SAAV, PFT, BD Corpo, Microsoft Graph, bus (ESB) et entrepôt de données, chacun en simulateur ou en HTTP (https, jeton par variable d'environnement), boîte d'envoi transactionnelle retentée et rejouable, relais du journal vers le bus et l'entrepôt (routes /api/effectifs/integrations)"),
+            m("alertes", "Communications cliniques — alertes (socle)", "communications", "Menu Alertes (Nouvelle alerte, Suivi, Mes alertes) et Administration › Paramètres des alertes : alertes priorisées à des personnes ou des groupes, réponses prédéfinies, modèles, suivi partagé des lectures et des prises en charge (routes /api/alertes, ADR 0074)"),
             m("byok", "Clé de chiffrement du client (BYOK)", "infrastructure", "Option d'hébergement — aucun écran ; se règle au déploiement"),
             m("dedicated", "Infrastructure dédiée", "infrastructure", "Option d'hébergement — aucun écran ; se règle au déploiement"));
 

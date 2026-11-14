@@ -3,6 +3,7 @@ package ca.vina.nexu.effectifs.infrastructure.persistance;
 import ca.vina.nexu.effectifs.domaine.ActionCorroboration;
 import ca.vina.nexu.effectifs.domaine.Contexte;
 import ca.vina.nexu.effectifs.domaine.CorroborationTemps;
+import ca.vina.nexu.effectifs.domaine.ChampsFeuille;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.FeuilleTemps;
 import ca.vina.nexu.effectifs.domaine.LectureFeuillesTempsPort;
@@ -57,7 +58,42 @@ public class DepotFeuillesTemps implements LectureFeuillesTempsPort, EcritureFeu
         return new SegmentStocke(rs.getString("id"), rs.getString("tenantId"), rs.getString("feuilleId"), rs.getString("placeId"), rs.getString("date"),
                 rs.getString("debut"), rs.getString("fin"), rs.getString("typeHeureCode"), TempsEffectifs.Source.valueOf(rs.getString("source")),
                 rs.getInt("version"), rs.getString("remplaceId"), rs.getInt("actif") == ACTIF, rs.getString("motif"), rs.getString("creeLe"),
-                rs.getString("creePar"), rs.getString("sourceExterne"), rs.getString("confirmeLe"), rs.getString("confirmePar"));
+                rs.getString("creePar"), rs.getString("sourceExterne"), rs.getString("confirmeLe"), rs.getString("confirmePar"),
+                rs.getString("description"), attributs(rs.getString("attributs")));
+    }
+
+    // ── Description des tâches, champs de l'organisme (ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md) ──
+
+    private static final TypeReference<java.util.LinkedHashMap<String, Object>> CARTE = new TypeReference<>() { };
+    private static final TypeReference<List<String>> TEXTES = new TypeReference<>() { };
+
+    /** Les valeurs des champs, rangées en JSON : une liste de champs que l'organisme définit ne se range pas en colonnes. */
+    private static java.util.Map<String, Object> attributs(String json) {
+        return json == null || json.isBlank() ? java.util.Map.of() : JSON.readValue(json, CARTE);
+    }
+
+    @Override
+    public void poserComplement(String tenantId, String segmentId, Complement c) {
+        jdbc.sql("UPDATE eff_segments_temps SET description = ?, attributs = ? WHERE tenantId = ? AND id = ?")
+                .params(c.description(), c.attributs().isEmpty() ? null : JSON.writeValueAsString(c.attributs()), tenantId, segmentId).update();
+    }
+
+    @Override
+    public List<ChampsFeuille.ChampFeuille> champs(String tenantId) {
+        return jdbc.sql("SELECT code, libelle, type, valeurs, requis, actif, ordre FROM eff_temps_champs WHERE tenantId = ? ORDER BY ordre, code").param(tenantId)
+                .query((rs, i) -> new ChampsFeuille.ChampFeuille(rs.getString("code"), rs.getString("libelle"),
+                        ChampsFeuille.TypeChamp.de(rs.getString("type")).orElseThrow(() -> new IllegalStateException("type de champ inconnu en base")),
+                        rs.getString("valeurs") == null ? List.of() : JSON.readValue(rs.getString("valeurs"), TEXTES),
+                        rs.getInt("requis") == 1, rs.getInt("actif") == 1, rs.getInt("ordre"))).list();
+    }
+
+    @Override
+    public void enregistrerChamp(String tenantId, ChampsFeuille.ChampFeuille c) {
+        jdbc.sql("INSERT INTO eff_temps_champs (tenantId, code, libelle, type, valeurs, requis, actif, ordre) VALUES (?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "ON CONFLICT (tenantId, code) DO UPDATE SET libelle = excluded.libelle, type = excluded.type, valeurs = excluded.valeurs, "
+                        + "requis = excluded.requis, actif = excluded.actif, ordre = excluded.ordre")
+                .params(tenantId, c.code(), c.libelle(), c.type().code(), c.valeurs().isEmpty() ? null : JSON.writeValueAsString(c.valeurs()),
+                        c.requis() ? 1 : 0, c.actif() ? 1 : 0, c.ordre()).update();
     }
 
     @Override

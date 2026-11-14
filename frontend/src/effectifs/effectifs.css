@@ -6,6 +6,8 @@
 .eff-barre select, .eff-barre input { max-width: 100%; }
 .eff-case { display: flex; align-items: center; gap: 8px; min-height: 24px; }
 .eff-case input[type="checkbox"] { width: 24px; height: 24px; margin: 0; flex: none; }
+/* Une aide sous un champ, sur sa propre ligne : jamais collée au contrôle qu’elle décrit. */
+.eff-aide { display: block; margin-top: 4px; }
 .eff-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .eff-actions button { min-height: 24px; }
 /* P-TN-8 : choisir le format puis exporter ; le message d'échec passe sous la rangée, jamais par-dessus. */

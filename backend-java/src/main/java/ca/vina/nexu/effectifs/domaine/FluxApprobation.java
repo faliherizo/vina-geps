@@ -19,6 +19,14 @@ import java.util.stream.IntStream;
 public final class FluxApprobation {
 
     public static final String PREFIXE_PERIMETRE = "perimetre:";
+    /**
+     * <strong>Le supérieur hiérarchique de qui soumet</strong> : la règle configurée ne peut pas nommer une personne
+     * d'avance, puisqu'elle vaut pour tous. Elle range ce marqueur, et le flux le remplace, à la soumission, par la
+     * personne que l'organigramme désigne ({@link #resoudreSuperieur}).
+     */
+    public static final String MARQUEUR_SUPERIEUR = "superieur:hierarchique";
+    /** La valeur affichée d'un approbateur « supérieur hiérarchique » : il n'a pas d'autre paramètre. */
+    public static final String SUPERIEUR_DIRECT = "direct";
     public static final int PALIER_MAX = 10;
     /** Le champ d'un palier inconditionnel : « toujours = 1 », le moteur générique exigeant une condition par règle. */
     public static final String TOUJOURS = "toujours";
@@ -77,7 +85,7 @@ public final class FluxApprobation {
         }
     }
 
-    public enum TypeApprobateur { PERIMETRE, ROLE, PERSONNE }
+    public enum TypeApprobateur { PERIMETRE, ROLE, PERSONNE, SUPERIEUR }
 
     /** Les opérateurs du moteur générique, tels quels : le flux se juge là-bas. */
     public enum OperateurFlux {
@@ -179,6 +187,7 @@ public final class FluxApprobation {
                 }
                 yield new Approbateur(type, valeur);
             }
+            case SUPERIEUR -> new Approbateur(type, SUPERIEUR_DIRECT);
         };
     }
 
@@ -201,6 +210,7 @@ public final class FluxApprobation {
             case PERIMETRE -> PREFIXE_PERIMETRE + a.valeur();
             case ROLE -> a.valeur();
             case PERSONNE -> null;
+            case SUPERIEUR -> MARQUEUR_SUPERIEUR;
         };
         return new RegleApprobation(r.id(), r.champ(), r.operateur(), texte(r.valeur()), r.palier(), role, a.type() == TypeApprobateur.PERSONNE ? a.valeur() : null);
     }
@@ -211,6 +221,9 @@ public final class FluxApprobation {
             return new Approbateur(TypeApprobateur.PERSONNE, approverId);
         }
         String role = approverRole == null ? "" : approverRole;
+        if (MARQUEUR_SUPERIEUR.equals(role)) {
+            return new Approbateur(TypeApprobateur.SUPERIEUR, SUPERIEUR_DIRECT);
+        }
         return role.startsWith(PREFIXE_PERIMETRE) ? new Approbateur(TypeApprobateur.PERIMETRE, role.substring(PREFIXE_PERIMETRE.length()))
                 : new Approbateur(TypeApprobateur.ROLE, role);
     }
@@ -224,6 +237,18 @@ public final class FluxApprobation {
     private static Number nombreDuTexte(String v) {
         double n = TempsEffectifs.nombre(v);
         return Double.isNaN(n) ? null : nombre(n);
+    }
+
+    /**
+     * Les règles d'un flux à ouvrir, avec le supérieur hiérarchique <strong>résolu</strong> : une règle « supérieur »
+     * désigne la personne que l'organigramme nomme. Sans supérieur connu (organigramme incomplet, compte sans dossier),
+     * le palier revient au niveau GESTION de l'unité — un document ne reste jamais sans personne pour l'approuver.
+     */
+    public static List<RegleApprobation> resoudreSuperieur(List<RegleApprobation> regles, Optional<String> superieur) {
+        return regles.stream().map(r -> !MARQUEUR_SUPERIEUR.equals(r.approverRole()) ? r
+                : superieur.map(id -> new RegleApprobation(r.id(), r.field(), r.operator(), r.value(), r.level(), null, id))
+                        .orElseGet(() -> new RegleApprobation(r.id(), r.field(), r.operator(), r.value(), r.level(),
+                                PREFIXE_PERIMETRE + Perimetres.Niveau.GESTION.name(), null))).toList();
     }
 
     /** Le flux d'avant la configuration : N paliers au niveau GESTION de l'unité, toujours. */

@@ -201,6 +201,19 @@ export default function Help({ section }: { section?: string | null }) {
           <p className="muted">Une <strong>indisponibilité</strong> (« je ne peux pas travailler ce soir-là ») n'est pas une <strong>absence</strong> (« je manque un temps de travail prévu ») : la première se déclare ici, la seconde dans Absences.</p>
         </section>
       )}
+{visible("alertes") && (
+        <section id="alertes" className="card" aria-labelledby="alertes-h">
+          <h2 id="alertes-h">Communications cliniques : alertes, réponses, suivi</h2>
+          <p>Une <strong>alerte</strong> joint vite les bonnes personnes et dit qui prend en charge. Elle a une priorité (information, urgente, critique), des destinataires figés à l'envoi, et des réponses que chacun donne d'un geste.</p>
+          <ol>
+            <li><strong>Paramètres des alertes</strong> (administration) — les réponses prédéfinies (« J'arrive » : prise en charge ; « Indisponible » : refus) et les modèles d'alerte. Rien ne s'efface : on désactive.</li>
+            <li><strong>Nouvelle alerte</strong> — un modèle au besoin, le titre, le message, la priorité, les groupes ou les personnes, les réponses proposées. Une alerte critique part sur tous les canaux, quelles que soient les préférences.</li>
+            <li><strong>Mes alertes</strong> — chacun lit les alertes qui le visent et répond d'un bouton, une fois.</li>
+            <li><strong>Suivi des alertes</strong> — partagé entre expéditeurs : qui a lu, qui a répondu, qui a pris en charge et quand.</li>
+          </ol>
+          <p className="muted">Les relances, les cascades et l'appel automatique viendront dans une phase suivante (ADR 0074).</p>
+        </section>
+      )}
 {visible("communication") && (
         <section id="communication" className="card" aria-labelledby="communication-h">
           <h2 id="communication-h">Communication : messages, appels, listes de diffusion</h2>

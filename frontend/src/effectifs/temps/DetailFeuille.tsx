@@ -5,12 +5,18 @@
  * (E-RF-13) et circuit d'approbation de la dernière soumission (E-GP-6).
  */
 import { Message } from "../../composants";
-import { duree, heureDe, LIBELLE_ETAPE, origineEnMots, preuveEnMots, type FeuilleDetaillee } from "./types";
+import { valeurDe } from "./ChampsFeuille";
+import { duree, enAttenteDe, heureDe, LIBELLE_ETAPE, origineEnMots, preuveEnMots, type ChampFeuille, type FeuilleDetaillee } from "./types";
 
 /** `avecSegments` : l'encadrement, qui n'a pas la liste des segments de l'employé, les lit ici avec leur preuve. */
-export default function DetailFeuille({ f, prefixe, avecSegments = false }: { f: FeuilleDetaillee; prefixe: string; avecSegments?: boolean }) {
+export default function DetailFeuille({ f, prefixe, avecSegments = false, champs = [] }: {
+  f: FeuilleDetaillee; prefixe: string; avecSegments?: boolean; champs?: ChampFeuille[];
+}) {
+  const attente = enAttenteDe(f);
   return (
     <>
+      {/* Qui doit agir : la personne qui soumet sait chez qui est sa feuille ; l'encadrement, si c'est à lui. */}
+      {attente && <p role="status" data-testid={`${prefixe}-attente`}>En attente de : <strong>{attente}</strong></p>}
       {f.anomalies.length > 0
         ? (
           <Message variante="avertissement" titre={`${f.anomalies.length} anomalie${f.anomalies.length > 1 ? "s" : ""}`} testId={`${prefixe}-anomalies`}>
@@ -36,10 +42,20 @@ export default function DetailFeuille({ f, prefixe, avecSegments = false }: { f:
       {avecSegments && f.segments.length > 0 && (
         <table className="eff-table-compacte" data-testid={`${prefixe}-segments`}>
           <caption>Temps et preuves</caption>
-          <thead><tr><th scope="col">Jour</th><th scope="col">Heures</th><th scope="col">Origine</th><th scope="col">Preuve tierce</th></tr></thead>
+          <thead>
+            <tr>
+              <th scope="col">Jour</th><th scope="col">Ressource</th><th scope="col">Heures</th><th scope="col">Tâches</th>
+              {champs.map((c) => <th key={c.code} scope="col">{c.libelle}</th>)}
+              <th scope="col">Origine</th><th scope="col">Preuve tierce</th>
+            </tr>
+          </thead>
           <tbody>
             {f.segments.map((s) => (
-              <tr key={s.id}><th scope="row">{s.date}</th><td>{heureDe(s.debut)}–{heureDe(s.fin)}</td><td>{origineEnMots(s)}</td><td>{preuveEnMots(s)}</td></tr>
+              <tr key={s.id}>
+                <th scope="row">{s.date}</th><td>{f.nom} ({f.matricule})</td><td>{heureDe(s.debut)}–{heureDe(s.fin)}</td><td>{s.description || "—"}</td>
+                {champs.map((c) => <td key={c.code}>{valeurDe(s, c)}</td>)}
+                <td>{origineEnMots(s)}</td><td>{preuveEnMots(s)}</td>
+              </tr>
             ))}
           </tbody>
         </table>

@@ -85,6 +85,13 @@ Aucun élément interactif ne doit être **recouvert** par un autre, aucun débo
 jusqu'à 320 px de large (1.4.10), et les corps de texte suivent l'échelle fluide de
 `frontend/src/styles.css` — pas de taille en dur qui casserait le zoom à 200 %.
 
+**Aucun bouton collé à un autre élément.** Deux commandes voisines (bouton, lien-bouton, champ,
+liste) gardent au moins **8 px** entre elles, horizontalement comme verticalement : collées, elles se
+lisent comme une seule et un doigt touche l'une pour l'autre. Dans une barre, un `gap` ; dans le flux
+du texte, la règle commune de `styles.css` (« Rien de collé ») ; après un tableau défilable, une marge.
+L'audit géométrique le mesure (`audit-wcag22`, relevé « collé à », écart < 4 px) dans `<main>` et dans
+le dialogue ouvert — un nouvel écran s'y ajoute avec ses états.
+
 ## Le produit — Urgences-santé, Java seul
 
 Ce dépôt est **Urgences-santé** (AO 26-015-DO, Corporation d'urgences-santé), séparé de Nexu VINA

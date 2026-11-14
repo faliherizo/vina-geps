@@ -76,7 +76,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     expect(section).toBeDefined();
     expect(section!.entrees.filter(estConcept).map((c) => c.key)).toEqual([
       "usdisponibilitesnotion", "usabsencesnotion", "usagphnotion", "usquarts",
-      "uspointagenotion", "ustempsnotion", "usechangesnotion", "uscommunication",
+      "uspointagenotion", "ustempsnotion", "usechangesnotion", "uscommunication", "alertesnotion",
     ]);
     // Le tableau de bord en tête, puis « Mon horaire » ; les rapports et les approbations en fin
     // de colonne — des **vues directes** : une notion d'un seul élément n'est pas une structure.
@@ -89,7 +89,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
 
     // Chaque écran du module porte le **socle** : sans lui, tous disparaissent, le tableau de bord reste.
     const ecransDuModule = NAVIGATION.flatMap((g) => g.entrees).flatMap((e) => (estConcept(e) ? e.vues : [e]))
-      .filter((v) => v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page));
+      .filter((v) => v.module !== "alertes" && (v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page)));
     expect(ecransDuModule).toHaveLength(29);
     expect(ecransDuModule.filter((v) => v.module !== "effectifs").map((v) => v.page)).toEqual([]);
     expect((section!.entrees[0] as Vue).module).toBeUndefined();

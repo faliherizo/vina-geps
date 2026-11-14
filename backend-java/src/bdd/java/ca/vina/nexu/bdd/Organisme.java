@@ -22,7 +22,7 @@ final class Organisme {
     private static final List<String> COMMUNS = List.of("superadmin", "anonyme");
     private static final List<String> MODULES = List.of("effectifs", "effectifs_planification", "effectifs_regles", "effectifs_agph",
             "effectifs_absences", "effectifs_echanges", "effectifs_disponibilites", "effectifs_presence", "effectifs_temps",
-            "effectifs_integrations", "effectifs_communication", "approvals", "notifications", "integrations", "confidentialite");
+            "effectifs_integrations", "effectifs_communication", "alertes", "approvals", "notifications", "integrations", "confidentialite");
 
     /** Le rôle de chaque acteur que les scénarios nomment, en plus de l'administration. */
     static final Map<String, String> ROLES = Map.of("julie", "employee", "marc", "employee", "chef", "manager", "directeur", "director");

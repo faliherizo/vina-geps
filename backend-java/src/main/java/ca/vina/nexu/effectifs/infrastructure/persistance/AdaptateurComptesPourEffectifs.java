@@ -22,6 +22,14 @@ public class AdaptateurComptesPourEffectifs implements ComptesPort {
     }
 
     @Override
+    public Optional<String> superieurDe(String tenantId, String utilisateurId) {
+        return jdbc.sql("SELECT m.id FROM users u JOIN employees e ON e.id = u.employeeId AND e.tenantId = u.tenantId "
+                        + "JOIN users m ON m.employeeId = e.managerId AND m.tenantId = u.tenantId AND m.active = 1 "
+                        + "WHERE u.tenantId = ? AND u.id = ? AND e.managerId IS NOT NULL LIMIT 1")
+                .params(tenantId, utilisateurId).query(String.class).optional();
+    }
+
+    @Override
     public Optional<String> nomDe(String utilisateurId) {
         return jdbc.sql("SELECT COALESCE(loginName, username) FROM users WHERE id = ?").param(utilisateurId).query(String.class).optional();
     }

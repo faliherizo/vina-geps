@@ -7,7 +7,7 @@
 
 ## ADR 0074 (proposé) : les communications cliniques sont un contexte de VINA GEPS, activable par organisme
 
-- **Statut** : proposé. Ne pas implanter avant l'acceptation et les réponses Q-TEL, Q-ALC et Q-DOS.
+- **Statut** : **accepté pour le socle (R1)** le 14 novembre 2026 — voir `docs/adr/0074-communications-cliniques-contexte-alertes.md`. Les phases R2 et suivantes attendent les réponses Q-TEL, Q-ALC et Q-DOS.
 - **Date** : 14 novembre 2026.
 
 ### Contexte

@@ -4,9 +4,11 @@ import ca.vina.nexu.personnel.application.requetes.LecturePersonnes;
 import ca.vina.nexu.personnel.domaine.RepertoirePersonnes;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
 import ca.vina.nexu.partage.personnel.FichesPersonnelPort;
+import ca.vina.nexu.personnel.application.commandes.GestionnaireHierarchie;
 import ca.vina.nexu.personnel.application.commandes.GestionnairePersonnes;
 import ca.vina.nexu.personnel.application.commandes.InscriptionDepuisEffectifs;
 import ca.vina.nexu.personnel.domaine.ComptesPersonnelPort;
+import ca.vina.nexu.personnel.infrastructure.persistance.DepotAnnuaireEmployes;
 import ca.vina.nexu.personnel.infrastructure.persistance.DepotRepertoirePersonnes;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,5 +33,10 @@ public class ConfigurationPersonnel {
     @Bean
     public LecturePersonnes lecturePersonnes(RepertoirePersonnes repertoire) {
         return new LecturePersonnes(repertoire);
+    }
+
+    @Bean
+    public GestionnaireHierarchie gestionnaireHierarchie(DepotAnnuaireEmployes annuaire) {
+        return new GestionnaireHierarchie(annuaire, annuaire);
     }
 }

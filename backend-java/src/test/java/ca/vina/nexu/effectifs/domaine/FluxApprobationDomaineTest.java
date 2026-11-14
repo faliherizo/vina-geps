@@ -76,7 +76,7 @@ class FluxApprobationDomaineTest {
     @Test
     @DisplayName("valide l'approbateur selon son type")
     void approbateurs() {
-        assertThatThrownBy(() -> FluxApprobation.regleDeFlux(base("approbateur", null))).hasMessage("« approbateur.type » : PERIMETRE, ROLE, PERSONNE");
+        assertThatThrownBy(() -> FluxApprobation.regleDeFlux(base("approbateur", null))).hasMessage("« approbateur.type » : PERIMETRE, ROLE, PERSONNE, SUPERIEUR");
         assertThatThrownBy(() -> FluxApprobation.regleDeFlux(base("approbateur", approbateur("PERIMETRE", "TOUT"))))
                 .hasMessage("« approbateur.valeur » : LECTURE, PLANIFICATION, GESTION");
         assertThatThrownBy(() -> FluxApprobation.regleDeFlux(base("approbateur", approbateur("ROLE", "Directeur Général")))).hasMessageContaining("le code d'un rôle");
@@ -210,6 +210,32 @@ class FluxApprobationDomaineTest {
                 new Regles.Motif("r3", 1, "c", ActionRegle.REFUSER, "jamais"));
         assertThat(ModificationHeures.messageDeRefus(motifs)).isEqualTo("modification des heures refusée : non ; jamais");
         assertThat(OperationModification.valueOf("SAISIE_A_POSTERIORI")).isEqualTo(OperationModification.SAISIE_A_POSTERIORI);
+    }
+
+
+    @Test
+    @DisplayName("le supérieur hiérarchique : marqueur dans le moteur, résolu à l'ouverture, repli sur GESTION sans organigramme")
+    void superieurHierarchique() {
+        RegleFlux r = FluxApprobation.regleDeFlux(base("approbateur", Map.of("type", "SUPERIEUR")));
+        assertThat(r.approbateur()).isEqualTo(new Approbateur(TypeApprobateur.SUPERIEUR, FluxApprobation.SUPERIEUR_DIRECT));
+        RegleApprobation brute = FluxApprobation.versRegleApprobation(r);
+        assertThat(List.of(String.valueOf(brute.approverRole()), String.valueOf(brute.approverId())))
+                .containsExactly(FluxApprobation.MARQUEUR_SUPERIEUR, "null");
+        assertThat(FluxApprobation.approbateurDe(brute.approverRole(), null)).isEqualTo(r.approbateur());
+        assertThat(FluxApprobation.depuisRegleApprobation(ObjetFlux.FEUILLE, brute).approbateur().type()).isEqualTo(TypeApprobateur.SUPERIEUR);
+
+        RegleApprobation autre = FluxApprobation.fluxParDefaut(1).getFirst();
+        List<RegleApprobation> resolues = FluxApprobation.resoudreSuperieur(List.of(brute, autre), java.util.Optional.of("usr-rh"));
+        assertThat(resolues.get(0).approverId()).isEqualTo("usr-rh");
+        assertThat(resolues.get(0).approverRole()).isNull();
+        assertThat(resolues.get(1)).isSameAs(autre);
+        RegleApprobation repli = FluxApprobation.resoudreSuperieur(List.of(brute), java.util.Optional.empty()).getFirst();
+        assertThat(List.of(String.valueOf(repli.approverRole()), String.valueOf(repli.approverId())))
+                .containsExactly(FluxApprobation.PREFIXE_PERIMETRE + "GESTION", "null");
+
+        assertThat(DemandesFlux.libelle(r.approbateur(), id -> id)).isEqualTo("le supérieur hiérarchique de la personne");
+        assertThat(DemandesFlux.porte(r.approbateur(), new DemandesFlux.Acteur("usr-rh", "manager", false, n -> true))).isFalse();
+        assertThat(DemandesFlux.porte(r.approbateur(), new DemandesFlux.Acteur("usr-admin", "admin", true, n -> false))).isTrue();
     }
 
     private static ModificationHeures.Modification avec(ModificationHeures.Modification m, String maintenant) {
