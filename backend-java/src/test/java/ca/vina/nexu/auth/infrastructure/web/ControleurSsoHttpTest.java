@@ -8,6 +8,7 @@ import ca.vina.nexu.auth.infrastructure.services.ServiceSso;
 
 import ca.vina.nexu.ClientHttpEssai;
 import ca.vina.nexu.SchemaEssai;
+import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.domaine.Oidc;
 import ca.vina.nexu.auth.domaine.Saml;
 import ca.vina.nexu.demonstration.domaine.DonneesDemo;
@@ -220,6 +221,20 @@ class ControleurSsoHttpTest {
         String url4 = http.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location");
         http.get("/api/auth/sso/entra/callback?code=mock." + Primitives.base64Url("{\"name\":\"x\"}".getBytes(StandardCharsets.UTF_8)) + "&state=" + parametres(url4).get("state"), null)
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("SSO claims missing email"));
+    }
+
+    @Test
+    @DisplayName("la découverte OIDC (annuaire générique, ADR 0075) : les adresses publiées ; un document incomplet ou illisible est refusé")
+    void decouverte() {
+        EchangeurOidcHttp echangeur = new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(5), HORLOGE);
+        Annuaires.Decouverte.Points p = echangeur.points(tiers.url() + "/mock/entra/" + DonneesDemo.ENTRA_TENANT + "/v2.0");
+        assertThat(p.autorisation()).startsWith(tiers.url()).endsWith("/oauth2/v2.0/authorize");
+        assertThat(p.jeton()).startsWith(tiers.url()).endsWith("/oauth2/v2.0/token");
+        assertThat(tiers.derniere().chemin()).endsWith("/v2.0/.well-known/openid-configuration");
+        tiers.repondre = r -> new FournisseurFactice.Reponse(200, "{\"issuer\":\"x\",\"authorization_endpoint\":\"a\"}");
+        assertThatThrownBy(() -> echangeur.points(tiers.url())).hasMessage("document de découverte sans authorization_endpoint ni token_endpoint");
+        tiers.repondre = r -> new FournisseurFactice.Reponse(200, "<html>introuvable</html>");
+        assertThatThrownBy(() -> echangeur.points(tiers.url())).isInstanceOf(IllegalStateException.class).hasMessage("document de découverte illisible");
     }
 
     @Test

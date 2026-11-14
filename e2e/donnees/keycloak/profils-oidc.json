@@ -1,0 +1,227 @@
+{
+  "description": "Profils de l'essai OIDC contre Keycloak (realm-vina-geps.json). Chaque profil dit ce que la connexion doit produire : rôle de l'application, menus visibles et absents, droit d'administrer les annuaires — ou le refus et son motif.",
+  "motDePasse": "Passe!Kc2026",
+  "annuaire": {
+    "nom": "Keycloak Urgences-santé",
+    "fournisseur": "oidc",
+    "emetteurChemin": "/realms/vina-geps",
+    "clientId": "vina-geps",
+    "variableSecret": "ANNUAIRE_KEYCLOAK",
+    "domaines": [
+      "urgences-sante.qc.ca"
+    ],
+    "revendication": "roles",
+    "correspondances": [
+      {
+        "groupe": "vina-admin",
+        "role": "admin"
+      },
+      {
+        "groupe": "vina-directeur",
+        "role": "director"
+      },
+      {
+        "groupe": "vina-rh",
+        "role": "rh"
+      },
+      {
+        "groupe": "vina-chef",
+        "role": "manager"
+      },
+      {
+        "groupe": "vina-employe",
+        "role": "employee"
+      }
+    ],
+    "roleParDefaut": null
+  },
+  "profils": [
+    {
+      "cle": "admin",
+      "identifiant": "diane.admin",
+      "courriel": "diane.admin@urgences-sante.qc.ca",
+      "groupes": [
+        "Administration TI"
+      ],
+      "hierarchie": "vina-admin ⊃ vina-directeur ⊃ vina-chef ⊃ vina-employe : la première règle (admin) l'emporte",
+      "attendu": {
+        "issue": "admis",
+        "role": "admin",
+        "menusVisibles": [
+          "nav-admin",
+          "nav-ustemps",
+          "nav-matemps"
+        ],
+        "menusAbsents": [
+          "nav-superadmin"
+        ],
+        "administreAnnuaires": true
+      }
+    },
+    {
+      "cle": "directeur",
+      "identifiant": "robert.directeur",
+      "courriel": "robert.directeur@urgences-sante.qc.ca",
+      "groupes": [
+        "Direction"
+      ],
+      "hierarchie": "vina-directeur ⊃ vina-chef ⊃ vina-employe",
+      "attendu": {
+        "issue": "admis",
+        "role": "director",
+        "menusVisibles": [
+          "nav-approvals",
+          "nav-ustemps",
+          "nav-matemps"
+        ],
+        "menusAbsents": [
+          "nav-admin",
+          "nav-notifications"
+        ],
+        "administreAnnuaires": false
+      }
+    },
+    {
+      "cle": "rh",
+      "identifiant": "rachel.rh",
+      "courriel": "rachel.rh@urgences-sante.qc.ca",
+      "groupes": [
+        "Ressources humaines"
+      ],
+      "hierarchie": "vina-rh ⊃ vina-employe",
+      "attendu": {
+        "issue": "admis",
+        "role": "rh",
+        "menusVisibles": [
+          "nav-monhoraire",
+          "nav-matemps",
+          "nav-mesabsences"
+        ],
+        "menusAbsents": [
+          "nav-admin",
+          "nav-ustemps"
+        ],
+        "administreAnnuaires": false
+      }
+    },
+    {
+      "cle": "chef",
+      "identifiant": "marc.chef",
+      "courriel": "marc.chef@urgences-sante.qc.ca",
+      "groupes": [
+        "Opérations/Chefs d'équipe"
+      ],
+      "hierarchie": "sous-groupe de Opérations : hérite de vina-employe, porte vina-chef",
+      "attendu": {
+        "issue": "admis",
+        "role": "manager",
+        "menusVisibles": [
+          "nav-ustemps",
+          "nav-approvals",
+          "nav-matemps"
+        ],
+        "menusAbsents": [
+          "nav-admin"
+        ],
+        "administreAnnuaires": false
+      }
+    },
+    {
+      "cle": "employe",
+      "identifiant": "julie.paramedic",
+      "courriel": "julie.paramedic@urgences-sante.qc.ca",
+      "groupes": [
+        "Opérations/Paramédics"
+      ],
+      "hierarchie": "sous-groupe sans rôle propre : hérite de vina-employe par Opérations",
+      "attendu": {
+        "issue": "admis",
+        "role": "employee",
+        "menusVisibles": [
+          "nav-monhoraire",
+          "nav-matemps",
+          "nav-mesabsences"
+        ],
+        "menusAbsents": [
+          "nav-admin",
+          "nav-ustemps",
+          "nav-approvals"
+        ],
+        "administreAnnuaires": false
+      }
+    },
+    {
+      "cle": "cumul",
+      "identifiant": "luc.cumul",
+      "courriel": "luc.cumul@urgences-sante.qc.ca",
+      "groupes": [
+        "Ressources humaines",
+        "Opérations/Chefs d'équipe"
+      ],
+      "hierarchie": "vina-rh et vina-chef : la règle déclarée la première (rh) l'emporte — l'ordre des correspondances est la priorité",
+      "attendu": {
+        "issue": "admis",
+        "role": "rh",
+        "menusVisibles": [
+          "nav-monhoraire",
+          "nav-matemps",
+          "nav-mesabsences"
+        ],
+        "menusAbsents": [
+          "nav-admin",
+          "nav-ustemps"
+        ],
+        "administreAnnuaires": false
+      }
+    },
+    {
+      "cle": "invite",
+      "identifiant": "invite.externe",
+      "courriel": "invite.externe@gmail.com",
+      "groupes": [
+        "Opérations/Paramédics"
+      ],
+      "attendu": {
+        "issue": "refuse",
+        "statut": 403,
+        "message": "le domaine de « invite.externe@gmail.com » n'est pas admis par l'annuaire « Keycloak Urgences-santé »"
+      }
+    },
+    {
+      "cle": "non-verifie",
+      "identifiant": "nadia.nonverifiee",
+      "courriel": "nadia.nonverifiee@urgences-sante.qc.ca",
+      "groupes": [
+        "Opérations/Paramédics"
+      ],
+      "attendu": {
+        "issue": "refuse",
+        "statut": 403,
+        "message": "le courriel « nadia.nonverifiee@urgences-sante.qc.ca » n'est pas vérifié par l'annuaire « Keycloak Urgences-santé »"
+      }
+    },
+    {
+      "cle": "orphelin",
+      "identifiant": "oscar.orphelin",
+      "courriel": "oscar.orphelin@urgences-sante.qc.ca",
+      "groupes": [],
+      "attendu": {
+        "issue": "refuse",
+        "statut": 403,
+        "message": "aucun groupe de « oscar.orphelin@urgences-sante.qc.ca » ne donne accès dans l'annuaire « Keycloak Urgences-santé »"
+      }
+    },
+    {
+      "cle": "desactive-keycloak",
+      "identifiant": "denis.desactive",
+      "courriel": "denis.desactive@urgences-sante.qc.ca",
+      "groupes": [
+        "Opérations/Paramédics"
+      ],
+      "attendu": {
+        "issue": "refuse_par_keycloak",
+        "message": "désactivé"
+      }
+    }
+  ]
+}

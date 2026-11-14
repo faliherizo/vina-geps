@@ -20,7 +20,8 @@ final class SaisieAnnuaire {
         List<String> motifs = new ArrayList<>();
         Annuaires.Saisie s = new Annuaires.Saisie(texte(c, "nom", motifs), texte(c, "locataireEntra", motifs), texte(c, "clientId", motifs),
                 texte(c, "variableSecret", motifs), textes(c, "domaines", motifs), texte(c, "revendication", motifs),
-                correspondances(c.get("correspondances"), motifs), texte(c, "roleParDefaut", motifs), actif(c.get("actif"), motifs));
+                correspondances(c.get("correspondances"), motifs), texte(c, "roleParDefaut", motifs), actif(c.get("actif"), motifs),
+                texte(c, "fournisseur", motifs), texte(c, "emetteur", motifs));
         if (!motifs.isEmpty()) {
             throw new Annuaires.AnnuaireInvalideException(motifs);
         }

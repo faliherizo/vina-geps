@@ -2,8 +2,9 @@
  * **Annuaires de l'organisme** — AO 26-015-DO P-TN-2 (« l'intégration à plusieurs annuaires actifs,
  * tel que : Active Directories »).
  *
- * L'administrateur déclare chaque locataire Microsoft Entra ID dont les comptes peuvent entrer, les
- * domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
+ * L'administrateur déclare chaque fournisseur d'identité dont les comptes peuvent entrer — un
+ * locataire Microsoft Entra ID, ou tout fournisseur OpenID Connect (Keycloak…) désigné par son
+ * émetteur (ADR 0075) —, les domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
  * par l'écran : seul le nom de la variable d'environnement qui le porte, et si elle est déployée.
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -14,10 +15,12 @@ import { ConfirmModal, FormulaireModal } from "../Modal";
 type Appel = (chemin: string, init?: RequestInit) => Promise<Response>;
 interface Correspondance { groupe: string; role: string }
 export interface Annuaire {
-  id: string; nom: string; locataireEntra: string; clientId: string; variableSecret: string; secretDeploye: boolean;
+  id: string; nom: string; fournisseur?: Fournisseur; locataireEntra: string; emetteur?: string | null; clientId: string; variableSecret: string; secretDeploye: boolean;
   domaines: string[]; revendication: "groups" | "roles"; correspondances: Correspondance[]; roleParDefaut: string | null; actif: boolean;
 }
 interface Role { role: string; label: string }
+type Fournisseur = "entra" | "oidc";
+const FOURNISSEURS: Record<Fournisseur, string> = { entra: "Microsoft Entra ID", oidc: "OpenID Connect (Keycloak, Okta…)" };
 
 /** « groupe = rôle », une règle par ligne : la première qui correspond l'emporte, comme au serveur. */
 export function lireRegles(texte: string): Correspondance[] {
@@ -35,7 +38,8 @@ function corpsDe(f: HTMLFormElement): Record<string, unknown> {
   const d = new FormData(f);
   const texte = (n: string) => String(d.get(n) ?? "");
   return {
-    nom: texte("nom"), locataireEntra: texte("locataireEntra"), clientId: texte("clientId"), variableSecret: texte("variableSecret"),
+    nom: texte("nom"), fournisseur: texte("fournisseur") || "entra", locataireEntra: texte("locataireEntra"), emetteur: texte("emetteur"),
+    clientId: texte("clientId"), variableSecret: texte("variableSecret"),
     domaines: texte("domaines").split(/[\s,]+/).filter(Boolean), revendication: texte("revendication"),
     correspondances: lireRegles(texte("correspondances")), roleParDefaut: texte("roleParDefaut") || null, actif: d.get("actif") === "on",
   };
@@ -45,6 +49,7 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
   prefixe: string; initial: Annuaire | null; roles: Role[]; onEnvoyer: (corps: Record<string, unknown>) => Promise<boolean>;
 }) {
   const [erreurs, setErreurs] = useState<string[]>([]);
+  const [fournisseur, setFournisseur] = useState<Fournisseur>(initial?.fournisseur ?? "entra");
   const id = (n: string) => `${prefixe}-${n}`;
   async function soumettre(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,13 +67,30 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
       )}
       <label className="field" htmlFor={id("nom")}><span>Nom <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("nom")} name="nom" required maxLength={80} defaultValue={initial?.nom} data-testid={id("nom")} /></label>
-      <label className="field" htmlFor={id("locataire")}><span>Locataire Entra (GUID ou domaine) <span className="req-star" aria-hidden="true">*</span></span>
-        <input id={id("locataire")} name="locataireEntra" required defaultValue={initial?.locataireEntra} data-testid={id("locataire")}
-          aria-describedby={id("locataire-aide")} /></label>
-      <p id={id("locataire-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
-        Jamais « common » ni « organizations » : ces autorités laissent entrer n'importe quel compte Microsoft.
-      </p>
-      <label className="field" htmlFor={id("client")}><span>Identifiant d'application (client) <span className="req-star" aria-hidden="true">*</span></span>
+      <label className="field" htmlFor={id("fournisseur")}><span>Fournisseur d'identité</span>
+        <select id={id("fournisseur")} name="fournisseur" value={fournisseur} onChange={(e) => setFournisseur(e.target.value as Fournisseur)} data-testid={id("fournisseur")}>
+          {(Object.keys(FOURNISSEURS) as Fournisseur[]).map((f) => <option key={f} value={f}>{FOURNISSEURS[f]}</option>)}
+        </select></label>
+      {fournisseur === "entra" ? (
+        <>
+          <label className="field" htmlFor={id("locataire")}><span>Locataire Entra (GUID ou domaine) <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("locataire")} name="locataireEntra" required defaultValue={initial?.locataireEntra} data-testid={id("locataire")}
+              aria-describedby={id("locataire-aide")} /></label>
+          <p id={id("locataire-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            Jamais « common » ni « organizations » : ces autorités laissent entrer n'importe quel compte Microsoft.
+          </p>
+        </>
+      ) : (
+        <>
+          <label className="field" htmlFor={id("emetteur")}><span>Émetteur OIDC (issuer) <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("emetteur")} name="emetteur" type="url" required defaultValue={initial?.emetteur ?? ""} data-testid={id("emetteur")}
+              aria-describedby={id("emetteur-aide")} /></label>
+          <p id={id("emetteur-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            L'adresse exacte de la revendication « iss », p. ex. https://sso.organisme.ca/realms/vina-geps. HTTPS obligatoire, sauf sur localhost.
+          </p>
+        </>
+      )}
+      <label className="field" htmlFor={id("client")}><span>Identifiant du client <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("client")} name="clientId" required defaultValue={initial?.clientId} data-testid={id("client")} /></label>
       <label className="field" htmlFor={id("variable")}><span>Variable du secret (ANNUAIRE_…) <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("variable")} name="variableSecret" required pattern="ANNUAIRE_[A-Z0-9_]+" defaultValue={initial?.variableSecret ?? "ANNUAIRE_"}
@@ -142,7 +164,7 @@ export default function AnnuairesOrganisme({ apiFetch }: { apiFetch: Appel }) {
     <section className="card" aria-labelledby="annuaires-titre" data-testid="annuaires">
       <h3 id="annuaires-titre">Annuaires de l'organisme</h3>
       <p className="muted">
-        Chaque annuaire Microsoft Entra ID déclaré ici apparaît sur la page de connexion. Adresse de retour à inscrire dans son
+        Chaque annuaire déclaré ici (Microsoft Entra ID ou OpenID Connect) apparaît sur la page de connexion. Adresse de retour à inscrire dans son
         inscription d'application : <code data-testid="annuaires-rappel">{rappel || "adresse publique non déclarée"}</code>
       </p>
       {info && <Message variante="succes" testId="annuaires-info">{info}</Message>}
@@ -156,12 +178,13 @@ export default function AnnuairesOrganisme({ apiFetch }: { apiFetch: Appel }) {
           <table data-testid="annuaires-table">
             <caption className="sr-only">Annuaires de l'organisme</caption>
             <thead><tr>
-              <th scope="col">Nom</th><th scope="col">Domaines</th><th scope="col">Règles</th><th scope="col">Secret</th><th scope="col">État</th><th scope="col">Actions</th>
+              <th scope="col">Nom</th><th scope="col">Fournisseur</th><th scope="col">Domaines</th><th scope="col">Règles</th><th scope="col">Secret</th><th scope="col">État</th><th scope="col">Actions</th>
             </tr></thead>
             <tbody>
               {annuaires.map((a) => (
                 <tr key={a.id} data-testid={`annuaire-${a.id}`}>
                   <th scope="row">{a.nom}</th>
+                  <td>{FOURNISSEURS[a.fournisseur ?? "entra"]}{a.fournisseur === "oidc" && a.emetteur ? ` — ${a.emetteur}` : ""}</td>
                   <td>{a.domaines.join(", ")}</td>
                   <td>{a.correspondances.length} règle(s){a.roleParDefaut ? `, défaut : ${a.roleParDefaut}` : ", sans défaut"}</td>
                   <td>{a.secretDeploye ? "✓ déployé" : `✗ ${a.variableSecret} absente`}</td>

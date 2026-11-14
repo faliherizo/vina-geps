@@ -52,7 +52,7 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
   // Mon espace
   dashboard: "mon-espace", account: "mon-espace", rapports: "exploitation",
   monhoraire: "mon-espace", mesdisponibilites: "mon-espace", mesechanges: "mon-espace", monagph: "mon-espace",
-  monpointage: "mon-espace", matemps: "mon-espace", mesabsences: "mon-espace",
+  monpointage: "mon-espace", matemps: "mon-espace", mesabsences: "mon-espace", monequipe: "effectifs-planification",
 
   // Urgences-santé : une page par entrée de menu, et une seule section d'aide — le module se
   // lit d'un bloc, et dix-neuf pages d'aide répéteraient dix-neuf fois le même propos.

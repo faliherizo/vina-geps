@@ -238,6 +238,27 @@ class FluxApprobationDomaineTest {
         assertThat(DemandesFlux.porte(r.approbateur(), new DemandesFlux.Acteur("usr-admin", "admin", true, n -> false))).isTrue();
     }
 
+
+    @Test
+    @DisplayName("suppléance : seule l'étape nominative en attente nomme le suppléant ; sans date de fin, aucune ; le suppléant porte l'étape")
+    void suppleance() {
+        DemandesFlux.EtapeFlux personne = new DemandesFlux.EtapeFlux("e1", 1, 1, new Approbateur(TypeApprobateur.PERSONNE, "usr-rh"), "Rachel (personne désignée)",
+                DemandesFlux.StatutEtape.EN_ATTENTE, null, null, null);
+        DemandesFlux.EtapeFlux role = new DemandesFlux.EtapeFlux("e2", 2, 2, new Approbateur(TypeApprobateur.ROLE, "director"), "le rôle « director »",
+                DemandesFlux.StatutEtape.EN_ATTENTE, null, null, null);
+        DemandesFlux.EtapeFlux decidee = new DemandesFlux.EtapeFlux("e0", 1, 1, new Approbateur(TypeApprobateur.PERSONNE, "usr-rh"), "Rachel (personne désignée)",
+                DemandesFlux.StatutEtape.APPROUVEE, "usr-rh", "x", null);
+        DemandesFlux.Flux f = new DemandesFlux.Flux("d", DemandesFlux.StatutFlux.EN_COURS, List.of(decidee, personne, role), 1);
+        DemandesFlux.Flux vu = DemandesFlux.avecSuppleance(f, id -> java.util.Optional.of(new DemandesFlux.Suppleance("usr-dir", null)), id -> "Diane");
+        assertThat(vu.etapes()).extracting(DemandesFlux.EtapeFlux::libelle)
+                .containsExactly("Rachel (personne désignée)", "Rachel (personne désignée) — en son absence : Diane", "le rôle « director »");
+        assertThat(DemandesFlux.avecSuppleance(f, id -> java.util.Optional.empty(), id -> "Diane").etapes()).isEqualTo(f.etapes());
+        assertThat(List.of(vu.demandeId(), vu.statut(), vu.palierCourant())).containsExactly("d", DemandesFlux.StatutFlux.EN_COURS, 1);
+        Approbateur rh = new Approbateur(TypeApprobateur.PERSONNE, "usr-rh");
+        assertThat(DemandesFlux.porte(rh, new DemandesFlux.Acteur("usr-dir", "director", false, n -> false, Set.of("usr-rh")))).isTrue();
+        assertThat(DemandesFlux.porte(rh, new DemandesFlux.Acteur("usr-dir", "director", false, n -> false))).isFalse();
+    }
+
     private static ModificationHeures.Modification avec(ModificationHeures.Modification m, String maintenant) {
         return new ModificationHeures.Modification(m.operation(), m.finDuTemps(), maintenant, m.periodeEtat(), m.parAutrui(), m.roleActeur(), m.niveauActeur(),
                 m.sourceSegment());

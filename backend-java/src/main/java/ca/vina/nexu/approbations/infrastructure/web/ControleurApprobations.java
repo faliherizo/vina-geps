@@ -7,6 +7,7 @@ import ca.vina.nexu.partage.web.Bord;
 import ca.vina.nexu.partage.web.GardeAcces;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -76,6 +77,14 @@ public class ControleurApprobations {
     @PostMapping("/delegations")
     public ResponseEntity<Object> deleguer(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> c) {
         return Bord.repondre(garde.exigerTenant(requete), 201, t -> gestionnaire.deleguer(t, GardeAcces.contexte(requete).userId(), Bord.corps(c)));
+    }
+
+    @DeleteMapping("/delegations/{id}")
+    public ResponseEntity<Object> revoquer(HttpServletRequest requete, @PathVariable String id) {
+        return Bord.repondre(garde.exigerTenant(requete), 204, t -> {
+            gestionnaire.revoquer(t, GardeAcces.contexte(requete).userId(), id);
+            return null;
+        });
     }
 
     @GetMapping("/by-document")

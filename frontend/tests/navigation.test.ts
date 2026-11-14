@@ -80,7 +80,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     ]);
     // Le tableau de bord en tête, puis « Mon horaire » ; les rapports et les approbations en fin
     // de colonne — des **vues directes** : une notion d'un seul élément n'est pas une structure.
-    expect(section!.entrees.filter((e) => !estConcept(e)).map((v) => (v as Vue).page)).toEqual(["dashboard", "monhoraire", "rapports", "approvals"]);
+    expect(section!.entrees.filter((e) => !estConcept(e)).map((v) => (v as Vue).page)).toEqual(["dashboard", "monhoraire", "monequipe", "rapports", "approvals"]);
     expect((section!.entrees[0] as Vue).page).toBe("dashboard");
 
     // Le paramétrage du module rejoint l'administration de l'organisme : même public, autre rythme.
@@ -90,7 +90,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     // Chaque écran du module porte le **socle** : sans lui, tous disparaissent, le tableau de bord reste.
     const ecransDuModule = NAVIGATION.flatMap((g) => g.entrees).flatMap((e) => (estConcept(e) ? e.vues : [e]))
       .filter((v) => v.module !== "alertes" && (v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page)));
-    expect(ecransDuModule).toHaveLength(29);
+    expect(ecransDuModule).toHaveLength(30);
     expect(ecransDuModule.filter((v) => v.module !== "effectifs").map((v) => v.page)).toEqual([]);
     expect((section!.entrees[0] as Vue).module).toBeUndefined();
 

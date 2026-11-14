@@ -409,7 +409,7 @@ Préparer sa feuille d'une période à partir de ses quarts, la corriger segment
 1. « Préparer ma feuille » avec le « Début de la période » et la « Fin de la période » : les segments viennent des quarts et des pointages.
 2. Vérifier chaque segment : la ressource (nom et matricule), les heures, le type d'heure, les « Tâches » et les champs propres à votre organisme.
 3. « Ajouter un segment » pour un temps manquant (jour, de, à, type d'heure), avec la « Description des tâches » et les champs demandés (ex. Véhicule) ; ou modifier un segment et « Enregistrer la correction ».
-4. « Soumettre ma feuille » : elle part au premier palier d'approbation — souvent votre supérieur hiérarchique. « En attente de » dit chez qui elle est.
+4. « Soumettre ma feuille » : elle part au premier palier d'approbation — souvent votre supérieur hiérarchique. « En attente de » dit chez qui elle est, et, s'il est absent, qui le remplace (« en son absence : … »).
 
 **Exemple de remplissage**
 
@@ -461,6 +461,34 @@ Préparer les feuilles d'une période, les approuver palier par palier, lire les
 **Résultat :** Les feuilles approuvées entrent au lot de paie ; une feuille routée au supérieur lui apparaît même hors de son périmètre, avec « En attente de ».
 
 > **Attention :** Sans supérieur désigné, une feuille routée au « Supérieur hiérarchique » revient au niveau GESTION de l'unité. Un champ se désactive, jamais ne s'efface : les valeurs déjà saisies restent lisibles.
+
+### Mon équipe
+
+*Adresse : `/admin/monequipe` — Gestionnaires, direction, RH et administration ; réorganiser exige le droit de corriger une fiche (gestion, RH, administration).*
+
+Voir les personnes qui relèvent de soi, réorganiser son équipe, suivre les feuilles à approuver et désigner un suppléant pendant son absence.
+
+**Comment faire**
+
+1. Lire « Les membres de mon équipe » : chaque personne, son poste, son supérieur direct et son lien (direct ou indirect).
+2. « Rattacher une personne » : choisir une personne encore sans supérieur, puis « Rattacher à mon équipe ».
+3. « Changer de supérieur » sur une ligne : choisir le « Nouveau supérieur direct » (vous ou un membre de votre équipe), puis « Enregistrer » ; « Détacher » retire un subordonné direct.
+4. « Feuilles de temps à approuver » : les feuilles qui attendent votre décision, puis « Ouvrir la console des feuilles pour décider ».
+5. Avant une absence : choisir le « Suppléant » (3 lettres de son nom), les dates « Du » et « Au », puis « Désigner ce suppléant » ; au retour, « Mettre fin ».
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Personne à rattacher | Léa Morin — Paramédic |
+| Nouveau supérieur direct de Luc Bouchard | Julie Tremblay |
+| Suppléant | Diane Roy |
+| Du | 2026-12-21 |
+| Au | 2027-01-04 |
+
+**Résultat :** « Luc Bouchard relève maintenant de Julie Tremblay. » ; pendant la suppléance, les feuilles de votre équipe parviennent aussi à Diane Roy, et l'employé lit « en son absence : Diane Roy (jusqu'au 2027-01-04) ».
+
+> **Attention :** Vous ne voyez et ne changez que votre propre équipe : une personne d'une autre branche se demande à son gestionnaire. Le suppléant doit pouvoir approuver des feuilles (gestion, direction ou administration).
 
 ### Mes échanges
 

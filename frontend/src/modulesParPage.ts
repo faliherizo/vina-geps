@@ -46,6 +46,8 @@ export const PAGE_MODULE: Partial<Record<Page, string>> = {
   // L'horaire existe parce que la planification existe : c'est elle qui le gouverne, et non
   // les échanges — un employé a un horaire même si son organisme n'achète pas les échanges.
   monhoraire: "effectifs_planification",
+  // Mon équipe vit de l'organigramme : le socle des effectifs suffit.
+  monequipe: "effectifs",
   // Communications cliniques (ADR 0074) : un module à part, qui n'exige pas les effectifs.
   alnouvelle: "alertes", alsuivi: "alertes", mesalertes: "alertes", alparametres: "alertes",
   mesdisponibilites: "effectifs_disponibilites",

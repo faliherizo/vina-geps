@@ -17,5 +17,6 @@
   <include file="db/changelog/0005-messagerie-noms-de-connexion.xml"/>
   <include file="db/changelog/0006-alertes.xml"/>
   <include file="db/changelog/0007-feuille-champs-et-taches.xml"/>
+  <include file="db/changelog/0008-annuaires-oidc.xml"/>
 
 </databaseChangeLog>

@@ -23,7 +23,7 @@ public class DepotAnnuaires implements RegistreAnnuaires, EcritureAnnuaires {
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<List<String>> TEXTES = new TypeReference<>() { };
     private static final TypeReference<List<Annuaires.Correspondance>> REGLES = new TypeReference<>() { };
-    private static final String COLONNES = "id, tenantId, nom, locataireEntra, clientId, variableSecret, domaines, revendication, correspondances, roleParDefaut, actif";
+    private static final String COLONNES = "id, tenantId, nom, locataireEntra, clientId, variableSecret, domaines, revendication, correspondances, roleParDefaut, actif, fournisseur, emetteur";
 
     private final JdbcClient jdbc;
     private final Clock horloge;
@@ -37,7 +37,8 @@ public class DepotAnnuaires implements RegistreAnnuaires, EcritureAnnuaires {
         return new Annuaires.Annuaire(rs.getString("id"), rs.getString("tenantId"), rs.getString("nom"), rs.getString("locataireEntra"),
                 rs.getString("clientId"), rs.getString("variableSecret"), JSON.readValue(rs.getString("domaines"), TEXTES),
                 Annuaires.Revendication.de(rs.getString("revendication")), JSON.readValue(rs.getString("correspondances"), REGLES),
-                Optional.ofNullable(rs.getString("roleParDefaut")), rs.getInt("actif") == 1);
+                Optional.ofNullable(rs.getString("roleParDefaut")), rs.getInt("actif") == 1,
+                Annuaires.Fournisseur.de(rs.getString("fournisseur")), rs.getString("emetteur"));
     }
 
     @Override
@@ -58,15 +59,16 @@ public class DepotAnnuaires implements RegistreAnnuaires, EcritureAnnuaires {
             throw new Annuaires.AnnuaireInvalideException(List.of("un annuaire de l'organisme porte déjà le nom « " + a.nom() + " »"));
         }
         String maintenant = Iso.de(horloge.instant());
-        jdbc.sql("INSERT INTO auth_annuaires (" + COLONNES + ", creeLe, creePar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+        jdbc.sql("INSERT INTO auth_annuaires (" + COLONNES + ", creeLe, creePar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 + "ON CONFLICT (id) DO UPDATE SET nom = excluded.nom, locataireEntra = excluded.locataireEntra, clientId = excluded.clientId, "
                 + "variableSecret = excluded.variableSecret, domaines = excluded.domaines, revendication = excluded.revendication, "
-                + "correspondances = excluded.correspondances, roleParDefaut = excluded.roleParDefaut, actif = excluded.actif, modifieLe = ? "
+                + "correspondances = excluded.correspondances, roleParDefaut = excluded.roleParDefaut, actif = excluded.actif, "
+                + "fournisseur = excluded.fournisseur, emetteur = excluded.emetteur, modifieLe = ? "
                 // Un identifiant d'un autre organisme ne se réécrit jamais, même si l'appelant l'a oublié.
                 + "WHERE auth_annuaires.tenantId = excluded.tenantId")
                 .params(a.id(), a.tenantId(), a.nom(), a.locataireEntra(), a.clientId(), a.variableSecret(), JSON.writeValueAsString(a.domaines()),
                         a.revendication().code(), JSON.writeValueAsString(a.correspondances()), a.roleParDefaut().orElse(null), a.actif() ? 1 : 0,
-                        maintenant, auteur, maintenant)
+                        a.fournisseur().code(), a.emetteur(), maintenant, auteur, maintenant)
                 .update();
     }
 

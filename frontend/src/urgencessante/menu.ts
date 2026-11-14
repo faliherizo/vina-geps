@@ -85,6 +85,10 @@ export const NOTIONS_US: NotionUs[] = [
     { cle: "mesechanges", icone: "🔁", roles: TOUS, module: "effectifs_echanges" },
     { cle: "usechanges", icone: "📋", roles: ENCADREMENT, module: "effectifs_echanges" },
   ] },
+  // Mon équipe (comme dans Nexu VINA) : la ligne hiérarchique du gestionnaire, ses feuilles à approuver, sa suppléance.
+  { cle: null, icone: "👥", entrees: [
+    { cle: "monequipe", icone: "👥", roles: [...ENCADREMENT, "rh"], module: "effectifs" },
+  ] },
   /**
    * **La communication du personnel** (AO 26-015-DO : se joindre entre collègues).
    *

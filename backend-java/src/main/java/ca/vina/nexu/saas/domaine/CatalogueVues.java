@@ -89,6 +89,7 @@ public final class CatalogueVues {
                     new Vue("ustemps", "urgencessante", "ustempsnotion", "ustemps", null, "nav.ustemps", "effectifs_temps"),
                     new Vue("mesechanges", "urgencessante", "usechangesnotion", "mesechanges", null, "nav.mesechanges", "effectifs_echanges"),
                     new Vue("usechanges", "urgencessante", "usechangesnotion", "usechanges", null, "nav.usechanges", "effectifs_echanges"),
+                    new Vue("monequipe", "urgencessante", null, "monequipe", null, "nav.monequipe", "effectifs"),
                     new Vue("alnouvelle", "urgencessante", "alertesnotion", "alnouvelle", null, "nav.alnouvelle", "alertes"),
                     new Vue("alsuivi", "urgencessante", "alertesnotion", "alsuivi", null, "nav.alsuivi", "alertes"),
                     new Vue("mesalertes", "urgencessante", "alertesnotion", "mesalertes", null, "nav.mesalertes", "alertes"),

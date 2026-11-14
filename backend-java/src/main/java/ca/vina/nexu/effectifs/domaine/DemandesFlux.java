@@ -5,11 +5,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import ca.vina.nexu.effectifs.domaine.FluxApprobation.Approbateur;
+import ca.vina.nexu.effectifs.domaine.FluxApprobation.TypeApprobateur;
 
 /**
  * <strong>Les demandes d'approbation des heures</strong> (E-GP-6) — le pur de {@code effectifs/approbations/service.ts} et des
@@ -88,8 +90,24 @@ public final class DemandesFlux {
         }
     }
 
-    /** Qui agit : l'administrateur porte toutes les étapes ; sinon le niveau de périmètre sur l'unité, le rôle ou la personne. */
-    public record Acteur(String id, String role, boolean administrateur, Predicate<Perimetres.Niveau> niveauSur) { }
+    /**
+     * Qui agit : l'administrateur porte toutes les étapes ; sinon le niveau de périmètre sur l'unité, le rôle ou la personne.
+     * {@code suppleePour} : les personnes désignées dont l'acteur tient la place pendant leur absence (délégation en vigueur).
+     */
+    public record Acteur(String id, String role, boolean administrateur, Predicate<Perimetres.Niveau> niveauSur, Set<String> suppleePour) {
+
+        public Acteur {
+            suppleePour = Set.copyOf(suppleePour);
+        }
+
+        /** Un acteur qui ne supplée personne. */
+        public Acteur(String id, String role, boolean administrateur, Predicate<Perimetres.Niveau> niveauSur) {
+            this(id, role, administrateur, niveauSur, Set.of());
+        }
+    }
+
+    /** Une absence : qui approuve à la place de la personne désignée, et jusqu'à quand ({@code null} : sans date de fin). */
+    public record Suppleance(String suppleantId, String jusquAu) { }
 
     /** Le libellé d'un approbateur, pour l'écran et les refus. */
     public static String libelle(Approbateur a, Function<String, String> nomDe) {
@@ -101,7 +119,10 @@ public final class DemandesFlux {
         };
     }
 
-    /** <strong>Qui porte une étape.</strong> La délégation d'une personne désignée est jugée par le moteur générique. */
+    /**
+     * <strong>Qui porte une étape.</strong> Une personne désignée la porte, et son suppléant aussi pendant son absence : la
+     * feuille doit apparaître chez qui peut la décider. La décision elle-même reste jugée par le moteur générique.
+     */
     public static boolean porte(Approbateur a, Acteur acteur) {
         if (acteur.administrateur()) {
             return true;
@@ -109,10 +130,25 @@ public final class DemandesFlux {
         return switch (a.type()) {
             case PERIMETRE -> Arrays.stream(Perimetres.Niveau.values()).anyMatch(n -> n.name().equals(a.valeur()) && acteur.niveauSur().test(n));
             case ROLE -> acteur.role().equals(a.valeur());
-            case PERSONNE -> acteur.id().equals(a.valeur());
+            case PERSONNE -> acteur.id().equals(a.valeur()) || acteur.suppleePour().contains(a.valeur());
             // Une étape vivante ne porte jamais le marqueur : il est remplacé par la personne à l'ouverture du flux.
             case SUPERIEUR -> false;
         };
+    }
+
+    /**
+     * Le flux, avec la suppléance <strong>dite</strong> : à l'étape qui attend une personne absente, le libellé nomme qui la
+     * remplace et jusqu'à quand. La personne qui soumet sait ainsi vers qui sa feuille est partie.
+     */
+    public static Flux avecSuppleance(Flux f, Function<String, Optional<Suppleance>> suppleanceDe, Function<String, String> nomDe) {
+        List<EtapeFlux> etapes = f.etapes().stream().map(e -> e.statut() != StatutEtape.EN_ATTENTE || e.approbateur().type() != TypeApprobateur.PERSONNE
+                ? e : suppleanceDe.apply(e.approbateur().valeur()).map(s -> avecLibelle(e, e.libelle() + " — en son absence : " + nomDe.apply(s.suppleantId())
+                        + (s.jusquAu() == null ? "" : " (jusqu'au " + s.jusquAu() + ")"))).orElse(e)).toList();
+        return new Flux(f.demandeId(), f.statut(), etapes, f.palierCourant());
+    }
+
+    private static EtapeFlux avecLibelle(EtapeFlux e, String libelle) {
+        return new EtapeFlux(e.id(), e.palier(), e.niveau(), e.approbateur(), libelle, e.statut(), e.decidePar(), e.decideLe(), e.pourLeCompteDe());
     }
 
     /** La demande du moteur, dans les mots des effectifs : les paliers se numérotent dans l'ordre des étapes. */

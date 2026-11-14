@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Annuaires OpenID Connect génériques** (14 novembre 2026, ADR 0075).
+
+    Un annuaire d'organisme n'était qu'un locataire Microsoft Entra ID. Il peut désormais être tout
+    fournisseur OIDC (Keycloak, Okta…), désigné par son émetteur : les adresses d'autorisation et
+    d'échange se lisent dans son document de découverte. Les annuaires existants restent « entra ».
+    Les colonnes se constatent par `pragma_table_info` (voir 0004).
+  -->
+  <changeSet id="0008-annuaires-oidc" author="annuaires-oidc">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'auth_annuaires'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('auth_annuaires') WHERE name = 'fournisseur'</sqlCheck>
+    </preConditions>
+    <comment>Le protocole de l'annuaire, et l'émetteur d'un fournisseur OIDC générique.</comment>
+    <sql>ALTER TABLE auth_annuaires ADD COLUMN fournisseur TEXT NOT NULL DEFAULT 'entra'</sql>
+    <sql>ALTER TABLE auth_annuaires ADD COLUMN emetteur TEXT</sql>
+  </changeSet>
+</databaseChangeLog>

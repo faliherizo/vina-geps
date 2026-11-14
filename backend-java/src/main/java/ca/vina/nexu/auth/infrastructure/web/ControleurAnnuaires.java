@@ -78,7 +78,8 @@ public class ControleurAnnuaires {
                                @Value("${nexu.jwt.secret}") String secret, @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
         this(new Dependances(new ServiceAnnuaires(new ServiceAnnuaires.Ports(annuaires, new AdaptateurComptesAnnuaire(comptes, ALEA),
                 new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge)::emettre,
-                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)::echanger), System.getenv(), horloge, ALEA),
+                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)::echanger,
+                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)), System.getenv(), horloge, ALEA),
                 annuaires, annuaires, roles, garde, hote, adresse, audit, sequence, System.getenv(), cookieSecurise));
     }
 
@@ -177,7 +178,9 @@ public class ControleurAnnuaires {
         Map<String, Object> v = new LinkedHashMap<>();
         v.put("id", a.id());
         v.put("nom", a.nom());
+        v.put("fournisseur", a.fournisseur().code());
         v.put("locataireEntra", a.locataireEntra());
+        v.put("emetteur", a.emetteur());
         v.put("clientId", a.clientId());
         v.put("variableSecret", a.variableSecret());
         v.put("secretDeploye", !d.env().getOrDefault(a.variableSecret(), "").isEmpty());

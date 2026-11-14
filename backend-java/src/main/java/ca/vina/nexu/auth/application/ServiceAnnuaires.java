@@ -43,7 +43,8 @@ public class ServiceAnnuaires {
     }
 
     /** Les ports : l'annuaire, les comptes, les sessions et l'échange du code. */
-    public record Ports(RegistreAnnuaires annuaires, Annuaires.Comptes comptes, Annuaires.Sessions sessions, Annuaires.Echange echange) {
+    public record Ports(RegistreAnnuaires annuaires, Annuaires.Comptes comptes, Annuaires.Sessions sessions, Annuaires.Echange echange,
+                        Annuaires.Decouverte decouverte) {
     }
 
     private record EnCours(Oidc.Demande demande, String annuaireId, String retour) {
@@ -51,6 +52,7 @@ public class ServiceAnnuaires {
 
     /** Le chemin du retour, à inscrire tel quel dans l'inscription d'application de chaque annuaire. */
     public static final String CHEMIN_RAPPEL = "/api/auth/sso/annuaires/callback";
+
 
     private final Ports ports;
     private final Map<String, String> env;
@@ -77,8 +79,24 @@ public class ServiceAnnuaires {
     private Oidc.Configuration configuration(Annuaires.Annuaire a, String origine) {
         String secret = Optional.ofNullable(env.get(a.variableSecret())).filter(s -> !s.isEmpty())
                 .orElseThrow(() -> new ConfigurationIncompleteException("le secret de l'annuaire n'est pas déployé (variable " + a.variableSecret() + ")"));
-        return Oidc.configuration(Map.of("AZURE_CLIENT_ID", a.clientId(), "AZURE_CLIENT_SECRET", secret, "AZURE_TENANT_ID", a.locataireEntra(),
-                "AZURE_REDIRECT_URI", origine + CHEMIN_RAPPEL), Optional.empty());
+        String rappel = origine + CHEMIN_RAPPEL;
+        return switch (a.fournisseur()) {
+            case ENTRA -> Oidc.configuration(Map.of("AZURE_CLIENT_ID", a.clientId(), "AZURE_CLIENT_SECRET", secret, "AZURE_TENANT_ID", a.locataireEntra(),
+                    "AZURE_REDIRECT_URI", rappel), Optional.empty());
+            case OIDC -> configurationOidc(a, secret, rappel);
+        };
+    }
+
+    /** Un fournisseur OIDC générique : ses adresses viennent de son document de découverte, lu à chaque connexion. */
+    private Oidc.Configuration configurationOidc(Annuaires.Annuaire a, String secret, String rappel) {
+        Annuaires.Decouverte.Points p;
+        try {
+            p = ports.decouverte().points(a.emetteur());
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw new ConfigurationIncompleteException("l'annuaire « " + a.nom() + " » est injoignable (" + a.emetteur() + ") : " + e.getMessage());
+        }
+        return new Oidc.Configuration(false, false, a.emetteur(), a.clientId(), secret, rappel, a.emetteur(), p.autorisation(), p.jeton(),
+                a.emetteur() + Oidc.CHEMIN_DECOUVERTE);
     }
 
     /**

@@ -14,6 +14,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Les flux d'approbation des heures branchés sur le <strong>moteur d'approbation générique</strong> (contexte
@@ -74,6 +76,16 @@ public class AdaptateurFluxApprobations implements FluxApprobationsPort {
     public List<DemandeApprobation> enCours(String tenantId, ObjetFlux objet) {
         return moteur.demandes(tenantId, DemandesFlux.StatutApprobation.EN_ATTENTE.code()).stream()
                 .filter(d -> objet.typeDocument().equals(d.get("documentType"))).map(AdaptateurFluxApprobations::demande).toList();
+    }
+
+    @Override
+    public Set<String> suppleePour(String tenantId, String suppleantId) {
+        return moteur.delegationsRecues(tenantId, suppleantId).stream().map(Approbations.Delegation::fromUserId).collect(Collectors.toSet());
+    }
+
+    @Override
+    public Optional<DemandesFlux.Suppleance> suppleanceDe(String tenantId, String approbateurId) {
+        return moteur.delegationActive(tenantId, approbateurId).map(d -> new DemandesFlux.Suppleance(d.toUserId(), d.toDate()));
     }
 
     @Override

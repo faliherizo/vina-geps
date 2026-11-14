@@ -14,6 +14,7 @@ Entra Id »), et c'est le flux implanté et vérifié par les essais.
 |---|---|
 | Protocole | OIDC 1.0 sur OAuth 2.0, *Authorization Code* avec **PKCE** (S256), `state` et `nonce` |
 | Fournisseur d'identité | Le locataire Microsoft Entra ID d'Urgences-santé ; un locataire précis, **jamais** `common`, `organizations` ou `consumers` |
+| Autre fournisseur OIDC | Keycloak, Okta ou tout fournisseur OpenID Connect, déclaré par son émetteur (ADR 0075). Processus et essais : [OIDC-KEYCLOAK.md](OIDC-KEYCLOAK.md) |
 | Jeton lu | L'`id_token`, dont la signature est vérifiée par les clés publiques (JWKS) d'Entra, ainsi que l'émetteur, l'audience, l'expiration et le `nonce` |
 | Rôle dans VINA GEPS | Déduit des **groupes de sécurité** Entra (revendication `groups`) ou des **rôles d'application** (revendication `roles`) |
 | Second facteur | Celui de l'**accès conditionnel** d'Entra (MFA, appareil conforme, emplacement). VINA GEPS ne le redemande pas après Entra |
@@ -175,4 +176,5 @@ connexion. C'est un lot à chiffrer.
 |---|---|---|
 | La route globale `/api/auth/sso/entra/*` (un seul locataire, configuré par `AZURE_*`) crée le compte **sans organisme** | En production multi-organisme, elle ne doit pas être utilisée : seule la route par annuaire (`/api/auth/sso/annuaires/*`) rattache le compte à son organisme | Réserver la route globale à la démonstration, ou la retirer une fois les annuaires déclarés |
 | Pas de SCIM | Un départ n'est constaté qu'à la tentative de connexion suivante, avec la même session au plus | Lot SCIM 2.0 (`/scim/v2/Users`, `/Groups`) |
+| Un refus au retour du fournisseur s'affiche en JSON brut | Le motif est juste mais peu lisible | Rediriger vers la page de connexion avec le motif (voir OIDC-KEYCLOAK.md § 8) |
 | Pas de déconnexion fédérée (*front-channel logout*) | Se déconnecter d'Entra ne ferme pas une session VINA GEPS déjà ouverte | Brancher `end_session_endpoint` et la déconnexion par canal frontal |

@@ -23,7 +23,7 @@ async function charger(fichier) {
 /** Les rubriques du menu, dans l'ordre de la colonne (ADR 0073). */
 const RUBRIQUES = [
   ["Menu principal", ["dashboard", "monhoraire", "mesdisponibilites", "usdisponibilites", "mesabsences", "usabsences", "monagph", "usagph",
-    "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas", "monpointage", "uspresence", "matemps", "ustemps",
+    "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas", "monpointage", "uspresence", "matemps", "ustemps", "monequipe",
     "mesechanges", "usechanges", "alnouvelle", "alsuivi", "mesalertes", "usmessages", "usappels", "usdiffusion", "rapports", "approvals"]],
   ["Administration", ["alparametres", "usreferentiels", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal",
     "admin", "access", "notifications", "integrations", "apidocs", "superadmin"]],

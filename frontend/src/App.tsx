@@ -44,7 +44,7 @@ import { I18nProvider, useT, LANGUAGES, Lang } from "./i18n";
  * (AO 2027-005) : elles sont déclarées par `santequebec/menu.ts` et rendues par son registre.
  * L'union tient sur une seule ligne — un garde-fou du dépôt la lit ainsi.
  */
-export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres";
+export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres";
 type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant" | "director";
 
 /**

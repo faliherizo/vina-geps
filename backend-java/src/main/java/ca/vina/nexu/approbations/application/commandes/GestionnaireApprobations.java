@@ -2,6 +2,7 @@ package ca.vina.nexu.approbations.application.commandes;
 
 import ca.vina.nexu.approbations.domaine.Approbations;
 import ca.vina.nexu.approbations.domaine.Delegataires;
+import ca.vina.nexu.partage.erreurs.domaine.IntrouvableException;
 
 import java.util.Map;
 
@@ -45,6 +46,13 @@ public final class GestionnaireApprobations {
         Approbations.Delegation d = Approbations.validerDelegation(deUserId, texte(corps, "toUserId"), texte(corps, "fromDate"), texte(corps, "toDate"));
         Delegataires.verifier(tenantId, comptes.destinataire(tenantId, d.toUserId()));
         return depot.deleguer(tenantId, d);
+    }
+
+    /** Le retour d'absence : l'auteur met fin à sa délégation. Celle d'un autre est introuvable, pour ne rien révéler. */
+    public void revoquer(String tenantId, String deUserId, String id) {
+        if (!depot.revoquer(tenantId, id, deUserId)) {
+            throw new IntrouvableException("délégation introuvable : " + id);
+        }
     }
 
     public Map<String, Object> relancer(String tenantId, Map<String, Object> corps) {

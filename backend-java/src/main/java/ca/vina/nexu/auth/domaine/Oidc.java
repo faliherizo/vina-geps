@@ -36,6 +36,9 @@ public final class Oidc {
 
     public static final long DUREE_DEMANDE_MS = 10 * 60_000L;
 
+    /** Le chemin normalisé du document de découverte OpenID Connect, sous l'émetteur. */
+    public static final String CHEMIN_DECOUVERTE = "/.well-known/openid-configuration";
+
     public record Configuration(boolean mock, boolean demonstration, String tenantId, String clientId, String clientSecret, String redirectUri,
                                 String authority, String authorizeUrl, String tokenUrl, String discoveryUrl) {
     }

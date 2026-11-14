@@ -374,6 +374,43 @@ class ControleurTempsFluxEffectifsHttpTest {
         http.post(decider("P4", "approuver"), compte("rh"), null).andExpect(status().isOk()).andExpect(jsonPath("$.statut").value("APPROUVEE"));
     }
 
+    /**
+     * <strong>La suppléance</strong> (14 novembre 2026) : rh, supérieur de Marc, s'absente et délègue à la directrice, qui n'a
+     * aucun périmètre sur l'unité. La feuille de Marc lui parvient par la seule délégation, l'écran de Marc le dit, elle la
+     * décide pour le compte de rh. Une délégation qui ne commence que plus tard ne fait rien.
+     */
+    @Test
+    @DisplayName("suppléance : la feuille va au délégataire du supérieur absent, l'écran le nomme, il décide pour son compte")
+    void suppleance() throws Exception {
+        for (String[] e : new String[][]{{"e-rh", null}, {"e-marc", "e-rh"}}) {
+            jdbc.sql("INSERT INTO employees (id, firstName, lastName, tenantId, managerId) VALUES (?, 'x', 'y', ?, ?)").params(e[0], T, e[1]).update();
+            jdbc.sql("UPDATE users SET employeeId = ? WHERE id = ?").params(e[0], "usr-" + e[0].substring(2)).update();
+        }
+        poser(regleFlux("FEUILLE", 1, "toujours", "eq", "1", "{\"type\":\"SUPERIEUR\"}"), ADMIN).andExpect(status().isCreated());
+        http.post(TP + "/feuilles/preparer", ADMIN, "{\"uniteCode\":\"EST\",\"debut\":\"2031-03-10\",\"fin\":\"2031-03-16\"}").andExpect(status().isCreated());
+        List<Map<String, Object>> liste = JsonPath.read(corps(http.get(TP + "/feuilles?debut=2031-03-10", ADMIN)), "$");
+        liste.forEach(f -> ids.put("f_" + f.get("matricule"), (String) f.get("id")));
+        String feuilleMarc = TP + "/feuilles/" + ids.get("f_P2");
+        http.post(feuilleMarc + "/soumettre", compte("marc"), null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.flux.etapes[*].libelle", Matchers.contains("rh (personne désignée)")));
+
+        // Une absence à venir : rien ne change encore.
+        flux.moteur().deleguer(T, new Approbations.Delegation("usr-rh", "usr-dir", "2099-01-01", null));
+        http.get(TP + "/feuilles?statut=SOUMISE", compte("dir")).andExpect(jsonPath("$[*].id", Matchers.not(Matchers.hasItem(ids.get("f_P2")))));
+        http.get(feuilleMarc, compte("dir")).andExpect(status().isNotFound());
+
+        // L'absence commence : la directrice reçoit la feuille, et Marc sait vers qui elle est partie.
+        flux.moteur().deleguer(T, new Approbations.Delegation("usr-rh", "usr-dir", null, "2099-12-31"));
+        http.get(feuilleMarc, compte("marc")).andExpect(jsonPath("$.flux.etapes[0].libelle")
+                .value("rh (personne désignée) — en son absence : dir (jusqu'au 2099-12-31)"));
+        http.get(TP + "/feuilles?statut=SOUMISE", compte("dir")).andExpect(jsonPath("$[*].id", Matchers.hasItem(ids.get("f_P2"))));
+        http.get(TP + "/feuilles?statut=SOUMISE", compte("chef2")).andExpect(jsonPath("$[*].id", Matchers.hasItem(ids.get("f_P2"))));
+        http.post(feuilleMarc + "/approuver", compte("chef2"), null).andExpect(status().isForbidden());
+        http.post(feuilleMarc + "/approuver", compte("dir"), null).andExpect(status().isOk()).andExpect(jsonPath("$.statut").value("APPROUVEE"))
+                .andExpect(jsonPath("$.flux.etapes[0].decidePar").value("usr-dir")).andExpect(jsonPath("$.flux.etapes[0].pourLeCompteDe").value("usr-rh"))
+                .andExpect(jsonPath("$.flux.etapes[0].libelle").value("rh (personne désignée)"));
+    }
+
     /** Sans pointage, une source tierce propose le temps, à confirmer ; deux sources se corrèlent entre elles (E-RF-13). */
     private void sourcesTierces() throws Exception {
         http.post(TP + "/feuilles/preparer", ADMIN, "{\"uniteCode\":\"EST\",\"debut\":\"2031-03-10\",\"fin\":\"2031-03-16\"}").andExpect(status().isCreated())
@@ -550,7 +587,9 @@ class ControleurTempsFluxEffectifsHttpTest {
         List<Map<String, Object>> saisie = pointages.saisirAPosteriori(ctx("julie", "2031-03-15T20:00:00.000Z"), Map.of("justification", "Formation à la caserne",
                 "segments", List.of(Map.of("debut", "2031-03-15T13:00:00.000Z", "fin", "2031-03-15T17:00:00.000Z", "type", "TRAVAIL"))));
         String id = (String) saisie.getFirst().get("id");
-        http.get(pt + "/" + id, compte("chef")).andExpect(jsonPath("$.flux.etapes[*].libelle", Matchers.contains("le niveau GESTION de l'unité", "rh (personne désignée)")));
+        // rh a délégué à chef2 sans date de fin (paliers des feuilles, plus haut) : l'étape qui l'attend le dit.
+        http.get(pt + "/" + id, compte("chef")).andExpect(jsonPath("$.flux.etapes[*].libelle", Matchers.contains("le niveau GESTION de l'unité",
+                "rh (personne désignée) — en son absence : chef2")));
         assertThat(corps(http.get(pt + "?statut=A_APPROUVER", compte("rh")))).isEqualTo("[]");
         http.post(pt + "/" + id + "/approuver", compte("chef"), null).andExpect(jsonPath("$[*].statut", Matchers.contains("A_APPROUVER", "A_APPROUVER")));
         http.post(pt + "/" + id + "/approuver", compte("chef"), null).andExpect(status().isConflict())

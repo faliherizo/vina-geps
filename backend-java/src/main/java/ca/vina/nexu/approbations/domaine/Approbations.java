@@ -55,6 +55,15 @@ public final class Approbations {
 
         List<Map<String, Object>> delegations(String tenantId, String deUserId);
 
+        /** La délégation en vigueur aujourd'hui d'un approbateur, la plus récente d'abord ; vide s'il est présent. */
+        Optional<Delegation> delegationActive(String tenantId, String deUserId);
+
+        /** Les délégations en vigueur aujourd'hui que ce compte a reçues : il approuve pour le compte de leurs auteurs. */
+        List<Delegation> delegationsRecues(String tenantId, String versUserId);
+
+        /** Met fin à une délégation de son auteur (retour d'absence) ; faux si elle n'existe pas ou n'est pas la sienne. */
+        boolean revoquer(String tenantId, String id, String deUserId);
+
         Map<String, Object> decider(String tenantId, String etapeId, String decision, String acteurId, String role);
 
         /** Une demande dont l'appelant peut imposer les règles (un flux par défaut que personne n'a écrit en règle). */

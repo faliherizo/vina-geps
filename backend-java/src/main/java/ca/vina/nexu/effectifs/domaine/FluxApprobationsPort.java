@@ -7,6 +7,7 @@ import ca.vina.nexu.effectifs.domaine.FluxApprobation.RegleApprobation;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 /**
@@ -39,6 +40,12 @@ public interface FluxApprobationsPort {
     List<DemandeApprobation> enCours(String tenantId, ObjetFlux objet);
 
     DemandeApprobation ouvrir(String tenantId, NouvelleDemande d);
+
+    /** Les personnes désignées dont ce compte tient la place aujourd'hui (délégations en vigueur qu'il a reçues). */
+    Set<String> suppleePour(String tenantId, String suppleantId);
+
+    /** La suppléance en vigueur aujourd'hui d'une personne désignée ; vide si elle est présente. */
+    Optional<DemandesFlux.Suppleance> suppleanceDe(String tenantId, String approbateurId);
 
     /**
      * Décide une étape ; un refus du moteur lève {@link DemandesFlux.EtapeRefuseeException} : {@code NON_PORTEE} quand l'acteur ne

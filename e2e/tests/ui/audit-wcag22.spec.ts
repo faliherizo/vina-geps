@@ -313,6 +313,19 @@ const MODULES_AUDIT = {
     { id: "sg-1", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:00:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 2, remplaceId: "sg-0", motif: "Sortie pointée en retard" },
     { id: "sg-0", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:10:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 1, remplaceId: null, motif: null },
   ],
+  // ADR 0075 : un annuaire Entra et un annuaire OpenID Connect (Keycloak) ; le second fait paraître la colonne « Fournisseur » complète.
+  "GET /api/auth/annuaires": { rappel: "https://app.urgences-sante.qc.ca/api/auth/sso/annuaires/callback", annuaires: [
+    { id: "ann-1", nom: "Entra du siège", fournisseur: "entra", locataireEntra: "0f8fad5b-d9cb-469f-a165-70867728950e", emetteur: null, clientId: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      variableSecret: "ANNUAIRE_SIEGE", secretDeploye: true, domaines: ["urgences-sante.qc.ca"], revendication: "groups", correspondances: [{ groupe: "g-admin", role: "admin" }], roleParDefaut: null, actif: true },
+    { id: "ann-2", nom: "Keycloak Urgences-santé", fournisseur: "oidc", locataireEntra: "", emetteur: "https://sso.urgences-sante.qc.ca/realms/vina-geps", clientId: "vina-geps",
+      variableSecret: "ANNUAIRE_KEYCLOAK", secretDeploye: false, domaines: ["urgences-sante.qc.ca"], revendication: "roles",
+      correspondances: [{ groupe: "vina-admin", role: "admin" }, { groupe: "vina-chef", role: "manager" }], roleParDefaut: null, actif: true }] },
+  // Mon équipe (comme dans Nexu VINA) : un direct, un indirect, une personne à rattacher ; une suppléance en cours.
+  "GET /api/personnel/equipe": { moiId: "e-chef", moiNom: "Marc Lavoie", membres: [
+    { id: "e-julie", nom: "Julie Roy", titre: "Paramédic", courriel: "julie.roy@urgences-sante.qc.ca", superieurId: "e-chef", superieurNom: "Marc Lavoie", niveau: 1 },
+    { id: "e-luc", nom: "Luc Bouchard", titre: null, courriel: null, superieurId: "e-julie", superieurNom: "Julie Roy", niveau: 2 }],
+    sansSuperieur: [{ id: "e-lea", nom: "Léa Morin", titre: "Paramédic", courriel: null, superieurId: null, superieurNom: null, niveau: 0 }] },
+  "GET /api/approvals/delegations": [{ id: "adel-1", toUserId: "usr-dir", toNom: "Diane Roy", fromDate: "2031-03-20", toDate: "2031-03-27", createdAt: "2031-03-01T10:00:00.000Z" }],
   // L'organigramme que lit l'approbateur « supérieur hiérarchique » : Julie relève de Marc.
   "GET /api/personnel/hierarchie": [{ id: "e-chef", nom: "Marc Lavoie", superieurId: null }, { id: "e-julie", nom: "Julie Roy", superieurId: "e-chef" }],
   // La feuille qui s'adapte à l'emploi : un champ de chaque type, et un désactivé qui garde sa valeur (colonne conservée).
@@ -610,7 +623,14 @@ const PAGES = [
       await page.getByTestId("incident-formulaire").waitFor({ state: "visible" });
       await page.getByTestId("incident-gravite").selectOption("elevee");
     // Le formulaire est un dialogue : refermé avant de quitter la page, sinon son voile intercepte la navigation.
-    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("incident-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("incident-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "organisme › déclarer un annuaire OpenID Connect (Keycloak)", agir: async (page) => {
+      await page.getByTestId("admin-tab-organisme").click();
+      await page.getByTestId("annuaire-ann-2").waitFor({ state: "visible" });
+      await page.getByTestId("annuaire-nouveau-ouvrir").click();
+      await page.getByTestId("annuaire-nouveau-fournisseur").selectOption("oidc");
+      await page.getByTestId("annuaire-nouveau-emetteur").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("annuaire-nouveau-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Guide et aide", nav: "nav-help" },
   { nom: "Soutien", nav: "nav-soutien", onglets: ["soutien-tab-niveaux", "soutien-tab-billets"], etats: [
     { nom: "ouvrir un billet, une pièce retenue et une refusée", agir: async (page) => {
@@ -796,6 +816,19 @@ const PAGES = [
       await page.getByTestId("mho-vue-liste").click();
       await page.getByTestId("mho-table").or(page.getByTestId("mho-vide")).first().waitFor({ state: "visible" });
     } }] },
+  { nom: "Mon équipe", nav: "nav-monequipe",
+    etats: [{ nom: "changer le supérieur d'un membre", agir: async (page) => {
+      await page.getByTestId("meq-e-luc-changer").click();
+      await page.getByTestId("meq-nouveau").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("meq-changement-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "détacher un subordonné direct, à confirmer", agir: async (page) => {
+      await page.getByTestId("meq-e-julie-detacher").click();
+      await page.getByTestId("meq-detacher-confirm").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.getByTestId("meq-detacher-cancel").click(); } },
+    { nom: "mettre fin à une suppléance, à confirmer", agir: async (page) => {
+      await page.getByTestId("meq-deleg-adel-1-terminer").click();
+      await page.getByTestId("meq-fin-confirm").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.getByTestId("meq-fin-cancel").click(); } }] },
   { nom: "Ma feuille de temps", nav: "nav-matemps",
     etats: [{ nom: "correction d'un segment et ses versions", agir: async (page) => {
       await page.getByTestId("mft-s-sg-1-modifier").click();
@@ -1082,7 +1115,7 @@ async function amenerLeLienDansLEcran(page: import("@playwright/test").Page, nav
  * fil auquel on répond.
  */
 const SANS_FORMULAIRE_EN_LIGNE = new Set([
-  "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges",
+  "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges", "nav-monequipe",
   "nav-uscomblement", "nav-usequipages", "nav-usdisponibilites", "nav-usabsences", "nav-usechanges", "nav-usagph", "nav-uspresence",
   "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-usregles",
   "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal", "nav-alparametres",

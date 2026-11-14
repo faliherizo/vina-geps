@@ -248,10 +248,36 @@ public class DepotApprobations implements Approbations.Depot {
 
     /** Le délégataire actif d'un approbateur à la date du jour, la délégation la plus récente d'abord. */
     public String delegataireActif(String tenantId, String userId) {
-        String aujourdhui = LocalDate.now(horloge.withZone(ZoneOffset.UTC)).toString();
-        return jdbc.sql("SELECT toUserId, fromDate, toDate FROM approval_delegations WHERE tenantId = ? AND fromUserId = ? ORDER BY createdAt DESC, rowid DESC").params(tenantId, userId)
-                .query((rs, i) -> new Approbations.Delegation(userId, rs.getString("toUserId"), rs.getString("fromDate"), rs.getString("toDate"))).list()
-                .stream().filter(d -> Approbations.delegationActive(d, aujourdhui)).map(Approbations.Delegation::toUserId).findFirst().orElse(null);
+        return delegationActive(tenantId, userId).map(Approbations.Delegation::toUserId).orElse(null);
+    }
+
+    private static Approbations.Delegation enDelegation(ResultSet rs, int i) throws SQLException {
+        return new Approbations.Delegation(rs.getString("fromUserId"), rs.getString("toUserId"), rs.getString("fromDate"), rs.getString("toDate"));
+    }
+
+    private String aujourdhui() {
+        return LocalDate.now(horloge.withZone(ZoneOffset.UTC)).toString();
+    }
+
+    @Override
+    public Optional<Approbations.Delegation> delegationActive(String tenantId, String deUserId) {
+        String jour = aujourdhui();
+        return jdbc.sql("SELECT fromUserId, toUserId, fromDate, toDate FROM approval_delegations WHERE tenantId = ? AND fromUserId = ? ORDER BY createdAt DESC, rowid DESC")
+                .params(tenantId, deUserId).query(DepotApprobations::enDelegation).list().stream().filter(d -> Approbations.delegationActive(d, jour)).findFirst();
+    }
+
+    @Override
+    public List<Approbations.Delegation> delegationsRecues(String tenantId, String versUserId) {
+        String jour = aujourdhui();
+        // Seule la plus récente délégation de chaque auteur fait foi : une plus ancienne vers ce compte peut avoir été remplacée.
+        return jdbc.sql("SELECT DISTINCT fromUserId FROM approval_delegations WHERE tenantId = ? AND toUserId = ?").params(tenantId, versUserId)
+                .query(String.class).list().stream().map(auteur -> delegationActive(tenantId, auteur))
+                .flatMap(Optional::stream).filter(d -> versUserId.equals(d.toUserId())).toList();
+    }
+
+    @Override
+    public boolean revoquer(String tenantId, String id, String deUserId) {
+        return jdbc.sql("DELETE FROM approval_delegations WHERE tenantId = ? AND id = ? AND fromUserId = ?").params(tenantId, id, deUserId).update() > 0;
     }
 
     /** Décide une étape, applique la séparation des tâches, recalcule l'état de la demande. */

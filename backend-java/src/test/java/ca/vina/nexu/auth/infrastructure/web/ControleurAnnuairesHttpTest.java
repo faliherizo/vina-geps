@@ -10,6 +10,7 @@ import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotRolesEtablissement;
 import ca.vina.nexu.auth.application.ServiceAnnuaires;
+import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.infrastructure.persistance.AdaptateurComptesAnnuaire;
 import ca.vina.nexu.auth.infrastructure.services.ServiceConnexion;
 import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
@@ -109,6 +110,11 @@ class ControleurAnnuairesHttpTest {
                         throw new IllegalStateException("Entra : invalid_grant — code expiré");
                     }
                     return revendications.get();
+                }, emetteur -> {
+                    if (emetteur.contains("injoignable")) {
+                        throw new IllegalStateException("Connection refused");
+                    }
+                    return new Annuaires.Decouverte.Points(emetteur + "/protocol/openid-connect/auth", emetteur + "/protocol/openid-connect/token");
                 }), env, HORLOGE, alea);
         HoteEtablissement hote = new HoteEtablissement() {
             @Override
@@ -273,5 +279,46 @@ class ControleurAnnuairesHttpTest {
         revendications.set(Map.of("email", "julie@urgences-sante.qc.ca", "groups", List.of("g-admin")));
         http.get("/api/auth/sso/annuaires/callback?code=c&state=" + state, null).andExpect(status().isNotFound());
         http.get("/api/auth/sso/annuaires/ann-1/login", null).andExpect(status().isNotFound());
+    }
+
+    private static final String KEYCLOAK = "{\"nom\":\"Keycloak\",\"fournisseur\":\"oidc\",\"emetteur\":\"http://localhost:8180/realms/vina-geps/\","
+            + "\"clientId\":\"vina-geps\",\"variableSecret\":\"ANNUAIRE_KEYCLOAK\",\"domaines\":[\"urgences-sante.qc.ca\"],\"revendication\":\"roles\","
+            + "\"correspondances\":[{\"groupe\":\"vina-admin\",\"role\":\"admin\"},{\"groupe\":\"vina-chef\",\"role\":\"manager\"}],\"roleParDefaut\":\"employee\"}";
+
+    @Test
+    @DisplayName("OIDC générique (Keycloak) : adresses lues à la découverte, rôle par priorité, courriel non vérifié refusé, fournisseur injoignable en 503")
+    void oidcGenerique() throws Exception {
+        env.put("ANNUAIRE_KEYCLOAK", "secret-keycloak");
+        http.post("/api/auth/annuaires", ADMIN_T1, KEYCLOAK).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fournisseur").value("oidc")).andExpect(jsonPath("$.emetteur").value("http://localhost:8180/realms/vina-geps"))
+                .andExpect(jsonPath("$.locataireEntra").value("")).andExpect(jsonPath("$.clientId").value("vina-geps"));
+        MvcResult r = http.get("/api/auth/sso/annuaires/ann-1/login", null).andExpect(status().isFound()).andReturn();
+        String url = r.getResponse().getRedirectedUrl();
+        assertThat(url).startsWith("http://localhost:8180/realms/vina-geps/protocol/openid-connect/auth?client_id=vina-geps").contains("code_challenge_method=S256");
+        String state = URI.create(url).getQuery().replaceAll(".*state=([^&]*).*", "$1");
+        // Une composite donne les deux rôles : la règle déclarée la première (admin) l'emporte.
+        revendications.set(Map.of("email", "diane@urgences-sante.qc.ca", "email_verified", true, "roles", List.of("vina-chef", "vina-admin")));
+        http.get("/api/auth/sso/annuaires/callback?code=c1&state=" + state, null).andExpect(status().isFound());
+        Oidc.Configuration cfg = configurationRecue.get();
+        assertThat(List.of(cfg.tokenUrl(), cfg.discoveryUrl(), cfg.clientSecret())).containsExactly("http://localhost:8180/realms/vina-geps/protocol/openid-connect/token",
+                "http://localhost:8180/realms/vina-geps/.well-known/openid-configuration", "secret-keycloak");
+        assertThat(comptes.lister().stream().filter(c -> "T1".equals(c.tenantId())).findFirst().orElseThrow().role()).isEqualTo("admin");
+
+        revendications.set(Map.of("email", "nouveau@urgences-sante.qc.ca", "email_verified", false, "roles", List.of("vina-chef")));
+        http.get("/api/auth/sso/annuaires/callback?code=c2&state=" + partirOidc(), null).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errors[0]").value("le courriel « nouveau@urgences-sante.qc.ca » n'est pas vérifié par l'annuaire « Keycloak »"));
+        // Aucun rôle reconnu : le rôle par défaut.
+        revendications.set(Map.of("email", "sans.role@urgences-sante.qc.ca", "roles", List.of("offline_access")));
+        http.get("/api/auth/sso/annuaires/callback?code=c3&state=" + partirOidc(), null).andExpect(status().isFound());
+        assertThat(comptes.lister().stream().filter(c -> "sans.role@urgences-sante.qc.ca".equals(c.email())).findFirst().orElseThrow().role()).isEqualTo("employee");
+
+        http.put("/api/auth/annuaires/ann-1", ADMIN_T1, KEYCLOAK.replace("localhost:8180", "localhost:9/injoignable")).andExpect(status().isOk());
+        http.get("/api/auth/sso/annuaires/ann-1/login", null).andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.errors[0]").value("l'annuaire « Keycloak » est injoignable (http://localhost:9/injoignable/realms/vina-geps) : Connection refused"));
+    }
+
+    private String partirOidc() throws Exception {
+        String url = http.get("/api/auth/sso/annuaires/ann-1/login", null).andExpect(status().isFound()).andReturn().getResponse().getRedirectedUrl();
+        return URI.create(url).getQuery().replaceAll(".*state=([^&]*).*", "$1");
     }
 }

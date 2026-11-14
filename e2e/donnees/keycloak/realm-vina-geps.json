@@ -1,0 +1,383 @@
+{
+  "realm": "vina-geps",
+  "displayName": "VINA GEPS — essais OIDC",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "fr",
+    "en"
+  ],
+  "defaultLocale": "fr",
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "roles": {
+    "realm": [
+      {
+        "name": "vina-employe",
+        "description": "Employé : son horaire, sa feuille de temps, ses demandes."
+      },
+      {
+        "name": "vina-chef",
+        "description": "Chef d'équipe : l'encadrement de son unité.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "vina-employe"
+          ]
+        }
+      },
+      {
+        "name": "vina-directeur",
+        "description": "Direction : approbations et pilotage.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "vina-chef"
+          ]
+        }
+      },
+      {
+        "name": "vina-admin",
+        "description": "Administration de l'organisme.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "vina-directeur"
+          ]
+        }
+      },
+      {
+        "name": "vina-rh",
+        "description": "Ressources humaines.",
+        "composite": true,
+        "composites": {
+          "realm": [
+            "vina-employe"
+          ]
+        }
+      }
+    ]
+  },
+  "groups": [
+    {
+      "name": "Urgences-santé",
+      "path": "/Urgences-santé",
+      "subGroups": [
+        {
+          "name": "Administration TI",
+          "path": "/Urgences-santé/Administration TI",
+          "realmRoles": [
+            "vina-admin"
+          ],
+          "subGroups": []
+        },
+        {
+          "name": "Direction",
+          "path": "/Urgences-santé/Direction",
+          "realmRoles": [
+            "vina-directeur"
+          ],
+          "subGroups": []
+        },
+        {
+          "name": "Ressources humaines",
+          "path": "/Urgences-santé/Ressources humaines",
+          "realmRoles": [
+            "vina-rh"
+          ],
+          "subGroups": []
+        },
+        {
+          "name": "Opérations",
+          "path": "/Urgences-santé/Opérations",
+          "realmRoles": [
+            "vina-employe"
+          ],
+          "subGroups": [
+            {
+              "name": "Chefs d'équipe",
+              "path": "/Urgences-santé/Opérations/Chefs d'équipe",
+              "realmRoles": [
+                "vina-chef"
+              ],
+              "subGroups": []
+            },
+            {
+              "name": "Paramédics",
+              "path": "/Urgences-santé/Opérations/Paramédics",
+              "realmRoles": [],
+              "subGroups": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "vina-geps",
+      "name": "VINA GEPS",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "vina-geps-secret-essai-uniquement",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5331/api/auth/sso/annuaires/callback",
+        "http://localhost:5173/api/auth/sso/annuaires/callback",
+        "http://localhost:5340/api/auth/sso/annuaires/callback",
+        "http://localhost:8095/api/auth/sso/annuaires/callback",
+        "http://localhost:4031/api/auth/sso/annuaires/callback",
+        "http://localhost:4000/api/auth/sso/annuaires/callback"
+      ],
+      "webOrigins": [
+        "+"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "+"
+      },
+      "defaultClientScopes": [
+        "web-origins",
+        "acr",
+        "profile",
+        "email",
+        "basic"
+      ],
+      "optionalClientScopes": [
+        "offline_access"
+      ],
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "multivalued": "true",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "groups",
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "diane.admin",
+      "enabled": true,
+      "email": "diane.admin@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Diane",
+      "lastName": "Roy",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Administration TI"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "robert.directeur",
+      "enabled": true,
+      "email": "robert.directeur@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Robert",
+      "lastName": "Gagnon",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Direction"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "rachel.rh",
+      "enabled": true,
+      "email": "rachel.rh@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Rachel",
+      "lastName": "Côté",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Ressources humaines"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "marc.chef",
+      "enabled": true,
+      "email": "marc.chef@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Marc",
+      "lastName": "Lavoie",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Opérations/Chefs d'équipe"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "julie.paramedic",
+      "enabled": true,
+      "email": "julie.paramedic@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Julie",
+      "lastName": "Tremblay",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Opérations/Paramédics"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "luc.cumul",
+      "enabled": true,
+      "email": "luc.cumul@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Luc",
+      "lastName": "Bouchard",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Ressources humaines",
+        "/Urgences-santé/Opérations/Chefs d'équipe"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "invite.externe",
+      "enabled": true,
+      "email": "invite.externe@gmail.com",
+      "emailVerified": true,
+      "firstName": "Ines",
+      "lastName": "Martin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Opérations/Paramédics"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "nadia.nonverifiee",
+      "enabled": true,
+      "email": "nadia.nonverifiee@urgences-sante.qc.ca",
+      "emailVerified": false,
+      "firstName": "Nadia",
+      "lastName": "Pelletier",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Opérations/Paramédics"
+      ],
+      "requiredActions": []
+    },
+    {
+      "username": "oscar.orphelin",
+      "enabled": true,
+      "email": "oscar.orphelin@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Oscar",
+      "lastName": "Fortin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [],
+      "requiredActions": []
+    },
+    {
+      "username": "denis.desactive",
+      "enabled": false,
+      "email": "denis.desactive@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Denis",
+      "lastName": "Morin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "Passe!Kc2026",
+          "temporary": false
+        }
+      ],
+      "groups": [
+        "/Urgences-santé/Opérations/Paramédics"
+      ],
+      "requiredActions": []
+    }
+  ]
+}
