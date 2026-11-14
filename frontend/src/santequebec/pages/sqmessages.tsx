@@ -15,7 +15,7 @@
  * Le **brouillon** s'enregistre à la demande et non à la frappe : un enregistrement automatique
  * aurait noyé le journal et surpris l'auteur, qui n'a pas demandé qu'on garde ce qu'il efface.
  */
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { Panneau, TableauDonnees, page, type ContexteSection, type Section } from "../noyau";
 import { ChampMembre } from "../references";
 import { ChampPieces, tailleLisible, type PieceLocale, type LimitesPieces } from "../../SoutienPieces";
@@ -54,6 +54,49 @@ interface MessageLu {
   piecesJointes?: PieceJointeLue[];
   /** « L'ai-je lu ? » — rendu par le serveur, et vrai d'office pour ce que j'ai écrit. */
   luParMoi?: boolean;
+  /** Les réactions posées, par type : le compte, et si l'une d'elles est la mienne. */
+  reactions?: ReactionLue[];
+  editeLe?: string | null;
+  modifie?: boolean;
+  supprime?: boolean;
+  supprimeLe?: string | null;
+  supprimePar?: string | null;
+  /** L'acheminement, servi à l'auteur seul : envoyé, reçu par N, lu par N. */
+  statut?: { destinataires: number; recus: number; lus: number; libelle: string } | null;
+}
+interface VersionLue { version: number; corps: string; ecritLe: string; remplaceLe: string | null; courante: boolean }
+interface ReactionLue { reaction: CodeReaction; nombre: number; parMoi: boolean }
+
+/**
+ * **Les réactions, un ensemble fermé** (REFONTE-MESSAGERIE.md § 2).
+ *
+ * Fermé, parce qu'une réaction libre deviendrait un second canal de messages, non journalisé ; et
+ * chaque réaction porte ses **mots**, que l'assistance technique lit à la place de l'émoji.
+ */
+type CodeReaction = "pouce" | "fait" | "merci" | "regarde";
+const REACTIONS: ReadonlyArray<{ code: CodeReaction; emoji: string; mots: string }> = [
+  { code: "pouce", emoji: "👍", mots: "bien reçu" },
+  { code: "fait", emoji: "✅", mots: "fait" },
+  { code: "merci", emoji: "❤️", mots: "merci" },
+  { code: "regarde", emoji: "👀", mots: "je regarde" },
+];
+
+/** Le jour d'un horodatage, pour séparer le fil comme une conversation : « Aujourd'hui », « Hier », sinon la date. */
+export function jourDe(iso: string, maintenant = new Date()): string {
+  const jour = String(iso ?? "").slice(0, 10);
+  const aujourdhui = maintenant.toISOString().slice(0, 10);
+  const hier = new Date(maintenant.getTime() - 86_400_000).toISOString().slice(0, 10);
+  if (jour === aujourdhui) return "Aujourd'hui";
+  if (jour === hier) return "Hier";
+  return jour;
+}
+
+/**
+ * **Qui je suis pour la messagerie** : le nom de connexion, comme le serveur (`GardeCommunication.acteurDe`).
+ * Comparer l'auteur d'un message à l'`id` du compte ne reconnaissait jamais mes propres messages.
+ */
+export function acteurDe(user: { id?: string; username?: string } | null | undefined): string {
+  return user?.username ?? user?.id ?? "";
 }
 
 /** L'heure d'un horodatage ISO, lisible sans décoder : « 2027-03-04 08:15 ». */
@@ -109,6 +152,40 @@ function Ouvrir({ ctx }: { ctx: ContexteSection }) {
 }
 
 /**
+ * **Écrire à une personne** — le geste le plus fréquent, réduit à deux temps.
+ *
+ * Ouvrir un fil de groupe demande un sujet et une portée ; écrire à Marc ne demande que Marc. Le
+ * serveur rend le fil à deux **existant** s'il y en a un : écrire deux fois à la même personne ne
+ * disperse plus la conversation dans deux fils.
+ */
+function EcrireA({ ctx }: { ctx: ContexteSection }) {
+  const [personne, setPersonne] = useState("");
+  const nomDe = useNomsDuGroupe(ctx);
+
+  return (
+    <form onSubmit={async (e) => {
+      e.preventDefault();
+      const fil = await ctx.appeler("/api/communication/conversations/directe", {
+        method: "POST", body: JSON.stringify({ personId: personne }),
+      });
+      if (fil?.id) {
+        ctx.annoncer(`Conversation avec ${nomDe(personne)} ouverte : choisissez-la dans la liste pour lui écrire.`);
+        setPersonne("");
+        ctx.recharger();
+      }
+    }}>
+      <div className="sq-rangee">
+        <ChampMembre ctx={ctx} libelle="Personne" requis testId="sq-msg-directe-personne"
+          valeur={personne} onChange={setPersonne} />
+      </div>
+      <div className="sq-actions">
+        <button type="submit" data-testid="sq-msg-directe">Écrire à cette personne</button>
+      </div>
+    </form>
+  );
+}
+
+/**
  * **Le nom d'une personne, pas son identifiant.**
  *
  * Les fils portaient `auteurId` à l'écran — « 7f3a… » en tête de chaque message. Personne ne
@@ -142,9 +219,16 @@ function useNomsDuGroupe(ctx: ContexteSection): (personId: string) => string {
    * ailleurs qu'en habillant l'écran.
    */
   return useMemo(() => (personId: string) => (
-    noms[personId] ?? (personId === user?.id ? "Moi" : personId)
-  ), [noms, user?.id]);
+    noms[personId] ?? (personId === acteurDe(user) ? "Moi" : personId)
+  ), [noms, user]);
 }
+
+/** Les filtres de la liste des fils (maquette : Tous · Non lus · Groupes · Archivés). */
+type Filtre = "tous" | "non-lus" | "groupes" | "archives";
+const FILTRES: ReadonlyArray<{ code: Filtre; libelle: string }> = [
+  { code: "tous", libelle: "Tous" }, { code: "non-lus", libelle: "Non lus" },
+  { code: "groupes", libelle: "Groupes" }, { code: "archives", libelle: "Archivés" },
+];
 
 /** Ce que la route des non-lus rend pour chaque fil. */
 interface FilNonLu {
@@ -248,7 +332,7 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
   const conversations = (Array.isArray(ctx.donnees) ? ctx.donnees : []) as Conversation[];
   const nomDe = useNomsDuGroupe(ctx);
   const { user } = useAuth();
-  const moiId = user?.id ?? "";
+  const moiId = acteurDe(user);
   const [fils, setFils] = useState<FilNonLu[]>([]);
 
   /**
@@ -267,6 +351,14 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
   const [repondA, setRepondA] = useState("");
   const [nouveauParticipant, setNouveauParticipant] = useState("");
   const [pieces, setPieces] = useState<PieceLocale[]>([]);
+  const [filtre, setFiltre] = useState<Filtre>("tous");
+  /** Le message en cours de modification, et son texte. */
+  const [edition, setEdition] = useState<{ id: string; corps: string } | null>(null);
+  /** Le message dont la suppression attend confirmation : un clic de trop ne supprime rien. */
+  const [aSupprimer, setASupprimer] = useState("");
+  /** L'historique déplié, par message. */
+  const [historiques, setHistoriques] = useState<Record<string, VersionLue[]>>({});
+  const [recherche, setRecherche] = useState("");
 
   const choisie = conversations.find((c) => c.id === conversationId);
   const actifs = (choisie?.participants ?? []).filter((p) => p.jusqua === null);
@@ -285,6 +377,73 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
   }
 
   const ouvrir = (id: string) => { setConversationId(id); setPriveA(""); setRepondA(""); };
+  const parId = new Map(conversations.map((c) => [c.id, c]));
+  const filsVisibles = fils.filter((f) => {
+    const c = parId.get(f.conversationId);
+    if (filtre === "non-lus" && f.nonLus === 0) return false;
+    if (filtre === "groupes" && c?.type !== "groupe") return false;
+    if (filtre === "archives" ? !c?.archiveeLe : Boolean(c?.archiveeLe)) return false;
+    const t = recherche.trim().toLocaleLowerCase("fr");
+    return !t || `${f.sujet} ${f.dernierExtrait ?? ""}`.toLocaleLowerCase("fr").includes(t);
+  });
+  const autre = choisie?.type === "individuelle" ? actifs.find((p) => p.personId !== moiId) : undefined;
+
+  const enregistrerModification = async () => {
+    if (!edition) return;
+    const fait = await ctx.appeler(`/api/communication/messages/${encodeURIComponent(edition.id)}`, {
+      method: "PUT", body: JSON.stringify({ corps: edition.corps }),
+    });
+    if (fait) {
+      ctx.annoncer("Message modifié : la version précédente reste dans son historique.");
+      setEdition(null);
+      setHistoriques((h) => { const n = { ...h }; delete n[fait.id]; return n; });
+      await charger(conversationId);
+    }
+  };
+
+  const supprimer = async (id: string) => {
+    const fait = await ctx.appeler(`/api/communication/messages/${encodeURIComponent(id)}`, { method: "DELETE" });
+    setASupprimer("");
+    if (fait) {
+      ctx.annoncer("Message supprimé : il garde sa place dans le fil, son texte ne se lit plus.");
+      await charger(conversationId);
+    }
+  };
+
+  const basculerHistorique = async (id: string) => {
+    if (historiques[id]) {
+      setHistoriques((h) => { const n = { ...h }; delete n[id]; return n; });
+      return;
+    }
+    const versions = await ctx.appeler(`/api/communication/messages/${encodeURIComponent(id)}/historique`);
+    if (Array.isArray(versions)) setHistoriques((h) => ({ ...h, [id]: versions as VersionLue[] }));
+  };
+
+  /** Réagir, ou retirer sa réaction : le serveur bascule, l'écran relit le fil. */
+  const reagir = async (m: MessageLu, r: (typeof REACTIONS)[number]) => {
+    const fait = await ctx.appeler(`/api/communication/messages/${encodeURIComponent(m.id)}/reactions`, {
+      method: "POST", body: JSON.stringify({ reaction: r.code }),
+    });
+    if (fait) {
+      ctx.annoncer(fait.pose ? `Réaction « ${r.mots} » posée.` : `Réaction « ${r.mots} » retirée.`);
+      await charger(conversationId);
+    }
+  };
+
+  /** Appeler depuis le fil : la personne d'un fil à deux, ou tout le groupe. */
+  const appelerDepuisLeFil = async () => {
+    if (!choisie) return;
+    const lance = autre
+      ? await ctx.appeler("/api/communication/appels", {
+          method: "POST", body: JSON.stringify({ appeleId: autre.personId, conversationId: choisie.id }),
+        })
+      : await ctx.appeler(`/api/communication/conversations/${encodeURIComponent(choisie.id)}/appel`, { method: "POST" });
+    if (lance) {
+      ctx.annoncer(autre
+        ? `Appel lancé : ça sonne chez ${nomDe(autre.personId)}.`
+        : `Appel de groupe lancé : ${actifs.length - 1} participant(s) invité(s).`);
+    }
+  };
 
   return (
     /*
@@ -308,7 +467,25 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
             </select>
           </div>
         </div>
-        <ListeConversations fils={fils} choisi={conversationId} onChoisir={ouvrir} nomDe={nomDe} />
+        <div className="sq-champ">
+          <label htmlFor="sq-msg-filtre-texte">Chercher un fil</label>
+          <input id="sq-msg-filtre-texte" type="search" data-testid="sq-msg-filtre-texte" value={recherche}
+                 onChange={(e) => setRecherche(e.target.value)} />
+        </div>
+        {/* Des boutons à bascule : l'état choisi se dit par `aria-pressed`, pas par la seule couleur. */}
+        <div className="msg-filtres" role="group" aria-label="Filtrer les conversations">
+          {FILTRES.map((f) => (
+            <button key={f.code} type="button" aria-pressed={filtre === f.code}
+                    className={`msg-filtre${filtre === f.code ? " msg-filtre-actif" : ""}`}
+                    data-testid={`sq-msg-filtre-${f.code}`} onClick={() => setFiltre(f.code)}>
+              {f.libelle}
+            </button>
+          ))}
+        </div>
+        <ListeConversations fils={filsVisibles} choisi={conversationId} onChoisir={ouvrir} nomDe={nomDe} />
+        {filsVisibles.length === 0 && fils.length > 0 && (
+          <p className="sq-vide" data-testid="sq-msg-filtre-vide">Aucun fil ne correspond à ce filtre.</p>
+        )}
       </div>
 
       <div className="msg-colonne-fil">
@@ -329,6 +506,23 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
             `sq-msg-table` reste l'identifiant du fil : les essais le lisent déjà, et le renommer
             n'aurait appris à personne que l'écran avait changé.
           */}
+          <div className="msg-entete-fil" data-testid="sq-msg-entete-fil">
+            <Avatar personId={autre?.personId ?? choisie?.id ?? ""} nom={autre ? nomDe(autre.personId) : (choisie?.sujet ?? "")} taille={40} />
+            <div className="msg-entete-fil-texte">
+              <h3 className="msg-entete-fil-titre">{autre ? nomDe(autre.personId) : choisie?.sujet}</h3>
+              <p className="msg-entete-fil-sous">
+                {choisie?.type === "groupe"
+                  ? `${actifs.length} participant(s) : ${actifs.slice(0, 3).map((p) => nomDe(p.personId)).join(", ")}${actifs.length > 3 ? "…" : ""}`
+                  : "Conversation à deux"}
+                {choisie?.archiveeLe ? " · archivée" : ""}
+              </p>
+            </div>
+            {!choisie?.archiveeLe && (
+              <button type="button" className="msg-appeler" data-testid="sq-msg-appeler" onClick={() => { void appelerDepuisLeFil(); }}>
+                <span aria-hidden="true">📞</span> {autre ? `Appeler ${nomDe(autre.personId)}` : "Appeler le groupe"}
+              </button>
+            )}
+          </div>
           <p className="msg-gestes-fil">
             {/* Rattraper une garde ne doit pas demander quarante clics. */}
             <button type="button" className="sq-lien" data-testid="sq-msg-tout-lu"
@@ -351,18 +545,26 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
             {messages.length === 0 && (
               <li className="msg-vide" data-testid="sq-msg-vide">Aucun message dans cette conversation.</li>
             )}
-            {messages.map((m) => {
+            {messages.map((m, i) => {
               const moi = m.auteurId === moiId;
               const auteur = nomDe(m.auteurId);
+              const jour = jourDe(m.envoyeLe);
+              const nouveauJour = i === 0 || jourDe(messages[i - 1].envoyeLe) !== jour;
               return (
-                <li key={m.id} className={`msg-bulle${moi ? " msg-bulle-moi" : ""}`}>
+                <Fragment key={m.id}>
+                {nouveauJour && (
+                  <li className="msg-jour" data-testid={`sq-msg-jour-${String(m.envoyeLe).slice(0, 10)}`}>
+                    <span>{jour}</span>
+                  </li>
+                )}
+                <li className={`msg-bulle${moi ? " msg-bulle-moi" : ""}${m.priveA ? " msg-bulle-privee" : ""}`}>
                   <Avatar personId={m.auteurId} nom={auteur} taille={36} />
                   <div className="msg-corps">
                     <p className="msg-entete">
                       <span className="msg-auteur">{auteur}</span>
                       <span className="msg-heure">{quand(m.envoyeLe)}</span>
                       {/* La portée est écrite, jamais rendue par une seule couleur (WCAG 1.4.1). */}
-                      <span className="msg-portee">{m.priveA ? `privé à ${nomDe(m.priveA)}` : "tout le fil"}</span>
+                      <span className="msg-portee">{m.priveA ? <><span aria-hidden="true">🔒 </span>Privé à {nomDe(m.priveA)}</> : "tout le fil"}</span>
                       {/* L'état de lecture **en toutes lettres** : une pastille muette se devine
                           (WCAG 1.4.1), et un fil exporté perd les couleurs mais garde les mots. */}
                       {!moi && (
@@ -372,7 +574,45 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
                         </span>
                       )}
                     </p>
-                    <p className="msg-texte">{m.corps}</p>
+                    {m.supprime ? (
+                      <p className="msg-texte msg-supprime" data-testid={`sq-msg-supprime-${m.id}`}>
+                        Message supprimé par {nomDe(m.supprimePar ?? "")} le {quand(m.supprimeLe)}.
+                      </p>
+                    ) : edition?.id === m.id ? (
+                      <form className="msg-edition" onSubmit={(e) => { e.preventDefault(); void enregistrerModification(); }}>
+                        <label htmlFor={`sq-msg-edition-${m.id}`}>Modifier le message</label>
+                        <textarea id={`sq-msg-edition-${m.id}`} data-testid={`sq-msg-edition-${m.id}`} rows={3} required
+                                  value={edition.corps} onChange={(e) => setEdition({ id: m.id, corps: e.target.value })} />
+                        <span className="msg-edition-gestes">
+                          <button type="submit" data-testid={`sq-msg-edition-enregistrer-${m.id}`}>Enregistrer la modification</button>
+                          <button type="button" data-testid={`sq-msg-edition-annuler-${m.id}`} onClick={() => setEdition(null)}>Annuler</button>
+                        </span>
+                      </form>
+                    ) : (
+                      <p className="msg-texte">{m.corps}</p>
+                    )}
+                    {/* L'état d'un message, **en mots** : envoyé, reçu, lu — pour l'auteur seul (WCAG 1.4.1). */}
+                    {!m.supprime && (m.statut || m.modifie) && (
+                      <p className="msg-etat">
+                        {m.statut && <span data-testid={`sq-msg-statut-${m.id}`}>{m.statut.libelle}</span>}
+                        {m.modifie && (
+                          <button type="button" className="sq-lien" aria-expanded={Boolean(historiques[m.id])}
+                                  data-testid={`sq-msg-historique-${m.id}`} onClick={() => { void basculerHistorique(m.id); }}>
+                            Modifié le {quand(m.editeLe)} · {historiques[m.id] ? "masquer l'historique" : "voir l'historique"}
+                          </button>
+                        )}
+                      </p>
+                    )}
+                    {historiques[m.id] && (
+                      <ol className="msg-historique" data-testid={`sq-msg-versions-${m.id}`} aria-label="Versions du message">
+                        {historiques[m.id].map((v) => (
+                          <li key={v.version}>
+                            <span className="msg-heure">Version {v.version} · {quand(v.ecritLe)}{v.courante ? " (actuelle)" : ""}</span>
+                            <span className="msg-historique-texte">{v.corps}</span>
+                          </li>
+                        ))}
+                      </ol>
+                    )}
                     {(m.piecesJointes ?? []).length > 0 && (
                       <ul className="msg-pieces">
                         {(m.piecesJointes ?? []).map((pj) => (
@@ -394,8 +634,47 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
                         ))}
                       </ul>
                     )}
-                    <p className="msg-gestes">
-                      {!choisie?.archiveeLe && (
+                    {!choisie?.archiveeLe && !m.supprime && (
+                      <p className="msg-reactions" data-testid={`sq-msg-reactions-${m.id}`}>
+                        {REACTIONS.map((r) => {
+                          const lue = (m.reactions ?? []).find((x) => x.reaction === r.code);
+                          const nombre = lue?.nombre ?? 0;
+                          return (
+                            <button key={r.code} type="button" className="msg-reaction" aria-pressed={Boolean(lue?.parMoi)}
+                                    data-testid={`sq-msg-reagir-${r.code}-${m.id}`}
+                                    aria-label={`${r.mots} : ${nombre} personne(s)${lue?.parMoi ? ", dont vous" : ""}`}
+                                    onClick={() => { void reagir(m, r); }}>
+                              <span aria-hidden="true">{r.emoji}</span>
+                              {nombre > 0 && <span aria-hidden="true"> {nombre}</span>}
+                            </button>
+                          );
+                        })}
+                      </p>
+                    )}
+                    {!m.supprime && <p className="msg-gestes">
+                      {moi && !choisie?.archiveeLe && edition?.id !== m.id && (
+                        <button type="button" className="sq-lien" data-testid={`sq-msg-modifier-${m.id}`}
+                                onClick={() => { setEdition({ id: m.id, corps: m.corps }); setASupprimer(""); }}>
+                          Modifier<span className="sr-only"> votre message de {quand(m.envoyeLe)}</span>
+                        </button>
+                      )}
+                      {moi && !choisie?.archiveeLe && aSupprimer !== m.id && (
+                        <button type="button" className="sq-lien" data-testid={`sq-msg-supprimer-${m.id}`} onClick={() => setASupprimer(m.id)}>
+                          Supprimer<span className="sr-only"> votre message de {quand(m.envoyeLe)}</span>
+                        </button>
+                      )}
+                      {aSupprimer === m.id && (
+                        <span role="group" aria-label="Confirmer la suppression">
+                          <button type="button" className="sq-lien msg-danger" data-testid={`sq-msg-supprimer-confirmer-${m.id}`}
+                                  onClick={() => { void supprimer(m.id); }}>
+                            Confirmer la suppression
+                          </button>
+                          <button type="button" className="sq-lien" data-testid={`sq-msg-supprimer-annuler-${m.id}`} onClick={() => setASupprimer("")}>
+                            Garder le message
+                          </button>
+                        </span>
+                      )}
+                      {!moi && !choisie?.archiveeLe && (
                         <button type="button" className="sq-lien" data-testid={`sq-msg-repondre-${m.id}`}
                                 onClick={() => {
                                   setRepondA(m.id);
@@ -412,9 +691,10 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
                               }}>
                         Marquer lu
                       </button>
-                    </p>
+                    </p>}
                   </div>
                 </li>
+                </Fragment>
               );
             })}
           </ul>
@@ -625,7 +905,13 @@ function Chercher({ ctx }: { ctx: ContexteSection }) {
  */
 export const SECTIONS_CONVERSATIONS: Section[] = [
     {
-      titre: "Ouvrir une conversation",
+      titre: "Écrire à une personne",
+      onglet: "Conversations",
+      aide: "Si vous avez déjà un fil avec cette personne, c'est lui qui s'ouvre : jamais deux fils à deux.",
+      rendu: (ctx) => <EcrireA ctx={ctx} />,
+    },
+    {
+      titre: "Ouvrir une conversation de groupe",
       onglet: "Conversations",
       aide: "Vous en êtes participant d'office : un fil auquel son auteur n'aurait pas accès n'aurait aucun sens.",
       rendu: (ctx) => <Ouvrir ctx={ctx} />,

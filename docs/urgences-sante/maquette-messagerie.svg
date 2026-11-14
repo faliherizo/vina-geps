@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="system-ui,sans-serif" font-size="12" role="img" aria-labelledby="t d">
+  <title id="t">Maquette — messagerie sécurisée du personnel</title>
+  <desc id="d">Trois colonnes : conversations, fil en bulles avec réactions, panneau d'informations ; bandeau d'appel de groupe en haut.</desc>
+  <rect width="960" height="560" fill="#f3f2ef"/>
+  <!-- Bandeau d'appel de groupe -->
+  <rect x="0" y="0" width="960" height="36" fill="#0a5c36"/>
+  <text x="16" y="23" fill="#fff" font-weight="600">📞 Appel de groupe — « Garde Est, nuit » · 3 présents · 04:12</text>
+  <rect x="790" y="7" width="74" height="22" rx="11" fill="#fff"/><text x="802" y="22" fill="#0a5c36">Rejoindre</text>
+  <rect x="870" y="7" width="74" height="22" rx="11" fill="#b42318"/><text x="882" y="22" fill="#fff">Ignorer</text>
+  <!-- Colonne 1 : conversations -->
+  <rect x="8" y="44" width="272" height="508" rx="8" fill="#fff" stroke="#d0d0d0"/>
+  <text x="20" y="68" font-size="15" font-weight="700">Messagerie</text>
+  <rect x="200" y="54" width="70" height="22" rx="11" fill="#0a66c2"/><text x="208" y="69" fill="#fff">✎ Nouveau</text>
+  <rect x="20" y="82" width="250" height="26" rx="13" fill="#eef3f8"/><text x="32" y="99" fill="#555">🔍 Chercher une personne, un message</text>
+  <g fill="#333"><text x="20" y="128" font-weight="700" fill="#0a66c2">Tous</text><text x="60" y="128">Non lus (3)</text><text x="140" y="128">Groupes</text><text x="200" y="128">Archivés</text></g>
+  <rect x="8" y="140" width="272" height="56" fill="#e8f1fb"/>
+  <circle cx="36" cy="168" r="18" fill="#7a9cc6"/><text x="29" y="173" fill="#fff">MT</text><circle cx="49" cy="181" r="5" fill="#057642" stroke="#fff"/>
+  <text x="62" y="162" font-weight="700">Marc Tremblay</text><text x="62" y="180" fill="#555">Vous : J'échange ton quart de mardi ?</text>
+  <text x="238" y="162" fill="#555">08:15</text>
+  <circle cx="36" cy="224" r="18" fill="#9b7ac6"/><text x="30" y="229" fill="#fff">GE</text>
+  <text x="62" y="218" font-weight="700">Garde Est, nuit · 6</text><text x="62" y="236" fill="#555">Chef : Briefing à 18 h 45</text>
+  <text x="238" y="218" fill="#555">07:50</text><rect x="244" y="226" width="20" height="16" rx="8" fill="#b42318"/><text x="250" y="238" fill="#fff">3</text>
+  <circle cx="36" cy="280" r="18" fill="#c69b7a"/><text x="30" y="285" fill="#fff">JL</text>
+  <text x="62" y="274">Julie Lavoie</text><text x="62" y="292" fill="#555">👍 a réagi à votre message</text><text x="230" y="274" fill="#555">hier</text>
+  <!-- Colonne 2 : fil -->
+  <rect x="288" y="44" width="436" height="508" rx="8" fill="#fff" stroke="#d0d0d0"/>
+  <circle cx="314" cy="72" r="16" fill="#9b7ac6"/><text x="338" y="68" font-weight="700">Garde Est, nuit</text><text x="338" y="84" fill="#555">6 participants · Julie, Marc, Chef…</text>
+  <text x="620" y="76" font-size="18">📞</text><text x="650" y="76" font-size="18">🎥</text><text x="684" y="76" font-size="18">ⓘ</text>
+  <line x1="288" y1="98" x2="724" y2="98" stroke="#e0e0e0"/>
+  <text x="470" y="120" fill="#555">— Aujourd'hui —</text>
+  <circle cx="310" cy="146" r="12" fill="#7a7ac6"/>
+  <rect x="328" y="134" width="250" height="44" rx="14" fill="#eef3f8"/><text x="340" y="152" font-weight="700">Chef · 07:50</text><text x="340" y="170">Briefing à 18 h 45, salle 2.</text>
+  <rect x="340" y="182" width="58" height="18" rx="9" fill="#fff" stroke="#d0d0d0"/><text x="346" y="195">👍 3 · ✅ 2</text>
+  <rect x="440" y="214" width="270" height="44" rx="14" fill="#0a66c2"/><text x="452" y="232" fill="#fff" font-weight="700">Vous · 08:02</text><text x="452" y="250" fill="#fff">Présente. Je prends le véhicule 3412.</text>
+  <text x="600" y="274" fill="#555">Vu par 4</text>
+  <rect x="328" y="290" width="250" height="40" rx="14" fill="#eef3f8"/><text x="340" y="314">📎 consignes-nuit.pdf (220 Ko)</text>
+  <rect x="440" y="344" width="270" height="44" rx="14" fill="#fff4e5" stroke="#b25e09"/><text x="452" y="362" font-weight="700">🔒 Privé à Marc · 08:10</text><text x="452" y="380">Peux-tu me remplacer mardi ?</text>
+  <rect x="300" y="480" width="412" height="62" rx="10" fill="#f8f8f8" stroke="#d0d0d0"/>
+  <text x="312" y="500" fill="#555">Écrire au fil (6 personnes le verront)…</text>
+  <text x="312" y="530" font-size="15">📎  😊</text><rect x="636" y="512" width="68" height="24" rx="12" fill="#0a66c2"/><text x="650" y="528" fill="#fff">Envoyer</text>
+  <!-- Colonne 3 : informations -->
+  <rect x="732" y="44" width="220" height="508" rx="8" fill="#fff" stroke="#d0d0d0"/>
+  <text x="744" y="68" font-weight="700">Participants (6)</text>
+  <g fill="#333"><text x="744" y="92">🟢 Julie Lavoie</text><text x="744" y="112">🟢 Marc Tremblay</text><text x="744" y="132">⚪ Chef Gagnon · gestion</text><text x="744" y="152">⚪ +3 autres</text></g>
+  <rect x="744" y="164" width="120" height="22" rx="11" fill="#eef3f8"/><text x="752" y="179">＋ Ajouter</text>
+  <text x="744" y="214" font-weight="700">Fichiers partagés</text><text x="744" y="236">📎 consignes-nuit.pdf</text>
+  <text x="744" y="270" font-weight="700">Appels récents</text><text x="744" y="292">Groupe · 12 min · 4 présents</text><text x="744" y="312">Marc · manqué · hier</text>
+  <rect x="744" y="508" width="196" height="28" rx="14" fill="#fff" stroke="#b42318"/><text x="784" y="527" fill="#b42318">Archiver le fil</text>
+</svg>

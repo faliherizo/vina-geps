@@ -59,19 +59,131 @@ public final class Messagerie {
     }
 
     /**
+     * <b>À qui va un message</b> : tout le fil, ou une seule personne ; et à quel message il répond.
+     *
+     * Une réponse « à l'émetteur seulement » qui partirait au fil entier ne se rattrape pas : la
+     * visibilité se décide ici, une fois, et toutes les lectures — fil, non-lus, recherche, pièces —
+     * passent par {@link #dansLaPortee}.
+     */
+    public record Adresse(String priveA, String repondAuMessageId) {
+        public static final Adresse PUBLIQUE = new Adresse(null, null);
+
+        /** Un message privé n'est lu que de son auteur et de son destinataire. */
+        public boolean visiblePar(String lecteur, String auteurId) {
+            return priveA == null || priveA.equals(lecteur) || auteurId.equals(lecteur);
+        }
+    }
+
+    /** Un message supprimé : quand, et par qui. Son texte ne se sert plus ; le geste reste au journal. */
+    public record Suppression(String le, String par) { }
+
+    /**
+     * <b>Où en est un message pour son auteur</b> : envoyé à N destinataires, reçu par certains (la notification
+     * leur est parvenue), lu par d'autres. Une lecture vaut réception : on ne lit pas ce qu'on n'a pas reçu.
+     */
+    public record Acheminement(int destinataires, int recus, int lus) {
+        public String libelle() {
+            if (destinataires == 0) {
+                return "Envoyé";
+            }
+            if (lus > 0) {
+                return "Lu par " + lus + " sur " + destinataires;
+            }
+            return recus > 0 ? "Reçu par " + recus + " sur " + destinataires : "Envoyé";
+        }
+
+        public Map<String, Object> enCarte() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("destinataires", destinataires);
+            m.put("recus", recus);
+            m.put("lus", lus);
+            m.put("libelle", libelle());
+            return m;
+        }
+    }
+
+    /**
+     * Les destinataires d'un message : son destinataire privé, ou les participants actifs du fil à l'envoi,
+     * l'auteur excepté. Un participant arrivé après ne compte pas : il n'était pas là pour le recevoir.
+     */
+    public static Set<String> destinataires(Conversation c, Message m) {
+        if (m.adresse().priveA() != null) {
+            return Set.of(m.adresse().priveA());
+        }
+        Set<String> d = new HashSet<>();
+        c.participants().stream().filter(p -> !p.personId().equals(m.auteurId()) && actif(p, m.envoyeLe()))
+                .forEach(p -> d.add(p.personId()));
+        return d;
+    }
+
+    /** L'acheminement d'un message, des accusés de réception et des lectures rangés. */
+    public static Acheminement acheminement(Conversation c, Message m, Set<String> recusPar, Set<String> lusPar) {
+        Set<String> d = destinataires(c, m);
+        Set<String> lus = new HashSet<>(lusPar);
+        lus.retainAll(d);
+        Set<String> recus = new HashSet<>(recusPar);
+        recus.addAll(lus);
+        recus.retainAll(d);
+        return new Acheminement(d.size(), recus.size(), lus.size());
+    }
+
+    /** Le compte d'une réaction sur un message, et si l'une est la mienne. */
+    public record CompteReaction(Reaction reaction, int nombre, boolean parMoi) {
+        public Map<String, Object> enCarte() {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("reaction", reaction.code());
+            m.put("mots", reaction.mots());
+            m.put("nombre", nombre);
+            m.put("parMoi", parMoi);
+            return m;
+        }
+    }
+
+    /** Une réaction posée, telle que rangée : qui, sur quel message, laquelle. */
+    public record ReactionPosee(String messageId, String personId, Reaction reaction) { }
+
+    /**
      * Un message, et <b>si le lecteur courant l'a lu</b>.
      *
      * {@code luParMoi} est faux par défaut : il n'a de sens que dans une lecture qui sait qui lit,
      * et les autres chemins (recherche, comptes) n'ont pas à s'en soucier.
      */
     public record Message(String id, String conversationId, String auteurId, String corps, String envoyeLe, String editeLe,
-                          List<PieceJointe> piecesJointes, boolean luParMoi) {
+                          List<PieceJointe> piecesJointes, Adresse adresse, boolean luParMoi, List<CompteReaction> reactions,
+                          Suppression suppression, Acheminement acheminement) {
+        public Message(String id, String conversationId, String auteurId, String corps, String envoyeLe, String editeLe,
+                       List<PieceJointe> piecesJointes, Adresse adresse, boolean luParMoi, List<CompteReaction> reactions) {
+            this(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, luParMoi, reactions, null, null);
+        }
+
         public Message(String id, String conversationId, String auteurId, String corps, String envoyeLe, String editeLe, List<PieceJointe> piecesJointes) {
-            this(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, false);
+            this(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, Adresse.PUBLIQUE);
+        }
+
+        public Message(String id, String conversationId, String auteurId, String corps, String envoyeLe, String editeLe, List<PieceJointe> piecesJointes,
+                       Adresse adresse) {
+            this(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, false, List.of());
         }
 
         public Message avecLecture(boolean lu) {
-            return new Message(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, lu);
+            return new Message(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, lu, reactions, suppression, acheminement);
+        }
+
+        public Message avecReactions(List<CompteReaction> comptes) {
+            return new Message(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, luParMoi, List.copyOf(comptes),
+                    suppression, acheminement);
+        }
+
+        public Message avecSuppression(Suppression s) {
+            return new Message(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, luParMoi, reactions, s, acheminement);
+        }
+
+        public Message avecAcheminement(Acheminement a) {
+            return new Message(id, conversationId, auteurId, corps, envoyeLe, editeLe, piecesJointes, adresse, luParMoi, reactions, suppression, a);
+        }
+
+        public boolean supprime() {
+            return suppression != null;
         }
 
         public Map<String, Object> enCarte() {
@@ -79,13 +191,53 @@ public final class Messagerie {
             m.put("id", id);
             m.put("conversationId", conversationId);
             m.put("auteurId", auteurId);
-            m.put("corps", corps);
+            // Supprimé, le message garde sa place dans le fil ; son texte, ses pièces et ses réactions ne se servent plus.
+            m.put("corps", supprime() ? null : corps);
             m.put("envoyeLe", envoyeLe);
             m.put("editeLe", editeLe);
-            m.put("piecesJointes", piecesJointes.stream().map(PieceJointe::enCarte).toList());
+            m.put("modifie", editeLe != null && !supprime());
+            m.put("supprime", supprime());
+            m.put("supprimeLe", supprime() ? suppression.le() : null);
+            m.put("supprimePar", supprime() ? suppression.par() : null);
+            m.put("priveA", adresse.priveA());
+            m.put("repondAuMessageId", adresse.repondAuMessageId());
+            m.put("piecesJointes", supprime() ? List.of() : piecesJointes.stream().map(PieceJointe::enCarte).toList());
             m.put("luParMoi", luParMoi);
+            m.put("reactions", supprime() ? List.of() : reactions.stream().map(CompteReaction::enCarte).toList());
+            m.put("statut", acheminement == null ? null : acheminement.enCarte());
             return m;
         }
+    }
+
+    /** Les comptes de réactions d'un message, dans l'ordre de l'ensemble fermé ; une réaction sans personne ne s'affiche pas. */
+    public static List<CompteReaction> compterReactions(String messageId, List<ReactionPosee> posees, String lecteur) {
+        List<CompteReaction> comptes = new ArrayList<>();
+        for (Reaction r : Reaction.values()) {
+            List<ReactionPosee> celles = posees.stream().filter(p -> p.messageId().equals(messageId) && p.reaction() == r).toList();
+            if (!celles.isEmpty()) {
+                comptes.add(new CompteReaction(r, celles.size(), celles.stream().anyMatch(p -> p.personId().equals(lecteur))));
+            }
+        }
+        return comptes;
+    }
+
+    /**
+     * Ce qu'une adresse exige : un destinataire privé qui participe et qui n'est pas l'auteur ; un message
+     * auquel on répond qui est dans le fil, lisible de l'auteur.
+     */
+    public static List<String> validerAdresse(Conversation c, String auteurId, Adresse adresse, List<Message> filLisible, String instant) {
+        List<String> erreurs = new ArrayList<>();
+        if (adresse.priveA() != null) {
+            if (adresse.priveA().equals(auteurId)) {
+                erreurs.add("un message privé s'adresse à une autre personne que vous");
+            } else if (!participantActif(c, adresse.priveA(), instant)) {
+                erreurs.add("« priveA » : cette personne ne participe pas à la conversation");
+            }
+        }
+        if (adresse.repondAuMessageId() != null && filLisible.stream().noneMatch(m -> m.id().equals(adresse.repondAuMessageId()))) {
+            erreurs.add("« repondAuMessageId » : message introuvable dans cette conversation");
+        }
+        return erreurs;
     }
 
     public record Fenetre(String conversationId, String depuis, String jusqua) {
@@ -129,6 +281,8 @@ public final class Messagerie {
 
     /** Longueur de l'aperçu d'une conversation : de quoi reconnaître le fil, jamais de quoi le lire. */
     private static final int LONGUEUR_APERCU = 90;
+    /** Ce que l'aperçu d'un fil montre d'un message supprimé : le fait, jamais le texte. */
+    static final String MESSAGE_SUPPRIME = "Message supprimé";
     /** En deçà, couper au dernier espace rognerait plus qu'il n'aiderait : on coupe net. */
     private static final int COUPURE_MOT_MINIMALE = 40;
 
@@ -145,12 +299,12 @@ public final class Messagerie {
         List<Message> visibles = messages.stream().filter(m -> dansLaPortee(portee, m)).toList();
         Message dernier = visibles.isEmpty() ? null : visibles.get(visibles.size() - 1);
         int compte = (int) visibles.stream()
-                .filter(m -> !m.auteurId().equals(portee.personId()) && !lus.contains(m.id()))
+                .filter(m -> !m.auteurId().equals(portee.personId()) && !lus.contains(m.id()) && !m.supprime())
                 .count();
         return new ConversationNonLue(conversation.id(), conversation.sujet(), compte,
                 dernier == null ? null : dernier.envoyeLe(),
                 dernier == null ? null : dernier.auteurId(),
-                dernier == null ? null : apercu(dernier.corps()));
+                dernier == null ? null : dernier.supprime() ? MESSAGE_SUPPRIME : apercu(dernier.corps()));
     }
 
     /** Une première ligne, coupée sur un mot et suivie d'une ellipse — jamais au milieu d'un mot. */
@@ -164,8 +318,9 @@ public final class Messagerie {
         return (espace > COUPURE_MOT_MINIMALE ? coupe.substring(0, espace) : coupe).stripTrailing() + "…";
     }
 
+    /** Dans ma fenêtre de participation, et pas privé à un autre que moi. */
     public static boolean dansLaPortee(PorteeLecture portee, Message m) {
-        return portee.couvre(m.conversationId(), m.envoyeLe());
+        return portee.couvre(m.conversationId(), m.envoyeLe()) && m.adresse().visiblePar(portee.personId(), m.auteurId());
     }
 
     private static final int LONGUEUR_EXTRAIT = 120;
@@ -186,7 +341,8 @@ public final class Messagerie {
         if (terme.length() < 2) {
             throw new IllegalArgumentException("la recherche demande au moins deux caractères");
         }
-        List<Message> trouves = new ArrayList<>(messages.stream().filter(m -> dansLaPortee(portee, m) && normaliser(m.corps()).contains(terme)).toList());
+        List<Message> trouves = new ArrayList<>(messages.stream().filter(m -> dansLaPortee(portee, m) && !m.supprime() && normaliser(m.corps()).contains(terme))
+                .toList());
         trouves.sort(Comparator.comparing(Message::envoyeLe).reversed());
         List<Map<String, Object>> resultats = new ArrayList<>();
         for (Message m : trouves) {
@@ -207,6 +363,14 @@ public final class Messagerie {
 
     public static boolean participantActif(Conversation c, String personId, String instant) {
         return c.participants().stream().anyMatch(p -> p.personId().equals(personId) && actif(p, instant));
+    }
+
+    /** Le fil à deux, actif, entre ces deux personnes : il n'y en a jamais deux (REFONTE-MESSAGERIE.md § 2). */
+    public static java.util.Optional<Conversation> filADeux(List<Conversation> conversations, String moi, String autre, String instant) {
+        return conversations.stream()
+                .filter(c -> TypeConversation.INDIVIDUELLE.est(c.type()) && c.archiveeLe() == null)
+                .filter(c -> participantActif(c, moi, instant) && participantActif(c, autre, instant))
+                .findFirst();
     }
 
     public static boolean peutEcrire(Conversation c, String personId, String instant) {
@@ -274,6 +438,21 @@ public final class Messagerie {
             erreurs.add("nom de fichier invalide");
         }
         return erreurs;
+    }
+
+    /** Le fichier d'une pièce, transmis en base64 ; vide si rien n'est transmis ou si ce n'est pas du base64. */
+    public static java.util.Optional<byte[]> contenuDe(Object brut) {
+        if (!(brut instanceof String texte) || texte.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            // Un « data:…;base64, » en tête est toléré : c'est ce que rend un FileReader.
+            String b64 = texte.contains(",") && texte.startsWith("data:") ? texte.substring(texte.indexOf(',') + 1) : texte;
+            // Décodeur strict : le décodeur « MIME » ignore les caractères invalides et accepterait n'importe quoi.
+            return java.util.Optional.of(java.util.Base64.getDecoder().decode(b64.replaceAll("\\s", "")));
+        } catch (IllegalArgumentException e) {
+            return java.util.Optional.empty();
+        }
     }
 
     public static String typeServi(String typeMime) {

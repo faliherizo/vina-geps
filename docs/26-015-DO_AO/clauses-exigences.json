@@ -1,0 +1,322 @@
+{
+  "_lisez-moi": "Chaque exigence fonctionnelle du 26-015-DO découpée en clauses vérifiables, mot pour mot du client autant que possible. Une preuve est soit « bdd:<fichier>|<début du titre du scénario> », soit « java:<Classe>#<méthode> » (essai à horloge figée, quand le temps réel ne peut pas attendre). Une clause sans preuve est un écart. Lu par construire-tableau-bdd.py.",
+  "E-GN-1": [
+    ["configurer des quarts nécessitant une ou plusieurs ressources", "bdd:01-planification|Un quart réunit plusieurs places"],
+    ["selon le corps d'emploi", "bdd:01-planification|Un quart réunit plusieurs places"],
+    ["ou le contexte (nature du quart, milieu)", "bdd:01-planification|Un quart réunit plusieurs places"]
+  ],
+  "E-GN-2": [
+    ["définir le nombre minimal de ressources d'un quart", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"],
+    ["pour qu'il soit considéré opérationnel (sous le minimum signalé)", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "E-GN-3": [
+    ["créer des quarts ponctuels ou ad hoc", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"]
+  ],
+  "E-GN-4": [
+    ["choisir pour un quart un mode d'attribution automatisé ou manuel", "bdd:04-absences|Après une dérogation, le quart automatisé"],
+    ["par un utilisateur autorisé seulement", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"]
+  ],
+  "E-GN-5": [
+    ["autoriser manuellement un congé refusé par l'automatisation", "bdd:04-absences|La dérogation exige un droit"],
+    ["avec attribution du code d'absence applicable", "bdd:04-absences|La dérogation exige un droit"]
+  ],
+  "E-GN-6": [
+    ["appliquer automatiquement les règles de comblement après une autorisation manuelle", "bdd:04-absences|Après une dérogation, le quart automatisé"]
+  ],
+  "E-GN-7": [
+    ["segmenter la planification par groupes organisationnels distincts", "bdd:01-planification|Chaque unité est un groupe organisationnel"],
+    ["segmenter les règles par groupes organisationnels distincts", "bdd:03-disponibilites|Une règle de conformité vise une unité ou un statut"]
+  ],
+  "E-GN-8": [
+    ["restreindre l'accès d'un utilisateur à des groupes organisationnels précis", "bdd:11-technologie|Les profils d'utilisateurs sont distincts"],
+    ["restreindre ses opérations à ces groupes", "bdd:02-quarts-et-attribution|Une règle de repos bloque l'attribution"]
+  ],
+  "E-GN-9": [
+    ["consigner de manière horodatée toute action sur horaires, quarts, absences, paramètres ou temps", "bdd:09-journal|Les gestes de paramétrage et d'horaire se retrouvent au journal"],
+    ["identifier l'utilisateur à l'origine", "bdd:02-quarts-et-attribution|Une règle de repos bloque l'attribution"],
+    ["ou le mécanisme automatisé à l'origine", "bdd:04-absences|La dérogation exige un droit"]
+  ],
+  "E-GN-10": [
+    ["consulter a posteriori l'ensemble des traces d'exécution", "bdd:09-journal|Les gestes de paramétrage et d'horaire se retrouvent au journal"],
+    ["et de paramétrage", "bdd:09-journal|Les gestes de paramétrage et d'horaire se retrouvent au journal"],
+    ["les auditer et les analyser (export)", "bdd:09-journal|Le journal s'exporte en CSV"]
+  ],
+  "E-GN-11": [
+    ["attribuer manuellement un quart en exception malgré les règles de priorisation", "bdd:02-quarts-et-attribution|Une règle de repos bloque l'attribution"],
+    ["avec traçabilité complète de la décision", "bdd:02-quarts-et-attribution|Une règle de repos bloque l'attribution"]
+  ],
+  "E-GN-12": [
+    ["définir des règles de conformité des disponibilités", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"],
+    ["selon le statut d'emploi, le type de poste ou le contexte", "bdd:03-disponibilites|Une règle de conformité vise une unité ou un statut"]
+  ],
+  "E-GN-13": [
+    ["les employés inscrivent leurs disponibilités pour une période donnée", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"]
+  ],
+  "E-GN-14": [
+    ["exclure automatiquement du bassin de candidats la ressource non conforme", "bdd:03-disponibilites|Le bassin de candidats d'une place exclut"]
+  ],
+  "E-GN-15": [
+    ["valider la conformité au moment de la saisie", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"],
+    ["empêcher ou signaler, selon des paramètres configurables", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"]
+  ],
+  "E-GN-16": [
+    ["informer l'utilisateur des motifs d'inadmissibilité", "bdd:03-disponibilites|Le bassin de candidats d'une place exclut"]
+  ],
+  "E-GN-17": [
+    ["identifier le milieu physique du quart planifié", "bdd:01-planification|Un quart réunit plusieurs places"]
+  ],
+  "E-CH-1": [
+    ["processus annuel structuré de planification (AGPH) pour l'attribution des postes", "bdd:06-agph|Une campagne AGPH complète"],
+    ["et de révision des horaires", "bdd:06-agph|Une campagne AGPH complète"],
+    ["les ressources émettent leurs disponibilités (journée, horaire)", "bdd:06-agph|Une campagne AGPH complète"],
+    ["en respectant les règles de convention : nombre de quarts", "bdd:06-agph|Le dépôt AGPH est jugé par les règles de convention"],
+    ["durée des quarts", "bdd:06-agph|Le dépôt AGPH est jugé par les règles de convention"],
+    ["optimisation des budgets", "bdd:06-agph|Le dépôt AGPH est jugé par les règles de convention"],
+    ["paramétrables par le service de planification", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "E-CH-2": [
+    ["créer des quarts de travail", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"],
+    ["créer des postes liés aux quarts", "bdd:01-planification|Un poste porte ses paramètres déclarés"]
+  ],
+  "E-CH-3": [
+    ["modifier des quarts de travail", "bdd:01-planification|Un quart du jour s'ajuste"],
+    ["modifier des postes liés aux quarts (un ou plusieurs)", "bdd:01-planification|Un poste porte ses paramètres déclarés"]
+  ],
+  "E-CH-4": [
+    ["publier des postes", "bdd:02-quarts-et-attribution|Un poste se publie une fois"],
+    ["publier des quarts", "bdd:05-echanges|Un échange se propose"]
+  ],
+  "E-CH-5": [
+    ["associer à chaque poste ses paramètres fonctionnels", "bdd:01-planification|Un poste porte ses paramètres déclarés"]
+  ],
+  "E-CH-6": [
+    ["identifier automatiquement les postes vacants causés par des absences planifiées", "bdd:04-absences|La dérogation exige un droit"]
+  ],
+  "E-CH-7": [
+    ["ouvrir un processus de remplacements long terme", "bdd:06-agph|Un remplacement long terme s'ouvre"]
+  ],
+  "E-CH-8": [
+    ["les employés admissibles se manifestent", "bdd:06-agph|Un remplacement long terme s'ouvre"]
+  ],
+  "E-CH-9": [
+    ["certains remplacements demeurent non comblés", "bdd:06-agph|L'encadrement laisse un remplacement non comblé"]
+  ],
+  "E-CH-10": [
+    ["transférer automatiquement vers la gestion régulière les quarts aux postes non couverts", "bdd:06-agph|L'encadrement laisse un remplacement non comblé"]
+  ],
+  "E-GR-1": [
+    ["gérer les horaires de façon continue hors du processus AGPH", "bdd:01-planification|Un poste porte ses paramètres déclarés"]
+  ],
+  "E-GR-2": [
+    ["prendre en charge les quarts non couverts à l'issue de l'AGPH", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "E-GR-3": [
+    ["évaluer l'impact d'une absence sur le taux de comblement", "bdd:04-absences|Une absence qui ferait tomber le comblement"]
+  ],
+  "E-GR-4": [
+    ["identifier automatiquement les quarts à offrir pour comblement", "bdd:04-absences|Après une dérogation, le quart automatisé"]
+  ],
+  "E-GR-5": [
+    ["gérer des ajustements journaliers", "bdd:01-planification|Un quart du jour s'ajuste"]
+  ],
+  "E-GR-6": [
+    ["créer et gérer des quarts ad hoc", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"]
+  ],
+  "E-GR-7": [
+    ["gérer les échanges de quarts", "bdd:05-echanges|Un échange se propose"],
+    ["avec validation d'admissibilité", "bdd:05-echanges|Un échange se propose"],
+    ["et de contiguïté (repos entre deux quarts)", "bdd:05-echanges|Un échange qui priverait un employé de son repos"]
+  ],
+  "E-GR-8": [
+    ["définir des quotas de comblement distincts par période, plage horaire ou type de quart", "bdd:01-planification|Les quotas de comblement se règlent"]
+  ],
+  "E-GR-9": [
+    ["ajuster temporairement les paramètres, quotas compris, en cours de période", "bdd:01-planification|Un quota s'ajuste temporairement"],
+    ["sans effet rétroactif", "bdd:01-planification|Un quota s'ajuste temporairement"]
+  ],
+  "E-GR-10": [
+    ["gérer les horaires par périodes de planification", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"],
+    ["avec ouverture contrôlée", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"],
+    ["et fermeture contrôlée", "bdd:01-planification|Une période fermée ne se modifie plus"]
+  ],
+  "E-GR-11": [
+    ["déposer ses disponibilités par période ouverte", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"],
+    ["et les ajuster", "bdd:03-disponibilites|Hors collecte, le dépôt de disponibilités est refusé"]
+  ],
+  "E-GR-12": [
+    ["configurer si les échanges entre périodes sont autorisés", "bdd:05-echanges|Sans règle, un échange entre deux périodes s'applique"],
+    ["restreints", "bdd:05-echanges|Un échange entre deux périodes suit la règle configurée"],
+    ["ou interdits", "bdd:05-echanges|Sans règle, un échange entre deux périodes s'applique"]
+  ],
+  "E-GR-13": [
+    ["configurer des quarts non liés à des postes", "bdd:02-quarts-et-attribution|Un quart ad hoc se crée"]
+  ],
+  "E-GP-1": [
+    ["les employés déclarent leurs heures en temps réel", "bdd:07-presence|Julie pointe à la caserne"],
+    ["selon des profils configurables", "bdd:07-presence|Le profil de pointage décide du mode"]
+  ],
+  "E-GP-2": [
+    ["saisie manuelle des pauses, repas et repos non payés", "bdd:07-presence|Le profil de pointage décide du mode"],
+    ["selon des profils configurables", "bdd:07-presence|Le profil de pointage décide du mode"]
+  ],
+  "E-GP-3": [
+    ["restreindre la modification des heures selon des règles configurables", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"]
+  ],
+  "E-GP-4": [
+    ["valider les heures saisies selon les règles du quart", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "E-GP-5": [
+    ["aviser l'utilisateur d'une anomalie lors de la saisie", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"]
+  ],
+  "E-GP-6": [
+    ["approuver les heures saisies", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"],
+    ["selon des flux configurables", "bdd:08-feuilles-de-temps|Le flux d'approbation se configure"]
+  ],
+  "E-GP-7": [
+    ["gestion multi-site de la déclaration de présence", "bdd:07-presence|Le site déclaré au pointage"]
+  ],
+  "E-GP-8": [
+    ["comparer heures planifiées et heures déclarées", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"]
+  ],
+  "E-GP-9": [
+    ["définir une exigence de présence préalable avant un quart", "bdd:07-presence|Julie pointe à la caserne"],
+    ["rémunérée", "java:ControleurTempsEffectifsHttpTest#recit"]
+  ],
+  "E-GP-10": [
+    ["valider que la déclaration se fait depuis un emplacement conforme au milieu du quart", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "E-GP-11": [
+    ["un ou plusieurs mécanismes de validation de la présence physique", "bdd:07-presence|Julie pointe à la caserne"]
+  ],
+  "E-GP-12": [
+    ["configurer les exigences de validation de présence", "bdd:07-presence|Julie pointe à la caserne"]
+  ],
+  "E-GP-13": [
+    ["valider la cohérence entre lieu de déclaration et milieu du quart", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"],
+    ["déclencher une action configurable en cas d'écart", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "E-GP-14": [
+    ["consigner la localisation des déclarations de présence", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"],
+    ["et permettre leur audit", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "E-GP-15": [
+    ["un utilisateur autorisé saisit des heures a posteriori", "bdd:07-presence|Un quart non pointé se déclare après coup"],
+    ["et des activités a posteriori", "bdd:07-presence|Une saisie après coup porte l'activité exercée"]
+  ],
+  "E-RF-1": [
+    ["préparer automatiquement la feuille de temps depuis les horaires et affectations", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"]
+  ],
+  "E-RF-2": [
+    ["saisie manuelle des données de temps", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"],
+    ["ou automatisée", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"]
+  ],
+  "E-RF-3": [
+    ["valider en temps réel les données de feuille de temps", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"]
+  ],
+  "E-RF-4": [
+    ["approuver les feuilles selon des profils autorisés", "bdd:08-feuilles-de-temps|La feuille soumise se verrouille"]
+  ],
+  "E-RF-5": [
+    ["évaluer automatiquement les heures supplémentaires", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"]
+  ],
+  "E-RF-6": [
+    ["distinguer les types d'heures", "bdd:08-feuilles-de-temps|La feuille soumise se verrouille"]
+  ],
+  "E-RF-7": [
+    ["produire des rapports opérationnels", "bdd:08-feuilles-de-temps|Les relevés se regroupent"]
+  ],
+  "E-RF-8": [
+    ["exporter les données dans des formats standards", "bdd:08-feuilles-de-temps|Les relevés se regroupent"]
+  ],
+  "E-RF-9": [
+    ["détecter automatiquement les anomalies de temps", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"],
+    ["et de présence", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "E-RF-10": [
+    ["configurer des règles de contrôle temporel", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"]
+  ],
+  "E-RF-11": [
+    ["afficher clairement les anomalies dans la feuille de temps", "bdd:08-feuilles-de-temps|La feuille se prépare depuis l'horaire"]
+  ],
+  "E-RF-12": [
+    ["structurer les données de temps pour la paie", "bdd:08-feuilles-de-temps|La feuille soumise se verrouille"]
+  ],
+  "E-RF-13": [
+    ["recevoir des horodatages de logiciels tiers", "bdd:07-presence|Les horodatages d'un logiciel tiers s'importent"],
+    ["les corréler entre sources pour valider présence et temps", "java:ControleurTempsFluxEffectifsHttpTest#recit"]
+  ],
+  "E-RF-14": [
+    ["modifier des entrées déjà faites selon les profils autorisés", "bdd:08-feuilles-de-temps|La saisie est jugée en temps réel"]
+  ],
+  "P-GN-1": [
+    ["attribuer automatiquement un quart à la ressource prioritaire selon les règles", "bdd:04-absences|Après une dérogation, le quart automatisé"]
+  ],
+  "P-GN-2": [
+    ["valider automatiquement l'admissibilité des absences et les restrictions", "bdd:04-absences|Une absence qui ferait tomber le comblement"]
+  ],
+  "P-GN-3": [
+    ["accepter automatiquement une absence quand toutes les règles sont respectées", "bdd:04-absences|Une absence conforme est acceptée d'office"]
+  ],
+  "P-GH-1": [
+    ["déclarer des absences ponctuelles", "bdd:04-absences|Une absence conforme est acceptée d'office"],
+    ["ou planifiées", "bdd:04-absences|Une absence de long terme réserve ses places"],
+    ["paramétrable selon le titre d'emploi", "bdd:04-absences|Une absence conforme est acceptée d'office"]
+  ],
+  "P-GH-2": [
+    ["valider automatiquement la conformité des absences déclarées", "bdd:04-absences|Une absence qui ferait tomber le comblement"]
+  ],
+  "P-GH-3": [
+    ["notifier les ressources admissibles à un quart disponible", "bdd:04-absences|Après une dérogation, le quart automatisé"]
+  ],
+  "P-GH-4": [
+    ["à la fin d'une période de collecte déterminée", "bdd:03-disponibilites|Ouvrir la collecte planifie sa fin"],
+    ["attribuer automatiquement le quart à qui a émis la disponibilité correspondante", "bdd:03-disponibilites|Ouvrir la collecte planifie sa fin"],
+    ["sans geste humain à l'échéance", "java:ControleurDisponibilitesEffectifsHttpTest#finDeCollecteAutomatique"]
+  ],
+  "P-CH-1": [
+    ["l'employé admissible voit les postes encore disponibles à son tour de rôle", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "P-CH-2": [
+    ["sélectionner un seul poste lors de son tour de rôle", "bdd:06-agph|Une campagne AGPH complète"],
+    ["dans un délai défini", "java:ControleurAgphEffectifsHttpTest#expiration"]
+  ],
+  "P-CH-3": [
+    ["empêcher toute sélection de poste non admissible selon les règles", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "P-CH-4": [
+    ["attribuer automatiquement les postes selon le tour de rôle", "java:ControleurAgphEffectifsHttpTest#expiration"]
+  ],
+  "P-CH-5": [
+    ["statut TC aux employés ayant obtenu un poste TC", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "P-CH-6": [
+    ["statut TPR aux employés ayant obtenu un poste TPR", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "P-CH-7": [
+    ["statut temps partiel aux employés sans poste", "bdd:06-agph|Une campagne AGPH complète"]
+  ],
+  "P-CH-8": [
+    ["appliquer des codes d'absence planifiés de moyen ou long terme", "bdd:04-absences|Une absence de long terme réserve ses places"]
+  ],
+  "P-CH-9": [
+    ["attribuer automatiquement les remplacements long terme selon les règles", "bdd:06-agph|Un remplacement long terme s'ouvre"]
+  ],
+  "P-GP-1": [
+    ["déclarer ses heures de manière asynchrone (a posteriori)", "bdd:07-presence|Un quart non pointé se déclare après coup"],
+    ["selon des profils configurables", "bdd:07-presence|Le profil de pointage décide du mode"]
+  ],
+  "P-GP-2": [
+    ["valider les heures saisies selon les règles du quart", "bdd:07-presence|Un écart de lieu déclenche l'action configurée"]
+  ],
+  "P-GP-3": [
+    ["saisir plusieurs segments de temps pour un quart exceptionnel", "bdd:07-presence|Un quart non pointé se déclare après coup"]
+  ],
+  "P-GP-4": [
+    ["cumuler plusieurs saisies d'un même quart", "bdd:07-presence|Un quart non pointé se déclare après coup"],
+    ["de façon cohérente : le même temps ne compte jamais deux fois, quart ou non", "bdd:07-presence|Deux saisies après coup hors de tout quart ne se chevauchent pas"]
+  ],
+  "P-RF-1": [
+    ["produire des relevés statistiques", "bdd:08-feuilles-de-temps|Les relevés se regroupent"],
+    ["selon des paramètres définis par l'organisation", "bdd:08-feuilles-de-temps|L'organisme définit son propre relevé statistique"]
+  ]
+}

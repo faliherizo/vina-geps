@@ -28,7 +28,9 @@ import ca.vina.nexu.effectifs.domaine.RepartitionPresence;
 import ca.vina.nexu.effectifs.domaine.Ressource;
 import ca.vina.nexu.effectifs.domaine.TempsEffectifs;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
+import ca.vina.nexu.partage.temps.Iso;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -53,6 +55,8 @@ public class GestionnairePointagesEffectifs {
     private static final String OBJET = "pointage";
     /** La longueur d'une date AAAA-MM-JJ au début d'un instant ISO 8601. */
     private static final int DATE = 10;
+    /** Autour d'une saisie hors quart, la fenêtre où chercher le temps déjà déclaré : assez large pour lire des paires entières. */
+    private static final Duration MARGE_HORS_QUART = Duration.ofDays(1);
 
     /** Les lectures que le pointage emprunte. */
     public record Lectures(LecturePresenceEffectifs presence, LectureQuartsPresence quarts, LectureRessources ressources, LecturePerimetres perimetres,
@@ -187,16 +191,29 @@ public class GestionnairePointagesEffectifs {
         }
         lire.qualification().exigerAPosteriori(ctx, r, segments);
         PresenceEffectifs.QuartPointe q = lire.quarts().autourDe(ctx.tenantId(), r.id(), segments.getFirst().debut()).orElse(null);
-        if (q != null) {
-            // P-GP-4 : plusieurs saisies se cumulent sur un quart ; seul le chevauchement est refusé, qui compterait deux fois le même temps.
-            RepartitionPresence.verifierCumul(segments, RepartitionPresence.plagesCouvertes(lire.presence().actifsDeLaPlace(ctx.tenantId(), r.id(), q.placeId())));
-        }
+        // P-GP-4 : plusieurs saisies se cumulent ; seul le chevauchement est refusé, qui compterait deux fois le même temps —
+        // sur un quart comme hors de tout quart.
+        RepartitionPresence.verifierCumul(segments, RepartitionPresence.plagesCouvertes(dejaDeclare(ctx, r, q, segments)));
         String saisieId = ecrire.sequence().suivant("esai");
         PointageEffectifs.Lieu lieu = q == null ? new PointageEffectifs.Lieu(null, null, r.uniteCode()) : new PointageEffectifs.Lieu(q.placeId(), q.milieuId(), q.uniteCode());
         Saisie saisie = new Saisie(saisieId, r, lieu, pourSoi, justification);
         exigerSaisiePermise(ctx, saisie, q == null ? segments.getFirst().debut().substring(0, DATE) : q.date(), segments.getLast().fin());
         inscrireLaSaisie(ctx, saisie, pointages);
         return lire.presence().vues(ctx.tenantId(), lire.presence().deLaSaisie(ctx.tenantId(), saisieId));
+    }
+
+    /**
+     * Le temps déjà déclaré que la saisie ne doit pas recouvrir : celui de la place du quart, ou, hors quart, celui de la
+     * personne autour des segments. La fenêtre s'élargit d'un jour de part et d'autre pour lire des paires entières —
+     * une entrée seule ne couvre rien.
+     */
+    private List<PresenceEffectifs.PointageCourt> dejaDeclare(Contexte ctx, Ressource r, PresenceEffectifs.QuartPointe q,
+                                                              List<PresenceEffectifs.SegmentSaisi> segments) {
+        if (q != null) {
+            return lire.presence().actifsDeLaPlace(ctx.tenantId(), r.id(), q.placeId());
+        }
+        return lire.presence().actifsHorsQuart(ctx.tenantId(), r.id(), Iso.de(Instant.parse(segments.getFirst().debut()).minus(MARGE_HORS_QUART)),
+                Iso.de(Instant.parse(segments.getLast().fin()).plus(MARGE_HORS_QUART)));
     }
 
     /** Une saisie après coup, prête à s'inscrire. */

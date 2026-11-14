@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -62,7 +63,7 @@ public class ControleurMessagerie {
         }
         return l.stream().map(o -> o instanceof Map<?, ?> m ? m : Map.of())
                 .map(p -> new GestionnaireMessagerie.PieceDemandee(p.get("nom") == null ? null : String.valueOf(p.get("nom")),
-                        p.get("typeMime") == null ? null : String.valueOf(p.get("typeMime")), p.get("taille")))
+                        p.get("typeMime") == null ? null : String.valueOf(p.get("typeMime")), p.get("contenu")))
                 .toList();
     }
 
@@ -77,12 +78,16 @@ public class ControleurMessagerie {
      */
     @GetMapping("/conversations/non-lus")
     public ResponseEntity<Object> conversationsNonLues(HttpServletRequest requete) {
-        return repondre(requete, OK, lecture::nonLus);
+        // Relever ses avis vaut accusé de réception : l'auteur voit son message passer de « envoyé » à « reçu ».
+        return repondre(requete, OK, a -> {
+            gestionnaire.accuserReception(a);
+            return lecture.nonLus(a);
+        });
     }
 
     @GetMapping("/conversations/{id}")
     public ResponseEntity<Object> conversation(HttpServletRequest requete, @PathVariable("id") String id) {
-        return repondre(requete, OK, a -> lecture.conversation(a.tenantId(), id).enCarte());
+        return repondre(requete, OK, a -> lecture.conversationLisible(a, id).enCarte());
     }
 
     @PostMapping("/conversations")
@@ -114,7 +119,49 @@ public class ControleurMessagerie {
 
     @PostMapping("/conversations/{id}/messages")
     public ResponseEntity<Object> envoyer(HttpServletRequest requete, @PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> corps) {
-        return repondre(requete, CREE, a -> gestionnaire.envoyer(a, id, texte(corps, "corps"), pieces(corps)).enCarte());
+        var adresse = new Messagerie.Adresse(vide(texte(corps, "priveA")), vide(texte(corps, "repondAuMessageId")));
+        var envoi = new GestionnaireMessagerie.Envoi(texte(corps, "corps"), pieces(corps), adresse);
+        return repondre(requete, CREE, a -> gestionnaire.envoyer(a, id, envoi).enCarte());
+    }
+
+    /** Une chaîne vide n'adresse personne : elle vaut « tout le fil ». */
+    private static String vide(String v) {
+        return v == null || v.isBlank() ? null : v.trim();
+    }
+
+    /** Écrire à une personne : 200 si le fil à deux existait, 201 s'il vient de naître. */
+    @PostMapping("/conversations/directe")
+    public ResponseEntity<Object> filDirect(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> corps) {
+        String personId = texte(corps, "personId");
+        ResponseEntity<Object> r = repondre(requete, CREE, a -> gestionnaire.filDirect(a, personId));
+        if (r.getBody() instanceof GestionnaireMessagerie.FilDirect f) {
+            return ResponseEntity.status(f.cree() ? CREE : OK).body(f.conversation().enCarte());
+        }
+        return r;
+    }
+
+    /** Modifier son message ; la version remplacée rejoint l'historique. */
+    @PutMapping("/messages/{id}")
+    public ResponseEntity<Object> modifier(HttpServletRequest requete, @PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> corps) {
+        String texte = texte(corps, "corps");
+        return repondre(requete, OK, a -> gestionnaire.modifier(a, id, texte).enCarte());
+    }
+
+    @DeleteMapping("/messages/{id}")
+    public ResponseEntity<Object> supprimer(HttpServletRequest requete, @PathVariable("id") String id) {
+        return repondre(requete, OK, a -> gestionnaire.supprimer(a, id).enCarte());
+    }
+
+    @GetMapping("/messages/{id}/historique")
+    public ResponseEntity<Object> historique(HttpServletRequest requete, @PathVariable("id") String id) {
+        return repondre(requete, OK, a -> lecture.historique(a, id));
+    }
+
+    /** Poser ou retirer une réaction : le même geste deux fois se défait. */
+    @PostMapping("/messages/{id}/reactions")
+    public ResponseEntity<Object> reagir(HttpServletRequest requete, @PathVariable("id") String id, @RequestBody(required = false) Map<String, Object> corps) {
+        String reaction = texte(corps, "reaction");
+        return repondre(requete, OK, a -> gestionnaire.reagir(a, id, reaction));
     }
 
     @PostMapping("/conversations/{id}/lu")
@@ -140,9 +187,23 @@ public class ControleurMessagerie {
         return repondre(requete, OK, a -> lecture.chercher(a, q));
     }
 
+    /**
+     * Le fichier lui-même, en pièce à enregistrer : jamais affiché dans la page (un HTML ou un SVG joint s'y
+     * exécuterait), et son type n'est pas deviné par le navigateur.
+     */
     @GetMapping("/pieces-jointes/{id}")
     public ResponseEntity<Object> pieceJointe(HttpServletRequest requete, @PathVariable("id") String id) {
-        return repondre(requete, OK, a -> lecture.pieceJointe(a, id));
+        ResponseEntity<Object> r = repondre(requete, OK, a -> lecture.pieceJointe(a, id));
+        if (!(r.getBody() instanceof LectureMessagerie.Fichier f)) {
+            return r;
+        }
+        return ResponseEntity.ok()
+                .contentType(org.springframework.http.MediaType.parseMediaType(f.typeMime()))
+                .contentLength(f.contenu().length)
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                        org.springframework.http.ContentDisposition.attachment().filename(f.nom(), java.nio.charset.StandardCharsets.UTF_8).build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(f.contenu());
     }
 
     @GetMapping("/conversations/{id}/acheminement")

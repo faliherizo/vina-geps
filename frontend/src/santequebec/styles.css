@@ -962,3 +962,61 @@ ul.sq-cartes {
 .msg-personne { display: inline-flex; align-items: center; gap: 0.5rem; min-width: 0; }
 
 .sq-rangee-personne { align-items: center; }
+
+/* ── Refonte de la messagerie (docs/urgences-sante/REFONTE-MESSAGERIE.md) ─────
+ *
+ * Mêmes jetons que le module : aucune teinte nouvelle, donc aucun contraste nouveau à mesurer —
+ * l'encre (12,32:1), le doux (5,68:1), l'accent (6,41:1) et l'attente (texte #8a5200 sur #fdf1de)
+ * le sont déjà. Les cibles font 44 px : une messagerie se manie au pouce.
+ */
+.msg-filtres { display: flex; flex-wrap: wrap; gap: 0.375rem; margin: 0.5rem 0; }
+.msg-filtre {
+  min-height: 44px; min-width: 44px; padding: 0.25rem 0.875rem;
+  border: 1px solid var(--sq-trait); border-radius: 999px;
+  background: var(--sq-surface); color: var(--sq-encre); font: inherit; cursor: pointer;
+}
+/* L'état choisi se lit aussi par le trait épais et le gras, pas seulement par la teinte (1.4.1). */
+.msg-filtre-actif { background: var(--sq-teinte); border: 2px solid var(--sq-accent); font-weight: 700; }
+
+.msg-entete-fil {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem;
+  padding: 0 0 0.75rem; margin: 0 0 0.75rem; border-block-end: 1px solid var(--sq-trait);
+}
+.msg-entete-fil-texte { flex: 1 1 12rem; min-width: 0; }
+.msg-entete-fil-titre { margin: 0; font-size: 1.0625rem; color: var(--sq-encre); overflow-wrap: anywhere; }
+.msg-entete-fil-sous { margin: 0.125rem 0 0; color: var(--sq-doux); font-size: 0.875rem; overflow-wrap: anywhere; }
+.msg-appeler {
+  min-height: 44px; padding: 0.375rem 1rem; border-radius: 999px;
+  border: 1px solid var(--sq-primaire); background: var(--sq-primaire); color: #fff; font: inherit; cursor: pointer;
+}
+.msg-appeler:hover { background: var(--sq-primaire-appui); }
+
+/* Le séparateur de jour : un repère, pas un message — centré, en doux, entre deux traits. */
+.msg-jour {
+  display: flex; align-items: center; gap: 0.75rem; margin: 0.5rem 0;
+  color: var(--sq-doux); font-size: 0.8125rem; list-style: none;
+}
+.msg-jour::before, .msg-jour::after { content: ""; flex: 1; border-block-start: 1px solid var(--sq-trait); }
+
+/* Le privé se dit par le mot « Privé » et le cadenas ; le liseré l'appuie, il ne le porte pas seul. */
+.msg-bulle-privee > .msg-corps { border-inline-start: 4px solid var(--sq-attente-texte); background: var(--sq-attente-fond); }
+
+.msg-reactions { display: flex; flex-wrap: wrap; gap: 0.25rem; margin: 0.375rem 0 0; }
+.msg-reaction {
+  min-height: 44px; min-width: 44px; padding: 0.125rem 0.5rem;
+  border: 1px solid var(--sq-trait); border-radius: 999px;
+  background: var(--sq-surface); color: var(--sq-encre); font: inherit; cursor: pointer;
+}
+.msg-reaction[aria-pressed="true"] { border: 2px solid var(--sq-accent); background: var(--sq-teinte); font-weight: 700; }
+
+/* Cycle de vie d'un message (REFONTE-MESSAGERIE.md § 7) : mêmes jetons, rien de neuf à mesurer. */
+.msg-supprime { font-style: italic; color: var(--sq-doux); }
+.msg-etat { display: flex; flex-wrap: wrap; gap: 0.25rem 0.75rem; margin: 0.25rem 0 0; color: var(--sq-doux); font-size: 0.875rem; }
+.msg-historique { margin: 0.375rem 0 0; padding-inline-start: 1.25rem; display: grid; gap: 0.25rem; font-size: 0.875rem; }
+.msg-historique li { display: grid; gap: 0.125rem; }
+.msg-historique-texte { color: var(--sq-encre); overflow-wrap: anywhere; }
+.msg-edition { display: grid; gap: 0.375rem; margin: 0.25rem 0 0; }
+.msg-edition textarea { width: 100%; box-sizing: border-box; }
+.msg-edition-gestes { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.msg-edition-gestes button { min-height: 44px; }
+.msg-danger { color: var(--sq-refus-texte); font-weight: 700; }

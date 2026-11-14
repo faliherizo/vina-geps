@@ -130,6 +130,16 @@ public class DepotPresenceEffectifs implements LecturePointagesEffectifsPort, Ec
     }
 
     @Override
+    public List<PresenceEffectifs.PointageCourt> actifsHorsQuart(String tenantId, String ressourceId, String du, String au) {
+        List<Object> params = new ArrayList<>(List.of(tenantId, ressourceId, du, au));
+        params.addAll(ACTIFS);
+        return jdbc.sql("SELECT sens, horodatage, milieuId, naturePause, activiteCode FROM eff_pointages WHERE tenantId = ? AND ressourceId = ? "
+                        + "AND placeId IS NULL AND horodatage >= ? AND horodatage < ? "
+                        + "AND statut IN (" + String.join(", ", Collections.nCopies(ACTIFS.size(), "?")) + ") ORDER BY horodatage")
+                .params(params).query(DepotPresenceEffectifs::courtComplet).list();
+    }
+
+    @Override
     public List<PresenceEffectifs.VerdictPreuve> preuves(String tenantId, String pointageId) {
         return jdbc.sql("SELECT * FROM eff_pointage_preuves WHERE tenantId = ? AND pointageId = ? ORDER BY mecanisme").params(tenantId, pointageId)
                 .query((rs, i) -> new PresenceEffectifs.VerdictPreuve(Milieux.Mecanisme.valueOf(rs.getString("mecanisme")), rs.getInt("exigee") == 1,

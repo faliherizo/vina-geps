@@ -150,6 +150,8 @@ resource "aws_ecs_task_definition" "application" {
         { name = "DB_FICHIER", value = local.fichier_base },
         { name = "NEXU_DONNEES", value = "${local.racine_donnees}/java" },
         { name = "SAUVEGARDES_DOSSIER", value = "${local.racine_donnees}/sauvegardes" },
+        # Les pièces jointes de la messagerie : dans la base, ou en fichiers sur ce même volume EFS.
+        { name = "PIECES_JOINTES_STOCKAGE", value = var.pieces_jointes_stockage },
         { name = "TENANT_RESOLUTION", value = "sous_domaine" },
         # E-TN-19 : la région réelle des données. La console de sécurité la classe (Québec ou non) et un
         # organisme créé sans résidence déclarée la reçoit — sans elle, la création est refusée.

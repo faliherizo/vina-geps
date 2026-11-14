@@ -3,6 +3,7 @@ package ca.vina.nexu.communication.infrastructure.configuration;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
 import ca.vina.nexu.communication.application.commandes.BalayageSonneries;
 import ca.vina.nexu.communication.application.commandes.GestionnaireAppelsDirects;
+import ca.vina.nexu.communication.application.commandes.GestionnaireAppelsGroupe;
 import ca.vina.nexu.communication.application.commandes.GestionnaireBrouillonsMessages;
 import ca.vina.nexu.communication.application.commandes.GestionnaireListesDistribution;
 import ca.vina.nexu.communication.application.commandes.GestionnaireMessagerie;
@@ -10,14 +11,23 @@ import ca.vina.nexu.communication.application.commandes.GestionnaireReglagesAche
 import ca.vina.nexu.communication.application.requetes.AcheminementParUnite;
 import ca.vina.nexu.communication.application.requetes.LectureReglagesAcheminement;
 import ca.vina.nexu.communication.application.requetes.LectureAppelsDirects;
+import ca.vina.nexu.communication.application.requetes.LectureAppelsGroupe;
 import ca.vina.nexu.communication.application.requetes.LectureBrouillonsMessages;
 import ca.vina.nexu.communication.application.requetes.LectureListesDistribution;
 import ca.vina.nexu.communication.application.requetes.LectureMessagerie;
 import ca.vina.nexu.communication.domaine.AcheminementPort;
+import ca.vina.nexu.communication.domaine.AnalysePieces;
+import ca.vina.nexu.communication.infrastructure.persistance.CoffreEnBase;
+import ca.vina.nexu.communication.infrastructure.persistance.CoffrePiecesJointes;
+import ca.vina.nexu.communication.infrastructure.persistance.CoffreSurVolume;
+import ca.vina.nexu.communication.infrastructure.persistance.ModeStockagePieces;
+import ca.vina.nexu.securite.domaine.Antivirus;
+import org.springframework.beans.factory.annotation.Value;
 import ca.vina.nexu.communication.domaine.ConversationsPourListesPort;
 import ca.vina.nexu.communication.domaine.JournalCommunicationPort;
 import ca.vina.nexu.communication.infrastructure.persistance.AdaptateurConversationsPourListes;
 import ca.vina.nexu.communication.infrastructure.persistance.DepotAppelsDirects;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotAppelsGroupe;
 import ca.vina.nexu.communication.infrastructure.persistance.DepotBrouillonsMessages;
 import ca.vina.nexu.communication.infrastructure.persistance.DepotListesDistribution;
 import ca.vina.nexu.communication.infrastructure.persistance.DepotMessagerie;
@@ -27,6 +37,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.simple.JdbcClient;
 
+import java.nio.file.Path;
 import java.time.Clock;
 
 /** Le câblage de la communication : messagerie, appels entre collègues, brouillons, listes de distribution. Du Java nu, assemblé ici. */
@@ -55,6 +66,22 @@ public class ConfigurationCommunication {
     }
 
     @Bean
+    public DepotAppelsGroupe depotAppelsGroupe(JdbcClient jdbc) {
+        return new DepotAppelsGroupe(jdbc);
+    }
+
+    @Bean
+    public GestionnaireAppelsGroupe gestionnaireAppelsGroupe(LectureMessagerie messagerie, DepotAppelsGroupe depot, JournalCommunicationPort journal,
+                                                             Sequence sequence, Clock horloge) {
+        return new GestionnaireAppelsGroupe(messagerie, depot, new GestionnaireAppelsGroupe.Ecritures(depot, journal, sequence, horloge));
+    }
+
+    @Bean
+    public LectureAppelsGroupe lectureAppelsGroupe(DepotAppelsGroupe depot, Clock horloge) {
+        return new LectureAppelsGroupe(depot, horloge);
+    }
+
+    @Bean
     public AcheminementPort acheminement(GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages) {
         return new AcheminementParUnite(groupes, reglages);
     }
@@ -77,8 +104,29 @@ public class ConfigurationCommunication {
 
     @Bean
     public GestionnaireMessagerie gestionnaireMessagerie(LectureMessagerie lecture, DepotMessagerie depot, JournalCommunicationPort journal,
-                                                         Sequence sequence, Clock horloge) {
-        return new GestionnaireMessagerie(new GestionnaireMessagerie.Dependances(lecture, depot, journal, sequence::uuid), horloge);
+                                                         Sequence sequence, Clock horloge, AnalysePieces antivirus) {
+        return new GestionnaireMessagerie(new GestionnaireMessagerie.Dependances(lecture, depot, journal, sequence::uuid, antivirus), horloge);
+    }
+
+    /** Le sous-dossier des pièces jointes sous le volume de données, quand elles y vivent. */
+    static final String DOSSIER_PIECES = "pieces-jointes";
+
+    /**
+     * Où se range le contenu des pièces jointes : un choix d'hébergement ({@code PIECES_JOINTES_STOCKAGE}). Un mode
+     * inconnu arrête le démarrage — jamais un repli silencieux qui rangerait les fichiers là où personne ne les sauvegarde.
+     */
+    @Bean
+    public CoffrePiecesJointes coffrePiecesJointes(@Value("${nexu.pieces-jointes.stockage:}") String mode, @Value("${nexu.donnees.dossier:data}") String donnees) {
+        return switch (ModeStockagePieces.de(mode)) {
+            case BASE -> new CoffreEnBase();
+            case VOLUME -> new CoffreSurVolume(Path.of(donnees, DOSSIER_PIECES));
+        };
+    }
+
+    /** L'antivirus de l'établissement, sur chaque pièce avant qu'elle ne rejoigne un fil ; injoignable, il fait échouer l'envoi. */
+    @Bean
+    public AnalysePieces analysePieces(Antivirus.AnalyseurFichier analyseur) {
+        return contenu -> Antivirus.exigerSain(analyseur, contenu);
     }
 
     @Bean

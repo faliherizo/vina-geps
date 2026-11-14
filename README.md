@@ -7,7 +7,7 @@ interface React, une console superadmin réduite, et leur outillage d'essai.
 ## Démarrer
 
 ```bash
-docker compose up -d --build                     # serveur Java + nginx → http://localhost:8090
+docker compose up -d --build                     # serveur Java + nginx → http://localhost:8095 (US_WEB_PORT pour un autre port)
 ```
 
 La base SQLite est créée par Liquibase au premier démarrage

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Refonte de la messagerie (docs/urgences-sante/REFONTE-MESSAGERIE.md) : les réactions à un message,
+    un ensemble fermé ; une même personne ne pose pas deux fois la même réaction sur un message.
+  -->
+  <changeSet id="0003-messagerie-reactions" author="refonte-messagerie">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="msg_reactions"/>
+      </not>
+    </preConditions>
+    <comment>Réactions aux messages.</comment>
+    <sql>
+      CREATE TABLE msg_reactions (
+        id TEXT PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        messageId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        reaction TEXT NOT NULL,
+        poseeLe TEXT NOT NULL,
+        UNIQUE (tenantId, messageId, personId, reaction)
+      )
+    </sql>
+  </changeSet>
+
+  <!--
+    L'appel de groupe : la session d'un appel lancé depuis un fil, et l'état de chaque invité. Le
+    transport de la voix s'y branche, comme pour l'appel à deux (msg_appels).
+  -->
+  <changeSet id="0003-messagerie-appels-groupe" author="refonte-messagerie">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="msg_appels_groupe"/>
+      </not>
+    </preConditions>
+    <comment>Appels de groupe et leurs participants.</comment>
+    <sql>
+      CREATE TABLE msg_appels_groupe (
+        id TEXT PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        conversationId TEXT NOT NULL,
+        lanceParId TEXT NOT NULL,
+        etat TEXT NOT NULL,
+        lanceLe TEXT NOT NULL,
+        debuteLe TEXT,
+        termineLe TEXT
+      )
+    </sql>
+    <sql>CREATE INDEX idx_msg_appels_groupe_fil ON msg_appels_groupe (tenantId, conversationId, etat)</sql>
+    <sql>
+      CREATE TABLE msg_appels_groupe_participants (
+        tenantId TEXT NOT NULL,
+        appelId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        etat TEXT NOT NULL,
+        rejointLe TEXT,
+        partiLe TEXT,
+        PRIMARY KEY (tenantId, appelId, personId)
+      )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

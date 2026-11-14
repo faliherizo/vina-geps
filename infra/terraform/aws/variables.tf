@@ -54,6 +54,23 @@ variable "environnement" {
   }
 }
 
+variable "pieces_jointes_stockage" {
+  type        = string
+  default     = "base"
+  description = <<-EOT
+    Où se range le contenu des pièces jointes de la messagerie (PIECES_JOINTES_STOCKAGE).
+    « base » : dans la base SQLite, donc dans chaque sauvegarde applicative, essai de restauration et copie par
+    organisme (E-TN-6). « volume » : en fichiers sous NEXU_DONNEES/pieces-jointes sur l'EFS, protégés par AWS Backup
+    avec le volume, mais absents des sauvegardes applicatives et des copies par organisme — à retenir quand les
+    pièces alourdiraient trop la base.
+  EOT
+
+  validation {
+    condition     = contains(["base", "volume"], var.pieces_jointes_stockage)
+    error_message = "Le stockage des pièces jointes est « base » ou « volume »."
+  }
+}
+
 variable "haute_disponibilite" {
   type        = bool
   default     = false

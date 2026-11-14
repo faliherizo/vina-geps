@@ -75,7 +75,8 @@ class ControleurMessagerieHttpTest {
         DepotMessagerie depot = new DepotMessagerie(jdbc);
         AcheminementPort courriel = (t, p, e) -> List.of(new AcheminementPort.Canal("courriel", "sonnerie", 1, true));
         lecture = new LectureMessagerie(depot, courriel, journal, horloge);
-        GestionnaireMessagerie gestionnaire = new GestionnaireMessagerie(new GestionnaireMessagerie.Dependances(lecture, depot, journal, () -> "id-" + n.incrementAndGet()), horloge);
+        GestionnaireMessagerie gestionnaire = new GestionnaireMessagerie(new GestionnaireMessagerie.Dependances(lecture, depot, journal, () -> "id-" + n.incrementAndGet(),
+                c -> ca.vina.nexu.securite.domaine.Antivirus.exigerSain(new ca.vina.nexu.securite.domaine.Antivirus.AnalyseurSimule(), c)), horloge);
         jdbc.sql("INSERT INTO tenant_quotas (tenantId, maxTeachers, maxContractsPerYear, modules) VALUES (?, 1, 1, '[\"effectifs_communication\"]'), ('T2', 1, 1, '[\"effectifs_communication\"]'), ('T3', 1, 1, '[\"effectifs\"]')").params(T).update();
         GardeCommunication garde = new GardeCommunication(new GardeAcces(new RegistrePolitiqueAcces()), new ca.vina.nexu.partage.modules.infrastructure.DepotModulesActives(jdbc));
         http = new ClientHttpEssai(new ControleurMessagerie(garde, lecture, gestionnaire));
@@ -125,11 +126,19 @@ class ControleurMessagerieHttpTest {
         http.post("/api/communication/conversations/id-1/messages", INF, "{\"corps\":\"Bonjour\"}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("vous ne participez pas à cette conversation"));
         http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"  \"}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("corps requis"));
         http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"" + "x".repeat(10_001) + "\"}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("message trop long (10 000 caractères au maximum)"));
-        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[{\"nom\":\"../x.pdf\",\"typeMime\":\"application/zip\",\"taille\":0}]}").andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]").value(containsString("pièce jointe 1 : typeMime doit être l'un de"))).andExpect(jsonPath("$.errors[0]").value(containsString("taille doit être un entier positif · nom de fichier invalide")));
-        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[{\"nom\":\"a.pdf\",\"typeMime\":\"application/pdf\",\"taille\":26214401}]}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("pièce jointe 1 : taille supérieure au maximum de 25 Mo"));
+        // Une pièce porte son fichier : déclarée sans contenu, elle ne transporterait rien (défaut du 1er novembre 2026).
+        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[{\"nom\":\"../x.pdf\",\"typeMime\":\"application/zip\"}]}").andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]").value(containsString("pièce jointe 1 : contenu requis : le fichier, encodé en base64 · typeMime doit être l'un de")))
+                .andExpect(jsonPath("$.errors[0]").value(containsString("nom de fichier invalide")));
+        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[{\"nom\":\"a.pdf\",\"typeMime\":\"application/pdf\",\"contenu\":\"!!pas du base64!!\"}]}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("pièce jointe 1 : contenu requis : le fichier, encodé en base64"));
+        // L'antivirus passe avant toute écriture : la pièce infectée est nommée, rien n'est rangé.
+        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[{\"nom\":\"a.txt\",\"typeMime\":\"text/plain\",\"contenu\":\"EICAR_B64\"}]}"
+                        .replace("EICAR_B64", java.util.Base64.getEncoder().encodeToString(ca.vina.nexu.securite.domaine.Antivirus.EICAR.getBytes(java.nio.charset.StandardCharsets.ISO_8859_1))))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("fichier refusé par l'antivirus (Eicar-Test-Signature)"));
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM msg_messages").query(Integer.class).single()).isZero();
         http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\"Bonjour\",\"piecesJointes\":[\"pas une carte\"]}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value(containsString("nom requis")));
-        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\" Bonjour l'équipe \",\"piecesJointes\":[{\"nom\":\"consigne.pdf\",\"typeMime\":\"application/pdf\",\"taille\":1024}]}").andExpect(status().isCreated())
+        http.post("/api/communication/conversations/id-1/messages", DR, "{\"corps\":\" Bonjour l'équipe \",\"piecesJointes\":[{\"nom\":\"consigne.pdf\",\"typeMime\":\"application/pdf\",\"contenu\":\"data:application/pdf;base64,JVBERi0xLjQgY29uc2lnbmUgZGUgZ2FyZGU=\"}]}").andExpect(status().isCreated())
                 .andExpect(jsonPath("$.corps").value("Bonjour l'équipe")).andExpect(jsonPath("$.auteurId").value("dr")).andExpect(jsonPath("$.piecesJointes[0].nom").value("consigne.pdf")).andExpect(jsonPath("$.editeLe").value(org.hamcrest.Matchers.nullValue()));
         horloge.avancer(60);
         // inf rejoint après le premier message : il ne le lit pas, et ne voit pas sa pièce jointe
@@ -141,7 +150,17 @@ class ControleurMessagerieHttpTest {
         http.get("/api/communication/conversations/id-1/messages", AUTRE).andExpect(status().isNotFound());
         http.get("/api/communication/conversations/inconnue/messages", DR).andExpect(status().isNotFound());
         String pieceId = jdbc.sql("SELECT id FROM msg_pieces_jointes").query(String.class).single();
-        http.get("/api/communication/pieces-jointes/" + pieceId, RES).andExpect(status().isOk()).andExpect(jsonPath("$.nom").value("consigne.pdf")).andExpect(jsonPath("$.typeMime").value("application/pdf")).andExpect(jsonPath("$.taille").value(1024));
+        // Le fichier lui-même, en pièce à enregistrer, sous son nom ; son type n'est pas deviné par le navigateur.
+        http.get("/api/communication/pieces-jointes/" + pieceId, RES).andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().bytes("%PDF-1.4 consigne de garde".getBytes(java.nio.charset.StandardCharsets.ISO_8859_1)))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Type", "application/pdf"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition", containsString("attachment; filename=\"consigne.pdf\"")))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("X-Content-Type-Options", "nosniff"));
+        assertThat(jdbc.sql("SELECT taille FROM msg_pieces_jointes").query(Integer.class).single()).isEqualTo(26);
+        // Une pièce déposée avant que les pièces ne portent leur fichier : sa description existe, son fichier non.
+        jdbc.sql("UPDATE msg_pieces_jointes SET contenu = NULL").update();
+        http.get("/api/communication/pieces-jointes/" + pieceId, RES).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0]").value("le fichier de cette pièce jointe n'a pas été conservé"));
         http.get("/api/communication/pieces-jointes/" + pieceId, INF).andExpect(status().isNotFound()).andExpect(jsonPath("$.errors[0]").value("pièce jointe introuvable"));
         http.get("/api/communication/pieces-jointes/inconnue", DR).andExpect(status().isNotFound());
         // lectures : idempotentes
@@ -176,6 +195,10 @@ class ControleurMessagerieHttpTest {
         assertThatThrownBy(() -> Messagerie.rechercher(p, List.of(), " ")).hasMessage("la recherche demande au moins deux caractères");
         assertThat(Messagerie.typeServi("application/x-msdownload")).isEqualTo("application/octet-stream");
         assertThat(Messagerie.validerPieceJointe("a.pdf", "application/pdf", 1.5)).containsExactly("taille doit être un entier positif");
+        assertThat(Messagerie.validerPieceJointe("a.pdf", "application/pdf", 26_214_401L)).containsExactly("taille supérieure au maximum de 25 Mo");
+        assertThat(Messagerie.contenuDe(42)).isEmpty();
+        assertThat(Messagerie.contenuDe(" ")).isEmpty();
+        assertThat(Messagerie.contenuDe("aGVsbG8=")).hasValueSatisfying(b -> assertThat(new String(b, java.nio.charset.StandardCharsets.UTF_8)).isEqualTo("hello"));
         assertThat(Messagerie.validerPieceJointe("a\\b.pdf", "application/pdf", 10)).containsExactly("nom de fichier invalide");
         assertThat(Messagerie.validerConversation("s", "individuelle", List.of("a", "b"))).isEmpty();
         assertThat(Messagerie.validerConversation("s", "groupe", List.of("a", "a"))).containsExactly("un participant est répété");

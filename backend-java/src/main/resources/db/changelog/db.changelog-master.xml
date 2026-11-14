@@ -12,5 +12,7 @@
   -->
   <include file="db/changelog/0001-schema-urgences-sante.xml"/>
   <include file="db/changelog/0002-acheminement-unites.xml"/>
+  <include file="db/changelog/0003-messagerie-reactions-appels-groupe.xml"/>
+  <include file="db/changelog/0004-messagerie-cycle-de-vie.xml"/>
 
 </databaseChangeLog>

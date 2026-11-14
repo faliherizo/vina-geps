@@ -4,6 +4,7 @@ import ca.vina.nexu.communication.domaine.Appelant;
 import ca.vina.nexu.communication.domaine.RefusCommunication;
 import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.web.GardeAcces;
+import ca.vina.nexu.partage.web.JournalErreurs;
 import ca.vina.nexu.partage.modules.ModulesActives;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -74,8 +75,10 @@ public class GardeCommunication {
         try {
             return ResponseEntity.status(code).body(geste.apply(appelant(requete, v)));
         } catch (RefusCommunication e) {
+            JournalErreurs.refus(statutDe(e.nature()), e);
             return erreur(statutDe(e.nature()), e.getMessage());
         } catch (IllegalArgumentException | IllegalStateException e) {
+            JournalErreurs.refus(INVALIDE, e);
             return erreur(INVALIDE, e.getMessage() == null ? "requête invalide" : e.getMessage());
         }
     }

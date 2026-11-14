@@ -134,7 +134,7 @@ class ControleurMessagerieEtendueHttpTest {
         ConfigurationCommunication c = new ConfigurationCommunication();
         DepotMessagerie depot = new DepotMessagerie(jdbc);
         LectureMessagerie lectureMessagerie = c.lectureMessagerie(depot, (t, p, e) -> List.of(), jp, horloge);
-        messagerie = c.gestionnaireMessagerie(lectureMessagerie, depot, jp, sequence, horloge);
+        messagerie = c.gestionnaireMessagerie(lectureMessagerie, depot, jp, sequence, horloge, c.analysePieces(new ca.vina.nexu.securite.domaine.Antivirus.AnalyseurSimule()));
         DepotAppelsDirects appels = c.depotAppelsDirects(jdbc);
         BalayageSonneries balayage = c.balayageSonneries(appels, jp);
         ConversationsPourListesPort conversations = c.conversationsPourListes(lectureMessagerie, messagerie);

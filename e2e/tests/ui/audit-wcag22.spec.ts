@@ -373,8 +373,10 @@ const MODULES_AUDIT = {
   "GET /api/communication/groupes/grp-1/membres": [
     { id: "mb-1", groupeId: "grp-1", personId: "julie.roy", role: "membre", actif: 1, nom: "Julie Roy" },
     { id: "mb-2", groupeId: "grp-1", personId: "marc.dube", role: "membre", actif: 1, nom: "Marc Dubé" }],
-  "GET /api/communication/conversations/non-lus": [{ conversationId: "cv-1", sujet: "Couverture du quart de nuit", nonLus: 1,
-    dernierMessageLe: "2031-01-15T22:10:00.000Z", dernierAuteurId: "marc.dube", dernierExtrait: "Je peux prendre la nuit" }],
+  // La forme du serveur (`LectureMessagerie.nonLus`) : un total et les fils. Un tableau nu, ici avant le
+  // 13 nov. 2026, laissait la liste des fils vide — elle n'avait jamais été mesurée.
+  "GET /api/communication/conversations/non-lus": { total: 1, conversations: [{ conversationId: "cv-1", sujet: "Couverture du quart de nuit", nonLus: 1,
+    dernierMessageLe: "2031-01-15T22:10:00.000Z", dernierAuteurId: "marc.dube", dernierExtrait: "Je peux prendre la nuit" }] },
   "GET /api/communication/conversations": [{ id: "cv-1", sujet: "Couverture du quart de nuit — véhicule 412", type: "groupe",
     groupeId: "grp-1", archiveeLe: null, createdAt: "2031-01-15T21:00:00.000Z",
     participants: [{ personId: "julie.roy", jusqua: null }, { personId: "marc.dube", jusqua: null }] }],
@@ -396,6 +398,7 @@ const MODULES_AUDIT = {
     modes: [{ code: "sonnerie", libelle: "Sonnerie" }, { code: "vibration", libelle: "Vibration" }, { code: "prioritaire", libelle: "Prioritaire — passe le mode silencieux" }],
   },
   "GET /api/communication/appels/en-cours": null,
+  "GET /api/communication/appels-groupe/en-cours": [],
   "GET /api/communication/appels": [{ id: "ap-1", de: "julie.roy", vers: "marc.dube", sens: "sortant", etat: "termine",
     lanceLe: "2031-01-15T21:30:00.000Z", repondeLe: "2031-01-15T21:30:20.000Z", termineLe: "2031-01-15T21:34:00.000Z", dureeSecondes: 220 }],
   "GET /api/communication/listes-distribution": [{ id: "ld-1", nom: "Secteur Est — tous", partagee: true, creeePar: "julie.roy",
@@ -655,10 +658,57 @@ const PAGES = [
   { nom: "Intégrations des effectifs", nav: "nav-usintegrations" },
   { nom: "Rétention des effectifs", nav: "nav-usretention" },
   { nom: "Journal des décisions", nav: "nav-usjournal" },
-  { nom: "Messagerie du personnel", nav: "nav-usmessages", etats: [
-    // Choisir une unité reprend son réglage dans le formulaire : les trois étapes se remplissent.
-    { nom: "acheminement : unité choisie", agir: async (page) => { await page.getByTestId("us-ach-unite").selectOption("EST"); } },
-  ] },
+  { nom: "Messagerie du personnel", nav: "nav-usmessages",
+    // La refonte (REFONTE-MESSAGERIE.md) : réactions, message privé et appel de groupe entrant — mesurés
+    // dans leur état chargé, sans quoi la bulle, les boutons de réaction et le bandeau ne seraient jamais vus.
+    stubs: {
+      "GET /api/communication/appels-groupe/en-cours": [{ id: "ag-1", conversationId: "cv-1", lanceParId: "marc.dube", etat: "sonne",
+        lanceLe: "2031-01-15T22:12:00.000Z", debuteLe: null, presents: 1, monEtat: "invite", entrant: true }],
+      "GET /api/communication/conversations/cv-1/messages": [
+        { id: "ms-1", conversationId: "cv-1", auteurId: "julie.roy", corps: "Le 412 sort à 23 h avec un seul paramédic.",
+          envoyeLe: "2031-01-15T21:05:00.000Z", priveA: null, luParMoi: true, piecesJointes: [],
+          reactions: [{ reaction: "pouce", mots: "bien reçu", nombre: 2, parMoi: true }, { reaction: "regarde", mots: "je regarde", nombre: 1, parMoi: false }] },
+        { id: "ms-2", conversationId: "cv-1", auteurId: "marc.dube", corps: "Je peux prendre la nuit si on décale demain.",
+          envoyeLe: "2031-01-16T06:10:00.000Z", priveA: "julie.roy", luParMoi: false, piecesJointes: [], reactions: [] },
+        // Le mien (le compte simulé est « admin ») : modifié, avec son acheminement ; puis un message supprimé.
+        { id: "ms-3", conversationId: "cv-1", auteurId: "admin", corps: "Je préviens la répartition pour le 412.",
+          envoyeLe: "2031-01-16T06:20:00.000Z", editeLe: "2031-01-16T06:25:00.000Z", modifie: true, priveA: null, luParMoi: true,
+          piecesJointes: [], reactions: [], statut: { destinataires: 2, recus: 2, lus: 1, libelle: "Lu par 1 sur 2" } },
+        { id: "ms-4", conversationId: "cv-1", auteurId: "marc.dube", corps: null, envoyeLe: "2031-01-16T06:30:00.000Z", priveA: null,
+          luParMoi: true, piecesJointes: [], reactions: [], supprime: true, supprimeLe: "2031-01-16T06:31:00.000Z", supprimePar: "marc.dube" }],
+      "GET /api/communication/messages/ms-3/historique": [
+        { version: 1, corps: "Je préviens la répartition.", ecritLe: "2031-01-16T06:20:00.000Z", remplaceLe: "2031-01-16T06:25:00.000Z", courante: false },
+        { version: 2, corps: "Je préviens la répartition pour le 412.", ecritLe: "2031-01-16T06:25:00.000Z", remplaceLe: null, courante: true }],
+    },
+    etats: [
+      { nom: "fil ouvert : jours, réactions, message privé, appel de groupe entrant", agir: async (page) => {
+        await page.getByTestId("sq-msg-fil-cv-1").click();
+        await page.getByTestId("sq-msg-reactions-ms-1").waitFor({ state: "visible" });
+        await page.getByTestId("sq-appel-groupe-ag-1").waitFor({ state: "visible" });
+      } },
+      { nom: "mon message : historique déplié", agir: async (page) => {
+        await page.getByTestId("sq-msg-historique-ms-3").click();
+        await page.getByTestId("sq-msg-versions-ms-3").waitFor({ state: "visible" });
+      } },
+      { nom: "mon message : modification en cours", agir: async (page) => {
+        await page.getByTestId("sq-msg-modifier-ms-3").click();
+        await page.getByTestId("sq-msg-edition-ms-3").waitFor({ state: "visible" });
+      }, apres: async (page) => { await page.getByTestId("sq-msg-edition-annuler-ms-3").click(); } },
+      { nom: "mon message : suppression à confirmer", agir: async (page) => {
+        await page.getByTestId("sq-msg-supprimer-ms-3").click();
+        await page.getByTestId("sq-msg-supprimer-confirmer-ms-3").waitFor({ state: "visible" });
+      }, apres: async (page) => { await page.getByTestId("sq-msg-supprimer-annuler-ms-3").click(); } },
+      { nom: "réponse privée préparée", agir: async (page) => {
+        await page.getByTestId("sq-msg-repondre-ms-2").click();
+        await page.getByTestId("sq-msg-annuler-prive").waitFor({ state: "visible" });
+      } },
+      { nom: "filtre « Non lus »", agir: async (page) => {
+        await page.getByTestId("sq-msg-filtre-non-lus").click();
+        await page.getByTestId("sq-msg-filtre-non-lus").and(page.locator("[aria-pressed=true]")).waitFor({ state: "visible" });
+      } },
+      // Choisir une unité reprend son réglage dans le formulaire : les trois étapes se remplissent.
+      { nom: "acheminement : unité choisie", agir: async (page) => { await page.getByTestId("us-ach-unite").selectOption("EST"); } },
+    ] },
   { nom: "Appeler un collègue", nav: "nav-usappels" },
   { nom: "Listes de diffusion du personnel", nav: "nav-usdiffusion" },
   { nom: "Mon horaire", nav: "nav-monhoraire" },

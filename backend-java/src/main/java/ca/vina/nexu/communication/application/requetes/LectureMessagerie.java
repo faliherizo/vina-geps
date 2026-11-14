@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Ce qu'on lit de la messagerie : conversations, messages, non-lus, recherche, pièces jointes et
@@ -26,6 +27,8 @@ public final class LectureMessagerie {
 
     static final String CONVERSATION_INTROUVABLE = "conversation introuvable";
     static final String PIECE_INTROUVABLE = "pièce jointe introuvable";
+    static final String MESSAGE_INTROUVABLE = "message introuvable";
+    static final String CONTENU_ABSENT = "le fichier de cette pièce jointe n'a pas été conservé";
     /** L'événement dont l'acheminement s'affiche à côté de chaque participant. */
     static final String EVENEMENT_MESSAGE = "message";
 
@@ -49,6 +52,14 @@ public final class LectureMessagerie {
         return lecture.conversation(tenantId, conversationId).orElseThrow(() -> RefusCommunication.introuvable(CONVERSATION_INTROUVABLE));
     }
 
+    /** Une conversation à laquelle l'appelant participe ou a participé ; toute autre est introuvable, pas interdite. */
+    public Messagerie.Conversation conversationLisible(Appelant a, String conversationId) {
+        if (!portee(a).connait(conversationId)) {
+            throw RefusCommunication.introuvable(CONVERSATION_INTROUVABLE);
+        }
+        return conversation(a.tenantId(), conversationId);
+    }
+
     public List<Messagerie.Conversation> conversations(Appelant a) {
         List<Messagerie.Conversation> liste = new ArrayList<>(lecture.conversationsDe(a.tenantId(), a.acteurId()).stream()
                 .map(id -> conversation(a.tenantId(), id)).toList());
@@ -68,7 +79,71 @@ public final class LectureMessagerie {
             throw RefusCommunication.introuvable(CONVERSATION_INTROUVABLE);
         }
         Set<String> lus = lecture.lusPar(a.tenantId(), a.acteurId());
-        return visibles.stream().map(m -> m.avecLecture(m.auteurId().equals(a.acteurId()) || lus.contains(m.id()))).toList();
+        List<Messagerie.ReactionPosee> reactions = lecture.reactions(a.tenantId(), conversationId);
+        Acheminements acheminements = acheminements(a, conversationId, visibles);
+        return visibles.stream().map(m -> m.avecLecture(m.auteurId().equals(a.acteurId()) || lus.contains(m.id()))
+                .avecReactions(Messagerie.compterReactions(m.id(), reactions, a.acteurId()))
+                .avecAcheminement(acheminements.de(m))).toList();
+    }
+
+    /** Ce qu'il faut pour dire à l'auteur où en sont ses messages : le fil, ses réceptions, ses lectures. */
+    private record Acheminements(Messagerie.Conversation fil, Map<String, Set<String>> recus, Map<String, Set<String>> lus, String auteur) {
+        /** Seul l'auteur voit l'acheminement de son message ; un message supprimé n'en a plus. */
+        Messagerie.Acheminement de(Messagerie.Message m) {
+            if (fil == null || !m.auteurId().equals(auteur) || m.supprime()) {
+                return null;
+            }
+            return Messagerie.acheminement(fil, m, recus.getOrDefault(m.id(), Set.of()), lus.getOrDefault(m.id(), Set.of()));
+        }
+    }
+
+    private Acheminements acheminements(Appelant a, String conversationId, List<Messagerie.Message> visibles) {
+        if (visibles.stream().noneMatch(m -> m.auteurId().equals(a.acteurId()))) {
+            return new Acheminements(null, Map.of(), Map.of(), a.acteurId());
+        }
+        return new Acheminements(conversation(a.tenantId(), conversationId), parMessage(lecture.receptions(a.tenantId(), conversationId)),
+                parMessage(lecture.lectures(a.tenantId(), conversationId)), a.acteurId());
+    }
+
+    private static Map<String, Set<String>> parMessage(List<LectureMessageriePort.Accuse> accuses) {
+        return accuses.stream().collect(Collectors.groupingBy(LectureMessageriePort.Accuse::messageId,
+                Collectors.mapping(LectureMessageriePort.Accuse::personId, Collectors.toSet())));
+    }
+
+    /**
+     * L'historique d'un message modifié : ses versions antérieures, puis la version courante. Un message supprimé
+     * n'a plus d'historique à servir — son texte, sous quelque version que ce soit, ne se lit plus.
+     */
+    public List<Map<String, Object>> historique(Appelant a, String messageId) {
+        Messagerie.Message m = message(a, messageId);
+        if (m.supprime()) {
+            throw RefusCommunication.conflit("ce message est supprimé : son historique ne se sert plus");
+        }
+        List<Map<String, Object>> versions = new ArrayList<>();
+        for (LectureMessageriePort.VersionStockee v : lecture.versions(a.tenantId(), messageId)) {
+            versions.add(version(v.version(), v.corps(), v.ecritLe(), v.remplaceLe()));
+        }
+        String ecritLe = m.editeLe() != null ? m.editeLe() : m.envoyeLe();
+        versions.add(version(versions.size() + 1, m.corps(), ecritLe, null));
+        return versions;
+    }
+
+    private static Map<String, Object> version(int numero, String corps, String ecritLe, String remplaceLe) {
+        Map<String, Object> v = new LinkedHashMap<>();
+        v.put("version", numero);
+        v.put("corps", corps);
+        v.put("ecritLe", ecritLe);
+        v.put("remplaceLe", remplaceLe);
+        v.put("courante", remplaceLe == null);
+        return v;
+    }
+
+    /** Un message que l'appelant peut lire ; tout autre — inexistant, hors portée, privé à un autre — est introuvable. */
+    public Messagerie.Message message(Appelant a, String messageId) {
+        String conversationId = lecture.conversationDuMessage(a.tenantId(), messageId).filter(c -> portee(a).connait(c))
+                .orElseThrow(() -> RefusCommunication.introuvable(MESSAGE_INTROUVABLE));
+        return messages(a, conversationId).stream().filter(m -> m.id().equals(messageId)).findFirst()
+                .orElseThrow(() -> RefusCommunication.introuvable(MESSAGE_INTROUVABLE));
     }
 
     /** Ce qui m'attend, conversation par conversation ; une conversation archivée ne réclame plus d'attention. */
@@ -87,8 +162,19 @@ public final class LectureMessagerie {
         return r;
     }
 
+    /** Qui a lu un message : seulement pour un message que l'appelant peut lire lui-même. */
     public List<Map<String, Object>> lecteurs(Appelant a, String messageId) {
+        message(a, messageId);
         return lecture.lecteurs(a.tenantId(), messageId);
+    }
+
+    /** Les messages reçus par l'appelant et pas encore accusés : ce qu'une notification vient de lui apporter. */
+    public List<String> aAccuser(Appelant a) {
+        Messagerie.PorteeLecture portee = portee(a);
+        Set<String> recus = lecture.recusPar(a.tenantId(), a.acteurId());
+        return conversations(a).stream().flatMap(c -> lecture.messages(a.tenantId(), c.id()).stream())
+                .filter(m -> Messagerie.dansLaPortee(portee, m) && !m.auteurId().equals(a.acteurId()) && !m.supprime() && !recus.contains(m.id()))
+                .map(Messagerie.Message::id).distinct().toList();
     }
 
     /** La recherche s'exécute dans la portée de l'appelant, jamais dans l'ensemble des messages. */
@@ -96,24 +182,28 @@ public final class LectureMessagerie {
         return Messagerie.rechercher(portee(a), lecture.messages(a.tenantId(), null), requete == null ? "" : requete);
     }
 
-    /** Une pièce hors portée répond comme une pièce inexistante ; chaque consultation est journalisée. */
-    public Map<String, Object> pieceJointe(Appelant a, String pieceId) {
+    /** Une pièce jointe servie : sa description et son fichier. */
+    public record Fichier(String nom, String typeMime, long taille, byte[] contenu) { }
+
+    /**
+     * Une pièce hors portée répond comme une pièce inexistante ; chaque consultation est journalisée. Une pièce dont
+     * le fichier n'a pas été conservé (déposée avant que les pièces ne transportent leur contenu) est introuvable aussi.
+     */
+    public Fichier pieceJointe(Appelant a, String pieceId) {
         LectureMessageriePort.PieceStockee p = lecture.piece(a.tenantId(), pieceId)
-                .filter(x -> portee(a).couvre(x.conversationId(), x.envoyeLe()))
+                .filter(x -> portee(a).couvre(x.conversationId(), x.envoyeLe())
+                        && new Messagerie.Adresse(x.priveA(), null).visiblePar(a.acteurId(), x.auteurId()) && !x.messageSupprime())
                 .orElseThrow(() -> RefusCommunication.introuvable(PIECE_INTROUVABLE));
+        byte[] contenu = lecture.contenuPiece(a.tenantId(), pieceId).orElseThrow(() -> RefusCommunication.introuvable(CONTENU_ABSENT));
         journal.consigner(a.tenantId(), new JournalCommunicationPort.Trace(a.acteurId(), "piece_jointe.consultation", pieceId, null, null));
-        Map<String, Object> r = new LinkedHashMap<>();
-        r.put("nom", p.nom());
-        r.put("typeMime", Messagerie.typeServi(p.typeMime()));
-        r.put("taille", p.taille());
-        return r;
+        return new Fichier(p.nom(), Messagerie.typeServi(p.typeMime()), p.taille(), contenu);
     }
 
     /** Par où chaque autre participant actif sera joint pour un message (3.7) — sans l'auteur. */
     public List<Map<String, Object>> acheminement(Appelant a, String conversationId) {
         String now = maintenant();
         List<Map<String, Object>> liste = new ArrayList<>();
-        for (Messagerie.Participation p : conversation(a.tenantId(), conversationId).participants()) {
+        for (Messagerie.Participation p : conversationLisible(a, conversationId).participants()) {
             if (!p.personId().equals(a.acteurId()) && (p.jusqua() == null || now.compareTo(p.jusqua()) <= 0)) {
                 Map<String, Object> m = new LinkedHashMap<>();
                 m.put("personId", p.personId());

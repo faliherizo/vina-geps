@@ -53,6 +53,13 @@ public final class Bord {
     }
 
     private static ResponseEntity<Object> traduire(RuntimeException ex) {
+        ResponseEntity<Object> r = reponseDe(ex);
+        JournalErreurs.refus(r.getStatusCode().value(), ex);
+        return r;
+    }
+
+    /** Une exception que le bord ne connaît pas n'est pas traduite : elle remonte, et le filtre du journal la consigne avec sa pile. */
+    private static ResponseEntity<Object> reponseDe(RuntimeException ex) {
         try {
             throw ex;
         } catch (IntrouvableException e) {

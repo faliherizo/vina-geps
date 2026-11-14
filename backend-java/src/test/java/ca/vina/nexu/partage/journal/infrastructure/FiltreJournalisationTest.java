@@ -156,4 +156,30 @@ class FiltreJournalisationTest {
         assertThat(actions.purger(2)).isEqualTo(4);
         assertThat(new DepotJournalActions.Action("i", "t", null, "u", null, "POST", "/x", 200, 5, "r").vue()).containsEntry("statut", 200).containsEntry("requeteId", "r");
     }
+
+    @Test
+    @DisplayName("une exception que nul bord n'a traduite : une ligne error avec sa pile, puis la ligne http et l'action au statut 500")
+    void exceptionNonTraitee() {
+        ContexteRequete lea = new ContexteRequete("usr-lea", "lea", "employee", "emp-1", "t-1");
+        MockHttpServletRequest r = new MockHttpServletRequest("POST", "/api/effectifs/x");
+        MockHttpServletResponse reponse = new MockHttpServletResponse();
+        assertThatThrownBy(() -> filtre.doFilter(r, reponse, new MockFilterChain() {
+            @Override
+            public void doFilter(jakarta.servlet.ServletRequest req, jakarta.servlet.ServletResponse res) {
+                req.setAttribute(ContexteRequete.ATTRIBUT, lea);
+                throw new IllegalStateException("panne");
+            }
+        })).isInstanceOf(IllegalStateException.class).hasMessage("panne");
+        assertThat(lignes.list).hasSize(2);
+        ILoggingEvent erreur = lignes.list.get(0);
+        assertThat(erreur.getLevel().toString()).isEqualTo("ERROR");
+        assertThat(champs(erreur)).containsEntry("evenement", "erreur").containsEntry("chemin", "/api/effectifs/x").containsEntry("type", "java.lang.IllegalStateException");
+        assertThat(erreur.getThrowableProxy().getMessage()).isEqualTo("panne");
+        assertThat(erreur.getMDCPropertyMap()).containsEntry("utilisateur", "usr-lea");
+        ILoggingEvent http = lignes.list.get(1);
+        assertThat(http.getLevel().toString()).isEqualTo("ERROR");
+        assertThat(champs(http)).containsEntry("evenement", "http").containsEntry("statut", 500);
+        assertThat(jdbc.sql("SELECT statut FROM journal_actions WHERE chemin = '/api/effectifs/x'").query(Integer.class).single()).isEqualTo(500);
+        assertThat(MDC.getCopyOfContextMap()).isNullOrEmpty();
+    }
 }

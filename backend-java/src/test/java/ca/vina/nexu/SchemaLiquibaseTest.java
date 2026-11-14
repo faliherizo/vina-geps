@@ -41,11 +41,11 @@ class SchemaLiquibaseTest {
         JdbcClient jdbc = JdbcClient.create(ds);
         assertThat(tables(jdbc)).hasSizeGreaterThan(120)
                 .contains("users", "tenants", "tenant_quotas", "eff_ressources", "eff_postes", "eff_absences", "msg_conversations", "msg_journal", "hab_objets", "soutien_engagements",
-                        "msg_acheminement_unites")
+                        "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe", "msg_distributions", "msg_message_versions")
                 // La paie, la tarification et la facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(3);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(8);
     }
 
     @Test
@@ -55,7 +55,10 @@ class SchemaLiquibaseTest {
         JdbcClient jdbc = JdbcClient.create(ds);
         jdbc.sql("CREATE TABLE users (id TEXT PRIMARY KEY)").update();
         liquibase(ds).afterPropertiesSet();
-        assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites");
-        assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list()).containsExactly("MARK_RAN", "EXECUTED", "EXECUTED");
+        // Les évolutions qui créent une table s'appliquent ; celle qui modifie `msg_messages`, absente d'une reprise, est constatée.
+        assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe",
+                "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions");
+        assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN");
     }
 }

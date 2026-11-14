@@ -33,6 +33,20 @@ export interface AppelServi {
   entrant: boolean;
 }
 
+/** Un appel de groupe tel que servi (REFONTE-MESSAGERIE.md) : mon état d'invité, et combien sont présents. */
+export interface AppelGroupeServi {
+  id: string;
+  conversationId: string;
+  lanceParId: string;
+  etat: "sonne" | "en_cours" | "termine" | "manque";
+  lanceLe: string;
+  debuteLe: string | null;
+  presents: number;
+  monEtat: "invite" | "present" | "parti" | "ignore" | null;
+  /** Vrai quand on m'invite et que je n'y suis pas encore : c'est ce qui fait sonner. */
+  entrant: boolean;
+}
+
 export const LIBELLE_ETAT_APPEL: Record<AppelServi["etat"], string> = {
   sonne: "sonne", en_cours: "en cours", termine: "terminé",
   refuse: "refusé", manque: "manqué", annule: "annulé",
@@ -63,6 +77,7 @@ export function useAppels(actif: boolean) {
   const { apiFetch, user } = useAuth();
   const { tenantId } = useCurrentTenant();
   const [appels, setAppels] = useState<AppelServi[]>([]);
+  const [groupes, setGroupes] = useState<AppelGroupeServi[]>([]);
   const [refus, setRefus] = useState("");
   // Une requête en vol au plus : sur un réseau lent, le rythme fixe empilerait les appels.
   const enVol = useRef(false);
@@ -85,12 +100,15 @@ export function useAppels(actif: boolean) {
     try {
       const l = await appelerApi("/api/communication/appels/en-cours");
       setAppels(Array.isArray(l) ? l : []);
+      // Les appels de groupe sont lus à part : un refus de l'un ne doit pas taire l'autre.
+      const g = await appelerApi("/api/communication/appels-groupe/en-cours").catch(() => []);
+      setGroupes(Array.isArray(g) ? g : []);
     } catch { /* un sondage muet : l'écran n'a pas à crier parce qu'une requête de fond a raté */ }
     finally { enVol.current = false; }
   }, [appelerApi]);
 
   useEffect(() => {
-    if (!actif) { setAppels([]); return; }
+    if (!actif) { setAppels([]); setGroupes([]); return; }
     void relire();
     const minuterie = setInterval(() => { void relire(); }, RYTHME_MS);
     return () => clearInterval(minuterie);
@@ -113,7 +131,13 @@ export function useAppels(actif: boolean) {
     await relire();
   }, [appelerApi, relire]);
 
-  return { appels, refus, moi: user?.username ?? "", appeler, geste, relire, appelerApi };
+  const gesteGroupe = useCallback(async (appelId: string, g: "rejoindre" | "quitter" | "ignorer") => {
+    try { await appelerApi(`/api/communication/appels-groupe/${encodeURIComponent(appelId)}/${g}`, { method: "POST" }); setRefus(""); }
+    catch (e) { setRefus((e as Error).message); }
+    await relire();
+  }, [appelerApi, relire]);
+
+  return { appels, groupes, refus, moi: user?.username ?? "", appeler, geste, gesteGroupe, relire, appelerApi };
 }
 
 /** L'autre bout de la ligne, vu de moi. */
@@ -127,7 +151,7 @@ const autrui = (a: AppelServi) => (a.entrant ? a.appelantId : a.appeleId);
  * (WCAG 2.4.3, et la règle du dépôt sur les mises à jour asynchrones).
  */
 export function BandeauAppels({ actif }: { actif: boolean }) {
-  const { appels, refus, geste } = useAppels(actif);
+  const { appels, groupes, refus, geste, gesteGroupe } = useAppels(actif);
   /**
    * Un battement par seconde, **pour re-rendre** — et rien d'autre.
    *
@@ -138,12 +162,12 @@ export function BandeauAppels({ actif }: { actif: boolean }) {
    */
   const [, retracer] = useState(0);
   useEffect(() => {
-    if (!appels.some((a) => a.etat === "en_cours")) return;
+    if (!appels.some((a) => a.etat === "en_cours") && !groupes.some((g) => g.debuteLe)) return;
     const t = setInterval(() => retracer((n) => n + 1), 1000);
     return () => clearInterval(t);
-  }, [appels]);
+  }, [appels, groupes]);
 
-  if (!actif || appels.length === 0) return null;
+  if (!actif || (appels.length === 0 && groupes.length === 0)) return null;
 
   return (
     <div className="sq-appels-bandeau" data-testid="sq-appels-bandeau" role="alert" aria-live="assertive">
@@ -183,6 +207,39 @@ export function BandeauAppels({ actif }: { actif: boolean }) {
                 La ligne est ouverte dans l'application ; la voix passe par votre téléphone
                 habituel.
               </span>
+            )}
+          </div>
+        );
+      })}
+      {groupes.map((g) => {
+        const ecoule = g.debuteLe ? Math.floor((Date.now() - Date.parse(g.debuteLe)) / 1000) : 0;
+        const present = g.monEtat === "present";
+        return (
+          <div key={g.id} className="sq-appel" data-testid={`sq-appel-groupe-${g.id}`}>
+            <span className="sq-appel-texte">
+              {g.entrant
+                ? <>Appel de groupe de <strong>{g.lanceParId}</strong> — {g.presents} présent(s).</>
+                : <>Appel de groupe — {g.presents} présent(s){g.debuteLe
+                    ? <> — <span data-testid={`sq-appel-groupe-duree-${g.id}`}>{dureeLisible(ecoule)}</span></>
+                    : " — ça sonne chez les autres"}.</>}
+            </span>
+            {!present && (
+              <button type="button" className="sq-appel-decrocher" data-testid={`sq-appel-groupe-rejoindre-${g.id}`}
+                      onClick={() => void gesteGroupe(g.id, "rejoindre")}>
+                Rejoindre<span className="sr-only"> l'appel de groupe</span>
+              </button>
+            )}
+            {g.monEtat === "invite" && (
+              <button type="button" className="sq-appel-refuser" data-testid={`sq-appel-groupe-ignorer-${g.id}`}
+                      onClick={() => void gesteGroupe(g.id, "ignorer")}>
+                Ignorer<span className="sr-only"> l'appel de groupe</span>
+              </button>
+            )}
+            {present && (
+              <button type="button" className="sq-appel-refuser" data-testid={`sq-appel-groupe-quitter-${g.id}`}
+                      onClick={() => void gesteGroupe(g.id, "quitter")}>
+                Quitter<span className="sr-only"> l'appel de groupe</span>
+              </button>
             )}
           </div>
         );

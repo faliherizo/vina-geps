@@ -24,6 +24,12 @@ public interface LecturePointagesEffectifsPort {
     /** Les pointages actifs (non rejetés) d'une personne sur une place, dans l'ordre chronologique. */
     List<PresenceEffectifs.PointageCourt> actifsDeLaPlace(String tenantId, String ressourceId, String placeId);
 
+    /**
+     * Les pointages actifs d'une personne <strong>hors de tout quart</strong> (sans place), horodatés dans
+     * {@code [du, au[}, dans l'ordre chronologique : ce qu'une saisie hors quart ne doit pas recouvrir (P-GP-4).
+     */
+    List<PresenceEffectifs.PointageCourt> actifsHorsQuart(String tenantId, String ressourceId, String du, String au);
+
     /** Les preuves jugées d'un pointage, par mécanisme. */
     List<PresenceEffectifs.VerdictPreuve> preuves(String tenantId, String pointageId);
 

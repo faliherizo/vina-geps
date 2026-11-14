@@ -57,6 +57,15 @@ par la solution et accessibles aux seuls comptes autorisés :
   continuité) ; les journaux techniques vont à CloudWatch Logs, à Montréal.
 - **Contenu** : les journaux applicatifs n'écrivent ni mot de passe, ni jeton, ni renseignement de
   santé (garde-fous statiques, ADR 0041).
+- **Erreurs** : chaque requête laisse une ligne `http` (méthode, chemin masqué, statut, durée,
+  utilisateur, organisme, `X-Requete-Id`) ; chaque requête mutante d'un compte, une ligne au journal
+  des actions (`journal_actions`, écran Administration). S'y ajoutent :
+  - `evenement=refus` (info) — un refus du métier rendu en 4xx, par son **type** et son statut ;
+    jamais son message, qui nomme des personnes (`JournalErreurs.refus`) ;
+  - `evenement=erreur` (warn) — une exception imprévue que la garde des effectifs a tout de même
+    rendue en 400 : la pile accompagne la ligne (`JournalErreurs.imprevue`) ;
+  - `evenement=erreur` (error) — une exception qu'aucun bord n'a traduite, consignée avec sa pile
+    par le filtre du journal ; la ligne `http` qui suit porte alors 500, comme l'action.
 
 ## 5. Ce qui reste
 

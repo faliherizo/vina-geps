@@ -37,6 +37,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <jjwt.version>0.12.6</jjwt.version>
     <archunit.version>1.5.0</archunit.version>
+    <cucumber.version>7.34.2</cucumber.version>
   </properties>
 
   <dependencies>
@@ -146,6 +147,27 @@
       <version>${archunit.version}</version>
       <scope>test</scope>
     </dependency>
+    <!--
+      BDD : les exigences de l'avis 26-015-DO en Gherkin (src/bdd), jouées par Cucumber contre le
+      serveur démarré pour de vrai (base vierge bâtie par Liquibase). Voir src/bdd/README.md.
+    -->
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-java</artifactId>
+      <version>${cucumber.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.cucumber</groupId>
+      <artifactId>cucumber-junit-platform-engine</artifactId>
+      <version>${cucumber.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
@@ -153,6 +175,30 @@
       <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+
+      <!--
+        src/bdd vit à côté de src/main et src/test : les scénarios Gherkin des exigences et leurs
+        étapes. Maven les compile et les joue comme des essais (phase test), avec les autres.
+      -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>3.6.1</version>
+        <executions>
+          <execution>
+            <id>sources-bdd</id>
+            <phase>generate-test-sources</phase>
+            <goals><goal>add-test-source</goal></goals>
+            <configuration><sources><source>src/bdd/java</source></sources></configuration>
+          </execution>
+          <execution>
+            <id>ressources-bdd</id>
+            <phase>generate-test-resources</phase>
+            <goals><goal>add-test-resource</goal></goals>
+            <configuration><resources><resource><directory>src/bdd/resources</directory></resource></resources></configuration>
+          </execution>
+        </executions>
       </plugin>
 
       <!--

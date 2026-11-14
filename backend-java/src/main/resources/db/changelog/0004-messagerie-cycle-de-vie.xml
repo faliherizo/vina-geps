@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.29.xsd">
+
+  <!--
+    Le cycle de vie d'un message (REFONTE-MESSAGERIE.md § 7) : reçu (la notification est parvenue),
+    modifié (les versions antérieures gardées), supprimé (le texte ne se sert plus, le geste reste).
+  -->
+  <changeSet id="0004-messagerie-distributions" author="refonte-messagerie">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="msg_distributions"/>
+      </not>
+    </preConditions>
+    <comment>Accusés de réception des messages.</comment>
+    <sql>
+      CREATE TABLE msg_distributions (
+        id TEXT PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        messageId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        recuLe TEXT NOT NULL,
+        UNIQUE (tenantId, messageId, personId)
+      )
+    </sql>
+  </changeSet>
+
+  <changeSet id="0004-messagerie-versions" author="refonte-messagerie">
+    <preConditions onFail="MARK_RAN">
+      <not>
+        <tableExists tableName="msg_message_versions"/>
+      </not>
+    </preConditions>
+    <comment>Versions antérieures des messages modifiés.</comment>
+    <sql>
+      CREATE TABLE msg_message_versions (
+        id TEXT PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        messageId TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        corps TEXT NOT NULL,
+        ecritLe TEXT NOT NULL,
+        remplaceLe TEXT NOT NULL,
+        UNIQUE (tenantId, messageId, version)
+      )
+    </sql>
+  </changeSet>
+
+  <changeSet id="0004-messagerie-suppression" author="refonte-messagerie">
+    <!-- `columnExists` échoue sur SQLite quand la base compte beaucoup de tables (instantané trop large) :
+         la table et la colonne se constatent directement. -->
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'msg_messages'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('msg_messages') WHERE name = 'supprimeLe'</sqlCheck>
+    </preConditions>
+    <comment>Suppression d'un message : quand, et par qui.</comment>
+    <sql>ALTER TABLE msg_messages ADD COLUMN supprimeLe TEXT</sql>
+    <sql>ALTER TABLE msg_messages ADD COLUMN supprimePar TEXT</sql>
+  </changeSet>
+</databaseChangeLog>

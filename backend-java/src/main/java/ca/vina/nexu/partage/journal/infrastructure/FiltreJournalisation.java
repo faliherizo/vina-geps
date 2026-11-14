@@ -40,6 +40,8 @@ public class FiltreJournalisation extends OncePerRequestFilter {
     static final String MDC_ACTEUR_REEL = "acteurReel";
     static final String EVENEMENT_HTTP = "http";
     static final String EVENEMENT_JOURNAL = "journal";
+    static final String EVENEMENT_ERREUR = "erreur";
+    static final int STATUT_ERREUR_SERVEUR = 500;
     static final String PREFIXE_API = "/api/";
     private static final int OCTETS_IDENTIFIANT = 6;
     private static final Logger JOURNAL = LoggerFactory.getLogger(FiltreJournalisation.class);
@@ -63,37 +65,65 @@ public class FiltreJournalisation extends OncePerRequestFilter {
         long debut = System.nanoTime();
         reponse.setHeader(EN_TETE, identifiant);
         MDC.put(MDC_REQUETE, identifiant);
+        boolean echec = true;
         try {
             suite.doFilter(requete, reponse);
+            echec = false;
+        } catch (IOException | ServletException | RuntimeException e) {
+            consignerEchec(requete, e);
+            throw e;
         } finally {
-            conclure(requete, reponse, identifiant, (System.nanoTime() - debut) / 1_000_000);
+            conclure(requete, reponse, new Issue(identifiant, (System.nanoTime() - debut) / 1_000_000, echec));
             MDC.clear();
         }
     }
 
-    private void conclure(HttpServletRequest requete, HttpServletResponse reponse, String identifiant, long dureeMs) {
-        Object attribut = requete.getAttribute(ContexteRequete.ATTRIBUT);
-        ContexteRequete contexte = attribut instanceof ContexteRequete c ? c : null;
+    /** Ce que la requête a donné : son identifiant, sa durée, et si une exception l'a interrompue. */
+    private record Issue(String identifiant, long dureeMs, boolean echec) { }
+
+    /**
+     * Une exception qu'aucun bord n'a traduite remonte jusqu'ici : le conteneur rendra une page
+     * d'erreur, mais la cause n'est connue que maintenant — elle se consigne avec sa pile.
+     */
+    private void consignerEchec(HttpServletRequest requete, Exception e) {
+        situer(contexteDe(requete));
+        JOURNAL.atError().addKeyValue("evenement", EVENEMENT_ERREUR).addKeyValue("methode", requete.getMethod())
+                .addKeyValue("chemin", Masquage.masquerChemin(requete.getRequestURI(), requete.getQueryString()))
+                .addKeyValue("type", e.getClass().getName()).setCause(e).log("exception non traitée : {}", e.getClass().getName());
+    }
+
+    private static ContexteRequete contexteDe(HttpServletRequest requete) {
+        return requete.getAttribute(ContexteRequete.ATTRIBUT) instanceof ContexteRequete c ? c : null;
+    }
+
+    private void conclure(HttpServletRequest requete, HttpServletResponse reponse, Issue issue) {
+        ContexteRequete contexte = contexteDe(requete);
         situer(contexte);
         String chemin = Masquage.masquerChemin(requete.getRequestURI(), requete.getQueryString());
-        int statut = reponse.getStatus();
+        // Interrompue par une exception, la réponse porte encore le 200 d'origine : ce n'est pas ce que reçoit le client.
+        int statut = issue.echec() && reponse.getStatus() < STATUT_ERREUR_SERVEUR ? STATUT_ERREUR_SERVEUR : reponse.getStatus();
         LoggingEventBuilder ligne = selon(Masquage.niveauDeLaRequete(requete.getMethod(), statut))
                 .addKeyValue("evenement", EVENEMENT_HTTP).addKeyValue("methode", requete.getMethod()).addKeyValue("chemin", chemin)
-                .addKeyValue("statut", statut).addKeyValue("dureeMs", dureeMs);
+                .addKeyValue("statut", statut).addKeyValue("dureeMs", issue.dureeMs());
         String motif = Masquage.libelleDuStatut(statut);
         if (motif != null) {
             ligne = ligne.addKeyValue("motif", motif);
         }
         ligne.log("{} {} → {}", requete.getMethod(), chemin, statut);
         if (contexte != null && Masquage.estMutante(requete.getMethod()) && requete.getRequestURI().startsWith(PREFIXE_API)) {
-            String sansRequete = chemin.contains("?") ? chemin.substring(0, chemin.indexOf('?')) : chemin;
-            actions.consigner(new DepotJournalActions.Action(null, Instant.now(horloge).toString(), contexte.tenantId(), contexte.userId(), contexte.emprunteur(),
-                    requete.getMethod(), sansRequete, statut, dureeMs, identifiant));
-            int purgees = actions.purgerSiDu(retentionJours);
-            if (purgees > 0) {
-                JOURNAL.atInfo().addKeyValue("evenement", EVENEMENT_JOURNAL).addKeyValue("purgees", purgees).addKeyValue("retentionJours", retentionJours)
-                        .log("journal des actions : {} ligne(s) de plus de {} jours purgée(s)", purgees, retentionJours);
-            }
+            consignerAction(contexte, requete.getMethod(), chemin, statut, issue);
+        }
+    }
+
+    /** Une requête mutante d'un compte authentifié laisse une ligne au journal des actions, qui se purge au passage. */
+    private void consignerAction(ContexteRequete contexte, String methode, String chemin, int statut, Issue issue) {
+        String sansRequete = chemin.contains("?") ? chemin.substring(0, chemin.indexOf('?')) : chemin;
+        actions.consigner(new DepotJournalActions.Action(null, Instant.now(horloge).toString(), contexte.tenantId(), contexte.userId(), contexte.emprunteur(),
+                methode, sansRequete, statut, issue.dureeMs(), issue.identifiant()));
+        int purgees = actions.purgerSiDu(retentionJours);
+        if (purgees > 0) {
+            JOURNAL.atInfo().addKeyValue("evenement", EVENEMENT_JOURNAL).addKeyValue("purgees", purgees).addKeyValue("retentionJours", retentionJours)
+                    .log("journal des actions : {} ligne(s) de plus de {} jours purgée(s)", purgees, retentionJours);
         }
     }
 

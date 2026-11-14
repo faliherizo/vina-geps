@@ -1,0 +1,212 @@
+[
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/unites",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "EST",
+   "libelleFr": "Opérations Est"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/corps_emploi",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "PARA",
+   "libelleFr": "Paramédics"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/titres_emploi",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "PSA",
+   "libelleFr": "Paramédic en soins avancés",
+   "attributs": {
+    "corps": "PARA"
+   }
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/statuts_emploi",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "TC",
+   "libelleFr": "Temps complet",
+   "comportement": "TEMPS_COMPLET"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/statuts_emploi",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "TPR",
+   "libelleFr": "Temps partiel régulier",
+   "comportement": "TEMPS_PARTIEL_REGULIER"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/natures_quart",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "REG",
+   "libelleFr": "Régulier",
+   "comportement": "REGULIER"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/natures_quart",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "ADH",
+   "libelleFr": "Ad hoc",
+   "comportement": "AD_HOC"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/types_milieu",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "CASERNE",
+   "libelleFr": "Caserne",
+   "comportement": "CASERNE"
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/plages_horaires",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "J",
+   "libelleFr": "Jour",
+   "attributs": {
+    "debut": 360,
+    "fin": 1080
+   }
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/codes_absence",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "MAL",
+   "libelleFr": "Maladie",
+   "comportement": "PAYE",
+   "attributs": {
+    "duree": "PONCTUELLE"
+   }
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/referentiels/codes_absence",
+  "corps": {
+   "effectifDepuis": "2026-01-01",
+   "code": "FORM",
+   "libelleFr": "Formation PSA",
+   "comportement": "PAYE",
+   "attributs": {
+    "duree": "PONCTUELLE",
+    "titres": [
+     "PSA"
+    ]
+   }
+  },
+  "attendu": {
+   "statut": 201
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/milieux",
+  "corps": {
+   "code": "C12",
+   "libelle": "Caserne 12",
+   "typeCode": "CASERNE",
+   "uniteCode": "EST"
+  },
+  "attendu": {
+   "statut": 201
+  },
+  "capturer": {
+   "c12": "id"
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/planification/ressources",
+  "corps": {
+   "matricule": "P1",
+   "nom": "Julie",
+   "corpsEmploiCode": "PARA",
+   "titreEmploiCode": "PSA",
+   "uniteCode": "EST",
+   "statutEmploiCode": "TPR",
+   "anciennete": 3,
+   "utilisateurId": "{{u_julie}}"
+  },
+  "attendu": {
+   "statut": 201
+  },
+  "capturer": {
+   "P1": "id"
+  }
+ },
+ {
+  "methode": "POST",
+  "chemin": "/api/effectifs/planification/ressources",
+  "corps": {
+   "matricule": "P2",
+   "nom": "Marc",
+   "corpsEmploiCode": "PARA",
+   "uniteCode": "EST",
+   "statutEmploiCode": "TPR",
+   "anciennete": 9,
+   "utilisateurId": "{{u_marc}}"
+  },
+  "attendu": {
+   "statut": 201
+  },
+  "capturer": {
+   "P2": "id"
+  }
+ }
+]

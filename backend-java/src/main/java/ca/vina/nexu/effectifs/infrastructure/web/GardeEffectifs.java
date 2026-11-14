@@ -13,6 +13,7 @@ import ca.vina.nexu.effectifs.domaine.ModulesPort;
 import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.temps.Iso;
 import ca.vina.nexu.partage.web.GardeAcces;
+import ca.vina.nexu.partage.web.JournalErreurs;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,9 @@ import java.util.function.Function;
  */
 @Component("effectifsGarde")
 public class GardeEffectifs {
+
+    /** Un refus par règle rend 409 avec son verdict, distinct des autres conflits. */
+    private static final int STATUT_REGLE = 409;
 
     /** Les capacités des effectifs (politique d'accès, identiques au Node). */
     public enum Capacite {
@@ -91,12 +95,29 @@ public class GardeEffectifs {
         try {
             return ResponseEntity.status(code).body(geste.apply(contexte(requete, v)));
         } catch (RefusParRegleException e) {
+            JournalErreurs.refus(STATUT_REGLE, e);
             // Le refus garde la trace de l'évaluation, comme le Node, qui la valide avant de refuser.
-            return ResponseEntity.status(409).body(Map.of("errors", List.of(e.getMessage()), "verdict", e.verdict()));
+            return ResponseEntity.status(STATUT_REGLE).body(Map.of("errors", List.of(e.getMessage()), "verdict", e.verdict()));
         } catch (RuntimeException e) {
             annulerLaTransaction();
-            return erreur(statutDe(e), e.getMessage() == null ? "erreur inattendue" : e.getMessage());
+            int statut = statutDe(e);
+            consigner(statut, e);
+            return erreur(statut, e.getMessage() == null ? "erreur inattendue" : e.getMessage());
         }
+    }
+
+    /** Un refus du contexte est un fait ; toute autre exception, rendue en 400, garde sa pile au journal. */
+    static void consigner(int statut, RuntimeException e) {
+        if (estDuContexte(e)) {
+            JournalErreurs.refus(statut, e);
+            return;
+        }
+        JournalErreurs.imprevue(statut, e);
+    }
+
+    private static boolean estDuContexte(RuntimeException e) {
+        return e instanceof EffectifsInvalideException || e instanceof IntrouvableException || e instanceof ConflitException
+                || e instanceof HorsPerimetreException || e instanceof SourceIndisponibleException;
     }
 
     /** Une erreur rendue n'est pas une erreur levée : sans ceci, la transaction de l'appel validerait un geste à moitié fait. */

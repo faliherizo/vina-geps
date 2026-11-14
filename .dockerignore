@@ -1,0 +1,27 @@
+# Le contexte de `docker compose build` est la racine du dépôt (docker-compose.yml) : seul ce qui sert
+# à construire les images y entre.
+#
+# Les node_modules restent dehors : l'image les installe elle-même (`npm install`). Copier ceux du poste
+# remplacerait le dossier installé — et `frontend/node_modules` est ici un lien symbolique vers un autre
+# dépôt, ce qui faisait échouer `COPY frontend ./` (« cannot replace to directory … with file »).
+**/node_modules
+frontend/dist
+
+# Sorties de construction et d'essais.
+backend-java/target
+e2e
+perf/jmeter/rapports
+perf/jmeter/resultats
+**/test-results
+**/playwright-report
+**/coverage
+
+# Ni l'historique, ni les index, ni l'outillage du poste.
+.git
+.gitnexus
+.vscode
+.idea
+.claude
+infra/terraform/**/.terraform
+**/.DS_Store
+*.log

@@ -11,7 +11,8 @@
 | Sujet | Contenu | Où il vit |
 |---|---|---|
 | Base de l'application | Toutes les données opérationnelles de tous les modules (horaires, quarts, absences, temps, paramètres, journal d'audit) | Fichier SQLite sur un volume EFS chiffré, régional (zones de Montréal) |
-| Données propres au Java | Pièces jointes et fichiers produits | Même volume (`/donnees/java`) |
+| Données propres au Java | Fichiers produits | Même volume (`/donnees/java`) |
+| Pièces jointes de la messagerie | Le fichier joint à un message. Le réglage `PIECES_JOINTES_STOCKAGE` (variable Terraform `pieces_jointes_stockage`) décide de son rangement : `base` (par défaut), dans la base, donc dans chaque sauvegarde applicative et copie par organisme ; `volume`, en fichiers sous `/donnees/java/pieces-jointes/<organisme>/`, couverts par la sauvegarde du volume EFS mais **absents** des sauvegardes applicatives et des copies par organisme | La base, ou le même volume |
 | Sauvegardes applicatives | Copies cohérentes de la base (`VACUUM INTO`), vérifiées par `integrity_check` à chaque copie | Même volume (`/donnees/sauvegardes`) |
 | Copie par organisme | Les lignes d'un seul organisme, tirées de chaque sauvegarde complète (E-TN-6) | Même volume (`/donnees/sauvegardes/organismes/<organisme>`) |
 | Journaux | Journaux applicatifs et d'accès | CloudWatch Logs, Montréal |

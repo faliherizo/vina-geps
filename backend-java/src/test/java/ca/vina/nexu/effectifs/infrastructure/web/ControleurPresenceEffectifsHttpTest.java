@@ -513,6 +513,22 @@ class ControleurPresenceEffectifsHttpTest {
     }
 
     @Test
+    @DisplayName("hors de tout quart, une saisie qui recouvre du temps déjà déclaré est refusée ; le même temps d'un autre, ou un complément, passe (P-GP-4)")
+    void cumulHorsQuart() throws Exception {
+        horloge.a("2031-01-16T00:00:00.000Z");
+        String formation = "[{\"debut\":\"2026-09-01T11:00:00.000Z\",\"fin\":\"2026-09-01T15:00:00.000Z\",\"type\":\"TRAVAIL\"}]";
+        http.post(P + "/saisies", JULIE, "{\"segments\":" + formation + ",\"justification\":\"Formation\"}").andExpect(status().isCreated())
+                .andExpect(jsonPath("$[0].placeId").value(Matchers.nullValue()));
+        String recouvre = "[{\"debut\":\"2026-09-01T14:00:00.000Z\",\"fin\":\"2026-09-01T16:00:00.000Z\",\"type\":\"TRAVAIL\"}]";
+        http.post(P + "/saisies", JULIE, "{\"segments\":" + recouvre + ",\"justification\":\"Oubli\"}").andExpect(status().is(422))
+                .andExpect(jsonPath("$.errors[0]").value(Matchers.containsString("chevauche du temps déjà déclaré (11:00 – 15:00)")));
+        // Le même temps, déclaré par Marc, est le sien : il ne recouvre rien.
+        http.post(P + "/saisies", MARC, "{\"segments\":" + recouvre + ",\"justification\":\"Formation\"}").andExpect(status().isCreated());
+        String complement = "[{\"debut\":\"2026-09-01T15:00:00.000Z\",\"fin\":\"2026-09-01T16:00:00.000Z\",\"type\":\"TRAVAIL\"}]";
+        http.post(P + "/saisies", JULIE, "{\"segments\":" + complement + ",\"justification\":\"Rapport\"}").andExpect(status().isCreated());
+    }
+
+    @Test
     @DisplayName("le code QR d'un milieu s'affiche pour l'encadrement, et change toutes les cinq minutes")
     void codeQr() throws Exception {
         horloge.a("2031-01-15T12:03:00.000Z");

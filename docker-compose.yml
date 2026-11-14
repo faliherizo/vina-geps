@@ -1,6 +1,6 @@
 # Urgences-santé — la pile locale : le serveur Java (base SQLite créée par Liquibase) et nginx.
 #
-#   docker compose up -d --build        # interface : http://localhost:${US_WEB_PORT:-8090}
+#   docker compose up -d --build        # interface : http://localhost:${US_WEB_PORT:-8095}
 #
 # Les secrets de production ne vivent pas ici : JWT_SECRET, ADMIN_PASSWORD et SUPERADMIN_PASSWORD
 # se fournissent par l'environnement (Secrets Manager sur AWS, voir infra/terraform/aws).
@@ -11,6 +11,13 @@ services:
       dockerfile: backend-java/Dockerfile
     container_name: urgences-sante-backend
     restart: unless-stopped
+    # Les identifiants des fournisseurs (Twilio, Telnyx, SMTP, Entra ID, ClamAV…) viennent du `.env` du poste,
+    # facultatif. Ne transmettre que SMS_FOURNISSEUR sans ses TWILIO_* faisait refuser le démarrage
+    # (« SMS_FOURNISSEUR=twilio : variables manquantes »). Les valeurs ci-dessous, propres à cette pile
+    # (port, base, dossiers), l'emportent toujours sur le `.env`.
+    env_file:
+      - path: .env
+        required: false
     environment:
       PORT: "4000"
       DB_URL: jdbc:sqlite:/app/data/urgences-sante.db
@@ -19,7 +26,7 @@ services:
       LOG_FORMAT: ${LOG_FORMAT:-json}
       LOG_NIVEAU: ${LOG_NIVEAU:-info}
       JWT_SECRET: ${JWT_SECRET:-developpement-uniquement-secret-de-32-octets-min}
-      CORS_ORIGINS: http://localhost:${US_WEB_PORT:-8090}
+      CORS_ORIGINS: http://localhost:${US_WEB_PORT:-8095}
       COOKIE_SECURE: "0"
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
@@ -27,7 +34,7 @@ services:
       SUPERADMIN_PASSWORD: ${SUPERADMIN_PASSWORD:-superadmin}
       REGION_DONNEES: ${REGION_DONNEES:-poste-local}
       HEBERGEUR: ${HEBERGEUR:-Docker local}
-      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:${US_WEB_PORT:-8090}}
+      PUBLIC_APP_URL: ${PUBLIC_APP_URL:-http://localhost:${US_WEB_PORT:-8095}}
       SMS_FOURNISSEUR: ${SMS_FOURNISSEUR:-}
     volumes:
       - donnees:/app/data
@@ -44,6 +51,6 @@ services:
       API_UPSTREAM: backend
       API_PORT: "4000"
     ports:
-      - "${US_WEB_PORT:-8090}:80"
+      - "${US_WEB_PORT:-8095}:80"
 volumes:
   donnees:

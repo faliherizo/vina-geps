@@ -75,6 +75,10 @@ public class LecturePresenceEffectifs {
         return depot.actifsDeLaPlace(tenantId, ressourceId, placeId);
     }
 
+    public List<PresenceEffectifs.PointageCourt> actifsHorsQuart(String tenantId, String ressourceId, String du, String au) {
+        return depot.actifsHorsQuart(tenantId, ressourceId, du, au);
+    }
+
     /** Ce que voit l'employé : son quart du moment (et ce qu'il peut pointer) et ses pointages récents. */
     public Map<String, Object> maPresence(Contexte ctx) {
         Map<String, Object> vue = new LinkedHashMap<>();
