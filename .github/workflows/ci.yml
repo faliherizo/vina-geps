@@ -1,6 +1,6 @@
 # Urgences-santé — portes de qualité bloquantes, à chaque poussée et chaque demande de fusion.
 #
-#   serveur   : mvn verify (ArchUnit, normes Java, JaCoCo ≥ 96 % par classe)
+#   serveur   : mvn verify (ArchUnit, normes Java, JaCoCo ≥ 96 % par classe), puis veraPDF sur l'échantillon PDF/A-2b
 #   interface : tsc, Vitest, construction
 #   écrans    : Playwright « interface » (API doublée) — audit WCAG 2.2 AA, géométrie à quatre largeurs
 #   parcours  : Playwright « e2e » contre le vrai serveur Java (base vierge bâtie par Liquibase)
@@ -30,6 +30,8 @@ jobs:
         with: { distribution: temurin, java-version: "${{ env.JAVA_VERSION }}", cache: maven }
       - run: mvn -B verify
         working-directory: backend-java
+      # ST-G10 (critère 39) : l'échantillon PDF/A-2b que dépose PdfAConformiteTest est validé par veraPDF.
+      - run: scripts/verifier-pdfa.sh backend-java/target/pdfa
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: couverture-java, path: backend-java/target/site/jacoco }

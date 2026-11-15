@@ -12,9 +12,13 @@ self.addEventListener("activate", (e) => { e.waitUntil(self.clients.claim()); })
 self.addEventListener("push", (e) => {
   let charge = { titre: "VINA GEPS", corps: "", url: "/admin/notifications" };
   try { charge = { ...charge, ...e.data.json() }; } catch { charge.corps = e.data ? e.data.text() : ""; }
+  // Une alerte critique (ST-G07) reste affichée jusqu'à ce qu'on y touche, et vibre longuement ; le navigateur ne
+  // contourne pas le mode silencieux — la cascade (texto, appel) prend le relais si personne ne répond.
+  const critique = charge.etiquette === "critique";
   e.waitUntil(self.registration.showNotification(charge.titre, {
     body: charge.corps, lang: "fr-CA", tag: charge.etiquette || "nexu-vina", renotify: true,
     icon: "/icones/icone-192.svg", badge: "/icones/icone-192.svg", data: { url: charge.url },
+    requireInteraction: critique, vibrate: critique ? [500, 200, 500, 200, 500, 200, 800] : undefined,
   }));
 });
 

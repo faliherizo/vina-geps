@@ -121,6 +121,10 @@ class AlertesTest {
     @DisplayName("R8 : la priorité critique impose tous les canaux ; les autres laissent décider les préférences ; les codes se lisent et se refusent")
     void prioritesEtSemantiques() {
         assertThat(Priorite.CRITIQUE.canauxImposes()).containsExactly("courriel", "texto", "poussee");
+        // L'appel n'est jamais imposé d'office (ST-G06) ; la critique se publie sous son propre événement (ST-G07).
+        assertThat(Priorite.Canal.APPEL.parAvis()).isFalse();
+        assertThat(ca.vina.nexu.alertes.application.commandes.GestionnaireEnvoiAlertes.evenementDe(Priorite.CRITIQUE)).isEqualTo("alerte.critique");
+        assertThat(ca.vina.nexu.alertes.application.commandes.GestionnaireEnvoiAlertes.evenementDe(Priorite.URGENTE)).isEqualTo("alerte.recue");
         assertThat(Priorite.URGENTE.canauxImposes()).isNull();
         assertThat(Priorite.INFORMATION.canauxImposes()).isNull();
         assertThat(Priorite.de("urgente")).contains(Priorite.URGENTE);

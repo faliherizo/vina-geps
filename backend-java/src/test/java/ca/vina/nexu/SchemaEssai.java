@@ -353,6 +353,12 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS alr_modele_version_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, version INTEGER NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, version, rang))",
             "CREATE TABLE IF NOT EXISTS alr_modele_groupes (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, groupeId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, groupeId))",
             "CREATE TABLE IF NOT EXISTS alr_reglages (tenantId TEXT NOT NULL PRIMARY KEY, copieCourriel INTEGER NOT NULL DEFAULT 0)",
+            // 0017 — ST-G12 : notes sur les destinataires.
+            "CREATE TABLE IF NOT EXISTS alr_notes (tenantId TEXT NOT NULL, personId TEXT NOT NULL, texte TEXT NOT NULL, ecriteLe TEXT NOT NULL, ecritePar TEXT NOT NULL, PRIMARY KEY (tenantId, personId))",
+            // 0016 — ST-G10 : historique des mots de passe.
+            "CREATE TABLE IF NOT EXISTS users_mots_de_passe (userId TEXT NOT NULL, empreinte TEXT NOT NULL, retireeLe TEXT NOT NULL)",
+            // 0015 — ST-G06 : appels automatiques.
+            "CREATE TABLE IF NOT EXISTS alr_appels (id TEXT NOT NULL PRIMARY KEY, tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, etape INTEGER NOT NULL, personId TEXT NOT NULL, fournisseurId TEXT, resultat TEXT NOT NULL, touche TEXT, dureeSecondes INTEGER, lanceLe TEXT NOT NULL, termineLe TEXT)",
             // 0014 — ST-G05 : textos entrants, contre le rejeu.
             "CREATE TABLE IF NOT EXISTS alr_textos_entrants (messageSid TEXT NOT NULL PRIMARY KEY, tenantId TEXT, alerteId TEXT, personId TEXT, issue TEXT NOT NULL, recuLe TEXT NOT NULL)",
             // 0013 — ST-G04 : politiques de relance, cascades et trace.

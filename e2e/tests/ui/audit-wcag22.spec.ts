@@ -140,13 +140,20 @@ const MODULES_AUDIT = {
   "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: true },
   "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit — liste" }],
   "GET /api/alertes/reglages": { copieCourriel: true },
+  // Notes sur les destinataires (ST-G12).
+  "GET /api/alertes/notes": [{ personId: "julie", texte: "Joindre sur le cellulaire de garde", ecriteLe: "2030-03-04T14:00:00Z", ecritePar: "chef" }],
+  // Utilisateurs actifs du mois (ST-G08).
+  "GET /api/alertes/utilisateurs-actifs": { mois: "2030-03", total: 2, actifs: [
+    { personId: "julie", nom: "Julie Roy", premiereTentative: "2030-03-04T14:02:00Z", alerteId: "al-1", titre: "Code bleu chambre 512" },
+    { personId: "marc", nom: "Marc Dubé", premiereTentative: "2030-03-04T14:07:00Z", alerteId: "al-1", titre: "Code bleu chambre 512" }] },
   // Relances et cascades (ST-G04).
   "GET /api/alertes/politiques": [{ id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [
     { cible: "initiaux", cibleId: null, canaux: ["poussee"], delaiMinutes: 5 }, { cible: "groupe", cibleId: "gt-1", canaux: ["texto", "courriel"], delaiMinutes: 10 }] }],
   "GET /api/alertes/envoyees/al-1/cascade": { cascade: { politique: { id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [] },
     etape: 2, etapes: 2, echeanceLe: "2030-03-04T14:15:00Z", etat: "armee" },
     traces: [{ evenement: "armee", etape: 1, personnes: [], instant: "2030-03-04T14:02:00Z", par: "chef" },
-      { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:07:00Z", par: "cascade" }] },
+      { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:07:00Z", par: "cascade" }],
+    appels: [{ personId: "julie", etape: 1, resultat: "repondu", touche: "1", dureeSecondes: 42, lanceLe: "2030-03-04T14:07:00Z", termineLe: "2030-03-04T14:08:00Z" }] },
   "GET /api/communication/groupes-transverses": [{ id: "gt-1", nom: "Garde de nuit", nature: "garde", actif: true,
     membres: [{ personId: "julie", nom: "Julie Roy", depuis: "2031-01-13", jusqua: "2031-01-19", moderateur: true }, { personId: "marc", nom: "Marc Dubé", depuis: null, jusqua: null, moderateur: false }] }],
   "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
@@ -834,7 +841,12 @@ const PAGES = [
       await page.getByTestId("als-alerte-al-1-detail").click();
       await page.getByTestId("als-fiche").waitFor({ state: "visible" });
       await page.getByTestId("als-cascade-trace").waitFor({ state: "visible" });
-    } }] },
+    } },
+    { nom: "note d'un destinataire en édition", agir: async (page) => {
+      if (!(await page.getByTestId("als-fiche").isVisible())) await page.getByTestId("als-alerte-al-1-detail").click();
+      await page.locator('[data-testid^="als-note-"][data-testid$="-modifier"]').first().click();
+      await page.getByTestId("als-note-texte").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("als-note-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mes alertes", nav: "nav-mesalertes",
     etats: [{ nom: "alerte dépliée, réponses offertes", agir: async (page) => {
       // L'audit a peut-être déjà déplié les replis de la page : cliquer le résumé replierait l'alerte.

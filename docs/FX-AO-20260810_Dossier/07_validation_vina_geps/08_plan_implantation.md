@@ -156,6 +156,15 @@ correctement après une panne simulée.
 ### R3 — Voix et alerte critique · 3 semaines
 
 **R3-a · Appel automatique (ST-G06)** — par Twilio (Q-TEL tranché).
+
+> **Livré le 14 novembre 2026** (ADR 0079) : canal d'étape `appel` (jamais imposé par la priorité critique) ; une tâche
+> durable `alerte.appel` par personne, idempotente ; port partagé `AppelsVocauxPort` implanté par les notifications
+> (Twilio : `<Gather>` en synthèse `fr-CA`, détection de répondeur, rappel de statut ; simulateur sinon) ; rappels
+> signés `/api/alertes/webhooks/voix` (touche) et `/voix/statut` (résultat, durée) ; « 1 » passe par la même porte
+> qu'à l'écran et arrête la cascade. Résultats en enum, trace `alr_appels` (changeset `0015`, numéro non conservé),
+> visibles dans la fiche du suivi. Vérifié : `AppelsAlertesTest`, `ControleurCascadesHttpTest` (appel, touche, signature
+> fausse, rejeu de tâche, messagerie, sans numéro, refus), `AdaptateursFournisseursTest`, BDD, vitest, audit. Grille :
+> 29 sur 32.
 - L'étape de cascade de canal `APPEL` passe par le port `Appels`. On l'étend : message en
   synthèse vocale française, saisie d'un chiffre (DTMF), puis un rappel du fournisseur signé vers
   `/api/alertes/webhooks/voix`.
@@ -164,6 +173,13 @@ correctement après une panne simulée.
 - Essais : un faux fournisseur rejoue chaque issue ; BDD des critères 13 et 14.
 
 **R3-b · Alerte critique sur mobile (ST-G07)**
+
+> **Livré côté serveur le 14 novembre 2026** (ADR 0080) : événement d'avis `alerte.critique` (essentiel) pour toute
+> alerte et toute relance de priorité critique ; poussée étiquetée `critique` : Expo en priorité haute, canal Android
+> `critique`, `interruptionLevel: critical` et son critique iOS ; navigateur : `requireInteraction` et vibration
+> prolongée. **Reste hors de ce dépôt** : l'application mobile déclare le canal `critique` (importance maximale,
+> contournement du « ne pas déranger » si l'utilisateur l'autorise) ; iOS attend Q-ALC. Repli documenté : la cascade
+> (texto, puis appel).
 - Android : canal de notification « Critique », importance maximale, contournement du mode
   silencieux si la permission est accordée.
 - iOS : *Critical Alerts* si Apple l'a accordé (Q-ALC). Sinon, le **repli documenté** : son
@@ -177,10 +193,10 @@ correctement après une panne simulée.
 
 | Story | Tâches |
 |---|---|
-| ST-G08 Utilisateurs actifs | Compter un utilisateur une fois par mois civil (America/Toronto), dès qu'une tentative de transmission le vise, directement, par groupe ou par cascade. Table d'agrégat ; export justificatif (première tentative, alerte en cause) |
-| ST-G10 Mots de passe, PDF/A | Historique des 10 dernières empreintes, réutilisation refusée pendant 6 mois (contexte `auth`). Exports en PDF/A-2b, validés par veraPDF en CI |
-| ST-G11 Microsoft 365, LDAPS | Canal courriel par Microsoft Graph (`Mail.Send`, application), le relais SMTP restant possible ; LDAPS en option pour un annuaire local. L'OIDC générique (ADR 0075) couvre déjà Entra et Keycloak |
-| ST-G12 Note | Après Q-DOS : une note courte et datée, visible des expéditeurs autorisés, jamais en clair au journal |
+| ST-G08 Utilisateurs actifs | **Livré le 15 novembre 2026** : compté à la lecture, sans table d'agrégat à tenir — les tentatives sont déjà tracées (remises, étapes de cascade, appels). Une fois par mois civil de Toronto, première tentative et alerte en cause ; `GET /api/alertes/utilisateurs-actifs` et son export (CSV, XLSX, PDF, JSON), réservés à `alertes.configure` ; section « Utilisateurs actifs » des Paramètres des alertes. Vérifié : `ControleurUtilisateursActifsHttpTest` (frontière de minuit à Toronto, heure d'été, trois sources), BDD, vitest, audit |
+| ST-G10 Mots de passe, PDF/A | **Livré le 15 novembre 2026** (ADR 0081) : historique dans `DepotComptes.modifier`, seul point d'écriture du mot de passe (changeset `0016`) ; `DocumentPdf`, seul producteur de PDF, produit du PDF/A-2b (Liberation Sans incorporée, sRGB, XMP, identifiant). veraPDF : `scripts/verifier-pdfa.sh`, en CI après `mvn verify` — **pas encore exécuté** |
+| ST-G11 Microsoft 365, LDAPS | **Graph livré le 15 novembre 2026** (ADR 0082) : `CourrierGraph`, troisième adaptateur du port `Courrier`, choisi dès que `GRAPH_CLIENT_ID` est posé ; essais contre un faux Entra et un faux Graph. **LDAPS différé** : l'OIDC générique couvre Entra, Keycloak et un AD fédéré ; à bâtir sur réponse à Q-LDAP, avec un serveur LDAP d'essai (UnboundID) pour l'éprouver |
+| ST-G12 Note | **Livré le 15 novembre 2026, dans la lecture « note interne » de Q-DOS** : une note par destinataire (280 caractères), datée et signée, tenue dans la fiche du suivi par qui a `alertes.envoyer` ; rien de son texte au journal. Vérifié : `ControleurNotesHttpTest`, BDD, vitest, audit. Si Q-DOS répond « dossier patient » : intégration à part |
 
 **Sortie** : grille fonctionnelle à 31 sur 32, puis 32 sur 32 selon la réponse à Q-DOS. Le
 tableau de [02_conformite_115_criteres.md](02_conformite_115_criteres.md) est mis à jour critère par critère.
@@ -189,6 +205,13 @@ tableau de [02_conformite_115_criteres.md](02_conformite_115_criteres.md) est mi
 
 - ST-G13 selon le profil retenu : guide Windows Server 2019+ et VMware vSphere 8 (profil B), ou
   la pile Docker et Terraform existante (profil A).
+
+> **ST-G13, partie documentaire et retour arrière : livrés le 15 novembre 2026.** Guide du profil B
+> ([09_exploitation_chez_l_etablissement.md](09_exploitation_chez_l_etablissement.md) : installation Windows Server 2019+
+> et vSphere 8, service, frontal TLS, sauvegardes chiffrées, archivage, surveillance) ; profil A déjà décrit
+> (COPIES-DE-SECURITE.md, Terraform). Retour arrière de schéma : un script de retour par changeset depuis `0006`
+> (`db/retour/`), éprouvé par `RetourArriereSchemaTest`. **Reste**, après le choix du profil : l'essai de restauration
+> sur l'infrastructure retenue et la campagne JMeter à 2 000 utilisateurs (go ou no-go).
 - Archivage, sauvegardes chiffrées, **retour arrière** de version et de schéma (changesets de
   retour pour `0006` et les suivants).
 - Campagne JMeter à 2 000 utilisateurs : envoi d'alertes, cascades simultanées, rappels de

@@ -77,7 +77,7 @@ public class ControleurCascades {
     public ResponseEntity<Object> reprendre(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
         return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK, a -> {
             Cascades.Cascade reprise = cas.cascades().reprendre(a, id, SaisiesCascades.entier(corps(c), "etape"));
-            return VuesCascades.suivi(new LectureCascades.Suivi(java.util.Optional.of(reprise), List.of()));
+            return VuesCascades.suivi(new LectureCascades.Suivi(java.util.Optional.of(reprise), List.of(), List.of()));
         });
     }
 }

@@ -5,6 +5,7 @@ import ca.vina.nexu.alertes.domaine.Alertes.Alerte;
 import ca.vina.nexu.alertes.domaine.Alertes.Destinataire;
 import ca.vina.nexu.alertes.domaine.Alertes.Remise;
 import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
+import ca.vina.nexu.alertes.domaine.AppelsAlertes;
 import ca.vina.nexu.alertes.domaine.ArmementCascades;
 import ca.vina.nexu.alertes.domaine.Cascades;
 import ca.vina.nexu.alertes.domaine.Cascades.Cascade;
@@ -171,11 +172,17 @@ public final class GestionnaireCascades implements ArmementCascades, ReactionsAl
         }
     }
 
+    /** Les canaux d'avis partent en une relance ; l'appel vocal (ST-G06), en un appel durable par personne. */
     private void relancer(String tenantId, Alerte a, Cascade c, List<Destinataire> vises, String maintenant) {
         List<String> comptes = vises.stream().map(Destinataire::compteAvis).filter(Objects::nonNull).toList();
-        if (!comptes.isEmpty()) {
-            s.echeancier().planifierRelance(tenantId, new EcheancierCascades.Relance(a.id(), c.etape(), comptes, c.etapeCourante().codesCanaux(),
-                    PREFIXE_RELANCE + "[" + a.priorite().code() + "] " + a.titre(), a.corps()), maintenant);
+        Etape e = c.etapeCourante();
+        if (!comptes.isEmpty() && !e.codesAvis().isEmpty()) {
+            s.echeancier().planifierRelance(tenantId, new EcheancierCascades.Relance(a.id(), c.etape(), comptes, e.codesAvis(), new EcheancierCascades.Message(
+                    GestionnaireEnvoiAlertes.evenementDe(a.priorite()), PREFIXE_RELANCE + "[" + a.priorite().code() + "] " + a.titre(), a.corps())), maintenant);
+        }
+        if (e.appelle()) {
+            vises.stream().filter(v -> v.compteAvis() != null).forEach(v -> s.echeancier().planifierAppel(tenantId,
+                    new AppelsAlertes.AAppeler(a.id(), c.etape(), v.personId(), v.compteAvis()), maintenant));
         }
     }
 

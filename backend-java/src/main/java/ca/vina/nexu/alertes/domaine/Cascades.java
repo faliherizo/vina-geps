@@ -112,9 +112,18 @@ public final class Cascades {
             return new Etape(cible, cible.exigeCibleId() ? cibleId.trim() : null, canaux.stream().distinct().toList(), delaiMinutes);
         }
 
-        /** Les codes de canaux, dans le vocabulaire du port d'avis. */
+        /** Les codes de tous les canaux de l'étape. */
         public List<String> codesCanaux() {
             return canaux.stream().map(Priorite.Canal::code).toList();
+        }
+
+        /** Les canaux qui partent par le port d'avis ; l'appel vocal part à part. */
+        public List<String> codesAvis() {
+            return canaux.stream().filter(Priorite.Canal::parAvis).map(Priorite.Canal::code).toList();
+        }
+
+        public boolean appelle() {
+            return canaux.contains(Priorite.Canal.APPEL);
         }
     }
 

@@ -3,6 +3,7 @@ package ca.vina.nexu.alertes.infrastructure.configuration;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireEnvoiAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireParametresAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireReceptionAlertes;
+import ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireCascades;
 import ca.vina.nexu.alertes.application.commandes.GestionnairePolitiques;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireTextosEntrants;
@@ -10,6 +11,7 @@ import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
 import ca.vina.nexu.alertes.application.requetes.LectureCascades;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
+import ca.vina.nexu.alertes.infrastructure.persistance.DepotAppelsAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotCascades;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotTextosEntrants;
 import ca.vina.nexu.alertes.infrastructure.persistance.EcheancierOrdonnanceur;
@@ -68,6 +70,16 @@ public class ConfigurationAlertes {
         return g;
     }
 
+    /** L'appel automatique (ST-G06) : ses tâches durables, la voix des notifications, les rappels sous l'URL publique. */
+    @Bean
+    public GestionnaireAppelsAlertes gestionnaireAppelsAlertes(DepotAlertes depot, JdbcClient jdbc, ControleurAlertes.Cas cas, Durables durables,
+                                                               ca.vina.nexu.partage.telephonie.AppelsVocauxPort voix, ControleurWebhooksAlertes.Reglages reglages, Clock horloge) {
+        GestionnaireAppelsAlertes g = new GestionnaireAppelsAlertes(new GestionnaireAppelsAlertes.Dependances(depot, new DepotAppelsAlertes(jdbc), voix, cas.reception()),
+                new GestionnaireAppelsAlertes.Rappels(reglages.urlPublique() == null ? "" : reglages.urlPublique()), () -> UUID.randomUUID().toString(), horloge);
+        new EcheancierOrdonnanceur(durables.taches(), durables.executeurs()).brancherAppels(g);
+        return g;
+    }
+
     /** Ce que les cascades empruntent aux autres contextes, groupé pour garder la signature courte. */
     public record Durables(DepotTaches taches, RegistreExecuteurs executeurs, DisponibiliteDestinatairesPort disponibilite,
                            TransactionTemplate transaction, PublicationAvis avis) { }
@@ -79,9 +91,9 @@ public class ConfigurationAlertes {
     }
 
     @Bean
-    public ControleurCascades.Cas casCascades(DepotCascades cascades, DepotAlertes depot, GestionnaireCascades gestionnaire, Clock horloge) {
+    public ControleurCascades.Cas casCascades(DepotCascades cascades, DepotAlertes depot, GestionnaireCascades gestionnaire, JdbcClient jdbc, Clock horloge) {
         return new ControleurCascades.Cas(new GestionnairePolitiques(cascades, cascades, () -> UUID.randomUUID().toString(), horloge), gestionnaire,
-                new LectureCascades(cascades, depot));
+                new LectureCascades(cascades, depot, new DepotAppelsAlertes(jdbc)));
     }
 
     /** La réponse par texto (ST-G05) : signée par le jeton Twilio, sous l'URL publique du déploiement s'il la connaît. */
@@ -94,6 +106,18 @@ public class ConfigurationAlertes {
     @Bean
     public GestionnaireTextosEntrants gestionnaireTextosEntrants(DepotAlertes depot, JdbcClient jdbc, ControleurAlertes.Cas cas, Clock horloge) {
         return new GestionnaireTextosEntrants(depot, new DepotTextosEntrants(jdbc), cas.reception(), horloge);
+    }
+
+    /** Le bordereau des utilisateurs actifs (ST-G08), lu dans les remises, les étapes de cascade et les appels. */
+    @Bean
+    public ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs lectureUtilisateursActifs(JdbcClient jdbc) {
+        return new ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs(new ca.vina.nexu.alertes.infrastructure.persistance.DepotTentatives(jdbc));
+    }
+
+    /** Les notes sur les destinataires (ST-G12). */
+    @Bean
+    public ca.vina.nexu.alertes.application.commandes.GestionnaireNotes gestionnaireNotes(JdbcClient jdbc, AdaptateurAnnuaireAlertes annuaire, Clock horloge) {
+        return new ca.vina.nexu.alertes.application.commandes.GestionnaireNotes(new ca.vina.nexu.alertes.infrastructure.persistance.DepotNotes(jdbc), annuaire, horloge);
     }
 
     @Bean

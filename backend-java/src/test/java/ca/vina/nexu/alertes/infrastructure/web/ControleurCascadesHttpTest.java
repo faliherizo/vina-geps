@@ -3,7 +3,11 @@ package ca.vina.nexu.alertes.infrastructure.web;
 import ca.vina.nexu.ClientHttpEssai;
 import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.acces.infrastructure.persistance.RegistrePolitiqueAcces;
+import ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireCascades;
+import ca.vina.nexu.alertes.application.commandes.GestionnaireTextosEntrants;
+import ca.vina.nexu.alertes.infrastructure.persistance.DepotAppelsAlertes;
+import ca.vina.nexu.alertes.infrastructure.persistance.DepotTextosEntrants;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireEnvoiAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireParametresAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnairePolitiques;
@@ -46,6 +50,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -91,6 +96,9 @@ class ControleurCascadesHttpTest {
     private final Horloge horloge = new Horloge();
     private final List<PublicationAvis.Avis> avis = new ArrayList<>();
     private final Set<String> indisponibles = new HashSet<>();
+    private static final String URL = "https://geps.exemple";
+    private static final String JETON = "jeton-essai";
+    private final List<ca.vina.nexu.partage.telephonie.AppelsVocauxPort.Appel> voix = new ArrayList<>();
     /** Simule une exécution concurrente qui a fait avancer la cascade entre la lecture et l'écriture. */
     private boolean devancee;
     private JdbcClient jdbc;
@@ -108,6 +116,9 @@ class ControleurCascadesHttpTest {
                     .params("u-" + login, login + "@@" + T, login, T).update();
         }
         new ca.vina.nexu.effectifs.infrastructure.persistance.SchemaPlanification(jdbc);
+        // Les numéros des fiches : celui de Julie et celui de Léa ; Marc n'en a pas.
+        jdbc.sql("INSERT INTO employees (id, firstName, lastName, tenantId, phone) VALUES ('u-julie', 'Julie', 'Roy', ?, '(514) 555-0101'), "
+                + "('u-lea', 'Léa', 'Côté', ?, '514-555-0103'), ('u-marc', 'Marc', 'Dubé', ?, NULL)").params(T, T, T).update();
         GroupesDeTravailPort groupes = new GroupesDeTravailPort() {
             @Override
             public List<Groupe> groupes(String tenantId) {
@@ -161,8 +172,16 @@ class ControleurCascadesHttpTest {
                 new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, publication), ids, horloge, cascades),
                 new GestionnaireReceptionAlertes(depot, depot, horloge, cascades), new LectureAlertes(depot, annuaire));
         GardeAlertes garde = new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc));
+        // ST-G06 : la voix simulée garde ce qu'on lui demande ; les appels sont tracés en base.
+        GestionnaireAppelsAlertes appels = new GestionnaireAppelsAlertes(new GestionnaireAppelsAlertes.Dependances(depot, new DepotAppelsAlertes(jdbc), a -> {
+            voix.add(a);
+            return "CA-" + voix.size();
+        }, cas.reception()), new GestionnaireAppelsAlertes.Rappels(URL), ids, horloge);
+        echeancier.brancherAppels(appels);
+        GestionnaireTextosEntrants textos = new GestionnaireTextosEntrants(depot, new DepotTextosEntrants(jdbc), cas.reception(), horloge);
         http = new ClientHttpEssai(new ControleurAlertes(garde, cas, horloge), new ControleurCascades(garde, new ControleurCascades.Cas(
-                new GestionnairePolitiques(depotCascades, depotCascades, ids, horloge), cascades, new LectureCascades(depotCascades, depot))));
+                new GestionnairePolitiques(depotCascades, depotCascades, ids, horloge), cascades, new LectureCascades(depotCascades, depot, new DepotAppelsAlertes(jdbc)))),
+                new ControleurWebhooksAlertes(textos, appels, new ControleurWebhooksAlertes.Reglages(URL, JETON)));
     }
 
     private static LectureListesDistributionPort sansListe() {
@@ -430,5 +449,86 @@ class ControleurCascadesHttpTest {
         cascades.executerEtape(T, autre, 0, "2026-11-16T14:05:00Z");
         http.get(A + "/envoyees/" + autre + "/cascade", CHEF).andExpect(jsonPath("$.traces[1].evenement").value("etape"))
                 .andExpect(jsonPath("$.traces[1].personnes.length()").value(0));
+    }
+
+    private ResultActions rappel(String chemin, String appelId, Map<String, String> corps) throws Exception {
+        StringBuilder donnees = new StringBuilder(URL + chemin + "?appel=" + appelId);
+        new java.util.TreeMap<>(corps).forEach((k, v) -> donnees.append(k).append(v));
+        org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder b = org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+                .post(chemin).queryParam("appel", appelId).header("X-Twilio-Signature", ca.vina.nexu.partage.telephonie.Telephonie.signer(donnees.toString(), JETON));
+        corps.forEach(b::param);
+        return http.envoyer(b, null);
+    }
+
+    @Test
+    @DisplayName("ST-G06, critères 13 et 14 : l'étape « appel » fait sonner la personne ; « 1 » prend en charge et arrête la cascade ; résultat et durée tracés")
+    void appelAutomatique() throws Exception {
+        String alerte = envoyer(politique("{\"cible\":\"initiaux\",\"canaux\":[\"appel\"],\"delaiMinutes\":5},"
+                + "{\"cible\":\"groupe\",\"cibleId\":\"GARDE\",\"canaux\":[\"appel\",\"texto\"],\"delaiMinutes\":10}", "prise_en_charge"), reponse());
+        avis.clear();
+        tic("2026-11-16T14:05:00Z");
+        assertThat(taches(EcheancierOrdonnanceur.TACHE_RELANCE, "en_attente")).isZero();
+        tic("2026-11-16T14:05:01Z");
+        assertThat(avis).isEmpty();
+        assertThat(voix).singleElement().satisfies(a -> {
+            assertThat(a.numero()).isEqualTo("+15145550101");
+            assertThat(a.message()).startsWith("Alerte urgente de VINA GEPS : Code bleu 512. 5e.").endsWith("Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.");
+            assertThat(a.urlChiffre()).isEqualTo(URL + "/api/alertes/webhooks/voix?appel=" + a.reference());
+        });
+        String appel = voix.getFirst().reference();
+        // Rejouée après une panne, la tâche d'appel ne rappelle pas.
+        new GestionnaireAppelsAlertes(new GestionnaireAppelsAlertes.Dependances(new DepotAlertes(jdbc), new DepotAppelsAlertes(jdbc), a -> {
+            voix.add(a);
+            return "doublon";
+        }, null), new GestionnaireAppelsAlertes.Rappels(URL), () -> "x", horloge)
+                .lancer(T, new ca.vina.nexu.alertes.domaine.AppelsAlertes.AAppeler(alerte, 0, "julie", "u-julie"));
+        assertThat(voix).hasSize(1);
+        // Une touche inconnue ne compte pas ; une signature fausse est refusée ; « 1 » prend en charge.
+        rappel("/api/alertes/webhooks/voix", appel, Map.of("Digits", "9", "CallSid", "CA-1")).andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Touche non reconnue")));
+        http.envoyer(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/api/alertes/webhooks/voix").queryParam("appel", appel)
+                .param("Digits", "1").header("X-Twilio-Signature", "faux"), null).andExpect(status().isForbidden());
+        rappel("/api/alertes/webhooks/voix", appel, Map.of("Digits", "1", "CallSid", "CA-1")).andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Prise en charge enregistrée")));
+        http.get(A + "/envoyees/" + alerte + "/cascade", CHEF).andExpect(jsonPath("$.cascade.etat").value("arretee"));
+        // La fin d'appel ne fait pas oublier la touche : répondu, 42 secondes.
+        rappel("/api/alertes/webhooks/voix/statut", appel, Map.of("CallStatus", "completed", "CallDuration", "42", "CallSid", "CA-1")).andExpect(status().isOk());
+        http.get(A + "/envoyees/" + alerte + "/cascade", CHEF).andExpect(jsonPath("$.appels[0].resultat").value("repondu"))
+                .andExpect(jsonPath("$.appels[0].touche").value("1")).andExpect(jsonPath("$.appels[0].dureeSecondes").value(42))
+                .andExpect(jsonPath("$.appels[0].etape").value(1)).andExpect(jsonPath("$.appels[0].personId").value("julie"));
+        // Répondre deux fois au téléphone : la seconde touche le dit.
+        rappel("/api/alertes/webhooks/voix", appel, Map.of("Digits", "1", "CallSid", "CA-1"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("déjà enregistrée")));
+        rappel("/api/alertes/webhooks/voix", "inconnu", Map.of("Digits", "1")).andExpect(status().isNotFound());
+        rappel("/api/alertes/webhooks/voix/statut", "inconnu", Map.of("CallStatus", "completed")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("ST-G06 : escalade par appel à un groupe — sans numéro, l'appel est tracé en échec ; la messagerie et le refus sont distingués")
+    void appelsDuGroupe() throws Exception {
+        String alerte = envoyer(politique("{\"cible\":\"groupe\",\"cibleId\":\"GARDE\",\"canaux\":[\"appel\",\"texto\"],\"delaiMinutes\":5}", "prise_en_charge"), reponse());
+        avis.clear();
+        tic("2026-11-16T14:05:00Z");
+        tic("2026-11-16T14:05:01Z");
+        assertThat(avis).singleElement().satisfies(a -> assertThat(a.canaux()).containsExactly("texto"));
+        assertThat(voix).extracting(ca.vina.nexu.partage.telephonie.AppelsVocauxPort.Appel::numero).containsExactly("+15145550103");
+        String lea = voix.getFirst().reference();
+        rappel("/api/alertes/webhooks/voix/statut", lea, Map.of("CallStatus", "completed", "AnsweredBy", "machine_end_beep", "CallDuration", "18")).andExpect(status().isOk());
+        String json = corps(http.get(A + "/envoyees/" + alerte + "/cascade", CHEF));
+        assertThat(JsonPath.<List<String>>read(json, "$.appels[*].resultat")).containsExactlyInAnyOrder("messagerie", "echec", "echec");
+        assertThat(JsonPath.<List<String>>read(json, "$.appels[?(@.personId == 'marc')].resultat")).containsExactly("echec");
+        // Un refus au téléphone n'arrête pas la cascade (critère « prise en charge »).
+        String alerte2 = envoyer(politique("{\"cible\":\"personne\",\"cibleId\":\"lea\",\"canaux\":[\"appel\"],\"delaiMinutes\":5},"
+                + "{\"cible\":\"initiaux\",\"canaux\":[\"texto\"],\"delaiMinutes\":5}", "prise_en_charge"),
+                JsonPath.read(corps(http.post(A + "/reponses", ADMIN, "{\"libelle\":\"Non\",\"semantique\":\"refus\"}")), "$.id"));
+        voix.clear();
+        cascades.executerEtape(T, alerte2, 0, "2026-11-16T14:05:00Z");
+        tic("2026-11-16T14:06:00Z");
+        rappel("/api/alertes/webhooks/voix", voix.getFirst().reference(), Map.of("Digits", "2")).andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content()
+                .string(org.hamcrest.Matchers.containsString("Refus enregistré")));
+        http.get(A + "/envoyees/" + alerte2 + "/cascade", CHEF).andExpect(jsonPath("$.cascade.etat").value("armee"));
+        // Un « 1 » sur une alerte qui ne propose que le refus : la voix renvoie vers l'application.
+        rappel("/api/alertes/webhooks/voix", voix.getFirst().reference(), Map.of("Digits", "1"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.content().string(org.hamcrest.Matchers.containsString("Touche non reconnue")));
     }
 }

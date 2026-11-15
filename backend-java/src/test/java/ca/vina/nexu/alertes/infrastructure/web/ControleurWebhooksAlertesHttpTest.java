@@ -100,7 +100,11 @@ class ControleurWebhooksAlertesHttpTest {
         Clock horloge = Clock.fixed(Instant.parse("2026-11-16T14:00:00Z"), ZoneOffset.UTC);
         envoi = new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, PublicationAvis.MUET), () -> "al-" + ++sequence, horloge);
         GestionnaireTextosEntrants textos = new GestionnaireTextosEntrants(depot, new DepotTextosEntrants(jdbc), new GestionnaireReceptionAlertes(depot, depot, horloge), horloge);
-        http = new ClientHttpEssai(new ControleurWebhooksAlertes(textos, new ControleurWebhooksAlertes.Reglages(URL, JETON)));
+        ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes appels = new ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes(
+                new ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes.Dependances(depot,
+                        new ca.vina.nexu.alertes.infrastructure.persistance.DepotAppelsAlertes(jdbc), a -> "SIM", new GestionnaireReceptionAlertes(depot, depot, horloge)),
+                new ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes.Rappels(URL), () -> "ap", horloge);
+        http = new ClientHttpEssai(new ControleurWebhooksAlertes(textos, appels, new ControleurWebhooksAlertes.Reglages(URL, JETON)));
         depot.enregistrer(T, Alertes.ReponsePredefinie.nouvelle("rp-ok", "J'arrive", Semantique.PRISE_EN_CHARGE));
         depot.enregistrer(T, Alertes.ReponsePredefinie.nouvelle("rp-non", "Indisponible", Semantique.REFUS));
     }
@@ -184,5 +188,26 @@ class ControleurWebhooksAlertesHttpTest {
         assertThat(textos.recevoir(new ca.vina.nexu.alertes.domaine.TextosEntrants.Entrant("SM9", "+15145550101", "1")).issue())
                 .isEqualTo(ca.vina.nexu.alertes.domaine.TextosEntrants.Issue.DEJA_REPONDU);
         assertThat(reponseDe(a, "julie")).isEqualTo("rp-non");
+    }
+
+    private ResultActions signe(String chemin, String requete, Map<String, String> corps) throws Exception {
+        StringBuilder donnees = new StringBuilder(URL + chemin + requete);
+        new TreeMap<>(corps).forEach((k, v) -> donnees.append(k).append(v));
+        MockHttpServletRequestBuilder b = MockMvcRequestBuilders.post(chemin + requete).header("X-Twilio-Signature", Telephonie.signer(donnees.toString(), JETON));
+        corps.forEach(b::param);
+        return http.envoyer(b, null);
+    }
+
+    @Test
+    @DisplayName("les rappels mal formés : texto sans expéditeur (400), rappel vocal sans appel (403), durée illisible ignorée")
+    void rappelsMalFormes() throws Exception {
+        signe(CHEMIN, "", Map.of("MessageSid", "SM1", "From", " ")).andExpect(status().isBadRequest());
+        signe(CHEMIN, "", Map.of("MessageSid", " ", "From", "+15145550101")).andExpect(status().isBadRequest());
+        signe("/api/alertes/webhooks/voix", "", Map.of("Digits", "1")).andExpect(status().isForbidden());
+        jdbc.sql("INSERT INTO alr_appels (id, tenantId, alerteId, etape, personId, resultat, lanceLe) VALUES ('ap-9', ?, 'a', 0, 'julie', 'lance', 'x')").param(T).update();
+        signe("/api/alertes/webhooks/voix/statut", "?appel=ap-9", Map.of("CallStatus", "busy", "CallDuration", "trois")).andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT resultat || '|' || COALESCE(dureeSecondes, -1) FROM alr_appels WHERE id = 'ap-9'").query(String.class).single()).isEqualTo("occupe|-1");
+        signe("/api/alertes/webhooks/voix/statut", "?appel=ap-9", Map.of("CallStatus", "completed")).andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT resultat FROM alr_appels WHERE id = 'ap-9'").query(String.class).single()).isEqualTo("decroche");
     }
 }

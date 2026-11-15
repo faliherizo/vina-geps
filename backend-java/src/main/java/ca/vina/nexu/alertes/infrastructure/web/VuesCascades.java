@@ -46,6 +46,17 @@ final class VuesCascades {
             l.put("par", t.par());
             return l;
         }).toList());
+        v.put("appels", s.appels().stream().map(a -> {
+            Map<String, Object> l = new LinkedHashMap<>();
+            l.put("personId", a.personId());
+            l.put("etape", a.etape() + 1);
+            l.put("resultat", a.resultat().code());
+            l.put("touche", a.touche());
+            l.put("dureeSecondes", a.dureeSecondes());
+            l.put("lanceLe", a.lanceLe());
+            l.put("termineLe", a.termineLe());
+            return l;
+        }).toList());
         return v;
     }
 

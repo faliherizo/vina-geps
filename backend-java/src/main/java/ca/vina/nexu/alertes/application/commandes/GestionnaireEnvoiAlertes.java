@@ -35,6 +35,8 @@ public final class GestionnaireEnvoiAlertes {
 
     /** L'événement du catalogue des avis ; essentiel : une personne ne ferme pas tous ses canaux écrits. */
     public static final String EVENEMENT = "alerte.recue";
+    /** L'événement d'une alerte critique : la poussée part avec l'étiquette critique (ST-G07). */
+    public static final String EVENEMENT_CRITIQUE = "alerte.critique";
     /** L'écran où le destinataire lit et répond. */
     public static final String URL_MES_ALERTES = "/admin/mesalertes";
     private static final String COURRIEL = Priorite.Canal.COURRIEL.code();
@@ -119,7 +121,7 @@ public final class GestionnaireEnvoiAlertes {
     private void aviser(Alerte a) {
         List<String> comptes = a.remises().stream().map(Remise::destinataire).map(Destinataire::compteAvis).filter(Objects::nonNull).toList();
         String sujet = "[" + a.priorite().code() + "] " + a.titre();
-        List<PublicationAvis.Envoi> envois = d.avis().publier(new PublicationAvis.Avis(a.tenantId(), EVENEMENT, comptes, sujet, a.corps(), URL_MES_ALERTES,
+        List<PublicationAvis.Envoi> envois = d.avis().publier(new PublicationAvis.Avis(a.tenantId(), evenementDe(a.priorite()), comptes, sujet, a.corps(), URL_MES_ALERTES,
                 Map.of(), a.priorite().canauxImposes()));
         copieParCourriel(a, comptes, envois, sujet);
     }
@@ -136,7 +138,15 @@ public final class GestionnaireEnvoiAlertes {
                 .filter(e -> COURRIEL.equals(e.canal())).map(PublicationAvis.Envoi::employeeId).collect(Collectors.toSet());
         List<String> restants = comptes.stream().filter(c -> !dejaJoints.contains(c)).toList();
         if (!restants.isEmpty()) {
-            d.avis().publier(new PublicationAvis.Avis(a.tenantId(), EVENEMENT, restants, sujet, a.corps(), URL_MES_ALERTES, Map.of(), List.of(COURRIEL)));
+            d.avis().publier(new PublicationAvis.Avis(a.tenantId(), evenementDe(a.priorite()), restants, sujet, a.corps(), URL_MES_ALERTES, Map.of(), List.of(COURRIEL)));
         }
+    }
+
+    /** L'événement d'avis d'une alerte, selon sa priorité : seule la critique se pousse comme telle. */
+    public static String evenementDe(Priorite p) {
+        return switch (p) {
+            case CRITIQUE -> EVENEMENT_CRITIQUE;
+            case INFORMATION, URGENTE -> EVENEMENT;
+        };
     }
 }

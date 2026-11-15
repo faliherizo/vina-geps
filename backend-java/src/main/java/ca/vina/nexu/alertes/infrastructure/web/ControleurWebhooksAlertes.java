@@ -1,5 +1,7 @@
 package ca.vina.nexu.alertes.infrastructure.web;
 
+import ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes;
+import ca.vina.nexu.alertes.application.commandes.GestionnaireAppelsAlertes.Rappels;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireTextosEntrants;
 import ca.vina.nexu.alertes.domaine.TextosEntrants;
 import ca.vina.nexu.partage.telephonie.Telephonie;
@@ -32,10 +34,12 @@ public class ControleurWebhooksAlertes {
     public record Reglages(String urlPublique, String jetonTwilio) { }
 
     private final GestionnaireTextosEntrants textos;
+    private final GestionnaireAppelsAlertes appels;
     private final Reglages reglages;
 
-    public ControleurWebhooksAlertes(GestionnaireTextosEntrants textos, Reglages reglages) {
+    public ControleurWebhooksAlertes(GestionnaireTextosEntrants textos, GestionnaireAppelsAlertes appels, Reglages reglages) {
         this.textos = textos;
+        this.appels = appels;
         this.reglages = reglages;
     }
 
@@ -55,12 +59,67 @@ public class ControleurWebhooksAlertes {
         return ResponseEntity.ok().contentType(TWIML).body(twiml(r.message()));
     }
 
+    /** La touche pressée pendant l'appel (ST-G06) ; la réponse est ce que la voix dit. */
+    @PostMapping("/voix")
+    public ResponseEntity<Object> voix(HttpServletRequest requete, @RequestParam Map<String, String> params,
+                                       @RequestHeader(name = "X-Twilio-Signature", required = false) String signature) {
+        String appel = params.get(Rappels.PARAMETRE);
+        if (!signee(requete, Rappels.CHEMIN_CHIFFRE, params, signature)) {
+            return GardeAlertes.erreur(INTERDIT, "signature Twilio absente ou invalide");
+        }
+        try {
+            return ResponseEntity.ok().contentType(TWIML).body(dire(appels.touche(appel, params.get("Digits"))));
+        } catch (ca.vina.nexu.alertes.domaine.RefusAlerte e) {
+            return GardeAlertes.erreur(GardeAlertes.statutDe(e.nature()), e.getMessage());
+        }
+    }
+
+    /** La fin de l'appel : son résultat, sa durée. */
+    @PostMapping("/voix/statut")
+    public ResponseEntity<Object> statutVoix(HttpServletRequest requete, @RequestParam Map<String, String> params,
+                                             @RequestHeader(name = "X-Twilio-Signature", required = false) String signature) {
+        if (!signee(requete, Rappels.CHEMIN_STATUT, params, signature)) {
+            return GardeAlertes.erreur(INTERDIT, "signature Twilio absente ou invalide");
+        }
+        appels.statut(params.get(Rappels.PARAMETRE), params.get("CallStatus"), params.get("AnsweredBy"), duree(params.get("CallDuration")));
+        return ResponseEntity.ok().contentType(TWIML).body(twiml(null));
+    }
+
+    /**
+     * Twilio signe l'URL complète, chaîne de requête comprise ({@code ?appel=…}), suivie des seuls paramètres du corps :
+     * celui de la chaîne de requête, que Spring mêle aux autres, en est retiré.
+     */
+    private boolean signee(HttpServletRequest requete, String chemin, Map<String, String> params, String signature) {
+        String appel = params.get(Rappels.PARAMETRE);
+        String url = (reglages.urlPublique() != null ? reglages.urlPublique() + chemin : requete.getRequestURL().toString())
+                + "?" + Rappels.PARAMETRE + "=" + appel;
+        Map<String, String> corps = new java.util.HashMap<>(params);
+        corps.remove(Rappels.PARAMETRE);
+        return appel != null && Telephonie.signatureTwilioValide(url, corps, signature, reglages.jetonTwilio());
+    }
+
+    private static Integer duree(String brute) {
+        try {
+            return brute == null ? null : Integer.valueOf(brute);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /** Ce que la voix dit, en TwiML. */
+    static String dire(String texte) {
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Say language=\"fr-CA\">" + echapper(texte) + "</Say></Response>";
+    }
+
+    private static String echapper(String s) {
+        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+    }
+
     /** Une réponse TwiML : le texto à renvoyer, échappé ; vide s'il n'y a rien à dire. */
     static String twiml(String message) {
         if (message == null) {
             return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response/>";
         }
-        String echappe = message.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Message>" + echappe + "</Message></Response>";
+        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Response><Message>" + echapper(message) + "</Message></Response>";
     }
 }

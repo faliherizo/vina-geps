@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Note sur la fiche du destinataire** (FX-AO-20260810, ST-G12, critère 2, 15 novembre 2026) : une note courte et
+    datée par personne, visible des expéditeurs autorisés. Lecture « note interne » de Q-DOS ; jamais au journal en clair.
+  -->
+  <changeSet id="0017-alertes-notes" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'alr_notes'</sqlCheck>
+    </preConditions>
+    <comment>Notes sur les destinataires.</comment>
+    <sql>
+      CREATE TABLE alr_notes (
+        tenantId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        texte TEXT NOT NULL,
+        ecriteLe TEXT NOT NULL,
+        ecritePar TEXT NOT NULL,
+        PRIMARY KEY (tenantId, personId)
+      )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

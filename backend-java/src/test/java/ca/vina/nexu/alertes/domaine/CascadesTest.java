@@ -137,7 +137,7 @@ class CascadesTest {
         refus(() -> Cible.de("x"), "« cible » : initiaux, groupe, personne ou prochain_disponible");
         refus(() -> Etat.de("x"), "« etat » : armee, arretee ou epuisee");
         refus(() -> Evenement.de("x"), "événement de cascade inconnu : x");
-        refus(() -> Priorite.Canal.de("pigeon"), "« canaux » : courriel, texto ou poussee");
+        refus(() -> Priorite.Canal.de("pigeon"), "« canaux » : courriel, texto, poussee ou appel");
         Cascades.Trace t = new Cascades.Trace("a1", Evenement.ETAPE, 0, new java.util.ArrayList<>(List.of("julie")), T0, "cascade");
         assertThat(t.personnes()).containsExactly("julie");
         assertThat(Cascades.plus(T0, 90)).isEqualTo("2026-11-16T15:30:00Z");

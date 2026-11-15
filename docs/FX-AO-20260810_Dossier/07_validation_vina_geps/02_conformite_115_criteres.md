@@ -17,15 +17,15 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 27 | 4 | 0 | 0 | 1 |
-| Technique (postes, bureautique, réseau) | 33-49 | 13 | 1 | 1 | 2 | 0 |
+| Fonctionnel | 1-32 | 29 | 3 | 0 | 0 | 0 |
+| Technique (postes, bureautique, réseau) | 33-49 | 14 | 1 | 0 | 2 | 0 |
 | Architecture et hébergement | 50-63 | 5 | 2 | 0 | 7 | 0 |
-| Sauvegarde, surveillance | 64-70 | 5 | 1 | 0 | 1 | 0 |
-| Sécurité, identité, audit | 71-93 | 12 | 4 | 1 | 6 | 0 |
-| Performance, fournisseur, soutien | 94-115 | 2 | 1 | 0 | 19 | 0 |
-| **Total** | **115** | **64** | **13** | **2** | **35** | **1** |
+| Sauvegarde, surveillance | 64-70 | 6 | 0 | 0 | 1 | 0 |
+| Sécurité, identité, audit | 71-93 | 14 | 3 | 0 | 6 | 0 |
+| Performance, fournisseur, soutien | 94-115 | 3 | 0 | 0 | 19 | 0 |
+| **Total** | **115** | **71** | **9** | **0** | **35** | **0** |
 
-Sur les **32 critères fonctionnels**, 27 sont acquis, 4 partiels, aucun à bâtir et 1 à clarifier, après la réponse par texto (ST-G05, R2-b), les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
+Sur les **32 critères fonctionnels**, 29 sont acquis, 3 partiels (dont la note, livrée dans sa lecture « note interne » en attendant Q-DOS), aucun à bâtir ni à clarifier, après l'appel automatique (ST-G06, R3-a), la réponse par texto (ST-G05, R2-b), les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
 Les 18 critères partiels ou à bâtir forment le module « Communications cliniques » : modèles et
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
@@ -35,7 +35,7 @@ critiques.
 | # | Critère (résumé) | Statut | Preuve dans VINA GEPS | Écart, story |
 |---|---|---|---|---|
 | 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | ✅ | **Nouvelle alerte** (ADR 0074) : priorité, modèle, groupes et personnes ; canaux selon les préférences, tous imposés si critique | — |
-| 2 | Note au dossier des destinataires | ❓ | Fiche de ressource (effectifs) | Q-DOS ; si c'est une note interne : ST-G12 |
+| 2 | Note au dossier des destinataires | 🟡 | **Note courte et datée sur la fiche du destinataire** (ST-G12, 15 novembre 2026) : tenue et lue par les expéditeurs autorisés dans le suivi, jamais au journal en clair (`/api/alertes/notes`, changeset `0017`) | Livré dans la lecture « note interne » ; si Q-DOS répond « dossier patient », c'est une intégration distincte |
 | 3 | Recherche de destinataire par nom et prénom | ✅ | Champ personne avec autocomplétion à 3 caractères ; membres nommés | — |
 | 4 | Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés | ✅ | Messagerie du personnel : fils à deux et de groupe, réponse privée (ADR 0072) ; **réponse par texto** à une alerte (ST-G05, ADR 0078 : webhook Twilio signé, « 1 »/« 2 », rejeu ignoré) | — |
 | 5 | Envoi à une personne, à plusieurs ou à un groupe configurable | ✅ | Fil à deux, fil de groupe, listes de diffusion (personnes et groupes recalculés) | — |
@@ -46,16 +46,16 @@ critiques.
 | 10 | Réponses prédéfinies, configurées par l'administration | ✅ | **Réponses prédéfinies** à sémantique fermée (prise en charge, refus, information), `/api/alertes/reponses` | — |
 | 11 | Statut d'envoi, réception, lecture, réponse, relance, vu par l'expéditeur | 🟡 | Acheminement « Envoyé / Reçu par N / Lu par N » | Réponse et relance — ST-G03, ST-G04 |
 | 12 | Historique et statuts partagés entre expéditeurs | ✅ | **Suivi des alertes** partagé entre expéditeurs autorisés, filtrable (période, priorité, état, expéditeur) et exportable en CSV, XLSX, PDF, JSON (R1-bis) | PDF/A pour l'archive — ST-G10 |
-| 13 | Confirmer la réception d'un retour d'appel | 🟡 | Appel à deux tracé (sonne, en cours, terminé, manqué) | Lier un retour d'appel à l'alerte — ST-G06 |
-| 14 | Appel téléphonique automatique si non-réponse, délai programmable | 🟡 | Port d'appel sortant au numéro de l'organisme (ADR 0022) | Appel déclenché par l'orchestrateur — ST-G06 |
+| 13 | Confirmer la réception d'un retour d'appel | ✅ | Appel à deux tracé (sonne, en cours, terminé, manqué) ; **appel automatique d'alerte** : « appuyez sur 1 » prend en charge et arrête la cascade, rappel signé (ST-G06, ADR 0079) | — |
+| 14 | Appel téléphonique automatique si non-réponse, délai programmable | ✅ | Étape de cascade de canal **« appel »**, à son délai (ST-G04) ; synthèse vocale française, touche 1/2, résultat (répondu, messagerie, occupé, sans réponse, échec) et durée tracés (ST-G06) | — |
 | 15 | Relances automatisées configurables | ✅ | **Politiques de relance** (ST-G04, ADR 0077) : étapes (cible, canaux, délai) versionnées ; échéances durables dans l'ordonnanceur partagé | — |
 | 16 | Cascades entre utilisateurs d'un groupe ou de groupes distincts | ✅ | Étapes « tout un groupe », « une personne », « prochain disponible d'un groupe » ; les personnes escaladées rejoignent l'alerte | — |
 | 17 | Délais, séquences, règles d'arrêt et de reprise des cascades | ✅ | Délai par étape ; arrêt à la prise en charge ou quand tous ont lu ; **reprise manuelle** à l'étape choisie, journalisée (`/api/alertes/envoyees/{id}/cascade/reprendre`) | — |
-| 18 | Alertes critiques, lorsque disponible et permis | 🟡 | Poussée native (application installable) | Notification critique (iOS *Critical Alerts*, Android canal prioritaire) — Q-ALC, ST-G07 |
+| 18 | Alertes critiques, lorsque disponible et permis | 🟡 | Poussée native et navigateur ; **une alerte critique se pousse en critique** (ST-G07, ADR 0080) : priorité haute sur le canal Android `critique`, niveau d'interruption et son critiques iOS, interaction exigée et vibration prolongée dans le navigateur | Application mobile (hors de ce dépôt) : déclarer le canal Android `critique` à importance maximale ; iOS : droit *Critical Alerts* d'Apple (Q-ALC). En attendant, repli : texto puis appel par la cascade (ST-G04, ST-G06) |
 | 19 | Traces des relances, appels, réponses, escalades | ✅ | Journal des actions (ADR 0041) ; **trace de cascade** en ajout seul : armement, chaque étape et les personnes visées, arrêt, épuisement, reprise (par qui) | Appels : ST-G06 |
 | 20 | Accès mobile par navigateur, sans équipement dédié | ✅ | Interface responsive (390 px auditée), application installable (PWA) | — |
 | 21 | Application mobile iOS et Android, si proposée | ✅ | PWA ; application native du dépôt `mobile` (poussée native) | — |
-| 22 | Préférences par destinataire sans contourner les règles obligatoires | ✅ | Préférences d'avis par événement, canal écrit obligatoire maintenu | Étendre aux alertes — ST-G07 |
+| 22 | Préférences par destinataire sans contourner les règles obligatoires | ✅ | Préférences d'avis par événement, canal écrit obligatoire maintenu ; **alerte critique** : tous les canaux d'avis imposés, événements `alerte.recue` et `alerte.critique` essentiels (ST-G07) ; l'appel n'est jamais imposé d'office (ST-G06) | — |
 | 23 | Interface intuitive, rapide en contexte clinique | ✅ | SGQRI 008 / WCAG 2.2 AA audité ; tableau de bord en un clic | — |
 | 24 | Historique de ses messages et confirmations selon ses droits | ✅ | Messagerie : historique, recherche limitée à sa participation | — |
 | 25 | Calendrier interne de disponibilité, si activé | ✅ | Disponibilités, horaires, « Mon horaire » en calendrier (module effectifs) ; **les cascades « prochain disponible » le consultent** (absence acceptée, indisponibilité déclarée) | — |
@@ -75,8 +75,8 @@ critiques.
 | 35, 37 | ✅ | L'impression passe par le navigateur et le service Windows ; aucun pilote propre. |
 | 36 | 📄 | Engagement de nomenclature : noms d'hôtes et groupes AD fournis par l'établissement. |
 | 38 | ✅ | Exports CSV, XLSX et PDF lisibles par Office 2016. |
-| 39 | 🔴 | Export **PDF/A** à produire (PDF/A-2b) — ST-G10. |
-| 40 | 🟡 | Courriel SMTP authentifié : Outlook 365 admis comme relais. Envoi par Microsoft Graph à ajouter si exigé — ST-G11. |
+| 39 | 🟡 | **Tous les PDF du produit sont produits en PDF/A-2b** (ST-G10, ADR 0081) : polices Liberation Sans incorporées, profil sRGB, XMP de conformité, identifiant — vérifiés par `PdfAConformiteTest`. Reste : la validation **veraPDF**, branchée en CI (`scripts/verifier-pdfa.sh`), pas encore exécutée. |
+| 40 | ✅ | Courriel SMTP authentifié (Outlook 365 admis comme relais) **ou Microsoft Graph** (`Mail.Send`, application Entra ID, jeton gardé) — choisi par la configuration (ST-G11, ADR 0082). |
 | 41, 42, 44, 47, 49 | ✅ | HTTPS standard sur le WAN, aucun broadcast, résolution DNS, compatible avec le mandataire (en-têtes `X-Forwarded-*`). |
 | 43 | 🏢 | Adressage privé 10.x pour un déploiement local (profil B). |
 | 45, 46, 48 | ✅ | Le Wi-Fi est celui du terminal : l'application n'impose rien (WPA2, 802.11ax, 802.1x restent du ressort du réseau). |
@@ -101,7 +101,7 @@ critiques.
 |---|---|---|
 | 64 | ✅ | Base en fichier et volume de données : sauvegardables par l'agent de l'établissement (`COPIES-DE-SECURITE.md`). |
 | 65 | ✅ | Sauvegardes applicatives planifiées, copies par organisme (superadmin › Sauvegardes). |
-| 66 | 🟡 | Rétention par classe de données (effectifs, messagerie) ; procédure d'**archivage** à formaliser — ST-G13. |
+| 66 | ✅ | Rétention par classe de données (effectifs, messagerie) ; **archivage** formalisé : copie complète annuelle par organisme, conservation 6 ans recommandée (profil A : AWS Backup mensuel 6 ans ; profil B : [09_exploitation_chez_l_etablissement.md](09_exploitation_chez_l_etablissement.md), § 3) — ST-G13. |
 | 67 | ✅ | Purge par politique de rétention, droit à l'oubli (Administration › Confidentialité). |
 | 68 | 📄 | Engagement : test de restauration accompagné, tous les 24 mois. |
 | 69 | ✅ | Port antivirus (fail-closed) ; compatible avec Microsoft Defender EDR sur l'hôte. |
@@ -113,16 +113,16 @@ critiques.
 |---|---|---|
 | 71, 72 | ✅ | Loi 25 : journalisation sans contenu sensible, rétention, droit à l'oubli. |
 | 73 | ✅ | TLS en transit (HSTS). |
-| 74 | 🟡 | Chiffrement au repos : volume chiffré (EFS, disque OVH) ; chiffrement **des sauvegardes** à démontrer — ST-G13. |
+| 74 | ✅ | Chiffrement au repos : volume chiffré (EFS, disque OVH) ; **sauvegardes chiffrées** — profil A : coffre AWS Backup et EFS chiffrés par KMS (`infra/terraform/aws`, COPIES-DE-SECURITE.md § 4) ; profil B : VM chiffrée vSphere ou BitLocker, et outil de sauvegarde chiffré (guide § 3) — ST-G13. |
 | 75, 76 | 📄 | Engagements : SIEM, incidents (`securite/domaine/Incidents`), avis sans délai. |
 | 77, 78, 80 | ✅ | Rôles et capacités, refus par défaut, désactivation immédiate d'un compte. |
 | 79 | ✅ | Comptes nominatifs ; aucun compte générique requis. |
 | 81 | ✅ | OIDC Entra ID, SAML, plusieurs annuaires par organisme (P-TN-2). |
-| 82 | 🟡 | Pas de LDAP direct : l'annuaire passe par OIDC ou SAML. Si LDAP est exigé, ajouter LDAPS — ST-G11. |
+| 82 | 🟡 | Pas de LDAP direct : l'annuaire passe par OIDC (Entra, Keycloak, AD FS — ADR 0075) ou SAML, qui couvrent un AD local fédéré. LDAPS **différé** (ADR 0082) : à bâtir si le client l'exige malgré la fédération — question Q-LDAP. |
 | 83 | 📄 | Remise de l'information GIA au pilote (`UTILISATEURS-PROFILS-ACCES.md`). |
 | 84 | 🟡 | Certificat **nominatif par hôte** à prévoir : le déploiement par sous-domaine utilise un wildcard. |
 | 85 | ✅ | 12 caractères et 4 classes (plus strict que l'exigence). |
-| 86 | 🔴 | Historique des 10 derniers mots de passe pendant 6 mois — ST-G10. |
+| 86 | ✅ | **Historique des 10 dernières empreintes** ; un mot de passe employé ces 6 derniers mois, le courant compris, est refusé sur tous les chemins (changement, premier mot de passe, réinitialisation, administration) — ST-G10, ADR 0081, changeset `0016`. |
 | 87 | ✅ | Navigateur sans privilège ; conteneur sans racine. |
 | 88 | 📄 | « Service F » à confirmer (GAP-11). |
 | 89 | 🟡 | Journal des actions et de la messagerie ; à étendre aux alertes — ST-G03. |
@@ -138,7 +138,7 @@ critiques.
 | 96 | ✅ | Multi-organisme, multi-unité, multi-site (sous-domaines, milieux). |
 | 97, 98 | 📄 | SLA : réponse en 4 h ou moins (nos niveaux de soutien par gravité le permettent). |
 | 99, 113 | 📄 | Calendrier d'évolution, préavis de 30 jours ouvrables (`CALENDRIER-EVOLUTION-ET-MISES-A-JOUR.md`). |
-| 100 | 🟡 | Retour à la version précédente : images versionnées. Procédure de **retour arrière de schéma** (Liquibase) à écrire — ST-G13. |
+| 100 | ✅ | Retour à la version précédente : images versionnées et `.jar` N-1 ; **retour arrière de schéma** par un script de retour par changeset depuis `0006` (`db/retour/`), éprouvé par `RetourArriereSchemaTest` (retour complet, puis remigration) — ST-G13. |
 | 101 | 📄 | **Écart contractuel** : astreinte 24/7 en français pour les incidents critiques (aujourd'hui : 5 h à 23 h). |
 | 102-107 | 📄 | Plan d'implantation, chargé de projet, registres, formation en français (`TROUSSE-FORMATION.md`, `GUIDE-ECRANS.md`). |
 | 108-111 | ✅ / 📄 | Module Soutien (billets, niveaux, délais, satisfaction) ; rapports périodiques. |

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Appel automatique** (FX-AO-20260810, ST-G06, 14 novembre 2026) : chaque appel d'une étape de cascade, son résultat
+    (répondu, décroché, messagerie, occupé, sans réponse, échec), la touche pressée et la durée. Le numéro appelé n'est
+    pas conservé : il se relit sur la fiche.
+  -->
+  <changeSet id="0015-alertes-appels" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'alr_appels'</sqlCheck>
+    </preConditions>
+    <comment>Appels automatiques des alertes.</comment>
+    <sql>
+      CREATE TABLE alr_appels (
+        id TEXT NOT NULL PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        alerteId TEXT NOT NULL,
+        etape INTEGER NOT NULL,
+        personId TEXT NOT NULL,
+        fournisseurId TEXT,
+        resultat TEXT NOT NULL,
+        touche TEXT,
+        dureeSecondes INTEGER,
+        lanceLe TEXT NOT NULL,
+        termineLe TEXT
+      )
+    </sql>
+    <sql>CREATE INDEX idx_alr_appels_alerte ON alr_appels (tenantId, alerteId)</sql>
+  </changeSet>
+</databaseChangeLog>

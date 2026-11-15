@@ -20,6 +20,8 @@ public final class Twilio {
     }
 
     public static final String URL = "https://api.twilio.com";
+    /** Le nom du fournisseur dans {@code APPEL_FOURNISSEUR} et {@code SMS_FOURNISSEUR}. */
+    public static final String NOM = "twilio";
 
     /** {@code statusCallback} : l'URL que Twilio rappelle à chaque changement de statut ; absente, le statut se redemande à la main. */
     public record Config(String url, String accountSid, String authToken, String from, String statusCallback) {

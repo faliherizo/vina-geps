@@ -212,7 +212,8 @@ public class DepotNotifications {
                 .params(id, tenantId, d.canal(), d.typeDestinataire(), m.destinataire(), m.sujet(), m.corps(), statut, maintenant, envoyeLe, sort.erreur(),
                         d.evenement(), tentative).update();
         if (pousser && (!type.personne() || preferences.canalOuvert(tenantId, m.destinataire(), Canal.POUSSEE, d.evenement()))) {
-            poussee.pousserPourNotification(tenantId, d.typeDestinataire(), m.destinataire(), m.sujet(), m.corps(), d.url());
+            poussee.pousserPourNotification(tenantId, new DepotAbonnementsPoussee.Poussee(d.typeDestinataire(), m.destinataire(), m.sujet(), m.corps(), d.url(),
+                    ca.vina.nexu.notifications.domaine.Evenements.etiquetteDe(d.evenement())));
         }
         Map<String, Object> n = new LinkedHashMap<>();
         n.put("id", id);

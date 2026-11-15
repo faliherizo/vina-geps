@@ -6,6 +6,7 @@
  */
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import CascadeAlerte from "./CascadeAlerte";
+import RemisesEtNotes from "./RemisesEtNotes";
 import ExportResultats from "../effectifs/ExportResultats";
 import { BadgeStatut, EnTeteEcran, EtatVide, Message, Tableau, type Colonne } from "../composants";
 import { useApiEffectifs as useApi } from "../effectifs/api";
@@ -27,10 +28,6 @@ const COL_ALERTES: ReadonlyArray<Colonne<AlerteSuivie>> = [
   { id: "priorite", libelle: "Priorité" }, { id: "lues", libelle: "Lues", numerique: true },
   { id: "reponses", libelle: "Réponses", numerique: true }, { id: "prise", libelle: "Prise en charge" },
   { id: "actions", libelle: "Actions", actions: true },
-];
-const COL_REMISES: ReadonlyArray<Colonne<Remise>> = [
-  { id: "nom", libelle: "Destinataire", tri: (r) => r.nom }, { id: "lue", libelle: "Lue le" },
-  { id: "etat", libelle: "État" }, { id: "repondu", libelle: "Répondu le" },
 ];
 
 export default function SuiviAlertes() {
@@ -91,12 +88,7 @@ export default function SuiviAlertes() {
         <section className="card tdb-panneau" aria-labelledby="als-fiche-h" data-testid="als-fiche">
           <h2 id="als-fiche-h">{fiche.titre}</h2>
           <p>{fiche.corps}</p>
-          <Tableau colonnes={COL_REMISES} lignes={fiche.remises} legende={`Destinataires de l'alerte ${fiche.titre}`} legendeVisible testId="als-remises"
-            rendre={(r) => (
-              <tr key={r.personId} data-testid={`als-remise-${r.personId}`}>
-                <td>{r.nom}</td><td>{quand(r.lueLe)}</td><td>{etatRemise(r, fiche.reponses)}</td><td>{quand(r.reponduLe)}</td>
-              </tr>
-            )} />
+          <RemisesEtNotes key={`remises-${fiche.id}`} fiche={fiche} />
           <CascadeAlerte key={fiche.id} alerteId={fiche.id} />
         </section>
       )}

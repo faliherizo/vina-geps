@@ -182,7 +182,8 @@ class ControleurAlertesHttpTest {
                 .andExpect(jsonPath("$.remises[?(@.personId=='dir')]").isEmpty());
         assertThat(avisPublies).hasSize(1);
         PublicationAvis.Avis a = avisPublies.get(0);
-        assertThat(a.evenement()).isEqualTo("alerte.recue");
+        // ST-G07 : critique, elle se publie sous l'événement critique, qui se pousse en critique.
+        assertThat(a.evenement()).isEqualTo("alerte.critique");
         assertThat(a.canaux()).containsExactly("courriel", "texto", "poussee");
         // Le compte à aviser : le dossier d'employé s'il existe, sinon le compte ; personne sans compte, personne à aviser.
         assertThat(a.destinataires()).containsExactlyInAnyOrder("E-JULIE", "u-marc", "u-lea", "E-CHEF");
@@ -260,8 +261,10 @@ class ControleurAlertesHttpTest {
         ca.vina.nexu.alertes.application.commandes.GestionnaireCascades cascades = c.gestionnaireCascades(c.depotCascades(jdbc), depot, annuaire, durables, Clock.systemUTC());
         assertThat(registre.pour("alerte.etape")).isPresent();
         assertThat(registre.pour("alerte.relance")).isPresent();
-        assertThat(c.casCascades(c.depotCascades(jdbc), depot, cascades, Clock.systemUTC()).politiques()).isNotNull();
+        assertThat(c.casCascades(c.depotCascades(jdbc), depot, cascades, jdbc, Clock.systemUTC()).politiques()).isNotNull();
         ControleurAlertes.Cas cas = c.casAlertes(depot, annuaire, PublicationAvis.MUET, cascades, Clock.systemUTC());
+        assertThat(c.gestionnaireAppelsAlertes(depot, jdbc, cas, durables, a -> "SIM", new ControleurWebhooksAlertes.Reglages(null, ""), Clock.systemUTC())).isNotNull();
+        assertThat(registre.pour("alerte.appel")).isPresent();
         assertThat(cas.parametres().creerReponse(T, "Ok", ca.vina.nexu.alertes.domaine.Semantique.INFORMATION).id()).hasSize(36);
         assertThat(c.gardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc))).isNotNull();
     }

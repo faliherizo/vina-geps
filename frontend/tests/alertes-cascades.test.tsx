@@ -25,6 +25,8 @@ vi.mock("../src/AuthContext", () => ({ useAuth: api.useAuth }));
 
 const { default: PolitiquesRelance } = await import("../src/alertes/PolitiquesRelance");
 const { default: CascadeAlerte } = await import("../src/alertes/CascadeAlerte");
+const { default: RemisesEtNotes } = await import("../src/alertes/RemisesEtNotes");
+const { default: UtilisateursActifs, moisCourant } = await import("../src/alertes/UtilisateursActifs");
 const { etapeEnMots, libelleArret, libelleCanal, libelleCible, libelleEtatCascade, libelleEvenement } = await import("../src/alertes/types");
 
 const POLITIQUE = { id: "po1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [
@@ -66,6 +68,7 @@ describe("libellés", () => {
   it("cibles, arrêts, canaux, états et événements en mots ; un code inconnu reste lisible", () => {
     expect(etapeEnMots(POLITIQUE.etapes[1] as never)).toBe("Après 10 min : Escalader à tout un groupe (GARDE), par Texto, Courriel");
     expect(etapeEnMots(POLITIQUE.etapes[0] as never)).toBe("Après 5 min : Relancer les destinataires qui n'ont pas réagi, par Poussée");
+    expect(etapeEnMots({ cible: "initiaux", cibleId: null, canaux: ["appel"], delaiMinutes: 3 })).toBe("Après 3 min : Relancer les destinataires qui n'ont pas réagi, par Appel automatique");
     expect([libelleArret("toutes_lues"), libelleCanal("x"), libelleCible("x"), libelleEtatCascade("epuisee"), libelleEtatCascade("x"), libelleEvenement("reprise"), libelleEvenement("x")])
       .toEqual(["Dès que tous ont lu", "x", "x", "Toutes les étapes sont parties", "x", "Reprise manuelle", "x"]);
   });
@@ -137,13 +140,18 @@ describe("Cascade d'une alerte", () => {
     api.etat.routes = {
       "GET /api/alertes/envoyees/a1/cascade": { cascade: { politique: POLITIQUE, etape: 2, etapes: 2, echeanceLe: "2030-03-04T14:15:00Z", etat: "armee" },
         traces: [{ evenement: "armee", etape: 1, personnes: [], instant: "2030-03-04T14:00:00Z", par: "chef" },
-          { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:05:00Z", par: "cascade" }] },
+          { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:05:00Z", par: "cascade" }],
+        appels: [{ personId: "julie", etape: 1, resultat: "repondu", touche: "1", dureeSecondes: 42, lanceLe: "x", termineLe: "y" },
+          { personId: "marc", etape: 1, resultat: "echec", touche: null, dureeSecondes: null, lanceLe: "x", termineLe: "x" }] },
       "POST /api/alertes/envoyees/a1/cascade/reprendre": { cascade: null, traces: [] },
     };
     await rendre(<CascadeAlerte alerteId="a1" />);
     expect($("als-cascade-etat")!.textContent).toContain("étape 2 sur 2");
     expect($("als-cascade-trace")!.textContent).toContain("julie");
     expect($("als-cascade-trace")!.textContent).toContain("Étape exécutée");
+    expect($("als-cascade-appels")!.textContent).toContain("Répondu au clavier");
+    expect($("als-cascade-appels")!.textContent).toContain("42 s");
+    expect($("als-cascade-appels")!.textContent).toContain("Échec (ou sans numéro)");
     await saisir("als-cascade-etape", "1");
     await soumettre("Reprendre la cascade");
     expect(envoisVers("/cascade/reprendre").at(-1)!.corps).toEqual({ etape: 1 });
@@ -154,11 +162,66 @@ describe("Cascade d'une alerte", () => {
     api.etat.routes = { "GET /api/alertes/envoyees/a2/cascade": { cascade: null, traces: [] } };
     await rendre(<CascadeAlerte alerteId="a2" />);
     expect($("als-cascade-aucune")).not.toBeNull();
+    expect($("als-cascade-appels")).toBeNull();
     act(() => racine.unmount());
     racine = createRoot(conteneur);
     api.etat.routes = { "GET /api/alertes/envoyees/a3/cascade": { cascade: { politique: POLITIQUE, etape: 2, etapes: 2, echeanceLe: null, etat: "arretee" }, traces: [] } };
     await rendre(<CascadeAlerte alerteId="a3" />);
     expect($("als-cascade-etat")!.textContent).toContain("Arrêtée");
     expect($("als-cascade-etat")!.textContent).not.toContain("prévue");
+  });
+});
+
+describe("Utilisateurs actifs", () => {
+  it("le mois courant à Toronto ; le total, les personnes et l'export suivent le mois choisi", async () => {
+    expect(moisCourant(new Date("2026-12-01T03:00:00Z"))).toBe("2026-11");
+    expect(moisCourant(new Date("2026-12-01T06:00:00Z"))).toBe("2026-12");
+    api.etat.routes = {
+      "GET /api/alertes/utilisateurs-actifs?mois=2026-10": { mois: "2026-10", total: 1, actifs: [{ personId: "julie", nom: "Julie Roy", premiereTentative: "2026-10-31T12:00:00Z", alerteId: "a1", titre: "Code bleu" }] },
+      "GET /api/alertes/utilisateurs-actifs": { mois: "2026-11", total: 0, actifs: [] },
+    };
+    await rendre(<UtilisateursActifs />);
+    expect($("alp-actifs-vide")).not.toBeNull();
+    expect($("alp-actifs-total")!.textContent).toContain("0 utilisateur actif");
+    await saisir("alp-actifs-mois", "2026-10");
+    expect($("alp-actif-julie")!.textContent).toContain("Code bleu");
+    expect($("alp-actifs-total")!.textContent).toContain("1 utilisateur actif en 2026-10");
+    await saisir("alp-actifs-mois", "");
+    expect(api.etat.appels.at(-1)!.url).toBe("/api/alertes/utilisateurs-actifs?mois=2026-10");
+  });
+});
+
+describe("Notes sur les destinataires (ST-G12)", () => {
+  const FICHE = { id: "a1", titre: "Code bleu", corps: "x", priorite: "urgente", expediteurId: "chef", envoyeeLe: "x", reponses: [],
+    bilan: { destinataires: 2, lues: 0, repondues: 0, priseEnChargePar: null, priseEnChargeLe: null },
+    remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "x", lueLe: null, reponseId: null, reponduLe: null },
+      { personId: "marc", nom: "Marc Dubé", envoyeeLe: "x", lueLe: null, reponseId: null, reponduLe: null }] };
+
+  it("la note se lit par destinataire ; elle s'ajoute, se modifie, s'efface", async () => {
+    api.etat.routes = {
+      "GET /api/alertes/notes": [{ personId: "julie", texte: "Cellulaire de garde", ecriteLe: "2026-11-15T12:00:00Z", ecritePar: "chef" }],
+      "PUT /api/alertes/notes/marc": { personId: "marc", texte: "En congé", ecriteLe: "x", ecritePar: "chef" },
+      "DELETE /api/alertes/notes/julie": { effacee: true },
+    };
+    await rendre(<RemisesEtNotes fiche={FICHE as never} />);
+    expect(api.etat.appels[0].url).toBe("/api/alertes/notes?personnes=julie%2Cmarc");
+    expect($("als-note-julie")!.textContent).toContain("Cellulaire de garde");
+    expect($("als-note-marc")!.textContent).toBe("—");
+    await cliquer("als-note-marc-modifier");
+    await saisir("als-note-texte", "En congé");
+    await soumettre("Note sur Marc Dubé");
+    expect(envoisVers("/notes/marc").at(-1)).toMatchObject({ methode: "PUT", corps: { texte: "En congé" } });
+    expect($("als-note-succes")!.textContent).toBe("Note de Marc Dubé enregistrée.");
+    await cliquer("als-note-julie-modifier");
+    expect(($("als-note-texte") as HTMLTextAreaElement).value).toBe("Cellulaire de garde");
+    act(() => racine.unmount());
+    racine = createRoot(conteneur);
+    await rendre(<RemisesEtNotes fiche={FICHE as never} />);
+    await cliquer("als-note-julie-effacer");
+    expect(envoisVers("/notes/julie").at(-1)!.methode).toBe("DELETE");
+    expect($("als-note-succes")!.textContent).toBe("Note de Julie Roy effacée.");
+    api.etat.routes["DELETE /api/alertes/notes/julie"] = { errors: ["aucune note sur cette personne"] };
+    await cliquer("als-note-julie-effacer");
+    expect($("als-note-erreur")!.textContent).toContain("aucune note");
   });
 });

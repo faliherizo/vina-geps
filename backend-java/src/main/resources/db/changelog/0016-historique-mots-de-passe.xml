@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Historique des mots de passe** (FX-AO-20260810, ST-G10, critère 86, 15 novembre 2026) : les 10 dernières empreintes
+    BCrypt de chaque compte et l'instant où chacune a cessé d'être courante. Un mot de passe employé ces 6 derniers
+    mois est refusé. Jamais un mot de passe en clair.
+  -->
+  <changeSet id="0016-historique-mots-de-passe" author="securite">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users_mots_de_passe'</sqlCheck>
+    </preConditions>
+    <comment>Empreintes des mots de passe retirés.</comment>
+    <sql>
+      CREATE TABLE users_mots_de_passe (
+        userId TEXT NOT NULL,
+        empreinte TEXT NOT NULL,
+        retireeLe TEXT NOT NULL
+      )
+    </sql>
+    <sql>CREATE INDEX idx_users_mots_de_passe ON users_mots_de_passe (userId, retireeLe)</sql>
+  </changeSet>
+</databaseChangeLog>

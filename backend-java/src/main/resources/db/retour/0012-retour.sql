@@ -1,0 +1,6 @@
+-- Retour de 0012-paie (ADR 0076).
+DROP TABLE IF EXISTS paie_bulletins;
+DROP TABLE IF EXISTS paie_cycles;
+DROP TABLE IF EXISTS paie_reglages;
+DROP TABLE IF EXISTS paie_dossiers;
+DELETE FROM DATABASECHANGELOG WHERE ID = '0012-paie';

@@ -67,7 +67,7 @@ export function etatRemise(r: Remise, reponses: Reponse[]): string {
 
 export type CibleEtape = "initiaux" | "groupe" | "personne" | "prochain_disponible";
 export type CritereArret = "prise_en_charge" | "toutes_lues";
-export type CanalAlerte = "poussee" | "texto" | "courriel";
+export type CanalAlerte = "poussee" | "texto" | "courriel" | "appel";
 export type EtatCascade = "armee" | "arretee" | "epuisee";
 
 export const CIBLES: ReadonlyArray<{ code: CibleEtape; libelle: string }> = [
@@ -82,7 +82,13 @@ export const ARRETS: ReadonlyArray<{ code: CritereArret; libelle: string }> = [
 ];
 export const CANAUX: ReadonlyArray<{ code: CanalAlerte; libelle: string }> = [
   { code: "poussee", libelle: "Poussée" }, { code: "texto", libelle: "Texto" }, { code: "courriel", libelle: "Courriel" },
+  { code: "appel", libelle: "Appel automatique" },
 ];
+const RESULTATS_APPEL: Record<string, string> = {
+  lance: "En cours", repondu: "Répondu au clavier", decroche: "Décroché, sans touche", messagerie: "Messagerie vocale",
+  occupe: "Occupé", sans_reponse: "Sans réponse", echec: "Échec (ou sans numéro)",
+};
+export const libelleResultatAppel = (r: string) => RESULTATS_APPEL[r] ?? r;
 const ETATS_CASCADE: Record<EtatCascade, string> = { armee: "En cours", arretee: "Arrêtée", epuisee: "Toutes les étapes sont parties" };
 const EVENEMENTS: Record<string, string> = { armee: "Armée à l'envoi", etape: "Étape exécutée", arretee: "Arrêtée", epuisee: "Épuisée", reprise: "Reprise manuelle" };
 
@@ -95,9 +101,11 @@ export const libelleEvenement = (e: string) => EVENEMENTS[e] ?? e;
 export interface EtapePolitique { cible: CibleEtape; cibleId: string | null; canaux: CanalAlerte[]; delaiMinutes: number }
 export interface Politique { id: string; nom: string; arret: CritereArret; version: number; actif: boolean; etapes: EtapePolitique[] }
 export interface TraceCascade { evenement: string; etape: number; personnes: string[]; instant: string; par: string }
+export interface AppelCascade { personId: string; etape: number; resultat: string; touche: string | null; dureeSecondes: number | null; lanceLe: string; termineLe: string | null }
 export interface SuiviCascade {
   cascade: { politique: Politique; etape: number; etapes: number; echeanceLe: string | null; etat: EtatCascade } | null;
   traces: TraceCascade[];
+  appels?: AppelCascade[];
 }
 
 /** Une étape en mots : « Après 5 min : relancer…, par poussée ». */

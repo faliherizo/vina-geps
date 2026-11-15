@@ -194,3 +194,59 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
       { "MessageSid": "SM1", "From": "+15145550101", "Body": "1" }
       """
     Alors la réponse a le statut 403
+
+  Scénario: Le retour d'un appel automatique sans signature Twilio valide est refusé (ST-G06)
+    # Critères 13, 14 : l'étape « appel », la touche « 1 », le résultat et la durée sont éprouvés dans
+    # ControleurCascadesHttpTest ; ici, ni la touche ni le statut n'entrent sans la signature.
+    Quand anonyme envoie POST /api/alertes/webhooks/voix?appel=ap-1 avec :
+      """json
+      { "Digits": "1" }
+      """
+    Alors la réponse a le statut 403
+    Quand anonyme envoie POST /api/alertes/webhooks/voix/statut?appel=ap-1 avec :
+      """json
+      { "CallStatus": "completed" }
+      """
+    Alors la réponse a le statut 403
+
+  Scénario: Les utilisateurs actifs du mois se comptent une fois chacun, et se réservent à l'administration (ST-G08)
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu", "corps": "5e", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}", "{{n_marc}}"] }
+      """
+    Alors la réponse a le statut 201
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu, encore", "corps": "5e", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie GET /api/alertes/utilisateurs-actifs
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "total": 2 }
+      """
+    Quand chef envoie GET /api/alertes/utilisateurs-actifs
+    Alors la réponse a le statut 403
+
+  Scénario: Une note courte et datée sur la fiche d'un destinataire, tenue par les expéditeurs (ST-G12)
+    # Critère 2, dans la lecture « note interne » de Q-DOS.
+    Quand chef envoie PUT /api/alertes/notes/{{n_julie}} avec :
+      """json
+      { "texte": "Joindre sur le cellulaire de garde" }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "texte": "Joindre sur le cellulaire de garde" }
+      """
+    Quand chef envoie GET /api/alertes/notes?personnes={{n_julie}}
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
+    Quand julie envoie PUT /api/alertes/notes/{{n_julie}} avec :
+      """json
+      { "texte": "x" }
+      """
+    Alors la réponse a le statut 403

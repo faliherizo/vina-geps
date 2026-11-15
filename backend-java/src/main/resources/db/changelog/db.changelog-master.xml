@@ -24,5 +24,8 @@
   <include file="db/changelog/0012-paie.xml"/>
   <include file="db/changelog/0013-alertes-cascades.xml"/>
   <include file="db/changelog/0014-alertes-textos-entrants.xml"/>
+  <include file="db/changelog/0015-alertes-appels.xml"/>
+  <include file="db/changelog/0016-historique-mots-de-passe.xml"/>
+  <include file="db/changelog/0017-alertes-notes.xml"/>
 
 </databaseChangeLog>

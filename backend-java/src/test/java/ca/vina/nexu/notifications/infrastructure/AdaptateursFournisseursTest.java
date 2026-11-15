@@ -115,6 +115,29 @@ class AdaptateursFournisseursTest {
     }
 
     @Test
+    @DisplayName("ST-G06 : l'appel vocal Twilio dit le message en français, attend une touche, rappelle le statut ; sans Twilio, il est simulé")
+    void appelVocal() {
+        Twilio.Config config = new Twilio.Config(f.url(), "AC123", "secret", "+15145550000");
+        ca.vina.nexu.partage.telephonie.AppelsVocauxPort.Appel a = new ca.vina.nexu.partage.telephonie.AppelsVocauxPort.Appel("T", "ap-1", "+14185550100",
+                "Alerte urgente : Code <bleu> & 5e", "https://x/voix?appel=ap-1", "https://x/statut?appel=ap-1");
+        f.repondre = r -> new FournisseurFactice.Reponse(201, "{\"sid\":\"CA9\",\"status\":\"queued\"}");
+        assertThat(new ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.ParTwilio(client, config).appeler(a)).isEqualTo("CA9");
+        assertThat(f.derniere().chemin()).isEqualTo("/2010-04-01/Accounts/AC123/Calls.json");
+        String corps = java.net.URLDecoder.decode(f.derniere().texte(), java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(corps).startsWith("To=+14185550100&From=+15145550000&Twiml=").contains("StatusCallback=https://x/statut?appel=ap-1")
+                .contains("MachineDetection=Enable").contains("<Gather numDigits=\"1\" timeout=\"10\" method=\"POST\" action=\"https://x/voix?appel=ap-1\">")
+                .contains("<Say language=\"fr-CA\">Alerte urgente : Code &lt;bleu&gt; &amp; 5e</Say>");
+        ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule simule = new ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule();
+        assertThat(simule.appeler(a)).isEqualTo("SIM-ap-1");
+        assertThat(simule.passes()).containsExactly(a);
+        assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of(), client)).isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule.class);
+        assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of("APPEL_FOURNISSEUR", "twilio", "TWILIO_ACCOUNT_SID", "a", "TWILIO_AUTH_TOKEN", "b"), client))
+                .isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.ParTwilio.class);
+        assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of("APPEL_FOURNISSEUR", "http", "APPEL_URL", "http://x", "APPEL_JETON", "j"), client))
+                .isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule.class);
+    }
+
+    @Test
     @DisplayName("Telnyx : JSON avec Bearer, statut dans to[0], erreur nommée par son code")
     void telnyx() {
         SmsTelnyx sms = new SmsTelnyx(client, f.url(), "KEY", "+15145550000", () -> T);
@@ -239,6 +262,14 @@ class AdaptateursFournisseursTest {
         assertThat(envoyee.chemin()).isEqualTo("/push/send");
         assertThat(envoyee.enTete("Authorization")).isEqualTo("Bearer secret-expo");
         assertThat(envoyee.texte()).contains("\"to\":\"ExponentPushToken[abcdefgh12]\"").contains("\"title\":\"Titre\"").contains("\"url\":\"/admin/notifications\"").contains("\"sound\":\"default\"");
+        // ST-G07 : une poussée critique part en priorité haute, sur le canal Android « critique », au niveau critique d'iOS.
+        expo.envoyer("j", new PousseeWeb.Charge("Code bleu", "5e", "/admin/mesalertes", ca.vina.nexu.notifications.domaine.Evenements.ETIQUETTE_CRITIQUE));
+        assertThat(f.derniere().texte()).contains("\"priority\":\"high\"").contains("\"channelId\":\"critique\"").contains("\"interruptionLevel\":\"critical\"")
+                .contains("\"sound\":{\"critical\":true,\"name\":\"default\",\"volume\":1}").doesNotContain("\"sound\":\"default\"");
+        assertThat(ca.vina.nexu.notifications.domaine.Evenements.etiquetteDe("alerte.critique")).isEqualTo("critique");
+        assertThat(ca.vina.nexu.notifications.domaine.Evenements.etiquetteDe("alerte.recue")).isEqualTo("notification");
+        assertThat(ca.vina.nexu.notifications.domaine.Evenements.etiquetteDe(null)).isEqualTo("notification");
+        assertThat(ca.vina.nexu.notifications.domaine.Evenements.parCode("alerte.critique")).hasValueSatisfying(e -> assertThat(e.essentiel()).isTrue());
         f.repondre = r -> new FournisseurFactice.Reponse(200, "{\"data\":{\"status\":\"error\",\"details\":{\"error\":\"DeviceNotRegistered\"}}}");
         assertThat(expo.envoyer("j", charge).statut()).isEqualTo(PousseeWeb.EXPIRE);
         f.repondre = r -> new FournisseurFactice.Reponse(200, "{\"data\":{\"status\":\"error\",\"message\":\"Trop de messages\"}}");

@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { BadgeStatut, Message } from "../composants";
 import { useApiEffectifs as useApi } from "../effectifs/api";
-import { libelleEtatCascade, libelleEvenement, quand, type SuiviCascade } from "./types";
+import { libelleEtatCascade, libelleEvenement, libelleResultatAppel, quand, type SuiviCascade } from "./types";
 
 const TON: Record<string, string> = { armee: "en_cours", arretee: "approved", epuisee: "refusee" };
 
@@ -42,6 +42,16 @@ export default function CascadeAlerte({ alerteId }: { alerteId: string }) {
                 <td>{t.personnes.join(", ") || "—"}</td><td>{t.par}</td></tr>
             ))}</tbody>
           </table>
+          {(suivi.appels ?? []).length > 0 && (
+            <table className="eff-table-compacte" data-testid="als-cascade-appels">
+              <caption>Appels automatiques : le résultat et la durée de chacun</caption>
+              <thead><tr><th scope="col">Personne</th><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Touche</th><th scope="col">Durée</th></tr></thead>
+              <tbody>{(suivi.appels ?? []).map((a, i) => (
+                <tr key={i}><td>{a.personId}</td><td className="num">{a.etape}</td><td>{libelleResultatAppel(a.resultat)}</td>
+                  <td>{a.touche ?? "—"}</td><td className="num">{a.dureeSecondes == null ? "—" : `${a.dureeSecondes} s`}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
           <form className="eff-barre" aria-label="Reprendre la cascade" onSubmit={(e) => void reprendre(e)}>
             <p><label htmlFor="als-cascade-etape">Reprendre à l'étape</label>
               <select id="als-cascade-etape" data-testid="als-cascade-etape" value={etape} onChange={(e) => setEtape(e.target.value)}>

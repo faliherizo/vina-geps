@@ -8,8 +8,11 @@ import java.util.List;
  */
 public interface EcheancierCascades {
 
+    /** Ce qu'une relance dit, et sous quel événement d'avis (une alerte critique se relance en critique). */
+    record Message(String evenement, String sujet, String corps) { }
+
     /** Une relance prête à partir : à qui, par quels canaux, quoi. */
-    record Relance(String alerteId, int etape, List<String> comptes, List<String> canaux, String sujet, String corps) {
+    record Relance(String alerteId, int etape, List<String> comptes, List<String> canaux, Message message) {
         public Relance {
             comptes = List.copyOf(comptes);
             canaux = List.copyOf(canaux);
@@ -22,4 +25,7 @@ public interface EcheancierCascades {
     void annulerEtape(String tenantId, String alerteId);
 
     void planifierRelance(String tenantId, Relance relance, String maintenant);
+
+    /** Un appel vocal à passer, par sa propre tâche durable : un redémarrage ne le perd pas (ST-G06). */
+    void planifierAppel(String tenantId, AppelsAlertes.AAppeler appel, String maintenant);
 }

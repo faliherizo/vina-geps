@@ -1,6 +1,7 @@
 package ca.vina.nexu.auth.infrastructure.persistance;
 
 import ca.vina.nexu.auth.domaine.Compte;
+import ca.vina.nexu.auth.domaine.HistoriqueMotsDePasse;
 import ca.vina.nexu.auth.domaine.PolitiqueMotDePasse;
 import ca.vina.nexu.partage.temps.Iso;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
@@ -143,7 +145,7 @@ public class DepotComptes {
             if (m.password().length() < 4) {
                 throw new IllegalArgumentException("password too short");
             }
-            jdbc.sql("UPDATE users SET passwordHash = ? WHERE id = ?").params(ENCODEUR.encode(m.password()), id).update();
+            changerMotDePasse(id, m.password());
         }
         if (m.mustChangePassword() != null) {
             jdbc.sql("UPDATE users SET mustChangePassword = ? WHERE id = ?").params(m.mustChangePassword() ? 1 : 0, id).update();
@@ -152,6 +154,27 @@ public class DepotComptes {
             jdbc.sql("UPDATE users SET securitySetupRequired = ? WHERE id = ?").params(m.securitySetupRequired() ? 1 : 0, id).update();
         }
         return parId(id).orElseThrow();
+    }
+
+    /**
+     * Refuse un mot de passe employé ces 6 derniers mois (ST-G10) ; sinon, range l'empreinte courante dans l'historique,
+     * n'en garde que les 10 dernières, et pose la nouvelle.
+     */
+    private void changerMotDePasse(String id, String motDePasse) {
+        Instant maintenant = horloge.instant();
+        String courante = jdbc.sql("SELECT passwordHash FROM users WHERE id = ?").param(id).query(String.class).single();
+        List<HistoriqueMotsDePasse.Empreinte> historique = new java.util.ArrayList<>(List.of(new HistoriqueMotsDePasse.Empreinte(courante, maintenant)));
+        historique.addAll(jdbc.sql("SELECT empreinte, retireeLe FROM users_mots_de_passe WHERE userId = ? ORDER BY retireeLe DESC LIMIT ?")
+                .params(id, HistoriqueMotsDePasse.TAILLE)
+                .query((rs, i) -> new HistoriqueMotsDePasse.Empreinte(rs.getString("empreinte"), Instant.parse(rs.getString("retireeLe")))).list());
+        if (HistoriqueMotsDePasse.reemploye(historique, e -> e != null && ENCODEUR.matches(motDePasse, e), maintenant)) {
+            throw new IllegalArgumentException(HistoriqueMotsDePasse.REFUS);
+        }
+        jdbc.sql("INSERT INTO users_mots_de_passe (userId, empreinte, retireeLe) VALUES (?, ?, ?)").params(id, courante, maintenant.toString()).update();
+        jdbc.sql("DELETE FROM users_mots_de_passe WHERE userId = ? AND rowid NOT IN "
+                        + "(SELECT rowid FROM users_mots_de_passe WHERE userId = ? ORDER BY retireeLe DESC, rowid DESC LIMIT ?)")
+                .params(id, id, HistoriqueMotsDePasse.TAILLE).update();
+        jdbc.sql("UPDATE users SET passwordHash = ? WHERE id = ?").params(ENCODEUR.encode(motDePasse), id).update();
     }
 
     public boolean supprimer(String id) {
