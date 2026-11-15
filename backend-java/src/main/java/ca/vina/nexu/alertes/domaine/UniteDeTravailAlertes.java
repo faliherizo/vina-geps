@@ -4,7 +4,4 @@ package ca.vina.nexu.alertes.domaine;
 public interface UniteDeTravailAlertes {
 
     void executer(Runnable geste);
-
-    /** Sans base transactionnelle (essais de domaine) : le geste s'exécute tel quel. */
-    UniteDeTravailAlertes DIRECTE = Runnable::run;
 }

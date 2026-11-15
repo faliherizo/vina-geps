@@ -40,18 +40,7 @@ public final class Textos {
      * un numéro international E.164 (« + » puis 8 à 15 chiffres, le premier non nul).
      */
     public static String normaliserNumero(String brut) {
-        String texte = (brut == null ? "" : brut).trim();
-        String chiffres = texte.replaceAll("\\D", "");
-        if (texte.startsWith("+")) {
-            return chiffres.matches("[1-9]\\d{7,14}") ? "+" + chiffres : null;
-        }
-        if (chiffres.length() == 10) {
-            return "+1" + chiffres;
-        }
-        if (chiffres.length() == 11 && chiffres.startsWith("1")) {
-            return "+" + chiffres;
-        }
-        return null;
+        return ca.vina.nexu.partage.telephonie.Telephonie.e164(brut);
     }
 
     public static List<String> validerTexte(String texte) {

@@ -1,17 +1,10 @@
 package ca.vina.nexu.notifications.domaine;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * Le journal des textos ({@code sms_message}) — port de la partie pure de
@@ -237,19 +230,7 @@ public final class JournalTextos {
      * non vérifié pourrait marquer « livré » ce qui ne l'est pas.
      */
     public static boolean verifierSignatureTwilio(String url, Map<String, String> params, String signature, String jeton) {
-        if (jeton == null || jeton.isEmpty() || signature == null || signature.isEmpty()) {
-            return false;
-        }
-        StringBuilder donnees = new StringBuilder(url);
-        new TreeMap<>(params).forEach((k, v) -> donnees.append(k).append(v));
-        try {
-            Mac mac = Mac.getInstance("HmacSHA1");
-            mac.init(new SecretKeySpec(jeton.getBytes(StandardCharsets.UTF_8), "HmacSHA1"));
-            String attendue = Base64.getEncoder().encodeToString(mac.doFinal(donnees.toString().getBytes(StandardCharsets.UTF_8)));
-            return MessageDigest.isEqual(attendue.getBytes(StandardCharsets.UTF_8), signature.getBytes(StandardCharsets.UTF_8));
-        } catch (GeneralSecurityException e) {
-            throw new IllegalStateException("HMAC-SHA1 indisponible", e);
-        }
+        return ca.vina.nexu.partage.telephonie.Telephonie.signatureTwilioValide(url, params, signature, jeton);
     }
 
     /** Le résumé du journal d'un établissement : combien, dans quel état, le dernier. */

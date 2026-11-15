@@ -185,3 +185,12 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
       { "etape": 1 }
       """
     Alors la réponse a le statut 403
+
+  Scénario: Un texto entrant sans signature Twilio valide est refusé avant toute lecture (ST-G05)
+    # Critères 4, 9 : la réponse par texto. Signature vraie, « 1 », « NON », mot inconnu, rejeu et numéro inconnu sont
+    # éprouvés dans ControleurWebhooksAlertesHttpTest ; ici, la porte publique ne s'ouvre pas sans la signature.
+    Quand anonyme envoie POST /api/alertes/webhooks/texto avec :
+      """json
+      { "MessageSid": "SM1", "From": "+15145550101", "Body": "1" }
+      """
+    Alors la réponse a le statut 403

@@ -615,7 +615,7 @@ Lire les alertes qui vous visent et y répondre d'un geste.
 
 **Résultat :** « Réponse … envoyée » ; l'expéditeur voit votre réponse dans son suivi.
 
-> **Attention :** Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis.
+> **Attention :** Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis. Sans l'application, répondez au texto reçu : « 1 » (ou « OK ») pour prendre en charge, « 2 » (ou « NON ») pour refuser ; tout autre mot reçoit l'aide et ne compte pas.
 
 ### Cycles de paie
 

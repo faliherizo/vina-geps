@@ -135,6 +135,14 @@ s'exporte.
 - BDD des critères 15, 16, 17, 19, 25 et 32.
 
 **R2-b · Réponse par texto (2 semaines, ST-G05)** — par Twilio (Q-TEL tranché).
+
+> **Livré le 14 novembre 2026** (ADR 0078) : `POST /api/alertes/webhooks/texto`, public, gardé par la signature
+> `X-Twilio-Signature` (vérifiée avant toute lecture ; le pare-feu applicatif borne le débit), réponse TwiML. Le texto
+> se rattache à la remise sans réponse la plus récente de ce numéro (fiche, normalisée en E.164) ; « 1 »/« OK » prend
+> en charge, « 2 »/« NON » refuse, et la réponse passe par la même porte qu'à l'écran — elle arrête donc la cascade.
+> Un mot inconnu reçoit l'aide, jamais compté ; un `MessageSid` rejoué est ignoré (changeset `0014`, contenu non
+> conservé). La signature et la normalisation des numéros vivent désormais dans `partage/telephonie`. Vérifié :
+> `TextosEntrantsTest`, `ControleurWebhooksAlertesHttpTest`, BDD (porte refusée sans signature). Grille : 27 sur 32.
 - Webhook entrant `/api/alertes/webhooks/texto`, avec la **signature Twilio vérifiée**
   (`X-Twilio-Signature`, HMAC-SHA1 de l'URL et des paramètres), sans session, limité en débit.
 - Rattachement à la dernière alerte ouverte vers ce numéro. « 1 » ou « OK » vaut prise en charge,

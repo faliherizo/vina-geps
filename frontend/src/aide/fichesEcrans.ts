@@ -379,7 +379,7 @@ export const FICHES: Record<Page, Fiche> = {
     etapes: ["Les non lues sont en tête, marquées « Non lue ».", "Ouvrir une alerte la marque lue.", "Répondre par un bouton (« J'arrive », « Indisponible ») : une seule réponse par alerte."],
     exemple: [["Alerte", "Critique — Code bleu chambre 512"], ["Réponse", "J'arrive"]],
     resultat: "« Réponse … envoyée » ; l'expéditeur voit votre réponse dans son suivi.",
-    attention: "Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis.",
+    attention: "Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis. Sans l'application, répondez au texto reçu : « 1 » (ou « OK ») pour prendre en charge, « 2 » (ou « NON ») pour refuser ; tout autre mot reçoit l'aide et ne compte pas.",
   },
   alparametres: {
     titre: "Paramètres des alertes",

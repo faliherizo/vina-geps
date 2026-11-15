@@ -353,6 +353,8 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS alr_modele_version_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, version INTEGER NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, version, rang))",
             "CREATE TABLE IF NOT EXISTS alr_modele_groupes (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, groupeId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, groupeId))",
             "CREATE TABLE IF NOT EXISTS alr_reglages (tenantId TEXT NOT NULL PRIMARY KEY, copieCourriel INTEGER NOT NULL DEFAULT 0)",
+            // 0014 — ST-G05 : textos entrants, contre le rejeu.
+            "CREATE TABLE IF NOT EXISTS alr_textos_entrants (messageSid TEXT NOT NULL PRIMARY KEY, tenantId TEXT, alerteId TEXT, personId TEXT, issue TEXT NOT NULL, recuLe TEXT NOT NULL)",
             // 0013 — ST-G04 : politiques de relance, cascades et trace.
             "CREATE TABLE IF NOT EXISTS alr_politiques (tenantId TEXT NOT NULL, id TEXT NOT NULL, version INTEGER NOT NULL, actif INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
             "CREATE TABLE IF NOT EXISTS alr_politique_versions (tenantId TEXT NOT NULL, politiqueId TEXT NOT NULL, version INTEGER NOT NULL, nom TEXT NOT NULL, arret TEXT NOT NULL, etapes TEXT NOT NULL, creeLe TEXT NOT NULL, creePar TEXT NOT NULL, PRIMARY KEY (tenantId, politiqueId, version))",

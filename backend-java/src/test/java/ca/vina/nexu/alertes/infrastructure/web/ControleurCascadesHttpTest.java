@@ -91,6 +91,8 @@ class ControleurCascadesHttpTest {
     private final Horloge horloge = new Horloge();
     private final List<PublicationAvis.Avis> avis = new ArrayList<>();
     private final Set<String> indisponibles = new HashSet<>();
+    /** Simule une exécution concurrente qui a fait avancer la cascade entre la lecture et l'écriture. */
+    private boolean devancee;
     private JdbcClient jdbc;
     private DepotTaches taches;
     private GestionnaireCascades cascades;
@@ -124,7 +126,28 @@ class ControleurCascadesHttpTest {
         RegistreExecuteurs registre = new RegistreExecuteurs();
         taches = new DepotTaches(jdbc, registre);
         EcheancierOrdonnanceur echeancier = new EcheancierOrdonnanceur(taches, registre);
-        cascades = new GestionnaireCascades(new GestionnaireCascades.Dependances(depotCascades, depotCascades, depot, depot, annuaire),
+        ca.vina.nexu.alertes.domaine.EcritureCascadesPort ecriture = new ca.vina.nexu.alertes.domaine.EcritureCascadesPort() {
+            @Override
+            public void enregistrer(String tenantId, Cascades.Politique politique, String instant, String auteur) {
+                depotCascades.enregistrer(tenantId, politique, instant, auteur);
+            }
+
+            @Override
+            public void armer(String tenantId, Cascades.Cascade cascade) {
+                depotCascades.armer(tenantId, cascade);
+            }
+
+            @Override
+            public boolean avancer(String tenantId, Cascades.Cascade avant, Cascades.Cascade apres) {
+                return !devancee && depotCascades.avancer(tenantId, avant, apres);
+            }
+
+            @Override
+            public void tracer(String tenantId, Cascades.Trace trace) {
+                depotCascades.tracer(tenantId, trace);
+            }
+        };
+        cascades = new GestionnaireCascades(new GestionnaireCascades.Dependances(depotCascades, ecriture, depot, depot, annuaire),
                 new GestionnaireCascades.Services(echeancier, (t, personne, instant) -> !indisponibles.contains(personne),
                         new UniteDeTravailAlertesSpring(new TransactionTemplate(new DataSourceTransactionManager(source)))), horloge);
         PublicationAvis publication = a -> {
@@ -372,5 +395,40 @@ class ControleurCascadesHttpTest {
         tic("2026-11-16T14:05:00Z");
         assertThat(evenements(alerte)).containsExactly("armee", "arretee");
         assertThat(avis).isEmpty();
+    }
+
+    @Test
+    @DisplayName("devancée par une exécution concurrente : l'étape ne fait rien, et la reprise répond 409 sans rien écrire")
+    void devancee() throws Exception {
+        String alerte = envoyer(politique(TROIS_ETAPES, "prise_en_charge"), reponse());
+        devancee = true;
+        cascades.executerEtape(T, alerte, 0, "2026-11-16T14:05:00Z");
+        http.post(A + "/envoyees/" + alerte + "/cascade/reprendre", CHEF, "{\"etape\":2}").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("la cascade vient de changer : rechargez, puis reprenez"));
+        assertThat(evenements(alerte)).containsExactly("armee");
+        assertThat(taches(EcheancierOrdonnanceur.TACHE_RELANCE, "en_attente")).isZero();
+    }
+
+    @Test
+    @DisplayName("une étape « personne » vise la personne nommée ; sous « toutes lues », la relance vise ceux qui n'ont pas lu")
+    void personneEtSansLecture() throws Exception {
+        String alerte = envoyer(politique("{\"cible\":\"personne\",\"cibleId\":\"adm\",\"canaux\":[\"courriel\"],\"delaiMinutes\":5},"
+                + "{\"cible\":\"initiaux\",\"canaux\":[\"texto\"],\"delaiMinutes\":5}", "toutes_lues"), reponse());
+        avis.clear();
+        tic("2026-11-16T14:05:00Z");
+        tic("2026-11-16T14:05:01Z");
+        assertThat(avis.getLast().destinataires()).containsExactly("u-adm");
+        // Julie lit après l'escalade : l'administratrice, elle, n'a pas lu — la cascade continue.
+        http.post(A + "/recues/" + alerte + "/lue", JULIE, null).andExpect(status().isOk());
+        tic("2026-11-16T14:10:01Z");
+        tic("2026-11-16T14:10:02Z");
+        // Julie a lu : seule l'administratrice, escaladée sans avoir lu, est relancée.
+        assertThat(avis.getLast().destinataires()).containsExactly("u-adm");
+        assertThat(avis.getLast().canaux()).containsExactly("texto");
+        // Une personne qui n'existe pas : l'étape passe, tracée sans personne visée.
+        String autre = envoyer(politique("{\"cible\":\"personne\",\"cibleId\":\"fantome\",\"canaux\":[\"texto\"],\"delaiMinutes\":5}", "toutes_lues"), reponse());
+        cascades.executerEtape(T, autre, 0, "2026-11-16T14:05:00Z");
+        http.get(A + "/envoyees/" + autre + "/cascade", CHEF).andExpect(jsonPath("$.traces[1].evenement").value("etape"))
+                .andExpect(jsonPath("$.traces[1].personnes.length()").value(0));
     }
 }

@@ -17,15 +17,15 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 26 | 5 | 0 | 0 | 1 |
+| Fonctionnel | 1-32 | 27 | 4 | 0 | 0 | 1 |
 | Technique (postes, bureautique, réseau) | 33-49 | 13 | 1 | 1 | 2 | 0 |
 | Architecture et hébergement | 50-63 | 5 | 2 | 0 | 7 | 0 |
 | Sauvegarde, surveillance | 64-70 | 5 | 1 | 0 | 1 | 0 |
 | Sécurité, identité, audit | 71-93 | 12 | 4 | 1 | 6 | 0 |
 | Performance, fournisseur, soutien | 94-115 | 2 | 1 | 0 | 19 | 0 |
-| **Total** | **115** | **63** | **14** | **2** | **35** | **1** |
+| **Total** | **115** | **64** | **13** | **2** | **35** | **1** |
 
-Sur les **32 critères fonctionnels**, 26 sont acquis, 5 partiels, aucun à bâtir et 1 à clarifier, après les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
+Sur les **32 critères fonctionnels**, 27 sont acquis, 4 partiels, aucun à bâtir et 1 à clarifier, après la réponse par texto (ST-G05, R2-b), les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
 Les 18 critères partiels ou à bâtir forment le module « Communications cliniques » : modèles et
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
@@ -37,12 +37,12 @@ critiques.
 | 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | ✅ | **Nouvelle alerte** (ADR 0074) : priorité, modèle, groupes et personnes ; canaux selon les préférences, tous imposés si critique | — |
 | 2 | Note au dossier des destinataires | ❓ | Fiche de ressource (effectifs) | Q-DOS ; si c'est une note interne : ST-G12 |
 | 3 | Recherche de destinataire par nom et prénom | ✅ | Champ personne avec autocomplétion à 3 caractères ; membres nommés | — |
-| 4 | Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés | ✅ | Messagerie du personnel : fils à deux et de groupe, réponse privée (ADR 0072) | Réponse **par texto** au message reçu (texto entrant) — ST-G05 |
+| 4 | Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés | ✅ | Messagerie du personnel : fils à deux et de groupe, réponse privée (ADR 0072) ; **réponse par texto** à une alerte (ST-G05, ADR 0078 : webhook Twilio signé, « 1 »/« 2 », rejeu ignoré) | — |
 | 5 | Envoi à une personne, à plusieurs ou à un groupe configurable | ✅ | Fil à deux, fil de groupe, listes de diffusion (personnes et groupes recalculés) | — |
 | 6 | Messages prédéfinis pour les expéditeurs | ✅ | **Modèles d'alerte** (Paramètres des alertes, `/api/alertes/modeles`, ADR 0074) | — |
 | 7 | Alertes en temps réel | ✅ | Poussée web et native, texto, cloche ; **alerte priorisée** (`/api/alertes`), la priorité critique force tous les canaux et se réserve à la capacité `alertes.critique` (R1-bis) | — |
 | 8 | Copie courriel si configurée par l'organisme | ✅ | **Réglage d'organisme** « copie par courriel » (Paramètres des alertes, `/api/alertes/reglages`) : une copie à chacun, sauf s'il l'a déjà reçue par courriel (R1-bis) | — |
-| 9 | Confirmation de réception, lecture ou prise en charge, simple et automatisée | 🟡 | Accusé reçu et lu automatique (ADR 0072, décision 5) | « Prise en charge » d'un geste — ST-G03 |
+| 9 | Confirmation de réception, lecture ou prise en charge, simple et automatisée | ✅ | Accusé reçu et lu automatique (ADR 0072) ; **prise en charge d'un geste** à l'écran (ADR 0074) ou **par texto** « 1 » (ST-G05), qui arrête la cascade | — |
 | 10 | Réponses prédéfinies, configurées par l'administration | ✅ | **Réponses prédéfinies** à sémantique fermée (prise en charge, refus, information), `/api/alertes/reponses` | — |
 | 11 | Statut d'envoi, réception, lecture, réponse, relance, vu par l'expéditeur | 🟡 | Acheminement « Envoyé / Reçu par N / Lu par N » | Réponse et relance — ST-G03, ST-G04 |
 | 12 | Historique et statuts partagés entre expéditeurs | ✅ | **Suivi des alertes** partagé entre expéditeurs autorisés, filtrable (période, priorité, état, expéditeur) et exportable en CSV, XLSX, PDF, JSON (R1-bis) | PDF/A pour l'archive — ST-G10 |

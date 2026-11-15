@@ -23,5 +23,6 @@
   <include file="db/changelog/0011-feuilles-payees.xml"/>
   <include file="db/changelog/0012-paie.xml"/>
   <include file="db/changelog/0013-alertes-cascades.xml"/>
+  <include file="db/changelog/0014-alertes-textos-entrants.xml"/>
 
 </databaseChangeLog>

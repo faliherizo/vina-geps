@@ -48,13 +48,11 @@ public final class GestionnaireEnvoiAlertes {
         }
     }
 
-    /** La demande d'envoi : ce qu'on dit, à qui, depuis quel modèle (nul : aucun), et si l'acteur a le droit du critique. */
+    /**
+     * La demande d'envoi : ce qu'on dit, à qui, depuis quel modèle (nul : aucun), si l'acteur a le droit du critique, et
+     * la politique de relance (nulle : l'alerte part une fois).
+     */
     public record Demande(Composition composition, Cibles cibles, String modeleId, boolean critiqueAutorisee, String politiqueId) {
-
-        /** Sans politique de relance : l'alerte part une fois (le socle R1). */
-        public Demande(Composition composition, Cibles cibles, String modeleId, boolean critiqueAutorisee) {
-            this(composition, cibles, modeleId, critiqueAutorisee, null);
-        }
     }
 
     /** Les dépendances du geste, groupées pour garder le constructeur court. */

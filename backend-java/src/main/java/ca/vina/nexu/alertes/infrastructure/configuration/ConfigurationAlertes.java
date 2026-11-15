@@ -5,14 +5,17 @@ import ca.vina.nexu.alertes.application.commandes.GestionnaireParametresAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireReceptionAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireCascades;
 import ca.vina.nexu.alertes.application.commandes.GestionnairePolitiques;
+import ca.vina.nexu.alertes.application.commandes.GestionnaireTextosEntrants;
 import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
 import ca.vina.nexu.alertes.application.requetes.LectureCascades;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotCascades;
+import ca.vina.nexu.alertes.infrastructure.persistance.DepotTextosEntrants;
 import ca.vina.nexu.alertes.infrastructure.persistance.EcheancierOrdonnanceur;
 import ca.vina.nexu.alertes.infrastructure.persistance.UniteDeTravailAlertesSpring;
 import ca.vina.nexu.alertes.infrastructure.web.ControleurCascades;
+import ca.vina.nexu.alertes.infrastructure.web.ControleurWebhooksAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.ControleurAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.GardeAlertes;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
@@ -79,6 +82,18 @@ public class ConfigurationAlertes {
     public ControleurCascades.Cas casCascades(DepotCascades cascades, DepotAlertes depot, GestionnaireCascades gestionnaire, Clock horloge) {
         return new ControleurCascades.Cas(new GestionnairePolitiques(cascades, cascades, () -> UUID.randomUUID().toString(), horloge), gestionnaire,
                 new LectureCascades(cascades, depot));
+    }
+
+    /** La réponse par texto (ST-G05) : signée par le jeton Twilio, sous l'URL publique du déploiement s'il la connaît. */
+    @Bean
+    public ControleurWebhooksAlertes.Reglages reglagesWebhooksAlertes(org.springframework.core.env.Environment env) {
+        String base = env.getProperty("PUBLIC_API_URL", "").trim().replaceAll("/+$", "");
+        return new ControleurWebhooksAlertes.Reglages(base.isEmpty() ? null : base, env.getProperty("TWILIO_AUTH_TOKEN", ""));
+    }
+
+    @Bean
+    public GestionnaireTextosEntrants gestionnaireTextosEntrants(DepotAlertes depot, JdbcClient jdbc, ControleurAlertes.Cas cas, Clock horloge) {
+        return new GestionnaireTextosEntrants(depot, new DepotTextosEntrants(jdbc), cas.reception(), horloge);
     }
 
     @Bean
