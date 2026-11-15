@@ -107,6 +107,29 @@ const MODULES_AUDIT = {
     jamais mesurés. Un écran ajouté sans son contrôle est une livraison incomplète ; un contrôle
     qui mesure l'état vide d'un écran l'est autant.
   */
+  // Paie (ADR 0076) : un cycle préparé, une personne sans dossier, des remises et des relevés — chaque tableau rempli.
+  "GET /api/paie/cycles/cy-1": { cycle: { id: "cy-1", debut: "2030-02-16", fin: "2030-03-01", datePaie: "2030-03-07", etat: "prepare", prepareLe: "2030-03-02T15:00:00Z", preparePar: "paie.admin" },
+    bulletins: [{ id: "b-1", cycleId: "cy-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", datePaie: "2030-03-07", heuresRegulieres: 70, heuresSupplementaires: 2,
+    retenues: { brut: 2190, impotFederal: 150.1, impotQuebec: 190.2, rrq: 129.49, rrq2: 0, ae: 28.47, rqap: 9.42, gainsRrq: 2190, gainsAe: 2190, gainsRqap: 2190,
+      employeur: { rrq: 129.49, rrq2: 0, ae: 39.86, rqap: 13.18, fss: 93.29, cnt: 1.31, cnesst: 38.98 } },
+    totalRetenues: 507.68, net: 1682.32, cotisationsEmployeur: 316.11, coutEmployeur: 2506.11, feuilles: ["ft-1", "ft-2"] }] },
+  "GET /api/paie/cycles": [{ id: "cy-1", debut: "2030-02-16", fin: "2030-03-01", datePaie: "2030-03-07", etat: "prepare", prepareLe: "2030-03-02T15:00:00Z", preparePar: "paie.admin" },
+    { id: "cy-0", debut: "2030-02-02", fin: "2030-02-15", datePaie: "2030-02-21", etat: "traite", prepareLe: "x", preparePar: "paie.admin", traiteLe: "y", traitePar: "paie.admin" }],
+  "GET /api/paie/dossiers": [
+    { ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", dossier: { ressourceId: "rs-1", mode: "horaire", frequence: "aux-deux-semaines", tauxHoraire: 30, salaireAnnuel: null,
+      montantPersonnelFederal: 16452, montantPersonnelQuebec: 18952 } },
+    { ressourceId: "rs-2", matricule: "P2", nom: "Marc Dubé", dossier: null }],
+  "GET /api/paie/remises": [{ mois: "2030-02", echeance: "2030-03-15", impotQuebec: 190.2, rrq: 258.98, rqap: 22.6, fss: 93.29, revenuQuebec: 565.07, impotFederal: 150.1, ae: 68.33, arc: 218.43, cnt: 1.31, cnesst: 38.98 }],
+  "GET /api/paie/releves": [{ ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", rl1: { a: 2190, b: 129.49, rrq2: 0, c: 28.47, e: 190.2, g: 2190, h: 9.42, i: 2190 },
+    t4: { c14: 2190, c17: 129.49, rrq2: 0, c18: 28.47, c22: 150.1, c24: 2190, c26: 2190, c55: 9.42, c56: 2190 } }],
+  "GET /api/paie/mes-bulletins": [{ id: "b-1", cycleId: "cy-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", datePaie: "2030-03-07", heuresRegulieres: 70, heuresSupplementaires: 2,
+    retenues: { brut: 2190, impotFederal: 150.1, impotQuebec: 190.2, rrq: 129.49, rrq2: 0, ae: 28.47, rqap: 9.42, gainsRrq: 2190, gainsAe: 2190, gainsRqap: 2190,
+      employeur: { rrq: 129.49, rrq2: 0, ae: 39.86, rqap: 13.18, fss: 93.29, cnt: 1.31, cnesst: 38.98 } },
+    totalRetenues: 507.68, net: 1682.32, cotisationsEmployeur: 316.11, coutEmployeur: 2506.11, feuilles: ["ft-1", "ft-2"] }],
+  "GET /api/paie/reglages": { annee: 2030, tauxFss: 0.0426, tauxCnesst: 0.0178, majorationSupplementaire: 0.5 },
+  "GET /api/paie/bareme": { annee: 2030, rrq: { tauxBase: 0.053, tauxSupplementaire: 0.01, exemption: 3500, mga: 74600, plafondSupplementaire: 85000, tauxRrq2: 0.04 },
+    ae: { tauxEmploye: 0.013, maximumAssurable: 68900 }, rqap: { tauxEmploye: 0.0043, tauxEmployeur: 0.00602, maximumAssurable: 103000 },
+    federal: { montantPersonnel: 16452 }, quebec: { montantPersonnel: 18952 } },
   // Communications cliniques (ADR 0074).
   "GET /api/alertes/reponses": [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }, { id: "rp-2", libelle: "Indisponible", semantique: "refus", active: false }],
   "GET /api/alertes/modeles/mo-1/versions": [
@@ -832,6 +855,39 @@ const PAGES = [
       await page.getByTestId("alp-gt-gt-1-gerer").click();
       await page.getByTestId("alp-gt-membres").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-gt-gestion-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  // Paie (ADR 0076) : chaque écran, et ses dialogues ouverts.
+  { nom: "Cycles de paie", nav: "nav-paiecycles",
+    etats: [{ nom: "dialogue « Préparer un cycle »", agir: async (page) => {
+      await page.getByTestId("pcy-preparer-ouvrir").click();
+      await page.getByTestId("pcy-debut").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pcy-preparer-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "cycle ouvert, gestes offerts", agir: async (page) => {
+      await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-traiter").waitFor({ state: "visible" });
+    } },
+    { nom: "détail d'un bulletin", agir: async (page) => {
+      if (!(await page.getByTestId("pcy-ouvert").isVisible())) await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-bulletin-rs-1-voir").click();
+      await page.getByTestId("pcy-b-retenues").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pcy-bulletin-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "confirmation du traitement", agir: async (page) => {
+      if (!(await page.getByTestId("pcy-ouvert").isVisible())) await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-traiter").click();
+      await page.getByTestId("pcy-confirmer-traiter-confirm").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+  { nom: "Dossiers de rémunération", nav: "nav-paiedossiers",
+    etats: [{ nom: "dialogue du dossier, au salaire", agir: async (page) => {
+      await page.getByTestId("pdo-rs-1-modifier").click();
+      await page.getByTestId("pdo-mode").selectOption("salaire");
+      await page.getByTestId("pdo-salaire").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pdo-dossier-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  { nom: "Remises et relevés", nav: "nav-paiedeclarations" },
+  { nom: "Mes bulletins de paie", nav: "nav-mesbulletins",
+    etats: [{ nom: "détail d'un bulletin", agir: async (page) => {
+      await page.getByTestId("mbu-b-1-voir").click();
+      await page.getByTestId("mbu-b-employeur").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+  { nom: "Paramètres de la paie", nav: "nav-paieparametres" },
   { nom: "Mon horaire", nav: "nav-monhoraire",
     // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {
@@ -1141,6 +1197,7 @@ const SANS_FORMULAIRE_EN_LIGNE = new Set([
   "nav-uscomblement", "nav-usequipages", "nav-usdisponibilites", "nav-usabsences", "nav-usechanges", "nav-usagph", "nav-uspresence",
   "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-usregles",
   "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal", "nav-alparametres",
+  "nav-paiecycles", "nav-paiedossiers", "nav-mesbulletins",
 ]);
 const NATURES_EN_LIGNE = ["requete", "en-place"];
 

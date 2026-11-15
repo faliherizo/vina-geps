@@ -20,5 +20,7 @@
   <include file="db/changelog/0008-annuaires-oidc.xml"/>
   <include file="db/changelog/0009-alertes-r1-bis.xml"/>
   <include file="db/changelog/0010-groupes-transverses.xml"/>
+  <include file="db/changelog/0011-feuilles-payees.xml"/>
+  <include file="db/changelog/0012-paie.xml"/>
 
 </databaseChangeLog>

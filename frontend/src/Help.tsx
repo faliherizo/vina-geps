@@ -214,6 +214,19 @@ export default function Help({ section }: { section?: string | null }) {
           <p className="muted">Les relances, les cascades et l'appel automatique viendront dans une phase suivante (ADR 0074).</p>
         </section>
       )}
+{visible("paie") && (
+        <section id="paie" className="card" aria-labelledby="paie-h">
+          <h2 id="paie-h">Paie : cycles, dossiers, remises, relevés, bulletins</h2>
+          <p>La paie se calcule à partir des <strong>seules feuilles de temps approuvées</strong>. Avant la paie, une feuille peut encore être retournée, rappelée ou rouverte ; une fois payée, elle ne se modifie plus.</p>
+          <ol>
+            <li><strong>Dossiers de rémunération</strong> — le taux horaire ou le salaire, la fréquence de paie et les montants personnels déclarés de chacun.</li>
+            <li><strong>Cycles de paie</strong> — préparer (période et date de paie), relire les bulletins, recalculer au besoin, puis traiter : les feuilles payées sont figées.</li>
+            <li><strong>Remises et relevés</strong> — ce qui se verse chaque mois à Revenu Québec et à l'ARC, et les cases des RL-1 et T4 de l'année.</li>
+            <li><strong>Mes bulletins de paie</strong> — chacun lit ses propres bulletins, du brut au net.</li>
+          </ol>
+          <p className="muted">Les taux de l'année viennent d'un barème publié avec le produit (ADR 0076) ; le FSS, la CNESST et la majoration des heures supplémentaires se règlent dans Paramètres de la paie.</p>
+        </section>
+      )}
 {visible("communication") && (
         <section id="communication" className="card" aria-labelledby="communication-h">
           <h2 id="communication-h">Communication : messages, appels, listes de diffusion</h2>

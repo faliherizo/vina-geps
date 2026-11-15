@@ -32,6 +32,7 @@ public final class CatalogueModules {
             // Le nom du client et celui de l'avis sont ce qu'un superadmin tape dans le filtre.
             new Famille("effectifs", "Santé — Urgences-santé (AO 26-015-DO)"),
             new Famille("communications", "Santé — communications cliniques (AO FX-AO-20260810)"),
+            new Famille("paie", "Paie québécoise (ADR 0076)"),
             new Famille("infrastructure", "Infrastructure et options"));
 
     private static Definition m(String code, String label, String famille, String debloque) {
@@ -59,6 +60,7 @@ public final class CatalogueModules {
             m("effectifs_communication", "Urgences-santé — communication du personnel", "effectifs", "effectifs", "Menu Urgences-santé › Communication (Messagerie du personnel, Appeler un collègue, Listes de distribution) : messagerie sécurisée — fil de conversation, réponse privée, pièces jointes, appels, diffusions (routes /api/communication)"),
             m("effectifs_integrations", "Urgences-santé — intégrations", "effectifs", "effectifs_temps", "Menu Urgences-santé › Administration des effectifs › Intégrations : connecteurs RAO, SAAV, PFT, BD Corpo, Microsoft Graph, bus (ESB) et entrepôt de données, chacun en simulateur ou en HTTP (https, jeton par variable d'environnement), boîte d'envoi transactionnelle retentée et rejouable, relais du journal vers le bus et l'entrepôt (routes /api/effectifs/integrations)"),
             m("alertes", "Communications cliniques — alertes (socle)", "communications", "Menu Alertes (Nouvelle alerte, Suivi, Mes alertes) et Administration › Paramètres des alertes : alertes priorisées à des personnes ou des groupes, réponses prédéfinies, modèles, suivi partagé des lectures et des prises en charge (routes /api/alertes, ADR 0074)"),
+            m("paie", "Paie québécoise", "paie", "effectifs_temps", "Menu Paie (Cycles de paie, Dossiers de rémunération, Remises et relevés, Mes bulletins de paie) et Administration › Paramètres de la paie : paie calculée sur les seules feuilles de temps approuvées, retenues fédérales et québécoises (RRQ, AE, RQAP), cotisations de l'employeur (FSS, CNT, CNESST), remises mensuelles, RL-1 et T4 ; une feuille payée est figée (routes /api/paie, ADR 0076)"),
             m("byok", "Clé de chiffrement du client (BYOK)", "infrastructure", "Option d'hébergement — aucun écran ; se règle au déploiement"),
             m("dedicated", "Infrastructure dédiée", "infrastructure", "Option d'hébergement — aucun écran ; se règle au déploiement"));
 

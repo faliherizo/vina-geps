@@ -101,6 +101,11 @@ public class LectureFeuillesTemps {
     }
 
     /** Écrire dans la feuille : la personne elle-même (vrai), ou le niveau PLANIFICATION de son unité (faux). */
+    /** Rouvrir une feuille approuvée revient à qui gère l'unité (niveau GESTION) ; sinon 403. */
+    public void exigerGestion(Contexte ctx, FeuilleTemps f) {
+        perimetres.exiger(ctx, f.uniteCode(), Perimetres.Niveau.GESTION);
+    }
+
     public boolean exigerEcriture(Contexte ctx, FeuilleTemps f) {
         if (estALui(ctx, f.ressourceId())) {
             return true;

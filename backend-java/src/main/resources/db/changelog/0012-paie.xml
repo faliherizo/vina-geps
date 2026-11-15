@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Module de paie** (ADR 0076, 14 novembre 2026) : dossiers de rémunération, réglages de l'organisme, cycles et
+    bulletins. Les montants sont des TEXT décimaux : un REAL arrondirait en binaire ce que la paie arrondit au cent.
+    Le calcul d'un bulletin est conservé tel qu'il a été fait (JSON) : un barème corrigé plus tard ne réécrit pas
+    l'histoire.
+  -->
+  <changeSet id="0012-paie" author="paie">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'paie_cycles'</sqlCheck>
+    </preConditions>
+    <comment>Dossiers, réglages, cycles et bulletins de paie.</comment>
+    <sql>
+      CREATE TABLE paie_dossiers (
+        tenantId TEXT NOT NULL,
+        ressourceId TEXT NOT NULL,
+        mode TEXT NOT NULL,
+        frequence TEXT NOT NULL,
+        tauxHoraire TEXT,
+        salaireAnnuel TEXT,
+        montantPersonnelFederal TEXT NOT NULL,
+        montantPersonnelQuebec TEXT NOT NULL,
+        modifieLe TEXT NOT NULL,
+        modifiePar TEXT NOT NULL,
+        PRIMARY KEY (tenantId, ressourceId)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE paie_reglages (
+        tenantId TEXT NOT NULL PRIMARY KEY,
+        tauxFss TEXT NOT NULL,
+        tauxCnesst TEXT NOT NULL,
+        majorationSupplementaire TEXT NOT NULL,
+        modifieLe TEXT NOT NULL,
+        modifiePar TEXT NOT NULL
+      )
+    </sql>
+    <sql>
+      CREATE TABLE paie_cycles (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        debut TEXT NOT NULL,
+        fin TEXT NOT NULL,
+        datePaie TEXT NOT NULL,
+        etat TEXT NOT NULL,
+        prepareLe TEXT NOT NULL,
+        preparePar TEXT NOT NULL,
+        traiteLe TEXT,
+        traitePar TEXT,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE paie_bulletins (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        cycleId TEXT NOT NULL,
+        ressourceId TEXT NOT NULL,
+        matricule TEXT NOT NULL,
+        nom TEXT NOT NULL,
+        datePaie TEXT NOT NULL,
+        heuresRegulieres TEXT NOT NULL,
+        heuresSupplementaires TEXT NOT NULL,
+        calcul TEXT NOT NULL,
+        feuilles TEXT NOT NULL,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>CREATE INDEX idx_paie_bulletins_cycle ON paie_bulletins (tenantId, cycleId)</sql>
+    <sql>CREATE INDEX idx_paie_bulletins_personne ON paie_bulletins (tenantId, ressourceId, datePaie)</sql>
+  </changeSet>
+</databaseChangeLog>

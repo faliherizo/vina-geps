@@ -17,7 +17,7 @@ import DetailFeuille from "./DetailFeuille";
 import FluxApprobation from "./FluxApprobation";
 import SuperieursHierarchiques from "./SuperieursHierarchiques";
 import { champsAffiches, ParametresChamps, useChampsFeuille } from "./ChampsFeuille";
-import { duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
+import { decisionEnMots, duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
 
 const COLONNES: ReadonlyArray<Colonne<Feuille>> = [
   { id: "nom", libelle: "Personne", tri: (f) => f.nom },
@@ -81,7 +81,7 @@ export default function TempsPlanification() {
     setFiche(await lire<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${f.id}`));
   };
 
-  const trancher = async (d: "approuver" | "retourner") => {
+  const trancher = async (d: "approuver" | "retourner" | "rouvrir") => {
     if (!fiche) return;
     const r = await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${fiche.id}/${d}`, { motif: motif || undefined });
     if (!r) return;
@@ -158,8 +158,22 @@ export default function TempsPlanification() {
             <p>Du {fiche.debut} au {fiche.fin} — {statutEnMots(fiche)}.</p>
             <DetailFeuille f={fiche} prefixe="pla-tps-fiche" avecSegments champs={champsAffiches(champs, fiche.segments)} />
             {fiche.decisions.length > 0 && (
-              <ul aria-label="Décisions">{fiche.decisions.map((d, i) => <li key={i}>Palier {d.palier} : {d.decision === "APPROUVER" ? "approuvé" : "retourné"}{d.motif ? ` — ${d.motif}` : ""}</li>)}</ul>
+              <ul aria-label="Décisions">{fiche.decisions.map((d, i) => <li key={i}>{d.decision === "RAPPELER" || d.decision === "ROUVRIR" ? "Hors circuit" : `Palier ${d.palier}`} : {decisionEnMots(d.decision)}{d.motif ? ` — ${d.motif}` : ""}</li>)}</ul>
             )}
+            {fiche.statut === "APPROUVEE" && (
+              <>
+                <p>Approuvée et pas encore payée : vous pouvez la rouvrir pour qu'elle soit corrigée. Une feuille payée ne se rouvre plus.</p>
+                <p>
+                  <label htmlFor="pla-tps-motif-rouvrir">Motif (obligatoire : ce qu'il faut corriger)</label>
+                  <textarea id="pla-tps-motif-rouvrir" data-testid="pla-tps-motif-rouvrir" rows={2} maxLength={500} value={motif} onChange={(e) => setMotif(e.target.value)} />
+                </p>
+                {erreur && <Message variante="erreur" testId="pla-tps-fiche-erreur">{erreur}</Message>}
+                <p className="eff-actions">
+                  <button type="button" className="secondary" data-testid="pla-tps-rouvrir" onClick={() => void trancher("rouvrir")}>Rouvrir pour correction</button>
+                </p>
+              </>
+            )}
+            {fiche.statut === "PAYEE" && <p data-testid="pla-tps-fiche-payee">Payée : elle ne se modifie plus.</p>}
             {fiche.statut === "SOUMISE" && (
               <>
                 <p>

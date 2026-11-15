@@ -61,4 +61,7 @@ public interface EcritureFeuillesTempsPort {
 
     /** Pose le statut et le palier ; la date d'approbation est celle du contexte si la feuille est approuvée, nulle sinon. */
     void poserIssue(Contexte ctx, String id, TempsEffectifs.Issue issue);
+
+    /** La feuille entre dans une paie traitée : statut PAYEE, la paie et l'instant notés. */
+    void marquerPayee(Contexte ctx, String id, String paieId);
 }

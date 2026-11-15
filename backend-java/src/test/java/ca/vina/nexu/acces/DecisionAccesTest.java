@@ -29,9 +29,9 @@ class DecisionAccesTest {
     private static final Map<String, Boolean> SANS_SURCHARGE = Map.of();
 
     @Test
-    @DisplayName("les 36 capacités sont chargées, libellé et portée compris")
+    @DisplayName("les 37 capacités sont chargées, libellé et portée compris")
     void tableComplete() {
-        assertThat(politique.capacites()).hasSize(36);
+        assertThat(politique.capacites()).hasSize(37);
         PolitiqueAcces.Regle r = politique.regle("employee.create");
         assertThat(r.roles()).containsExactly("admin", "rh", "manager");
         assertThat(r.libelle()).isEqualTo("Créer un employé");
@@ -43,7 +43,7 @@ class DecisionAccesTest {
     @Test
     @DisplayName("chaque rôle intégré retrouve exactement son décompte de capacités")
     void decomptesParRole() {
-        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(36);
+        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(37);
         assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(27);
         assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(12);
         assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(8);
@@ -111,7 +111,7 @@ class DecisionAccesTest {
         for (String c : politique.capacites()) {
             toutRetire.put(c, false);
         }
-        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(36);
+        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(37);
         assertThat(decision.peut("admin", "org.manage", toutRetire)).isTrue();
 
         // Le gestionnaire, lui, perd bien tout : la garde ne vaut que pour l'administrateur.

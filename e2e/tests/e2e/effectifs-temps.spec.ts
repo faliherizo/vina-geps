@@ -91,9 +91,17 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await expect(julie.getByTestId("mft-info")).toContainText("Segment du 2031-01-15 corrigé.");
   await expect(julie.getByTestId("mft-segments")).toContainText("corrigé (v2)");
   await julie.getByTestId("mft-soumettre").click();
-  await expect(julie.getByTestId("mft-info")).toContainText("Feuille soumise : elle est verrouillée jusqu'à la décision.");
+  await expect(julie.getByTestId("mft-info")).toContainText("Feuille soumise : elle attend la décision.");
   await expect(julie.getByTestId("mft-statut")).toContainText("Soumise");
   await expect(julie.getByTestId("mft-soumettre")).toHaveCount(0);
+  // Avant la paie, Julie peut rappeler sa feuille pour la corriger, puis la soumettre de nouveau.
+  await julie.getByTestId("mft-rappeler").click();
+  await expectNoA11yViolations(julie);
+  await julie.getByTestId("mft-rappel-confirm").click();
+  await expect(julie.getByTestId("mft-info")).toContainText("Feuille rappelée : elle est revenue au brouillon.");
+  await expect(julie.getByTestId("mft-statut")).toContainText("Brouillon");
+  await julie.getByTestId("mft-soumettre").click();
+  await expect(julie.getByTestId("mft-statut")).toContainText("Soumise");
   await ctxJulie.close();
 
   // ── Le planificateur ───────────────────────────────────────────────────────────────────
@@ -114,5 +122,12 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await expect(chef.getByTestId("pla-tps-lot")).toContainText("1 feuille(s)");
   await expect(chef.getByTestId("pla-tps-lot")).toContainText("Empreinte");
   await expectNoA11yViolations(chef);
+  // Approuvée, pas encore payée : le chef la rouvre pour correction, avec un motif ; l'historique le dit.
+  await chef.getByTestId("pla-tps-filtre").selectOption("APPROUVEE");
+  await chef.locator('[data-testid^="pla-tps-"][data-testid$="-ouvrir"]').first().click();
+  await chef.getByTestId("pla-tps-motif-rouvrir").fill("La formation du 17 est en heures régulières");
+  await expectNoA11yViolations(chef);
+  await chef.getByTestId("pla-tps-rouvrir").click();
+  await expect(chef.getByTestId("pla-tps-bilan")).toContainText("Feuille de Julie Roy : retournée.");
   await ctxChef.close();
 });

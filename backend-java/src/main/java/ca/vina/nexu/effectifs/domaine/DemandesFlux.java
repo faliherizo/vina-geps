@@ -31,7 +31,9 @@ public final class DemandesFlux {
     /** Un statut du moteur générique, avec ce qu'il devient pour une étape et pour le flux. */
     public enum StatutApprobation {
         EN_ATTENTE("pending", StatutEtape.EN_ATTENTE, StatutFlux.EN_COURS), APPROUVE("approved", StatutEtape.APPROUVEE, StatutFlux.APPROUVE),
-        REJETE("rejected", StatutEtape.REJETEE, StatutFlux.REJETE);
+        REJETE("rejected", StatutEtape.REJETEE, StatutFlux.REJETE),
+        /** Rappelée par son auteur avant la fin du circuit : plus personne n'a à la décider. */
+        RETIRE("withdrawn", StatutEtape.RETIREE, StatutFlux.RETIRE);
 
         private final String code;
         private final StatutEtape etape;
@@ -53,9 +55,9 @@ public final class DemandesFlux {
         }
     }
 
-    public enum StatutEtape { EN_ATTENTE, APPROUVEE, REJETEE }
+    public enum StatutEtape { EN_ATTENTE, APPROUVEE, REJETEE, RETIREE }
 
-    public enum StatutFlux { EN_COURS, APPROUVE, REJETE }
+    public enum StatutFlux { EN_COURS, APPROUVE, REJETE, RETIRE }
 
     /** Pourquoi le moteur a refusé une décision. */
     public enum RefusEtape { NON_PORTEE, DEMANDEUR, AUTRE }

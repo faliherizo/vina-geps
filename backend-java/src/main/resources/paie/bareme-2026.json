@@ -1,0 +1,41 @@
+{
+  "annee": 2026,
+  "federal": {
+    "tranches": [
+      { "jusqua": 58523, "taux": 0.14 },
+      { "jusqua": 117045, "taux": 0.205 },
+      { "jusqua": 181440, "taux": 0.26 },
+      { "jusqua": 258482, "taux": 0.29 },
+      { "jusqua": null, "taux": 0.33 }
+    ],
+    "montantPersonnel": 16452,
+    "montantEmploi": 1501,
+    "tauxEmploi": 0,
+    "abattement": 0.165
+  },
+  "quebec": {
+    "tranches": [
+      { "jusqua": 54345, "taux": 0.14 },
+      { "jusqua": 108680, "taux": 0.19 },
+      { "jusqua": 132245, "taux": 0.24 },
+      { "jusqua": null, "taux": 0.2575 }
+    ],
+    "montantPersonnel": 18952,
+    "montantEmploi": 1450,
+    "tauxEmploi": 0.06,
+    "abattement": 0
+  },
+  "rrq": {
+    "tauxBase": 0.053,
+    "tauxSupplementaire": 0.01,
+    "exemption": 3500,
+    "mga": 74600,
+    "plafondSupplementaire": 85000,
+    "tauxRrq2": 0.04
+  },
+  "ae": { "tauxEmploye": 0.013, "tauxEmployeur": 0.0182, "maximumAssurable": 68900 },
+  "rqap": { "tauxEmploye": 0.0043, "tauxEmployeur": 0.00602, "maximumAssurable": 103000 },
+  "cnt": { "taux": 0.0006, "maximum": 103000 },
+  "tauxFssParDefaut": 0.0426,
+  "tauxCnesstParDefaut": 0.0178
+}

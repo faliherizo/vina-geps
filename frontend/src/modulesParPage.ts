@@ -50,6 +50,7 @@ export const PAGE_MODULE: Partial<Record<Page, string>> = {
   monequipe: "effectifs",
   // Communications cliniques (ADR 0074) : un module à part, qui n'exige pas les effectifs.
   alnouvelle: "alertes", alsuivi: "alertes", mesalertes: "alertes", alparametres: "alertes",
+  paiecycles: "paie", paiedossiers: "paie", paiedeclarations: "paie", mesbulletins: "paie", paieparametres: "paie",
   mesdisponibilites: "effectifs_disponibilites",
   mesechanges: "effectifs_echanges",
   monagph: "effectifs_agph",

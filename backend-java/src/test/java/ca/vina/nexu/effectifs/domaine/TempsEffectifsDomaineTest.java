@@ -57,15 +57,37 @@ class TempsEffectifsDomaineTest {
     @DisplayName("valide le statut et dit quand une feuille se corrige")
     void statuts() {
         assertThat(TempsEffectifs.statutDe("SOUMISE")).isEqualTo(StatutFeuille.SOUMISE);
-        assertThatThrownBy(() -> TempsEffectifs.statutDe("PERDUE")).hasMessage("« statut » : BROUILLON, SOUMISE, RETOURNEE, APPROUVEE");
-        assertThat(List.of(StatutFeuille.values()).stream().map(StatutFeuille::estModifiable)).containsExactly(true, false, true, false);
+        assertThatThrownBy(() -> TempsEffectifs.statutDe("PERDUE")).hasMessage("« statut » : BROUILLON, SOUMISE, RETOURNEE, APPROUVEE, PAYEE");
+        assertThat(List.of(StatutFeuille.values()).stream().map(StatutFeuille::estModifiable)).containsExactly(true, false, true, false, false);
         assertThatCode(() -> TempsEffectifs.verifierModifiable(StatutFeuille.BROUILLON)).doesNotThrowAnyException();
-        assertThatThrownBy(() -> TempsEffectifs.verifierModifiable(StatutFeuille.APPROUVEE)).hasMessage("feuille approuvée : elle est verrouillée");
+        assertThatThrownBy(() -> TempsEffectifs.verifierModifiable(StatutFeuille.APPROUVEE)).hasMessage("feuille approuvée : rouvrez-la ou rappelez-la avant la paie pour la corriger");
         assertThatThrownBy(() -> TempsEffectifs.verifierModifiable(StatutFeuille.SOUMISE))
-                .hasMessage("feuille soumise : elle attend une décision, retournez-la pour la corriger");
+                .hasMessage("feuille soumise : elle attend une décision ; rappelez-la ou faites-la retourner pour la corriger");
         assertThatCode(() -> TempsEffectifs.verifierSoumission(StatutFeuille.RETOURNEE)).doesNotThrowAnyException();
         assertThatThrownBy(() -> TempsEffectifs.verifierSoumission(StatutFeuille.APPROUVEE)).hasMessage("une feuille approuvée ne se soumet pas");
         assertThatThrownBy(() -> TempsEffectifs.verifierSoumission(StatutFeuille.SOUMISE)).hasMessage("une feuille déjà soumise ne se soumet pas");
+        assertThatThrownBy(() -> TempsEffectifs.verifierSoumission(StatutFeuille.PAYEE)).hasMessage(TempsEffectifs.FEUILLE_PAYEE);
+        assertThatThrownBy(() -> TempsEffectifs.verifierModifiable(StatutFeuille.PAYEE)).hasMessage(TempsEffectifs.FEUILLE_PAYEE);
+    }
+
+    @Test
+    @DisplayName("avant la paie, une feuille se rappelle ou se rouvre ; payée, plus jamais ; seule une feuille approuvée se paie")
+    void rappelReouvertureEtPaie() {
+        assertThat(List.of(TempsEffectifs.apresRappel(StatutFeuille.SOUMISE), TempsEffectifs.apresRappel(StatutFeuille.APPROUVEE)))
+                .containsOnly(new TempsEffectifs.Issue(StatutFeuille.BROUILLON, TempsEffectifs.AUCUN_PALIER));
+        for (StatutFeuille s : List.of(StatutFeuille.BROUILLON, StatutFeuille.RETOURNEE)) {
+            assertThatThrownBy(() -> TempsEffectifs.apresRappel(s)).hasMessage("une feuille qui n'est pas soumise n'a rien à rappeler");
+        }
+        assertThatThrownBy(() -> TempsEffectifs.apresRappel(StatutFeuille.PAYEE)).hasMessage(TempsEffectifs.FEUILLE_PAYEE);
+        assertThat(TempsEffectifs.apresReouverture(StatutFeuille.APPROUVEE)).isEqualTo(new TempsEffectifs.Issue(StatutFeuille.RETOURNEE, TempsEffectifs.AUCUN_PALIER));
+        assertThatThrownBy(() -> TempsEffectifs.apresReouverture(StatutFeuille.PAYEE)).hasMessage(TempsEffectifs.FEUILLE_PAYEE);
+        for (StatutFeuille s : List.of(StatutFeuille.BROUILLON, StatutFeuille.SOUMISE, StatutFeuille.RETOURNEE)) {
+            assertThatThrownBy(() -> TempsEffectifs.apresReouverture(s)).hasMessage("seule une feuille approuvée se rouvre ; une feuille soumise se retourne");
+        }
+        assertThat(TempsEffectifs.apresPaie(StatutFeuille.APPROUVEE)).isEqualTo(new TempsEffectifs.Issue(StatutFeuille.PAYEE, TempsEffectifs.AUCUN_PALIER));
+        assertThatThrownBy(() -> TempsEffectifs.apresPaie(StatutFeuille.PAYEE)).hasMessage("feuille déjà payée");
+        assertThatThrownBy(() -> TempsEffectifs.apresPaie(StatutFeuille.SOUMISE)).hasMessage("seule une feuille approuvée entre dans une paie");
+        assertThat(List.of(TempsEffectifs.Decision.RAPPELER.actionJournal(), TempsEffectifs.Decision.ROUVRIR.actionJournal())).containsExactly("temps.rappeler", "temps.rouvrir");
     }
 
     @Test
@@ -187,6 +209,31 @@ class TempsEffectifsDomaineTest {
         assertThat(TempsEffectifs.heuresSupplementaires(six, P)).isEqualTo(new TempsEffectifs.HeuresSupplementaires(Map.of("2031-01-18", 480L), 480));
         assertThat(TempsEffectifs.heuresSupplementaires(six, parametres(8, 36, 1, 15)).parJour())
                 .containsOnly(entry("2031-01-17", 240L), entry("2031-01-18", 480L));
+    }
+
+    @Test
+    @DisplayName("les heures supplémentaires déclarées comptent sous le seuil, et ne se paient jamais deux fois au-dessus")
+    void supplementairesDeclarees() {
+        TempsEffectifs.CodesPaie codes = new TempsEffectifs.CodesPaie(Map.of("REG", "100", "HS", "150"), "100", "150");
+        // 6 h + 2 h déclarées, seuil de 8 h : 2 h supplémentaires, rien à reclasser.
+        List<SegmentTemps> sous = List.of(seg("2031-01-15", "08:00", "14:00"), seg("2031-01-15", "14:00", "16:00", "HS", TypeHeure.SUPPLEMENTAIRE, Source.SAISIE, null));
+        TempsEffectifs.HeuresSupplementaires hs = TempsEffectifs.heuresSupplementaires(sous, P);
+        assertThat(hs).isEqualTo(new TempsEffectifs.HeuresSupplementaires(Map.of("2031-01-15", 120L), 120));
+        assertThat(TempsEffectifs.lignesDePaie("P1", sous, codes, hs.parJour()))
+                .containsExactly(new LignePaie("P1", "2031-01-15", "100", 6L), new LignePaie("P1", "2031-01-15", "150", 2L));
+        // 8 h + 2 h déclarées : l'excédent, ce sont les 2 h déclarées — 2 h majorées, et non 4.
+        List<SegmentTemps> dessus = List.of(seg("2031-01-15", "08:00", "16:00"), seg("2031-01-15", "16:00", "18:00", "HS", TypeHeure.SUPPLEMENTAIRE, Source.SAISIE, null));
+        hs = TempsEffectifs.heuresSupplementaires(dessus, P);
+        assertThat(hs.total()).isEqualTo(120);
+        assertThat(TempsEffectifs.lignesDePaie("P1", dessus, codes, hs.parJour()))
+                .containsExactly(new LignePaie("P1", "2031-01-15", "100", 8L), new LignePaie("P1", "2031-01-15", "150", 2L));
+        // 9 h + 2 h déclarées : 3 h d'excédent, dont 2 déclarées ; une seule heure régulière se reclasse.
+        List<SegmentTemps> plus = List.of(seg("2031-01-15", "08:00", "17:00"), seg("2031-01-15", "17:00", "19:00", "HS", TypeHeure.SUPPLEMENTAIRE, Source.SAISIE, null));
+        hs = TempsEffectifs.heuresSupplementaires(plus, P);
+        assertThat(hs.total()).isEqualTo(180);
+        assertThat(TempsEffectifs.lignesDePaie("P1", plus, codes, hs.parJour()))
+                .containsExactly(new LignePaie("P1", "2031-01-15", "100", 8L), new LignePaie("P1", "2031-01-15", "150", 3L));
+        assertThat(TempsEffectifs.supplementairesDeclarees(plus)).containsExactly(entry("2031-01-15", 120L));
     }
 
     @Test

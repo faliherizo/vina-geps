@@ -166,7 +166,7 @@ public class DepotApprobations implements Approbations.Depot {
     /** Un approbateur additionnel, au niveau suivant, sans toucher aux règles. */
     public Map<String, Object> ajouterApprobateur(String tenantId, String demandeId, String approbateurId) {
         Map<String, Object> d = exigerDemande(tenantId, demandeId);
-        if (!"pending".equals(d.get("status"))) {
+        if (!Approbations.StatutDemande.EN_ATTENTE.est(d.get("status"))) {
             throw new IllegalArgumentException("request is not pending");
         }
         int niveauMax = etapesDe(d).stream().mapToInt(e -> (Integer) e.get("level")).max().orElse(0);
@@ -273,6 +273,15 @@ public class DepotApprobations implements Approbations.Depot {
         return jdbc.sql("SELECT DISTINCT fromUserId FROM approval_delegations WHERE tenantId = ? AND toUserId = ?").params(tenantId, versUserId)
                 .query(String.class).list().stream().map(auteur -> delegationActive(tenantId, auteur))
                 .flatMap(Optional::stream).filter(d -> versUserId.equals(d.toUserId())).toList();
+    }
+
+    @Override
+    @Transactional
+    public boolean retirer(String tenantId, String demandeId) {
+        String attente = Approbations.StatutDemande.EN_ATTENTE.code();
+        String retiree = Approbations.StatutDemande.RETIREE.code();
+        jdbc.sql("UPDATE approval_steps SET status = ? WHERE tenantId = ? AND requestId = ? AND status = ?").params(retiree, tenantId, demandeId, attente).update();
+        return jdbc.sql("UPDATE approval_requests SET status = ? WHERE tenantId = ? AND id = ? AND status = ?").params(retiree, tenantId, demandeId, attente).update() > 0;
     }
 
     @Override

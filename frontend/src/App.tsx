@@ -8,6 +8,11 @@ import NouvelleAlerte from "./alertes/NouvelleAlerte";
 import SuiviAlertes from "./alertes/SuiviAlertes";
 import MesAlertes from "./alertes/MesAlertes";
 import ParametresAlertes from "./alertes/ParametresAlertes";
+import CyclesPaie from "./paie/CyclesPaie";
+import DeclarationsPaie from "./paie/DeclarationsPaie";
+import DossiersPaie from "./paie/DossiersPaie";
+import MesBulletins from "./paie/MesBulletins";
+import ParametresPaie from "./paie/ParametresPaie";
 import ApiDocs from "./ApiDocs";
 import MaintenanceBanner from "./MaintenanceBanner";
 import { EmpruntBandeau } from "./admin/EmpruntIdentite";
@@ -44,7 +49,7 @@ import { I18nProvider, useT, LANGUAGES, Lang } from "./i18n";
  * (AO 2027-005) : elles sont déclarées par `santequebec/menu.ts` et rendues par son registre.
  * L'union tient sur une seule ligne — un garde-fou du dépôt la lit ainsi.
  */
-export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres";
+export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres" | "paiecycles" | "paiedossiers" | "paiedeclarations" | "mesbulletins" | "paieparametres";
 type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant" | "director";
 
 /**
@@ -86,6 +91,12 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
   { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
   { key: "alparametres", i18nKey: "nav.alparametres", icon: "⚙️", roles: ["admin"] },
+  // Paie (ADR 0076) : la gestion exige « paie.gerer » au serveur ; chacun lit ses propres bulletins.
+  { key: "paiecycles", i18nKey: "nav.paiecycles", icon: "💵", roles: ["admin"] },
+  { key: "paiedossiers", i18nKey: "nav.paiedossiers", icon: "🗂️", roles: ["admin"] },
+  { key: "paiedeclarations", i18nKey: "nav.paiedeclarations", icon: "🧾", roles: ["admin"] },
+  { key: "mesbulletins", i18nKey: "nav.mesbulletins", icon: "📄", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "paieparametres", i18nKey: "nav.paieparametres", icon: "⚙️", roles: ["admin"] },
   { key: "rapports", i18nKey: "nav.rapports", icon: "📑", roles: ["admin", "manager"] },
   { key: "account", i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee"] },
   { key: "help", i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
@@ -647,6 +658,11 @@ function AppShell() {
         {page === "alsuivi" && <SuiviAlertes />}
         {page === "mesalertes" && <MesAlertes />}
         {page === "alparametres" && <ParametresAlertes />}
+        {page === "paiecycles" && <CyclesPaie />}
+        {page === "paiedossiers" && <DossiersPaie />}
+        {page === "paiedeclarations" && <DeclarationsPaie />}
+        {page === "mesbulletins" && <MesBulletins />}
+        {page === "paieparametres" && <ParametresPaie />}
         {page === "apidocs" && <ApiDocs />}
         {page === "integrations" && <Integrations />}
         {page === "notifications" && <Notifications />}

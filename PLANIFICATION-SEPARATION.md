@@ -81,7 +81,7 @@ pas le comportement : ils se copient avec leur port.
 | # | Question | Recommandation |
 |---|---|---|
 | D1 | Garder le Node dans le nouveau produit ? | **Non.** Il ne sert plus que les migrations ; Flyway les reprend (phase 4). Un produit neuf sans deuxième pile se maintient mieux |
-| D2 | La paie : contexte `personnel` minimal, ou toute la paie ? | **`personnel` minimal** (coupure C5) ; l'AO 26-015-DO verse les feuilles de temps à la paie de l'organisme (PFT), il ne la calcule pas |
+| D2 | La paie : contexte `personnel` minimal, ou toute la paie ? | **`personnel` minimal** (coupure C5) ; l'AO 26-015-DO verse les feuilles de temps à la paie de l'organisme (PFT), il ne la calcule pas — **renversée le 14 novembre 2026 par l'[ADR 0076](docs/adr/0076-module-de-paie-quebecois.md)** : un contexte `paie` neuf, réduit à la paie, alimenté par les seules feuilles approuvées |
 | D3 | La console superadmin : quels onglets ? | Organismes, modules, soutien, exploitation, sécurité, consommation d'avis. **Retirer** la vitrine, les forfaits et la facturation des abonnements, sauf si le produit se vend à d'autres organismes |
 | D4 | Garder l'historique Git des fichiers copiés ? | **Oui si la traçabilité compte pour l'AO** : refaire la copie avec `git filter-repo --paths-from-file` sur un clone du dépôt mère (½ j) ; sinon la copie actuelle suffit |
 | D5 | Le dépôt mère après la séparation ? | **Retirer le module** du dépôt mère une fois la phase 5 verte, pour éviter deux versions qui divergent ; à défaut, le geler en lecture seule |

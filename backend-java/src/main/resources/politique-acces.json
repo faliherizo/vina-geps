@@ -276,5 +276,12 @@
     ],
     "libelle": "Envoyer une alerte de priorité critique",
     "portee": "La priorité critique force tous les canaux de chaque destinataire ; un organisme peut l'ouvrir à d'autres rôles (FX-AO-20260810, ST-G01)."
+  },
+  "paie.gerer": {
+    "roles": [
+      "admin"
+    ],
+    "libelle": "Préparer et traiter la paie, tenir les dossiers de rémunération, lire les remises et les relevés",
+    "portee": "Lire ses propres bulletins n'exige que le module (ADR 0076)."
   }
 }

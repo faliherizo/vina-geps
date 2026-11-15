@@ -79,6 +79,12 @@ public class AdaptateurFluxApprobations implements FluxApprobationsPort {
     }
 
     @Override
+    public boolean retirer(String tenantId, ObjetFlux objet, String documentId) {
+        return moteur.demandeDuDocument(tenantId, objet.typeDocument(), documentId)
+                .map(d -> moteur.retirer(tenantId, (String) d.get("id"))).orElse(false);
+    }
+
+    @Override
     public Set<String> suppleePour(String tenantId, String suppleantId) {
         return moteur.delegationsRecues(tenantId, suppleantId).stream().map(Approbations.Delegation::fromUserId).collect(Collectors.toSet());
     }

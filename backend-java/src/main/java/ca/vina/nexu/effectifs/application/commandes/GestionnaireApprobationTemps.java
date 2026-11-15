@@ -70,6 +70,43 @@ public class GestionnaireApprobationTemps {
         return calcul.lire(ctx, id);
     }
 
+    /**
+     * <strong>Rappeler sa feuille</strong> avant la paie : soumise ou approuvée, elle revient au brouillon pour être corrigée,
+     * puis soumise de nouveau. Le circuit en attente est retiré — plus personne n'a à la décider ; un circuit fini reste à
+     * l'historique. Qui peut la soumettre peut la rappeler : la personne, ou qui planifie son unité.
+     */
+    public FeuilleDetailleeTemps rappeler(Contexte ctx, String id, Map<String, Object> entree) {
+        FeuilleTemps f = lecture.exigerLigne(ctx, id).feuille();
+        lecture.exigerEcriture(ctx, f);
+        TempsEffectifs.Issue issue = TempsEffectifs.apresRappel(f.statut());
+        if (f.statut() == TempsEffectifs.StatutFeuille.SOUMISE) {
+            flux.retirer(ctx, FluxApprobation.ObjetFlux.FEUILLE, id);
+        }
+        return consigner(ctx, f, TempsEffectifs.Decision.RAPPELER, new Decidee(issue, TempsEffectifs.texteLibre(entree.get("motif"))));
+    }
+
+    /**
+     * <strong>Rouvrir une feuille approuvée</strong> avant la paie : l'encadrement de l'unité la renvoie à la personne,
+     * retournée, avec ce qu'il faut corriger. Une feuille payée ne se rouvre jamais.
+     */
+    public FeuilleDetailleeTemps rouvrir(Contexte ctx, String id, Map<String, Object> entree) {
+        FeuilleTemps f = lecture.exigerLigne(ctx, id).feuille();
+        lecture.exigerGestion(ctx, f);
+        TempsEffectifs.Issue issue = TempsEffectifs.apresReouverture(f.statut());
+        String motif = TempsEffectifs.texteLibre(entree.get("motif"));
+        if (motif == null) {
+            throw new EffectifsInvalideException("« motif » : dites ce qu'il faut corriger");
+        }
+        return consigner(ctx, f, TempsEffectifs.Decision.ROUVRIR, new Decidee(issue, motif));
+    }
+
+    private FeuilleDetailleeTemps consigner(Contexte ctx, FeuilleTemps f, TempsEffectifs.Decision decision, Decidee d) {
+        ecrire.depot().inscrireDecision(ctx, new EcritureFeuillesTempsPort.NouvelleDecision(ecrire.sequence().suivant("efde"), f.id(), f.palier(), decision, d.motif()));
+        ecrire.depot().poserIssue(ctx, f.id(), d.issue());
+        journaliser(ctx, f, decision, d);
+        return calcul.calculer(ctx, lecture.ligne(ctx.tenantId(), f.id()), false);
+    }
+
     /** Ce que la feuille montre à sa soumission : ce sur quoi les paliers se routent. */
     private static DemandesFlux.FeuilleSoumise soumise(FeuilleDetailleeTemps d) {
         long payees = d.segments().stream().filter(s -> TempsEffectifs.estPaye(s.comportement())).mapToLong(s -> TempsEffectifs.minutesDe(s.debut(), s.fin())).sum();
@@ -93,6 +130,8 @@ public class GestionnaireApprobationTemps {
         TempsEffectifs.Issue issue = switch (decision) {
             case APPROUVER -> TempsEffectifs.apresApprobation(f.statut(), f.palier(), tranche.etapes().size());
             case RETOURNER -> TempsEffectifs.apresRetour(f.statut());
+            // Ce ne sont pas des décisions d'un palier : ils ont leurs propres gestes (rappeler, rouvrir).
+            case RAPPELER, ROUVRIR -> throw new EffectifsInvalideException("« " + decision.name() + " » n'est pas une décision d'un palier");
         };
         ecrire.depot().inscrireDecision(ctx, new EcritureFeuillesTempsPort.NouvelleDecision(ecrire.sequence().suivant("efde"), id, f.palier(), decision, motif));
         ecrire.depot().poserIssue(ctx, id, issue);

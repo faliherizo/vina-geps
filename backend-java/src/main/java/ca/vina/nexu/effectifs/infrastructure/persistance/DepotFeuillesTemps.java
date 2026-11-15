@@ -1,6 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.persistance;
 
 import ca.vina.nexu.effectifs.domaine.ActionCorroboration;
+import ca.vina.nexu.effectifs.domaine.ConflitException;
 import ca.vina.nexu.effectifs.domaine.Contexte;
 import ca.vina.nexu.effectifs.domaine.CorroborationTemps;
 import ca.vina.nexu.effectifs.domaine.ChampsFeuille;
@@ -278,5 +279,15 @@ public class DepotFeuillesTemps implements LectureFeuillesTempsPort, EcritureFeu
         String approuveeLe = issue.statut() == TempsEffectifs.StatutFeuille.APPROUVEE ? ctx.maintenant() : null;
         jdbc.sql("UPDATE eff_feuilles SET statut = ?, palier = ?, approuveeLe = ? WHERE tenantId = ? AND id = ?")
                 .params(issue.statut().name(), issue.palier(), approuveeLe, ctx.tenantId(), id).update();
+    }
+
+    /** Seule une feuille encore approuvée passe payée : une réouverture concurrente l'emporte, et rien ne se paie deux fois. */
+    @Override
+    public void marquerPayee(Contexte ctx, String id, String paieId) {
+        int n = jdbc.sql("UPDATE eff_feuilles SET statut = ?, payeeLe = ?, paieId = ? WHERE tenantId = ? AND id = ? AND statut = ?")
+                .params(TempsEffectifs.StatutFeuille.PAYEE.name(), ctx.maintenant(), paieId, ctx.tenantId(), id, TempsEffectifs.StatutFeuille.APPROUVEE.name()).update();
+        if (n == 0) {
+            throw new ConflitException("la feuille " + id + " n'est plus approuvée : elle n'entre pas dans cette paie");
+        }
     }
 }

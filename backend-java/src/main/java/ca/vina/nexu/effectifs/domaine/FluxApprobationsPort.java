@@ -41,6 +41,9 @@ public interface FluxApprobationsPort {
 
     DemandeApprobation ouvrir(String tenantId, NouvelleDemande d);
 
+    /** Retire la demande en attente du document (son auteur la rappelle) ; faux s'il n'y en avait aucune en attente. */
+    boolean retirer(String tenantId, ObjetFlux objet, String documentId);
+
     /** Les personnes désignées dont ce compte tient la place aujourd'hui (délégations en vigueur qu'il a reçues). */
     Set<String> suppleePour(String tenantId, String suppleantId);
 

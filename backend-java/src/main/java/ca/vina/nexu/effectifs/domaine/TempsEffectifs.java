@@ -58,7 +58,9 @@ public final class TempsEffectifs {
     // ── Énumérations ─────────────────────────────────────────────────────────
 
     public enum StatutFeuille {
-        BROUILLON, SOUMISE, RETOURNEE, APPROUVEE;
+        BROUILLON, SOUMISE, RETOURNEE, APPROUVEE,
+        /** Prise dans une paie traitée : plus rien ne la change — ni correction, ni rappel, ni retour. */
+        PAYEE;
 
         /** Une feuille se corrige tant qu'elle n'est pas soumise, ou quand elle revient (E-GP-3). */
         public boolean estModifiable() {
@@ -79,7 +81,11 @@ public final class TempsEffectifs {
 
     /** La décision de l'encadrement au palier courant. */
     public enum Decision {
-        APPROUVER, RETOURNER;
+        APPROUVER, RETOURNER,
+        /** La personne (ou qui a soumis pour elle) reprend sa feuille avant la paie, pour la corriger. */
+        RAPPELER,
+        /** L'encadrement rouvre une feuille approuvée, avant la paie, et la renvoie à la personne avec un motif. */
+        ROUVRIR;
 
         public String actionJournal() {
             return "temps." + name().toLowerCase(Locale.ROOT);
@@ -231,14 +237,18 @@ public final class TempsEffectifs {
 
     public static void verifierModifiable(StatutFeuille s) {
         if (!s.estModifiable()) {
-            throw new EffectifsInvalideException(s == StatutFeuille.APPROUVEE ? "feuille approuvée : elle est verrouillée"
-                    : "feuille soumise : elle attend une décision, retournez-la pour la corriger");
+            throw new EffectifsInvalideException(switch (s) {
+                case APPROUVEE -> "feuille approuvée : rouvrez-la ou rappelez-la avant la paie pour la corriger";
+                case PAYEE -> FEUILLE_PAYEE;
+                default -> "feuille soumise : elle attend une décision ; rappelez-la ou faites-la retourner pour la corriger";
+            });
         }
     }
 
     public static void verifierSoumission(StatutFeuille s) {
         if (!s.estModifiable()) {
-            throw new EffectifsInvalideException("une feuille " + (s == StatutFeuille.APPROUVEE ? "approuvée" : "déjà soumise") + " ne se soumet pas");
+            throw new EffectifsInvalideException(s == StatutFeuille.PAYEE ? FEUILLE_PAYEE
+                    : "une feuille " + (s == StatutFeuille.APPROUVEE ? "approuvée" : "déjà soumise") + " ne se soumet pas");
         }
     }
 
@@ -248,6 +258,37 @@ public final class TempsEffectifs {
             throw new EffectifsInvalideException("seule une feuille soumise s'approuve");
         }
         return palier >= paliersRequis ? new Issue(StatutFeuille.APPROUVEE, palier) : new Issue(StatutFeuille.SOUMISE, palier + 1);
+    }
+
+    public static final String FEUILLE_PAYEE = "feuille payée : elle ne se modifie plus (une erreur se corrige à la paie suivante)";
+
+    /**
+     * Le rappel : avant la paie, une feuille soumise ou approuvée revient au brouillon, pour être corrigée puis soumise de
+     * nouveau. Une feuille payée ne revient jamais ; une feuille qui n'est pas partie n'a rien à rappeler.
+     */
+    public static Issue apresRappel(StatutFeuille s) {
+        return switch (s) {
+            case SOUMISE, APPROUVEE -> new Issue(StatutFeuille.BROUILLON, AUCUN_PALIER);
+            case PAYEE -> throw new EffectifsInvalideException(FEUILLE_PAYEE);
+            case BROUILLON, RETOURNEE -> throw new EffectifsInvalideException("une feuille qui n'est pas soumise n'a rien à rappeler");
+        };
+    }
+
+    /** La réouverture : avant la paie, une feuille approuvée revient à la personne, retournée, avec le motif de l'encadrement. */
+    public static Issue apresReouverture(StatutFeuille s) {
+        return switch (s) {
+            case APPROUVEE -> new Issue(StatutFeuille.RETOURNEE, AUCUN_PALIER);
+            case PAYEE -> throw new EffectifsInvalideException(FEUILLE_PAYEE);
+            case BROUILLON, SOUMISE, RETOURNEE -> throw new EffectifsInvalideException("seule une feuille approuvée se rouvre ; une feuille soumise se retourne");
+        };
+    }
+
+    /** Le verrou de la paie : seule une feuille approuvée se paie, une fois. */
+    public static Issue apresPaie(StatutFeuille s) {
+        if (s != StatutFeuille.APPROUVEE) {
+            throw new EffectifsInvalideException(s == StatutFeuille.PAYEE ? "feuille déjà payée" : "seule une feuille approuvée entre dans une paie");
+        }
+        return new Issue(StatutFeuille.PAYEE, AUCUN_PALIER);
     }
 
     public static Issue apresRetour(StatutFeuille s) {
@@ -425,7 +466,16 @@ public final class TempsEffectifs {
             semaines.computeIfAbsent(Planification.lundiDe(j.getKey()), k -> new ArrayList<>()).add(Map.entry(j.getKey(), j.getValue() - excedent));
         });
         semaines.values().forEach(jours -> repartirLaSemaine(jours, p.seuilSemaineHeures() * (long) MINUTES_HEURE, parJour));
+        // Une heure déclarée supplémentaire l'est même sous le seuil ; au-dessus, l'excédent la contient déjà.
+        supplementairesDeclarees(segments).forEach((jour, minutes) -> parJour.merge(jour, minutes, Math::max));
         return new HeuresSupplementaires(parJour, parJour.values().stream().mapToLong(Long::longValue).sum());
+    }
+
+    /** Les minutes que la personne a déclarées elle-même en heures supplémentaires (type de comportement SUPPLEMENTAIRE), par jour. */
+    public static Map<String, Long> supplementairesDeclarees(List<? extends SegmentDeTemps> segments) {
+        Map<String, Long> m = new LinkedHashMap<>();
+        segments.stream().filter(s -> s.comportement() == TypeHeure.SUPPLEMENTAIRE).forEach(s -> m.merge(s.date(), minutesDe(s.debut(), s.fin()), Long::sum));
+        return m;
     }
 
     private static void repartirLaSemaine(List<Map.Entry<String, Long>> jours, long seuil, Map<String, Long> parJour) {
@@ -513,14 +563,17 @@ public final class TempsEffectifs {
 
     /**
      * Les lignes de paie d'une feuille : les minutes payées par jour et par code de paie, les heures supplémentaires
-     * <strong>reclassées</strong> du travail régulier vers le code supplémentaire.
+     * <strong>reclassées</strong> du travail régulier vers le code supplémentaire, déduction faite de celles déclarées comme telles.
      */
     public static List<LignePaie> lignesDePaie(String matricule, List<? extends SegmentDeTemps> segments, CodesPaie codes, Map<String, Long> hs) {
         Map<List<String>, Long> parCle = new LinkedHashMap<>();
         segments.stream().filter(s -> estPaye(s.comportement()))
                 .forEach(s -> parCle.merge(List.of(s.date(), codes.codePaieDe(s.typeHeureCode())), minutesDe(s.debut(), s.fin()), Long::sum));
+        Map<String, Long> declarees = supplementairesDeclarees(segments);
         hs.forEach((date, minutes) -> {
-            long deplace = Math.min(parCle.getOrDefault(List.of(date, codes.codeRegulier()), 0L), minutes);
+            // Les heures déclarées supplémentaires sont déjà à leur code : seul le reste se reclasse — sinon elles se paieraient deux fois majorées.
+            long aReclasser = Math.max(0, minutes - declarees.getOrDefault(date, 0L));
+            long deplace = Math.min(parCle.getOrDefault(List.of(date, codes.codeRegulier()), 0L), aReclasser);
             parCle.merge(List.of(date, codes.codeRegulier()), -deplace, Long::sum);
             parCle.merge(List.of(date, codes.codeSupplementaire()), deplace, Long::sum);
         });

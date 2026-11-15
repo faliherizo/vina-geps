@@ -261,7 +261,7 @@ Fonctionnalité: Feuilles de temps — préparation, saisie en versions, approba
       """json
       { "date": "2030-03-07", "debut": "2030-03-07T13:00:00Z", "fin": "2030-03-07T14:00:00Z", "typeHeureCode": "REG" }
       """
-    Alors la réponse correspond à "feuille soumise : elle attend une décision, retournez-la pour la corriger"
+    Alors la réponse correspond à "feuille soumise : elle attend une décision ; rappelez-la ou faites-la retourner pour la corriger"
     Quand julie envoie POST /api/effectifs/temps/feuilles/{{fJulie}}/approuver
     Alors la réponse a le statut 403
     Quand chef envoie POST /api/effectifs/temps/feuilles/{{fJulie}}/approuver

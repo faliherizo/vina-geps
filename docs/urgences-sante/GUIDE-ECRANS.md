@@ -410,6 +410,8 @@ Préparer sa feuille d'une période à partir de ses quarts, la corriger segment
 2. Vérifier chaque segment : la ressource (nom et matricule), les heures, le type d'heure, les « Tâches » et les champs propres à votre organisme.
 3. « Ajouter un segment » pour un temps manquant (jour, de, à, type d'heure), avec la « Description des tâches » et les champs demandés (ex. Véhicule) ; ou modifier un segment et « Enregistrer la correction ».
 4. « Soumettre ma feuille » : elle part au premier palier d'approbation — souvent votre supérieur hiérarchique. « En attente de » dit chez qui elle est, et, s'il est absent, qui le remplace (« en son absence : … »).
+5. Des heures supplémentaires ? Ajoutez un segment du type d'heure « Heures supplémentaires » : elles comptent même sous le seuil du jour, et se paient majorées, une seule fois. Au-delà des seuils de l'organisme, l'excédent devient supplémentaire de lui-même.
+6. Une erreur après la soumission ? Tant que la paie n'est pas faite, « Rappeler ma feuille » la ramène au brouillon : corrigez-la, puis soumettez-la de nouveau.
 
 **Exemple de remplissage**
 
@@ -426,7 +428,7 @@ Préparer sa feuille d'une période à partir de ses quarts, la corriger segment
 
 **Résultat :** La feuille passe à « Soumise » et affiche « En attente de : … » ; chaque correction garde ses versions, sa description et ses champs, et une anomalie est nommée avec ce qu'il faut corriger.
 
-> **Attention :** Une feuille retournée porte son motif : corriger puis soumettre à nouveau. Un champ marqué « obligatoire » doit être rempli pour que le segment soit accepté.
+> **Attention :** Une feuille retournée ou rouverte porte son motif : corriger puis soumettre à nouveau. Une feuille payée ne se modifie plus : une erreur se corrige à la paie suivante. Un champ marqué « obligatoire » doit être rempli pour que le segment soit accepté.
 
 ### Feuilles de temps (console)
 
@@ -437,7 +439,7 @@ Préparer les feuilles d'une période, les approuver palier par palier, lire les
 **Comment faire**
 
 1. « Préparer les feuilles » pour une unité et une période.
-2. Ouvrir une feuille soumise : approuver, ou retourner avec un motif obligatoire.
+2. Ouvrir une feuille soumise : approuver, ou retourner avec un motif obligatoire. Une feuille approuvée mais pas encore payée se « Rouvre pour correction », avec un motif.
 3. « Afficher le relevé » (regroupé par personne, unité ou type d'heure) et l'exporter ; « Produire le lot » puis « Télécharger le lot (CSV) ».
 4. Régler le « Flux d'approbation des heures » : paliers, conditions et approbateur — niveau de l'unité, rôle, personne désignée ou « Supérieur hiérarchique ».
 5. « Supérieurs hiérarchiques » : choisir une « Personne » puis « Son supérieur hiérarchique », et « Enregistrer ». C'est ce que lit l'approbateur « Supérieur hiérarchique ».
@@ -613,6 +615,96 @@ Lire les alertes qui vous visent et y répondre d'un geste.
 
 > **Attention :** Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis.
 
+### Cycles de paie
+
+*Adresse : `/admin/paiecycles` — Administration (capacité « paie.gerer »).*
+
+Préparer une paie à partir des feuilles de temps approuvées, la relire, puis la traiter.
+
+**Comment faire**
+
+1. « Préparer un cycle » : le début et la fin de la période de travail, puis la date de paie. Seules les feuilles approuvées dont la semaine commence dans la période entrent.
+2. Relire les bulletins : heures régulières et supplémentaires, brut, retenues, net, coût pour l'employeur ; « Détail » montre chaque retenue.
+3. Une personne approuvée sans dossier est nommée en avertissement : créez son dossier, puis « Recalculer ».
+4. « Traiter la paie » : le cycle est recalculé une dernière fois, puis figé ; ses feuilles passent « payées ».
+5. « Annuler le cycle » abandonne un cycle préparé ; ses feuilles restent approuvées.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Début de la période | 2026-02-15 |
+| Fin de la période | 2026-02-28 |
+| Date de paie | 2026-03-05 |
+
+**Résultat :** Les bulletins sont lisibles par chacun dans « Mes bulletins de paie », et les montants entrent dans les remises du mois.
+
+> **Attention :** Si une feuille a été rappelée ou rouverte entre la préparation et le traitement, le traitement est refusé en entier : recalculez, puis traitez de nouveau. Une feuille payée ne se corrige plus ; une erreur se règle à la paie suivante.
+
+### Dossiers de rémunération
+
+*Adresse : `/admin/paiedossiers` — Administration (capacité « paie.gerer »).*
+
+Dire, pour chaque personne des effectifs, comment elle est payée.
+
+**Comment faire**
+
+1. « Créer » ou « Modifier » sur la ligne de la personne.
+2. Choisir la rémunération (à l'heure ou au salaire annuel) et la fréquence de paie.
+3. Saisir le taux horaire (au salaire, il sert à payer les heures supplémentaires) ou le salaire annuel.
+4. Au besoin, les montants personnels déclarés sur les formulaires TP-1015.3-V (Québec) et TD1 (fédéral) ; laissés vides, ce sont ceux de base de l'année.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Rémunération | À l'heure |
+| Fréquence de paie | Aux deux semaines (26 paies) |
+| Taux horaire | 32,50 |
+
+**Résultat :** La prochaine paie préparée ou recalculée applique ce dossier.
+
+### Remises et relevés
+
+*Adresse : `/admin/paiedeclarations` — Administration (capacité « paie.gerer »).*
+
+Lire ce qu'il faut verser chaque mois et les cases des relevés de l'année.
+
+**Comment faire**
+
+1. Choisir l'année.
+2. Remises mensuelles : le montant à verser à Revenu Québec (impôt du Québec, RRQ, RQAP, FSS) et à l'ARC (impôt fédéral, assurance-emploi), avec l'échéance du 15 du mois suivant.
+3. Relevés : pour chaque personne, les cases du RL-1 et du T4 à reporter.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Année | 2026 |
+
+**Résultat :** Les montants ne comptent que les paies traitées ; un cycle préparé ou annulé n'y figure pas.
+
+> **Attention :** La transmission électronique des relevés et des remises se fait hors du produit.
+
+### Mes bulletins de paie
+
+*Adresse : `/admin/mesbulletins` — Toute personne dont le compte est relié à une ressource des effectifs.*
+
+Lire ses propres bulletins de paie, du brut au net.
+
+**Comment faire**
+
+1. Ouvrir « Mes bulletins de paie » : la paie la plus récente d'abord.
+2. « Détail » montre le brut, chaque retenue, le net et ce que paie l'employeur.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Bulletin | Paie du 2026-03-05 |
+
+**Résultat :** Vous voyez seulement vos bulletins, une fois la paie traitée.
+
 ### Messagerie du personnel
 
 *Adresse : `/admin/usmessages` — Tous les comptes de l'organisme qui ont le module de communication.*
@@ -761,6 +853,29 @@ Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
 | Personne à inscrire | Julie Roy, du 2026-12-21 au 2026-12-27 |
 
 **Résultat :** La réponse, le modèle ou le groupe est proposé dès la prochaine alerte ; les alertes passées gardent ce qu'elles ont proposé, et la version du modèle dont elles sont parties.
+
+### Paramètres de la paie
+
+*Adresse : `/admin/paieparametres` — Administration (capacité « paie.gerer »).*
+
+Régler les taux propres à l'organisme et lire le barème de l'année.
+
+**Comment faire**
+
+1. Saisir le taux du Fonds des services de santé (selon la masse salariale et le secteur ; 4,26 % au secteur public).
+2. Saisir le taux de la CNESST indiqué sur l'avis de cotisation de l'organisme.
+3. Saisir la majoration des heures supplémentaires : au moins 50 % (Loi sur les normes du travail), davantage si la convention le prévoit.
+4. « Enregistrer les réglages ».
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Taux du FSS | 4,26 |
+| Taux de la CNESST | 1,78 |
+| Majoration des heures supplémentaires | 50 |
+
+**Résultat :** Les prochains calculs appliquent ces taux ; les paies déjà traitées ne changent pas.
 
 ### Référentiels
 

@@ -195,6 +195,18 @@ public class ControleurTempsEffectifs {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.approbation().decider(ctx, id, TempsEffectifs.Decision.RETOURNER, corps(c)));
     }
 
+    /** La personne (ou qui a soumis pour elle) reprend sa feuille avant la paie, pour la corriger. */
+    @PostMapping("/feuilles/{id}/rappeler")
+    public ResponseEntity<Object> rappeler(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, module(r), 200, ctx -> agir.approbation().rappeler(ctx, id, corps(c)));
+    }
+
+    /** L'encadrement rouvre une feuille approuvée, avant la paie, et la renvoie avec un motif. */
+    @PostMapping("/feuilles/{id}/rouvrir")
+    public ResponseEntity<Object> rouvrir(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, gerer(r), 200, ctx -> agir.approbation().rouvrir(ctx, id, corps(c)));
+    }
+
     @GetMapping("/export-paie")
     public ResponseEntity<Object> exportPaie(HttpServletRequest r, @RequestParam(required = false) String debut, @RequestParam(required = false) String uniteCode) {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.exportPaie().exporter(ctx, requete(debut), requete(uniteCode)));

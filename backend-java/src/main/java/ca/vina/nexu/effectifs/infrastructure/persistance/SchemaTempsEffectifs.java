@@ -46,7 +46,10 @@ public class SchemaTempsEffectifs {
             new Colonne("eff_temps_parametres", "actionSourcesDivergentes", "TEXT NOT NULL DEFAULT 'BLOQUER'"),
             new Colonne("eff_segments_temps", "sourceExterne", "TEXT"),
             new Colonne("eff_segments_temps", "confirmeLe", "TEXT"),
-            new Colonne("eff_segments_temps", "confirmePar", "TEXT"));
+            new Colonne("eff_segments_temps", "confirmePar", "TEXT"),
+            // La feuille prise dans une paie traitée (changeset 0011) : elle ne se modifie plus.
+            new Colonne("eff_feuilles", "payeeLe", "TEXT"),
+            new Colonne("eff_feuilles", "paieId", "TEXT"));
 
     /** Une colonne à ajouter, si elle manque. */
     record Colonne(String table, String nom, String definition) { }
