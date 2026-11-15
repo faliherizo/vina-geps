@@ -13,6 +13,7 @@
  */
 import { request as pwRequest, expect, type APIRequestContext, type Page } from "@playwright/test";
 import { TENANT_ADMIN_PASS, TENANT_ADMIN_USER } from "./organisme";
+import { menuPret } from "./nav";
 import donnees from "../../../donnees/urgences-sante/ecarts.json";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
@@ -315,6 +316,7 @@ export async function seConnecterProfil(page: Page, tenantId: string, identifian
   await page.getByTestId("login-pass").fill(MDP_PROFIL);
   await page.getByTestId("login-submit").click();
   await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 60_000 });
+  await menuPret(page);
 }
 
 export async function seConnecterOrganisme(page: Page, tenantId: string): Promise<void> {
@@ -327,4 +329,5 @@ export async function seConnecterOrganisme(page: Page, tenantId: string): Promis
   await page.getByTestId("login-pass").fill(TENANT_ADMIN_PASS);
   await page.getByTestId("login-submit").click();
   await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 60_000 });
+  await menuPret(page);
 }

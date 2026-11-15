@@ -4,6 +4,7 @@
 #   interface : tsc, Vitest, construction
 #   écrans    : Playwright « interface » (API doublée) — audit WCAG 2.2 AA, géométrie à quatre largeurs
 #   parcours  : Playwright « e2e » contre le vrai serveur Java (base vierge bâtie par Liquibase)
+#   infra     : terraform fmt, validate et test (fournisseurs simulés) — p. ex. aucun certificat générique (critère 84)
 name: CI
 
 on:
@@ -36,6 +37,21 @@ jobs:
         if: always()
         with: { name: couverture-java, path: backend-java/target/site/jacoco }
 
+  infra:
+    name: Infrastructure (terraform fmt, validate, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: infra/terraform/aws }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.12.0" }
+      - run: terraform fmt -check -recursive
+      # Sans dorsale : la CI n'a pas accès à l'état, et n'en a pas besoin pour valider ni tester.
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+      - run: terraform test
+
   interface:
     name: Interface (tsc, Vitest, construction)
     runs-on: ubuntu-latest
@@ -51,6 +67,8 @@ jobs:
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+      # Chaque exigence fonctionnelle des deux avis a son scénario e2e, et docs/SCENARIOS-E2E.md est à jour.
+      - run: node scripts/construire-scenarios-e2e.cjs --verifier
 
   ecrans:
     name: Écrans (WCAG 2.2 AA, géométrie)

@@ -11,6 +11,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -67,7 +68,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await amorcer(tenantId, identifiant);
 
   // ── Julie ──────────────────────────────────────────────────────────────────────────────
-  const ctxJulie = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxJulie = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const julie = await ctxJulie.newPage();
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
@@ -105,7 +106,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await ctxJulie.close();
 
   // ── Le planificateur ───────────────────────────────────────────────────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-ustemps");

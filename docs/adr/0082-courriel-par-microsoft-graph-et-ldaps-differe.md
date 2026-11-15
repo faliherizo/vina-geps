@@ -1,6 +1,6 @@
 # ADR 0082 — Le courriel peut partir par Microsoft Graph ; LDAPS est différé tant que la fédération couvre l'annuaire
 
-- **Statut** : accepté, le 15 novembre 2026.
+- **Statut** : accepté, le 15 novembre 2026. La partie « annuaire » est **remplacée par l'ADR 0083** (LDAPS livré le même jour, UnboundID devenu disponible).
 - **Décideurs** : équipe VINA.
 - **Concerne** : `partage/courrier/infrastructure/CourrierGraph.java`, `ConfigurationCourrier.java`, `.env.exemple`.
 - **Story** : ST-G11 (FX-AO-20260810, critères 40 et 82).

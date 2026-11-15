@@ -114,6 +114,18 @@ describe("Cycles de paie", () => {
     expect($("pcy-b-detail")!.textContent).toContain("2 feuilles de temps");
   });
 
+  it("un refus du serveur se lit dans le dialogue, et non sous son voile", async () => {
+    api.etat.routes["POST /api/paie/cycles"] = { errors: ["aucun type d'heure de comportement SUPPLEMENTAIRE n'est en vigueur"] };
+    await rendre(<CyclesPaie />);
+    await cliquer("pcy-preparer-ouvrir");
+    await saisir("pcy-debut", "2026-02-15");
+    await saisir("pcy-fin", "2026-02-28");
+    await saisir("pcy-date-paie", "2026-03-05");
+    await soumettre("Préparer un cycle de paie");
+    const dialogue = $("pcy-preparer-modal")!;
+    expect(dialogue.querySelector('[data-testid="pcy-preparer-erreur"]')!.textContent).toContain("SUPPLEMENTAIRE");
+  });
+
   it("ouvrir, recalculer, traiter après confirmation ; un cycle traité n'offre plus de geste", async () => {
     await rendre(<CyclesPaie />);
     await cliquer("pcy-cycle-c1-voir");

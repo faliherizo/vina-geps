@@ -97,7 +97,7 @@ final class SaisiesAlertes {
         Priorite priorite = present(q, "priorite") == null ? null
                 : Priorite.de(q.get("priorite")).orElseThrow(() -> RefusAlerte.invalide("« priorite » : information, urgente ou critique"));
         EtatSuivi etat = present(q, "etat") == null ? null
-                : EtatSuivi.de(q.get("etat")).orElseThrow(() -> RefusAlerte.invalide("« etat » : prise_en_charge, sans_prise_en_charge ou non_lue"));
+                : EtatSuivi.de(q.get("etat")).orElseThrow(() -> RefusAlerte.invalide("« etat » : prise_en_charge, sans_prise_en_charge, non_lue ou relancee"));
         return new LectureAlertes.Filtre(new LectureAlertesPort.Critere(date(q, "du"), date(q, "au"), priorite, present(q, "expediteur")), etat);
     }
 

@@ -13,7 +13,7 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
 import { auditA11y } from "./helpers/a11y";
-import { ouvrirNav } from "./helpers/nav";
+import { menuPret, ouvrirNav } from "./helpers/nav";
 import donnees from "../../donnees/urgences-sante/demonstration.json";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
@@ -54,6 +54,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     await page.getByTestId("login-pass").fill(mdp);
     await page.getByTestId("login-submit").click();
     await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 60_000 });
+    await menuPret(page);
   };
 
   test("le menu porte les entrées des planches, et chaque écran porte leur chrome", async ({ page }) => {
@@ -69,7 +70,9 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
 
     const section = page.getByTestId("nav-group-urgencessante");
     await expect(section).toHaveCount(1);
-    await expect(section).toContainText("Urgences-santé");
+    // Les rubriques ont des titres fixes (« Menu principal », « Administration », « Aide et compte ») : le module
+    // ne nomme plus la rubrique, il la remplit.
+    await expect(section).toContainText("Menu principal");
 
     /*
       **La présence, et non le dépliage.** Le contenu d'un `<details>` replié reste dans le
@@ -152,12 +155,8 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     /*
       **Attendre la disparition, et non compter tout de suite.**
 
-      Le menu se rend une première fois **avant** que les modules et les vues masquées de
-      l'établissement ne soient connus : à cet instant, `enabledModules` vaut `null` et tout
-      s'affiche. Compter là mesure l'avancement du chargement, pas le réglage — et l'essai
-      échouait en nommant les cinq sections, ce qui ressemblait à un masquage sans effet.
-
-      La section du module sert de témoin : elle est la dernière chose que la recomposition pose.
+      Le menu porte `aria-busy` tant que les modules et les vues masquées ne sont pas connus (`connecter` attend
+      sa fin) ; l'attente de détachement reste, par prudence, pour une section qui partirait au rendu suivant.
     */
     await expect(page.getByTestId("nav-group-urgencessante")).toHaveCount(1, { timeout: 30_000 });
 
@@ -174,7 +173,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     expect(absentes, "sections qui n'ont rien à faire chez un organisme préhospitalier").toEqual([]);
 
     // Et ce qui reste est utilisable : la porte d'entrée, le module, mon espace, l'administration.
-    for (const cle of ["pilotage", "space", "admin"]) {
+    for (const cle of ["urgencessante", "space", "admin"]) {
       await expect(page.getByTestId(`nav-group-${cle}`), `section ${cle}`).toHaveCount(1);
     }
 

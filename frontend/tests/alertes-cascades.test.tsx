@@ -145,9 +145,11 @@ describe("Cascade d'une alerte", () => {
           { personId: "marc", etape: 1, resultat: "echec", touche: null, dureeSecondes: null, lanceLe: "x", termineLe: "x" }] },
       "POST /api/alertes/envoyees/a1/cascade/reprendre": { cascade: null, traces: [] },
     };
-    await rendre(<CascadeAlerte alerteId="a1" />);
+    await rendre(<CascadeAlerte alerteId="a1" noms={{ julie: "Julie Roy" }} />);
     expect($("als-cascade-etat")!.textContent).toContain("étape 2 sur 2");
-    expect($("als-cascade-trace")!.textContent).toContain("julie");
+    expect($("als-cascade-trace")!.textContent).toContain("Julie Roy");
+    expect($("als-cascade-appels")!.textContent).toContain("Julie Roy");
+    expect($("als-cascade-appels")!.textContent).toContain("marc");
     expect($("als-cascade-trace")!.textContent).toContain("Étape exécutée");
     expect($("als-cascade-appels")!.textContent).toContain("Répondu au clavier");
     expect($("als-cascade-appels")!.textContent).toContain("42 s");
@@ -193,7 +195,7 @@ describe("Utilisateurs actifs", () => {
 
 describe("Notes sur les destinataires (ST-G12)", () => {
   const FICHE = { id: "a1", titre: "Code bleu", corps: "x", priorite: "urgente", expediteurId: "chef", envoyeeLe: "x", reponses: [],
-    bilan: { destinataires: 2, lues: 0, repondues: 0, priseEnChargePar: null, priseEnChargeLe: null },
+    bilan: { destinataires: 2, lues: 0, repondues: 0, relances: 0, priseEnChargePar: null, priseEnChargeLe: null },
     remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "x", lueLe: null, reponseId: null, reponduLe: null },
       { personId: "marc", nom: "Marc Dubé", envoyeeLe: "x", lueLe: null, reponseId: null, reponduLe: null }] };
 

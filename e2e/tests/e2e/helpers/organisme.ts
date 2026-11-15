@@ -1,3 +1,4 @@
+import { menuPret } from "./nav";
 import type { Page, APIRequestContext } from "@playwright/test";
 import { superadminContext } from "./auth";
 
@@ -75,4 +76,5 @@ export async function selectTenant(page: Page, tenantId: string): Promise<void> 
   });
   if (!r.ok()) throw new Error(`Connexion admin d'établissement échouée (${r.status()})`);
   await page.goto("/");
+  await menuPret(page);
 }

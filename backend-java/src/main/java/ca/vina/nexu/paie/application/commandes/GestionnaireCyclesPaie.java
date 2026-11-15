@@ -81,11 +81,19 @@ public class GestionnaireCyclesPaie {
         }
     }
 
+    private List<HeuresApprouveesPort.FeuilleAPayer> heuresApprouvees(String tenantId, CyclePaie cycle) {
+        try {
+            return d.heures().approuvees(tenantId, cycle.debut(), cycle.fin());
+        } catch (HeuresApprouveesPort.HeuresIncalculables e) {
+            throw RefusPaie.invalide(e.getMessage());
+        }
+    }
+
     private Preparation calculer(String tenantId, CyclePaie cycle) {
         int annee = cycle.periode().annee();
         Map<String, DossierRemuneration> dossiers = d.lecture().dossiersParPersonne(tenantId);
         Function<String, Cumuls> cumuls = d.lecture().cumulsAvant(tenantId, annee);
-        PreparationPaie.Resultat r = PreparationPaie.preparer(cycle, d.heures().approuvees(tenantId, cycle.debut(), cycle.fin()),
+        PreparationPaie.Resultat r = PreparationPaie.preparer(cycle, heuresApprouvees(tenantId, cycle),
                 new PreparationPaie.Sources(d.lecture().bareme(annee), d.lecture().reglages(tenantId, annee), dossiers, cumuls, d.sequence()::uuid));
         d.ecriture().remplacerBulletins(tenantId, cycle.id(), r.bulletins());
         return new Preparation(cycle, r.bulletins(), r.sansDossier());

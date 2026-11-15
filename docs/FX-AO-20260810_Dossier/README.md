@@ -17,6 +17,16 @@
 | `06_gouvernance` | Hypothèses, risques, validation et critères d'acceptation |
 | `07_validation_vina_geps` | **Validation du dossier** contre les sources et contre VINA GEPS : conformité des 115 critères, écarts, ADR 0074 (module ou projet), feuille de route, stories et maquettes |
 
+## Démontrer et vérifier
+
+| Quoi | Comment |
+|---|---|
+| Organisme de démonstration (6 sites, 9 comptes par profil, groupes, alertes déjà envoyées) | `node scripts/semer-fx-ao.cjs --api http://localhost:8095` ; données : `e2e/donnees/fx-ao/demonstration.json` |
+| Scénarios e2e, critère par critère, avec leurs données JSON | [docs/SCENARIOS-E2E.md](../SCENARIOS-E2E.md) (généré par `scripts/construire-scenarios-e2e.cjs`) |
+| Les 115 critères, leur écran et leurs preuves | `e2e/donnees/fx-ao/exigences.json`, joué par `fx-ao-exigences.spec.ts` |
+| Les comportements par l'API (13 scénarios) | `e2e/donnees/fx-ao/comportements.json`, joué par `fx-ao-comportements.spec.ts` |
+| Le parcours à l'écran des compléments (copie, LDAPS, relances, note, export) | `fx-ao-parcours.spec.ts` |
+
 ## Statut et limites
 Ce dossier est une **conception de référence** issue des deux PDF transmis. Il ne constitue ni une réponse fournisseur ni une architecture approuvée par Santé Québec. Les décisions dépendant de l'infrastructure, de la téléphonie, de l'identité, des politiques de sécurité ou des processus cliniques sont identifiées comme à confirmer.
 

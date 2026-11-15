@@ -41,7 +41,7 @@ export default function Login() {
   const [entraSimule, setEntraSimule] = useState(true);
   // P-TN-2 : les annuaires que l'organisme a déclarés. Ils dépendent de l'organisme : on les relit
   // quand il change, et la liste reste vide tant qu'aucun n'est choisi.
-  const [annuaires, setAnnuaires] = useState<Array<{ id: string; nom: string }>>([]);
+  const [annuaires, setAnnuaires] = useState<Array<{ id: string; nom: string; fournisseur?: string }>>([]);
   // Le **pays/la devise** ne sont PAS un choix utilisateur : ils sont déterminés par
   // l'établissement (tenant) et appliqués après connexion (`useCurrentTenant` renseigne
   // `localStorage.hostCountry` depuis le tenant). Aucun sélecteur de pays au login.
@@ -81,6 +81,18 @@ export default function Login() {
       if (!r.ok) { const j = await r.json().catch(() => ({})); setError((j.errors || ["Échec de la connexion SSO"]).join(", ")); return; }
       // Le backend a posé la session ; on recharge pour que le contexte d'auth la reprenne
       // (fonctionne quel que soit le préfixe de l'app : "/" en dev, "/admin" en production).
+      window.location.reload();
+    } finally { setBusy(false); }
+  }
+
+  // Un annuaire LDAPS (ADR 0083) n'a pas de redirection : l'identifiant et le mot de passe déjà saisis lui sont envoyés.
+  async function ldapsLogin(annuaireId: string) {
+    if (!username.trim() || !password) { setError(t("login.ldapsChamps")); return; }
+    setError(""); setBusy(true);
+    try {
+      const r = await fetch(`/api/auth/sso/annuaires/${encodeURIComponent(annuaireId)}/connexion`, { method: "POST", credentials: "include",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify({ identifiant: username, motDePasse: password }) });
+      if (!r.ok) { const j = await r.json().catch(() => ({})); setError((j.errors || [t("login.ldapsChamps")]).join(", ")); return; }
       window.location.reload();
     } finally { setBusy(false); }
   }
@@ -250,10 +262,17 @@ export default function Login() {
           <ul aria-label={t("login.annuaires")} data-testid="login-annuaires" style={{ listStyle: "none", padding: 0, margin: "8px 0 0" }}>
             {annuaires.map((a) => (
               <li key={a.id} style={{ marginTop: 8 }}>
-                <a className="btn secondary" data-testid={`login-annuaire-${a.id}`} href={`/api/auth/sso/annuaires/${encodeURIComponent(a.id)}/login`}
-                  style={{ display: "inline-flex", width: "100%", justifyContent: "center", boxSizing: "border-box" }}>
-                  <span aria-hidden="true">🗂️</span> {t("login.annuaire", { nom: a.nom })}
-                </a>
+                {a.fournisseur === "ldaps" ? (
+                  <button type="button" className="secondary" data-testid={`login-annuaire-${a.id}`} disabled={busy} style={{ width: "100%" }}
+                    onClick={() => void ldapsLogin(a.id)}>
+                    <span aria-hidden="true">🗂️</span> {t("login.annuaireLdaps", { nom: a.nom })}
+                  </button>
+                ) : (
+                  <a className="btn secondary" data-testid={`login-annuaire-${a.id}`} href={`/api/auth/sso/annuaires/${encodeURIComponent(a.id)}/login`}
+                    style={{ display: "inline-flex", width: "100%", justifyContent: "center", boxSizing: "border-box" }}>
+                    <span aria-hidden="true">🗂️</span> {t("login.annuaire", { nom: a.nom })}
+                  </a>
+                )}
               </li>
             ))}
           </ul>

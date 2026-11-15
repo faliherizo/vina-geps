@@ -13,6 +13,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -69,7 +70,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await sa.dispose();
   await amorcer(tenantId);
 
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, acceptDownloads: true });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] }, acceptDownloads: true }));
   const page = await ctx.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-rapports");

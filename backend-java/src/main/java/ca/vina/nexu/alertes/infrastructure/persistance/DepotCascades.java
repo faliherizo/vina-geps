@@ -8,6 +8,7 @@ import ca.vina.nexu.alertes.domaine.Cascades.Trace;
 import ca.vina.nexu.alertes.domaine.EcritureCascadesPort;
 import ca.vina.nexu.alertes.domaine.LectureCascadesPort;
 import ca.vina.nexu.alertes.domaine.Priorite;
+import ca.vina.nexu.alertes.domaine.RelancesAlertesPort;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
@@ -24,7 +25,7 @@ import java.util.Optional;
  * Politiques, cascades et trace en base (changeset 0013). Une politique se lit dans sa <strong>version</strong> : la
  * courante pour l'administration, celle de l'armement pour une cascade en cours. La trace est en ajout seul.
  */
-public class DepotCascades implements LectureCascadesPort, EcritureCascadesPort {
+public class DepotCascades implements LectureCascadesPort, EcritureCascadesPort, RelancesAlertesPort {
 
     private static final String VERSION = "SELECT p.id, p.actif, v.version, v.nom, v.arret, v.etapes FROM alr_politiques p "
             + "JOIN alr_politique_versions v ON v.tenantId = p.tenantId AND v.politiqueId = p.id ";
@@ -62,6 +63,19 @@ public class DepotCascades implements LectureCascadesPort, EcritureCascadesPort 
     }
 
     private record Ligne(String politiqueId, int version, int etape, String echeanceLe, Cascades.Etat etat) { }
+
+    /** Une relance par étape exécutée ; bornée aux alertes envoyées depuis {@code depuis}, en une seule lecture. */
+    @Override
+    public Map<String, Integer> relancesDepuis(String tenantId, String depuis) {
+        Map<String, Integer> parAlerte = new java.util.HashMap<>();
+        jdbc.sql("SELECT t.alerteId, COUNT(*) AS n FROM alr_cascade_traces t JOIN alr_alertes a ON a.tenantId = t.tenantId AND a.id = t.alerteId "
+                        + "WHERE t.tenantId = ? AND t.evenement = ? AND a.envoyeeLe >= ? GROUP BY t.alerteId")
+                .params(tenantId, Cascades.Evenement.ETAPE.code(), depuis)
+                .query(rs -> {
+                    parAlerte.put(rs.getString("alerteId"), rs.getInt("n"));
+                });
+        return Map.copyOf(parAlerte);
+    }
 
     @Override
     public List<Trace> traces(String tenantId, String alerteId) {

@@ -170,7 +170,7 @@ class AnnuairesTest {
         assertThatThrownBy(() -> Annuaires.valider("k", "T1", oidc("https://sso.ca/r", "client avec espace"), ROLES))
                 .hasMessage("l'identifiant du client OIDC est requis (lettres, chiffres, . _ : @ -)");
         Annuaires.Saisie inconnu = new Annuaires.Saisie("K", null, "c", "ANNUAIRE_K", List.of("a.ca"), "roles", null, "employee", true, "saml", "https://sso.ca/r");
-        assertThatThrownBy(() -> Annuaires.valider("k", "T1", inconnu, ROLES)).hasMessageContaining("fournisseur inconnu : « saml » (attendu : entra, oidc)");
+        assertThatThrownBy(() -> Annuaires.valider("k", "T1", inconnu, ROLES)).hasMessageContaining("fournisseur inconnu : « saml » (attendu : entra, oidc, ldaps)");
         assertThatThrownBy(() -> Annuaires.Fournisseur.de("x")).isInstanceOf(Annuaires.AnnuaireInvalideException.class);
     }
 
@@ -182,5 +182,32 @@ class AnnuairesTest {
                 .isInstanceOf(Annuaires.ConnexionRefuseeException.class).hasMessage("le courriel « x@urgences-sante.qc.ca » n'est pas vérifié par l'annuaire « Keycloak »");
         assertThat(Annuaires.admettre(a, "x@urgences-sante.qc.ca", Map.of("email_verified", true, "roles", List.of("vina-admin")))).isEqualTo("admin");
         assertThat(Annuaires.admettre(a, "x@urgences-sante.qc.ca", Map.of("roles", List.of()))).isEqualTo("employee");
+    }
+
+    private static Annuaires.Saisie ldaps(String url, String dn) {
+        return new Annuaires.Saisie("AD local", null, dn, "ANNUAIRE_AD", List.of("urgences-sante.qc.ca"), "groups",
+                List.of(new Annuaires.Correspondance("GEPS-Chefs", "manager")), null, true, "ldaps", url);
+    }
+
+    @Test
+    @DisplayName("critère 82 : un annuaire LDAP s'écrit en ldaps:// avec sa base, et désigne le DN de son compte de service ; ldap:// en clair est refusé")
+    void annuaireLdaps() {
+        Annuaires.Annuaire a = Annuaires.valider("ann-l", "T1", ldaps(" ldaps://ad.us.local:636/OU=Personnel,DC=us,DC=local/ ", " CN=svc,DC=us,DC=local "), ROLES);
+        assertThat(List.of(a.fournisseur(), a.emetteur(), a.autorite(), a.clientId(), a.locataireEntra())).containsExactly(Annuaires.Fournisseur.LDAPS,
+                "ldaps://ad.us.local:636/OU=Personnel,DC=us,DC=local", "ldaps://ad.us.local:636/OU=Personnel,DC=us,DC=local", "CN=svc,DC=us,DC=local", "");
+        assertThat(Annuaires.valider("ann-l", "T1", ldaps("ldaps://ad.us.local/DC=us,DC=local", "CN=svc,DC=us,DC=local"), ROLES).emetteur())
+                .isEqualTo("ldaps://ad.us.local/DC=us,DC=local");
+        for (String mauvais : List.of("ldap://ad.us.local:389/DC=us,DC=local", "ldaps://ad.us.local", "ldaps://ad.us.local/sans-base", "ldaps:///DC=us",
+                "ldaps://ad.us.local/DC=us?cn", "ldaps://ad.us.local/DC=us#x", "pas une adresse", "")) {
+            assertThatThrownBy(() -> Annuaires.valider("l", "T1", ldaps(mauvais, "CN=svc,DC=us"), ROLES)).isInstanceOf(Annuaires.AnnuaireInvalideException.class)
+                    .hasMessageContaining("ldap:// en clair est refusé");
+        }
+        for (String mauvais : List.of("", "svc-geps", "CN=" + "x".repeat(512))) {
+            assertThatThrownBy(() -> Annuaires.valider("l", "T1", ldaps("ldaps://ad.us.local/DC=us", mauvais), ROLES))
+                    .hasMessageContaining("le DN du compte de service est requis");
+        }
+        // Les groupes que la liaison rend tiennent lieu de revendication : le CN déclaré donne le rôle.
+        assertThat(Annuaires.admettre(a, "marie@urgences-sante.qc.ca", Map.of("groups", List.of("CN=GEPS-Chefs,OU=G,DC=us", "GEPS-Chefs")))).isEqualTo("manager");
+        assertThat(new Annuaires.Personne("m@a.ca", new java.util.ArrayList<>(List.of("g"))).groupes()).isUnmodifiable();
     }
 }

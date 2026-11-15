@@ -11,6 +11,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -60,7 +61,7 @@ test("configurer les connecteurs, publier les équipages et relayer le journal",
   await sa.dispose();
   await amorcer(tenantId);
 
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctx.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-usintegrations");

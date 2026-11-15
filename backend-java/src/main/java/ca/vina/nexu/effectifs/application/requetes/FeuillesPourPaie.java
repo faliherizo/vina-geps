@@ -5,6 +5,7 @@ import ca.vina.nexu.effectifs.domaine.ConflitException;
 import ca.vina.nexu.effectifs.domaine.Contexte;
 import ca.vina.nexu.effectifs.domaine.DepotRessourcesPort;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort;
+import ca.vina.nexu.effectifs.domaine.EffectifsInvalideException;
 import ca.vina.nexu.effectifs.domaine.FeuilleTemps;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifs;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
@@ -48,7 +49,12 @@ public class FeuillesPourPaie implements HeuresApprouveesPort, PersonnesPourPaie
     }
 
     private FeuilleAPayer aPayer(Contexte ctx, FeuilleTemps f) {
-        ExportPaieTemps.LignesFeuille l = d.export().lignesDe(ctx, f);
+        ExportPaieTemps.LignesFeuille l;
+        try {
+            l = d.export().lignesDe(ctx, f);
+        } catch (EffectifsInvalideException e) {
+            throw new HeuresIncalculables(e.getMessage(), e);
+        }
         List<LigneHeures> lignes = l.lignes().stream().map(lp -> new LigneHeures(lp.date(), lp.codePaie(),
                 l.codesSupplementaires().contains(lp.codePaie()) ? NatureHeures.SUPPLEMENTAIRE : NatureHeures.REGULIERE,
                 new BigDecimal(lp.heures().toString()))).toList();

@@ -13,6 +13,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -67,7 +68,7 @@ async function amorcer(tenantId: string, comptes: Comptes): Promise<void> {
 }
 
 async function seConnecter(browser: Browser, identifiant: string, tenantId: string) {
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
@@ -83,7 +84,7 @@ test("champ de l'organisme, description des tâches, soumission au supérieur hi
   await amorcer(tenantId, comptes);
 
   // ── L'administration : un champ, un supérieur, un flux ───────────────────────────────────
-  const ctxAdm = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxAdm = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const adm = await ctxAdm.newPage();
   await selectTenant(adm, tenantId);
   await ouvrirNav(adm, "nav-ustemps");

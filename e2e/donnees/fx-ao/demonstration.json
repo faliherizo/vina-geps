@@ -1,0 +1,346 @@
+{
+ "pourquoi": "L'organisme de démonstration de l'avis FX-AO-20260810 (Santé Québec Laurentides) : les six sites du devis (§ 5.1), des personnes fictives par profil (administration, coordination, chefs d'unité, médecins, infirmières, inhalothérapeute), les groupes de garde, de spécialité et de comité, et un paramétrage d'alertes prêt à montrer. Semé par scripts/semer-fx-ao.cjs ; chaque bloc nomme le critère de la grille qu'il sert.",
+ "organisme": {
+  "nom": "Santé Québec Laurentides — démonstration FX-AO",
+  "planCode": "enterprise"
+ },
+ "modules": [
+  "effectifs",
+  "effectifs_regles",
+  "effectifs_planification",
+  "effectifs_disponibilites",
+  "effectifs_absences",
+  "effectifs_communication",
+  "alertes"
+ ],
+ "vuesGardees": {
+  "pourquoi": "Le menu ne montre que ce que la grille demande (critères 1-32) : les écrans de planification ouvrière restent fermés, même si leur module porte le calendrier de disponibilité (critère 25).",
+  "sections": [
+   "space",
+   "admin"
+  ],
+  "cles": [
+   "dashboard",
+   "monhoraire",
+   "mesdisponibilites",
+   "usdisponibilites",
+   "mesabsences",
+   "usabsences",
+   "alnouvelle",
+   "alsuivi",
+   "mesalertes",
+   "usmessages",
+   "usappels",
+   "usdiffusion",
+   "usreferentiels",
+   "usressources",
+   "usjournal"
+  ]
+ },
+ "sites": [
+  {
+   "code": "ARG",
+   "libelleFr": "CMSSS d'Argenteuil"
+  },
+  {
+   "code": "HSE",
+   "libelleFr": "Hôpital de Saint-Eustache"
+  },
+  {
+   "code": "HSJ",
+   "libelleFr": "Hôpital de Saint-Jérôme"
+  },
+  {
+   "code": "SAG",
+   "libelleFr": "CMSSS de Sainte-Agathe"
+  },
+  {
+   "code": "RRO",
+   "libelleFr": "CMSSS de Rivière-Rouge"
+  },
+  {
+   "code": "HML",
+   "libelleFr": "Hôpital de Mont-Laurier"
+  }
+ ],
+ "corpsEmploi": [
+  {
+   "code": "MED",
+   "libelleFr": "Médecins"
+  },
+  {
+   "code": "INF",
+   "libelleFr": "Soins infirmiers"
+  },
+  {
+   "code": "INH",
+   "libelleFr": "Inhalothérapie"
+  }
+ ],
+ "personnes": [
+  {
+   "username": "coord.urgence",
+   "nom": "Sophie Lalonde",
+   "role": "director",
+   "profil": "Coordonnatrice des mesures d'urgence — envoie les alertes critiques (critère 18)",
+   "site": "HSJ",
+   "corps": "INF",
+   "matricule": "L-1001"
+  },
+  {
+   "username": "chef.urgence.hsj",
+   "nom": "Martin Gagnon",
+   "role": "manager",
+   "profil": "Chef de l'urgence, Saint-Jérôme — expéditeur (critères 1-17)",
+   "site": "HSJ",
+   "corps": "INF",
+   "matricule": "L-1002"
+  },
+  {
+   "username": "chef.soins.hse",
+   "nom": "Nadia Bouchard",
+   "role": "manager",
+   "profil": "Cheffe des soins, Saint-Eustache — expéditrice, suivi partagé (critère 12)",
+   "site": "HSE",
+   "corps": "INF",
+   "matricule": "L-1003"
+  },
+  {
+   "username": "dre.tremblay",
+   "nom": "Dre Isabelle Tremblay",
+   "role": "employee",
+   "profil": "Cardiologue de garde — destinataire (critères 9, 24)",
+   "site": "HSJ",
+   "corps": "MED",
+   "matricule": "L-2001"
+  },
+  {
+   "username": "dr.lavoie",
+   "nom": "Dr Antoine Lavoie",
+   "role": "employee",
+   "profil": "Cardiologue — destinataire, deuxième de la garde",
+   "site": "HSE",
+   "corps": "MED",
+   "matricule": "L-2002"
+  },
+  {
+   "username": "inf.roy",
+   "nom": "Julie Roy",
+   "role": "employee",
+   "profil": "Infirmière, urgence de Saint-Jérôme — destinataire",
+   "site": "HSJ",
+   "corps": "INF",
+   "matricule": "L-3001"
+  },
+  {
+   "username": "inf.cote",
+   "nom": "Marc Côté",
+   "role": "employee",
+   "profil": "Infirmier, Saint-Eustache — destinataire",
+   "site": "HSE",
+   "corps": "INF",
+   "matricule": "L-3002"
+  },
+  {
+   "username": "inf.pelletier",
+   "nom": "Émilie Pelletier",
+   "role": "employee",
+   "profil": "Infirmière, Mont-Laurier — destinataire",
+   "site": "HML",
+   "corps": "INF",
+   "matricule": "L-3003"
+  },
+  {
+   "username": "inh.bergeron",
+   "nom": "Luc Bergeron",
+   "role": "employee",
+   "profil": "Inhalothérapeute, Sainte-Agathe — destinataire",
+   "site": "SAG",
+   "corps": "INH",
+   "matricule": "L-4001"
+  }
+ ],
+ "groupesTransverses": [
+  {
+   "nom": "Garde de cardiologie",
+   "nature": "garde",
+   "membres": [
+    "dre.tremblay",
+    "dr.lavoie"
+   ],
+   "moderateurs": [
+    "dre.tremblay"
+   ],
+   "critere": "16, 25, 27"
+  },
+  {
+   "nom": "Comité des mesures d'urgence",
+   "nature": "comite",
+   "membres": [
+    "coord.urgence",
+    "chef.urgence.hsj",
+    "chef.soins.hse"
+   ],
+   "moderateurs": [
+    "coord.urgence"
+   ],
+   "critere": "27, 28"
+  },
+  {
+   "nom": "Inhalothérapie régionale",
+   "nature": "specialite",
+   "membres": [
+    "inh.bergeron"
+   ],
+   "moderateurs": [],
+   "critere": "27"
+  }
+ ],
+ "listeDistribution": {
+  "nom": "Soins infirmiers — urgences",
+  "partagee": true,
+  "personnes": [
+   "inf.roy",
+   "inf.cote",
+   "inf.pelletier"
+  ],
+  "critere": "5"
+ },
+ "reponses": [
+  {
+   "cle": "arrive",
+   "libelle": "J'arrive",
+   "semantique": "prise_en_charge"
+  },
+  {
+   "cle": "indispo",
+   "libelle": "Indisponible",
+   "semantique": "refus"
+  },
+  {
+   "cle": "rappel",
+   "libelle": "Je rappelle dans 5 min",
+   "semantique": "information"
+  }
+ ],
+ "modeles": [
+  {
+   "cle": "codebleu",
+   "titre": "Code bleu",
+   "corps": "Arrêt cardiorespiratoire. Présentez-vous immédiatement au lieu indiqué.",
+   "priorite": "critique",
+   "reponses": [
+    "arrive",
+    "indispo"
+   ]
+  },
+  {
+   "cle": "codeblanc",
+   "titre": "Code blanc",
+   "corps": "Personne agressive. Équipe d'intervention demandée.",
+   "priorite": "urgente",
+   "reponses": [
+    "arrive",
+    "indispo",
+    "rappel"
+   ]
+  },
+  {
+   "cle": "rappelgarde",
+   "titre": "Rappel de garde",
+   "corps": "Consultation demandée à l'urgence.",
+   "priorite": "information",
+   "reponses": [
+    "arrive",
+    "indispo",
+    "rappel"
+   ]
+  }
+ ],
+ "politique": {
+  "nom": "Code bleu — escalade",
+  "arret": "prise_en_charge",
+  "critere": "14, 15, 16, 17",
+  "etapes": [
+   {
+    "cible": "initiaux",
+    "canaux": [
+     "poussee",
+     "texto"
+    ],
+    "delaiMinutes": 2
+   },
+   {
+    "cible": "prochain_disponible",
+    "groupe": "Garde de cardiologie",
+    "canaux": [
+     "texto"
+    ],
+    "delaiMinutes": 5
+   },
+   {
+    "cible": "initiaux",
+    "canaux": [
+     "appel"
+    ],
+    "delaiMinutes": 10
+   }
+  ]
+ },
+ "reglages": {
+  "copieCourriel": true,
+  "critere": "8"
+ },
+ "annuaire": {
+  "pourquoi": "Déclaré, inactif : l'administration montre la configuration LDAPS (critère 82) sans proposer à la connexion un annuaire que la démonstration ne peut pas joindre.",
+  "nom": "Active Directory des Laurentides",
+  "fournisseur": "ldaps",
+  "emetteur": "ldaps://ad.laurentides.local:636/OU=Personnel,DC=laurentides,DC=local",
+  "clientId": "CN=svc-geps,OU=Services,DC=laurentides,DC=local",
+  "variableSecret": "ANNUAIRE_AD_LAURENTIDES",
+  "domaines": [
+   "laurentides.example"
+  ],
+  "roleParDefaut": "employee",
+  "actif": false
+ },
+ "alertes": [
+  {
+   "par": "chef.urgence.hsj",
+   "modele": "codeblanc",
+   "titre": "Code blanc — urgence, salle 3",
+   "groupe": "HSJ",
+   "politique": true,
+   "critere": "1, 5, 7, 15"
+  },
+  {
+   "par": "chef.urgence.hsj",
+   "modele": "rappelgarde",
+   "titre": "Rappel de garde — cardiologie",
+   "groupeTransverse": "Garde de cardiologie",
+   "prisePar": "dre.tremblay",
+   "refusPar": "dr.lavoie",
+   "critere": "9, 10, 11"
+  },
+  {
+   "par": "coord.urgence",
+   "modele": "codebleu",
+   "titre": "Code bleu — 4e étage, chambre 412",
+   "personnes": [
+    "inf.roy",
+    "inf.cote",
+    "inh.bergeron"
+   ],
+   "lectures": [
+    "inf.roy"
+   ],
+   "critere": "18, 22"
+  }
+ ],
+ "note": {
+  "par": "chef.urgence.hsj",
+  "personne": "dr.lavoie",
+  "texte": "En congé jusqu'au 20 : joindre la Dre Tremblay",
+  "critere": "2"
+ }
+}

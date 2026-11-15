@@ -4,7 +4,7 @@
  *
  * L'administrateur déclare chaque fournisseur d'identité dont les comptes peuvent entrer — un
  * locataire Microsoft Entra ID, ou tout fournisseur OpenID Connect (Keycloak…) désigné par son
- * émetteur (ADR 0075) —, les domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
+ * émetteur (ADR 0075), ou un annuaire LDAP joint en LDAPS (ADR 0083) —, les domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
  * par l'écran : seul le nom de la variable d'environnement qui le porte, et si elle est déployée.
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -19,8 +19,8 @@ export interface Annuaire {
   domaines: string[]; revendication: "groups" | "roles"; correspondances: Correspondance[]; roleParDefaut: string | null; actif: boolean;
 }
 interface Role { role: string; label: string }
-type Fournisseur = "entra" | "oidc";
-const FOURNISSEURS: Record<Fournisseur, string> = { entra: "Microsoft Entra ID", oidc: "OpenID Connect (Keycloak, Okta…)" };
+type Fournisseur = "entra" | "oidc" | "ldaps";
+const FOURNISSEURS: Record<Fournisseur, string> = { entra: "Microsoft Entra ID", oidc: "OpenID Connect (Keycloak, Okta…)", ldaps: "Annuaire LDAP (Active Directory), en LDAPS" };
 
 /** « groupe = rôle », une règle par ligne : la première qui correspond l'emporte, comme au serveur. */
 export function lireRegles(texte: string): Correspondance[] {
@@ -80,7 +80,7 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
             Jamais « common » ni « organizations » : ces autorités laissent entrer n'importe quel compte Microsoft.
           </p>
         </>
-      ) : (
+      ) : fournisseur === "oidc" ? (
         <>
           <label className="field" htmlFor={id("emetteur")}><span>Émetteur OIDC (issuer) <span className="req-star" aria-hidden="true">*</span></span>
             <input id={id("emetteur")} name="emetteur" type="url" required defaultValue={initial?.emetteur ?? ""} data-testid={id("emetteur")}
@@ -89,8 +89,18 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
             L'adresse exacte de la revendication « iss », p. ex. https://sso.organisme.ca/realms/vina-geps. HTTPS obligatoire, sauf sur localhost.
           </p>
         </>
+      ) : (
+        <>
+          <label className="field" htmlFor={id("ldaps")}><span>Adresse LDAPS et base de recherche <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("ldaps")} name="emetteur" required defaultValue={initial?.emetteur ?? "ldaps://"} data-testid={id("emetteur")}
+              aria-describedby={id("ldaps-aide")} /></label>
+          <p id={id("ldaps-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            P. ex. ldaps://ad.etablissement.local:636/OU=Personnel,DC=etablissement,DC=local. ldap:// en clair est refusé ; le certificat
+            de l'annuaire doit être reconnu par le serveur et porter ce nom d'hôte.
+          </p>
+        </>
       )}
-      <label className="field" htmlFor={id("client")}><span>Identifiant du client <span className="req-star" aria-hidden="true">*</span></span>
+      <label className="field" htmlFor={id("client")}><span>{fournisseur === "ldaps" ? "DN du compte de service" : "Identifiant du client"} <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("client")} name="clientId" required defaultValue={initial?.clientId} data-testid={id("client")} /></label>
       <label className="field" htmlFor={id("variable")}><span>Variable du secret (ANNUAIRE_…) <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("variable")} name="variableSecret" required pattern="ANNUAIRE_[A-Z0-9_]+" defaultValue={initial?.variableSecret ?? "ANNUAIRE_"}
@@ -184,7 +194,7 @@ export default function AnnuairesOrganisme({ apiFetch }: { apiFetch: Appel }) {
               {annuaires.map((a) => (
                 <tr key={a.id} data-testid={`annuaire-${a.id}`}>
                   <th scope="row">{a.nom}</th>
-                  <td>{FOURNISSEURS[a.fournisseur ?? "entra"]}{a.fournisseur === "oidc" && a.emetteur ? ` — ${a.emetteur}` : ""}</td>
+                  <td>{FOURNISSEURS[a.fournisseur ?? "entra"]}{a.fournisseur !== "entra" && a.emetteur ? ` — ${a.emetteur}` : ""}</td>
                   <td>{a.domaines.join(", ")}</td>
                   <td>{a.correspondances.length} règle(s){a.roleParDefaut ? `, défaut : ${a.roleParDefaut}` : ", sans défaut"}</td>
                   <td>{a.secretDeploye ? "✓ déployé" : `✗ ${a.variableSecret} absente`}</td>

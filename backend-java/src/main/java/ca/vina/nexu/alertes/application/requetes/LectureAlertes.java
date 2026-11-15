@@ -1,6 +1,7 @@
 package ca.vina.nexu.alertes.application.requetes;
 
 import ca.vina.nexu.alertes.domaine.Acteur;
+import ca.vina.nexu.alertes.domaine.AlerteSuivie;
 import ca.vina.nexu.alertes.domaine.Alertes.Alerte;
 import ca.vina.nexu.alertes.domaine.Alertes.Destinataire;
 import ca.vina.nexu.alertes.domaine.Alertes.Modele;
@@ -9,8 +10,11 @@ import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
 import ca.vina.nexu.alertes.domaine.EtatSuivi;
 import ca.vina.nexu.alertes.domaine.LectureAlertesPort;
 import ca.vina.nexu.alertes.domaine.RefusAlerte;
+import ca.vina.nexu.alertes.domaine.RelancesAlertesPort;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Ce qu'on lit des alertes : le catalogue (réponses, modèles, groupes, listes), le suivi partagé des expéditeurs,
@@ -30,10 +34,12 @@ public final class LectureAlertes {
 
     private final LectureAlertesPort lecture;
     private final AnnuaireAlertes annuaire;
+    private final RelancesAlertesPort relances;
 
-    public LectureAlertes(LectureAlertesPort lecture, AnnuaireAlertes annuaire) {
+    public LectureAlertes(LectureAlertesPort lecture, AnnuaireAlertes annuaire, RelancesAlertesPort relances) {
         this.lecture = lecture;
         this.annuaire = annuaire;
+        this.relances = relances;
     }
 
     public List<ReponsePredefinie> reponses(String tenantId) {
@@ -63,21 +69,32 @@ public final class LectureAlertes {
         return annuaire.listes(acteur.tenantId(), acteur.personId());
     }
 
-    public List<Alerte> envoyees(String tenantId, Filtre filtre) {
-        return filtrer(lecture.envoyees(tenantId, filtre.critere(), LIMITE), filtre);
+    public List<AlerteSuivie> envoyees(String tenantId, Filtre filtre) {
+        return filtrer(suivies(tenantId, lecture.envoyees(tenantId, filtre.critere(), LIMITE)), filtre);
     }
 
-    public List<Alerte> aExporter(String tenantId, Filtre filtre) {
-        return filtrer(lecture.envoyees(tenantId, filtre.critere(), LIMITE_EXPORT), filtre);
+    public List<AlerteSuivie> aExporter(String tenantId, Filtre filtre) {
+        return filtrer(suivies(tenantId, lecture.envoyees(tenantId, filtre.critere(), LIMITE_EXPORT)), filtre);
     }
 
-    private static List<Alerte> filtrer(List<Alerte> alertes, Filtre filtre) {
+    /** Les relances se comptent d'une seule lecture, bornée à la plus ancienne alerte de la page. */
+    private List<AlerteSuivie> suivies(String tenantId, List<Alerte> alertes) {
+        if (alertes.isEmpty()) {
+            return List.of();
+        }
+        String depuis = alertes.stream().map(Alerte::envoyeeLe).min(Comparator.naturalOrder()).orElseThrow();
+        Map<String, Integer> parAlerte = relances.relancesDepuis(tenantId, depuis);
+        return alertes.stream().map(a -> new AlerteSuivie(a, parAlerte.getOrDefault(a.id(), 0))).toList();
+    }
+
+    private static List<AlerteSuivie> filtrer(List<AlerteSuivie> alertes, Filtre filtre) {
         return filtre.etat() == null ? alertes : alertes.stream().filter(filtre.etat()::decrit).toList();
     }
 
-    /** La fiche d'une alerte pour un expéditeur autorisé : toutes ses remises. */
-    public Alerte fiche(String tenantId, String id) {
-        return lecture.alerte(tenantId, id).orElseThrow(() -> RefusAlerte.introuvable("alerte introuvable"));
+    /** La fiche d'une alerte pour un expéditeur autorisé : toutes ses remises, et ses relances. */
+    public AlerteSuivie fiche(String tenantId, String id) {
+        Alerte a = lecture.alerte(tenantId, id).orElseThrow(() -> RefusAlerte.introuvable("alerte introuvable"));
+        return suivies(tenantId, List.of(a)).getFirst();
     }
 
     /** Les non lues d'abord, puis les plus récentes. */

@@ -170,7 +170,7 @@ class ControleurCascadesHttpTest {
         java.util.function.Supplier<String> ids = () -> "id-" + ++n[0];
         ControleurAlertes.Cas cas = new ControleurAlertes.Cas(new GestionnaireParametresAlertes(new GestionnaireParametresAlertes.Dependances(depot, depot, annuaire, horloge), ids),
                 new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, publication), ids, horloge, cascades),
-                new GestionnaireReceptionAlertes(depot, depot, horloge, cascades), new LectureAlertes(depot, annuaire));
+                new GestionnaireReceptionAlertes(depot, depot, horloge, cascades), new LectureAlertes(depot, annuaire, depotCascades));
         GardeAlertes garde = new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc));
         // ST-G06 : la voix simulée garde ce qu'on lui demande ; les appels sont tracés en base.
         GestionnaireAppelsAlertes appels = new GestionnaireAppelsAlertes(new GestionnaireAppelsAlertes.Dependances(depot, new DepotAppelsAlertes(jdbc), a -> {
@@ -296,7 +296,7 @@ class ControleurCascadesHttpTest {
         tic("2026-11-16T14:15:01Z");
         tic("2026-11-16T14:15:02Z");
         assertThat(avis.getLast().destinataires()).containsExactlyInAnyOrder("u-lea", "u-marc", "u-remi");
-        http.get(A + "/envoyees", CHEF).andExpect(jsonPath("$[0].bilan.destinataires").value(4));
+        http.get(A + "/envoyees", CHEF).andExpect(jsonPath("$[0].bilan.destinataires").value(4)).andExpect(jsonPath("$[0].bilan.relances").value(2));
         // Léa prend en charge : la cascade s'arrête aussitôt, et l'étape 3 ne partira jamais.
         http.post(A + "/recues/" + alerte + "/reponse", LEA, "{\"reponseId\":\"" + JsonPath.read(corps(http.get(A + "/recues", LEA)), "$[0].reponses[0].id") + "\"}")
                 .andExpect(status().isOk());
@@ -368,6 +368,11 @@ class ControleurCascadesHttpTest {
         http.get(A + "/envoyees/" + libre + "/cascade", CHEF).andExpect(jsonPath("$.cascade").isEmpty()).andExpect(jsonPath("$.traces.length()").value(0));
         http.post(A + "/envoyees/" + libre + "/cascade/reprendre", CHEF, "{\"etape\":1}").andExpect(status().isNotFound());
         http.get(A + "/envoyees/inconnue/cascade", CHEF).andExpect(status().isNotFound());
+        // Critère 11 : l'expéditeur voit les relances — au bilan, à l'export, et par l'état « relancée ».
+        http.get(A + "/envoyees/" + alerte, CHEF).andExpect(jsonPath("$.bilan.relances").value(2));
+        http.get(A + "/envoyees/" + libre, CHEF).andExpect(jsonPath("$.bilan.relances").value(0));
+        http.get(A + "/envoyees?etat=relancee", CHEF).andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0].id").value(alerte));
+        assertThat(corps(http.get(A + "/envoyees/export?format=csv&etat=relancee", CHEF).andExpect(status().isOk()))).contains("relances");
     }
 
     @Test

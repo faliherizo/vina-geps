@@ -62,7 +62,7 @@ export default function CyclesPaie() {
         <h2 id="pcy-liste-h">Cycles</h2>
         <div className="eff-actions">
           <FormulaireModal libelle="Préparer un cycle" titre="Préparer un cycle de paie" testId="pcy-preparer" size="sm">
-            {(fermer) => <FormulairePeriode envoyer={envoyer} apres={async (p) => {
+            {(fermer) => <FormulairePeriode envoyer={envoyer} erreur={erreur} apres={async (p) => {
               fermer(); setOuvert(p); setSucces(`Cycle préparé : ${p.bulletins.length} bulletin(s) à relire.`); await charger();
             }} />}
           </FormulaireModal>
@@ -130,7 +130,12 @@ function SansDossier({ personnes }: { personnes: Personne[] }) {
 
 type Envoyer = ReturnType<typeof useApi>["envoyer"];
 
-function FormulairePeriode({ envoyer, apres }: { envoyer: Envoyer; apres: (p: Preparation) => Promise<void> }) {
+/**
+ * `erreur` : le refus du serveur, **dans** le dialogue. Affiché seulement sur la page, il restait sous le voile du
+ * dialogue ouvert — l'administration voyait le bouton ne rien faire, sans le motif (une année sans barème, un type
+ * d'heure manquant).
+ */
+function FormulairePeriode({ envoyer, apres, erreur }: { envoyer: Envoyer; apres: (p: Preparation) => Promise<void>; erreur: string | null }) {
   const [debut, setDebut] = useState("");
   const [fin, setFin] = useState("");
   const [datePaie, setDatePaie] = useState("");
@@ -141,6 +146,7 @@ function FormulairePeriode({ envoyer, apres }: { envoyer: Envoyer; apres: (p: Pr
   };
   return (
     <form onSubmit={(e) => void soumettre(e)} aria-label="Préparer un cycle de paie">
+      {erreur && <Message variante="erreur" testId="pcy-preparer-erreur">{erreur}</Message>}
       <p><label htmlFor="pcy-debut">Début de la période de travail</label>
         <input id="pcy-debut" data-testid="pcy-debut" type="date" required value={debut} onChange={(e) => setDebut(e.target.value)} /></p>
       <p><label htmlFor="pcy-fin">Fin de la période</label>

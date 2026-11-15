@@ -11,6 +11,7 @@ import { expectNoA11yViolations } from "./helpers/a11y";
 import { ouvrirNav } from "./helpers/nav";
 import { createTenant, selectTenant, setTenantModules, uniq, MODULES_SOCLE } from "./helpers/organisme";
 import { choisirPersonne } from "./helpers/personne";
+import { optionsFilmees } from "./helpers/film";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 
@@ -31,7 +32,7 @@ test("l'employée règle ses notifications ; l'administration l'avise par son no
   await systeme.patch(`${API}/api/auth/users/${compte.id}`, { headers: t, data: { mustChangePassword: false, securitySetupRequired: false } });
 
   // 1) Mon compte › Mes notifications : la matrice, un refus nommé, puis un réglage enregistré.
-  const ctxLea = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxLea = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const lea = await ctxLea.newPage();
   await lea.goto("/");
   await uiLogin(lea, `lea-${suffixe}`, "pass1234", tenantId);
@@ -55,7 +56,7 @@ test("l'employée règle ses notifications ; l'administration l'avise par son no
   await ctxLea.close();
 
   // 2) Notifications › Notifier une personne (l'administration de l'établissement) : par le nom, tous les canaux demandés — le texto est « désactivé ».
-  const ctxAdmin = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxAdmin = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctxAdmin.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-notifications");

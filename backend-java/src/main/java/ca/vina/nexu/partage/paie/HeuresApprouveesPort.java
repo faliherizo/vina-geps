@@ -28,6 +28,16 @@ public interface HeuresApprouveesPort {
 
     record Verrou(String tenantId, String acteurId, String instant, String cycleId) { }
 
+    /**
+     * Les heures d'une feuille ne se calculent pas (un paramétrage des effectifs manque : type d'heure, seuil) : le motif
+     * des effectifs, dans le vocabulaire du port. La paie le rend tel quel à l'administration, au lieu d'une erreur 500.
+     */
+    final class HeuresIncalculables extends RuntimeException {
+        public HeuresIncalculables(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
     /** Le refus du verrou, dans le vocabulaire du port : la paie n'a pas à connaître les exceptions des effectifs. */
     final class FeuilleNonApprouvee extends RuntimeException {
         public FeuilleNonApprouvee(String message, Throwable cause) {

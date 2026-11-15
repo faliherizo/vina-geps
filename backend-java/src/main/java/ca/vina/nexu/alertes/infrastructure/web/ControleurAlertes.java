@@ -4,6 +4,7 @@ import ca.vina.nexu.alertes.application.commandes.GestionnaireEnvoiAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireParametresAlertes;
 import ca.vina.nexu.alertes.application.commandes.GestionnaireReceptionAlertes;
 import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
+import ca.vina.nexu.alertes.domaine.AlerteSuivie;
 import ca.vina.nexu.alertes.domaine.Alertes;
 import ca.vina.nexu.alertes.domaine.Alertes.Composition;
 import ca.vina.nexu.alertes.domaine.RefusAlerte;
@@ -152,10 +153,10 @@ public class ControleurAlertes {
     public ResponseEntity<Object> envoyer(HttpServletRequest r, @RequestBody(required = false) Map<String, Object> c) {
         Map<String, Object> d = corps(c);
         boolean critique = garde.peut(r, CAPACITE_CRITIQUE);
-        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), CREE, a -> VuesAlertes.suivi(cas.envoi().envoyer(a, new GestionnaireEnvoiAlertes.Demande(
+        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), CREE, a -> VuesAlertes.suivi(AlerteSuivie.nouvelle(cas.envoi().envoyer(a, new GestionnaireEnvoiAlertes.Demande(
                 new Composition(SaisiesAlertes.texte(d, "titre"), SaisiesAlertes.texte(d, "corps"), SaisiesAlertes.priorite(d), SaisiesAlertes.textes(d, "reponseIds")),
                 new GestionnaireEnvoiAlertes.Cibles(SaisiesAlertes.textes(d, "personnes"), SaisiesAlertes.textes(d, "groupes"), SaisiesAlertes.textes(d, "listes")),
-                SaisiesAlertes.texte(d, "modeleId"), critique, SaisiesAlertes.texte(d, "politiqueId")))));
+                SaisiesAlertes.texte(d, "modeleId"), critique, SaisiesAlertes.texte(d, "politiqueId"))))));
     }
 
     /** Le suivi, filtrable : période ({@code du}, {@code au}), priorité, état, expéditeur (ST-G03). */

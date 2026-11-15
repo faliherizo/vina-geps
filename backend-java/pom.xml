@@ -58,6 +58,12 @@
       <artifactId>poi-ooxml</artifactId>
       <version>5.4.1</version>
     </dependency>
+    <!-- Annuaire LDAP joint en LDAPS (ADR 0083, FX-AO-20260810 critère 82) ; sert aussi le serveur LDAPS en mémoire des essais. -->
+    <dependency>
+      <groupId>com.unboundid</groupId>
+      <artifactId>unboundid-ldapsdk</artifactId>
+      <version>7.0.5</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>

@@ -136,18 +136,23 @@ class AlertesTest {
     }
 
     @Test
-    @DisplayName("ST-G03 : l'état du suivi se lit sur l'alerte — non lue, puis lue, puis prise en charge ; les codes se convertissent et se refusent")
+    @DisplayName("ST-G03 : l'état du suivi se lit sur l'alerte — non lue, puis lue, puis prise en charge, puis relancée ; les codes se convertissent et se refusent")
     void etatsDuSuivi() {
         assertThat(java.util.Arrays.stream(EtatSuivi.values()).map(EtatSuivi::code).toList())
-                .containsExactly("prise_en_charge", "sans_prise_en_charge", "non_lue");
+                .containsExactly("prise_en_charge", "sans_prise_en_charge", "non_lue", "relancee");
         assertThat(java.util.Arrays.stream(EtatSuivi.values()).map(e -> EtatSuivi.de(e.code()).orElseThrow()).toList()).containsExactly(EtatSuivi.values());
         assertThat(EtatSuivi.de("perdue")).isEmpty();
         Alerte a = alerte();
-        assertThat(List.of(EtatSuivi.NON_LUE.decrit(a), EtatSuivi.PRISE_EN_CHARGE.decrit(a), EtatSuivi.SANS_PRISE_EN_CHARGE.decrit(a))).containsExactly(true, false, true);
+        AlerteSuivie neuve = AlerteSuivie.nouvelle(a);
+        assertThat(List.of(EtatSuivi.NON_LUE.decrit(neuve), EtatSuivi.PRISE_EN_CHARGE.decrit(neuve), EtatSuivi.SANS_PRISE_EN_CHARGE.decrit(neuve),
+                EtatSuivi.RELANCEE.decrit(neuve))).containsExactly(true, false, true, false);
         Alerte lue = a.lue("julie", "x").lue("marc", "x");
-        assertThat(EtatSuivi.NON_LUE.decrit(lue)).isFalse();
-        Alerte prise = lue.repondue("julie", "r1", "y");
+        assertThat(EtatSuivi.NON_LUE.decrit(AlerteSuivie.nouvelle(lue))).isFalse();
+        AlerteSuivie prise = AlerteSuivie.nouvelle(lue.repondue("julie", "r1", "y"));
         assertThat(List.of(EtatSuivi.PRISE_EN_CHARGE.decrit(prise), EtatSuivi.SANS_PRISE_EN_CHARGE.decrit(prise))).containsExactly(true, false);
+        AlerteSuivie relancee = new AlerteSuivie(a, 2);
+        assertThat(List.of(relancee.relancee(), EtatSuivi.RELANCEE.decrit(relancee))).containsExactly(true, true);
+        assertThatThrownBy(() -> new AlerteSuivie(a, -1)).isInstanceOf(RefusAlerte.class).hasMessageContaining("négatif");
     }
 
     @Test

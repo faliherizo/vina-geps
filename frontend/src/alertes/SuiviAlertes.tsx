@@ -26,9 +26,15 @@ export function parametresDe(f: Filtre): URLSearchParams {
 const COL_ALERTES: ReadonlyArray<Colonne<AlerteSuivie>> = [
   { id: "envoi", libelle: "Envoyée", tri: (a) => a.envoyeeLe }, { id: "titre", libelle: "Alerte" },
   { id: "priorite", libelle: "Priorité" }, { id: "lues", libelle: "Lues", numerique: true },
-  { id: "reponses", libelle: "Réponses", numerique: true }, { id: "prise", libelle: "Prise en charge" },
+  { id: "reponses", libelle: "Réponses", numerique: true }, { id: "relances", libelle: "Relances", numerique: true },
+  { id: "prise", libelle: "Prise en charge" },
   { id: "actions", libelle: "Actions", actions: true },
 ];
+
+/** Les noms des personnes de l'alerte, par identifiant : la trace et les appels les nomment au lieu de montrer l'identifiant. */
+export function nomsDe(remises: Remise[]): Record<string, string> {
+  return Object.fromEntries(remises.map((r) => [r.personId, r.nom]));
+}
 
 export default function SuiviAlertes() {
   const { lire, erreur } = useApi();
@@ -79,6 +85,7 @@ export default function SuiviAlertes() {
             <td><BadgeStatut statut={tonPriorite(a.priorite)}>{libellePriorite(a.priorite)}</BadgeStatut></td>
             <td className="num">{a.bilan.lues} / {a.bilan.destinataires}</td>
             <td className="num">{a.bilan.repondues}</td>
+            <td className="num" data-testid={`als-alerte-${a.id}-relances`}>{a.bilan.relances}</td>
             <td>{a.bilan.priseEnChargePar ? `${a.bilan.priseEnChargePar}, ${quand(a.bilan.priseEnChargeLe)}` : "Personne encore"}</td>
             <td><button type="button" className="secondary" data-testid={`als-alerte-${a.id}-detail`} aria-expanded={ouverte === a.id}
               onClick={() => setOuverte(ouverte === a.id ? null : a.id)}>Détail<span className="sr-only"> de l'alerte {a.titre}</span></button></td>
@@ -89,7 +96,7 @@ export default function SuiviAlertes() {
           <h2 id="als-fiche-h">{fiche.titre}</h2>
           <p>{fiche.corps}</p>
           <RemisesEtNotes key={`remises-${fiche.id}`} fiche={fiche} />
-          <CascadeAlerte key={fiche.id} alerteId={fiche.id} />
+          <CascadeAlerte key={fiche.id} alerteId={fiche.id} noms={nomsDe(fiche.remises)} />
         </section>
       )}
     </div>

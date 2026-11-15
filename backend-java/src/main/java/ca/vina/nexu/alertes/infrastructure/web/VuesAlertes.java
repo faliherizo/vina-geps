@@ -1,5 +1,6 @@
 package ca.vina.nexu.alertes.infrastructure.web;
 
+import ca.vina.nexu.alertes.domaine.AlerteSuivie;
 import ca.vina.nexu.alertes.domaine.Alertes.Alerte;
 import ca.vina.nexu.alertes.domaine.Alertes.Bilan;
 import ca.vina.nexu.alertes.domaine.Alertes.Modele;
@@ -92,14 +93,16 @@ final class VuesAlertes {
         return m;
     }
 
-    /** Le suivi : le bilan, et chaque remise. */
-    static Map<String, Object> suivi(Alerte a) {
+    /** Le suivi : le bilan (relances comprises, critère 11), et chaque remise. */
+    static Map<String, Object> suivi(AlerteSuivie s) {
+        Alerte a = s.alerte();
         Map<String, Object> m = entete(a);
         Bilan b = a.bilan();
         Map<String, Object> bilan = new LinkedHashMap<>();
         bilan.put("destinataires", b.destinataires());
         bilan.put("lues", b.lues());
         bilan.put("repondues", b.repondues());
+        bilan.put("relances", s.relances());
         bilan.put("priseEnChargePar", b.premierePriseEnCharge().map(r -> r.destinataire().nom()).orElse(null));
         bilan.put("priseEnChargeLe", b.premierePriseEnCharge().map(Remise::reponduLe).orElse(null));
         m.put("bilan", bilan);
@@ -119,7 +122,8 @@ final class VuesAlertes {
     }
 
     /** Une ligne de l'export du suivi : une alerte et son bilan, à plat. */
-    static Map<String, Object> ligneExport(Alerte a, boolean csv) {
+    static Map<String, Object> ligneExport(AlerteSuivie s, boolean csv) {
+        Alerte a = s.alerte();
         Bilan b = a.bilan();
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("envoyeeLe", a.envoyeeLe());
@@ -130,6 +134,7 @@ final class VuesAlertes {
         m.put("destinataires", b.destinataires());
         m.put("lues", b.lues());
         m.put("reponses", b.repondues());
+        m.put("relances", s.relances());
         m.put("priseEnChargePar", cellule(b.premierePriseEnCharge().map(r -> r.destinataire().nom()).orElse(""), csv));
         m.put("priseEnChargeLe", b.premierePriseEnCharge().map(Remise::reponduLe).orElse(""));
         return m;

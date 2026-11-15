@@ -676,6 +676,13 @@ class ControleurTempsEffectifsHttpTest {
         assertThat(sienne.lignes()).isNotEmpty().allSatisfy(l -> assertThat(l.heures()).isPositive());
         assertThat(sienne.lignes()).extracting(HeuresApprouveesPort.LigneHeures::nature).contains(HeuresApprouveesPort.NatureHeures.REGULIERE);
         assertThat(feuillesPourPaie.approuvees(T, "2031-01-20", "2031-01-26")).isEmpty();
+        // Sans type d'heure supplémentaire en vigueur, les heures ne se calculent pas : le motif passe dans le
+        // vocabulaire du port, que la paie rend à l'administration (et non une erreur 500).
+        String sansHs = "UPDATE eff_referentiels SET comportement = ? WHERE tenantId = ? AND type = 'types_heure' AND code = 'HS'";
+        jdbc.sql(sansHs).params("TRAVAILLEE", T).update();
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> feuillesPourPaie.approuvees(T, "2031-01-13", "2031-01-19"))
+                .isInstanceOf(HeuresApprouveesPort.HeuresIncalculables.class).hasMessageContaining("SUPPLEMENTAIRE");
+        jdbc.sql(sansHs).params("SUPPLEMENTAIRE", T).update();
         assertThat(feuillesPourPaie.personnes(T)).extracting(PersonnesPourPaiePort.Personne::ressourceId).contains(sienne.ressourceId());
         assertThat(feuillesPourPaie.ressourceDe(T, JULIE.userId())).contains(sienne.ressourceId());
         assertThat(feuillesPourPaie.ressourceDe(T, "inconnu")).isEmpty();

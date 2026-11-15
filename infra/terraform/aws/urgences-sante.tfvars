@@ -7,7 +7,7 @@
 # d'une copie ; le RPO est celui des sauvegardes applicatives (15 minutes). Les garde-fous de
 # `objectifs-de-reprise.tf` refusent au `plan` toute combinaison qui ne tiendrait pas ces chiffres.
 #
-#   terraform plan -var-file=urgences-sante.tfvars -var registre_images=… -var version_images=<empreinte> -var domaine=… -var certificat_arn=…
+#   terraform plan -var-file=urgences-sante.tfvars -var registre_images=… -var version_images=<empreinte> -var domaine=…
 
 client              = "us"
 organisme           = "Urgences-santé"

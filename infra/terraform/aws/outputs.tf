@@ -65,3 +65,12 @@ output "deploiement_ci" {
     service = aws_ecs_service.application.name
   }
 }
+
+output "certificat_validation_dns" {
+  value = [for o in aws_acm_certificate.principal.domain_validation_options : {
+    nom    = o.resource_record_name
+    type   = o.resource_record_type
+    valeur = o.resource_record_value
+  }]
+  description = "Enregistrements CNAME à créer dans la zone DNS pour qu'ACM délivre le certificat nominatif (critère 84)."
+}

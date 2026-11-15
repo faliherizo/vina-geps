@@ -30,11 +30,12 @@ export interface Droits { envoyer: boolean; critique: boolean; configurer: boole
 export interface Reglages { copieCourriel: boolean }
 
 /** Les états du suivi, tels que le serveur les filtre (ST-G03). */
-export type EtatSuivi = "prise_en_charge" | "sans_prise_en_charge" | "non_lue";
+export type EtatSuivi = "prise_en_charge" | "sans_prise_en_charge" | "non_lue" | "relancee";
 export const ETATS: ReadonlyArray<{ code: EtatSuivi; libelle: string }> = [
   { code: "prise_en_charge", libelle: "Prise en charge" },
   { code: "sans_prise_en_charge", libelle: "Sans prise en charge" },
   { code: "non_lue", libelle: "Pas encore lue de tous" },
+  { code: "relancee", libelle: "Relancée par sa cascade" },
 ];
 export interface Groupe { id: string; nom: string }
 export interface Personne { personId: string; nom: string }
@@ -44,7 +45,7 @@ export interface AlerteBase {
   modeleId?: string | null; modeleVersion?: number | null;
 }
 export interface AlerteSuivie extends AlerteBase {
-  bilan: { destinataires: number; lues: number; repondues: number; priseEnChargePar: string | null; priseEnChargeLe: string | null };
+  bilan: { destinataires: number; lues: number; repondues: number; relances: number; priseEnChargePar: string | null; priseEnChargeLe: string | null };
   remises: Remise[];
 }
 export interface AlerteRecue extends AlerteBase { maRemise: Remise }

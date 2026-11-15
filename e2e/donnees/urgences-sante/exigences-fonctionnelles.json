@@ -451,7 +451,7 @@
       "geste": "L'employé admissible voit le remplacement ouvert et se manifeste pour lui.",
       "preuve": [
         "agm-titre",
-        "agm-info|agm-sans-remplacement"
+        "agm-info|agm-sans-remplacement|prefixe:agm-rlt-"
       ],
       "essaiProfond": [
         "backend-java/src/test/java/ca/vina/nexu/effectifs/infrastructure/web/ControleurAgphEffectifsHttpTest.java",

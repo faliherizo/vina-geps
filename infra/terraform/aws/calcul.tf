@@ -255,7 +255,7 @@ resource "aws_lb_listener" "https" {
   protocol          = "HTTPS"
   # TLS 1.2 au minimum ; la politique 1.3 refuserait des navigateurs encore soutenus.
   ssl_policy      = "ELBSecurityPolicy-TLS13-1-2-2021-06"
-  certificate_arn = var.certificat_arn
+  certificate_arn = aws_acm_certificate_validation.principal.certificate_arn
 
   default_action {
     type             = "forward"

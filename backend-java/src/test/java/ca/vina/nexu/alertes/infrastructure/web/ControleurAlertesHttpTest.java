@@ -10,6 +10,7 @@ import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
 import ca.vina.nexu.alertes.infrastructure.configuration.ConfigurationAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
+import ca.vina.nexu.alertes.infrastructure.persistance.DepotCascades;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
 import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
 import ca.vina.nexu.communication.domaine.ListesDistribution;
@@ -120,7 +121,7 @@ class ControleurAlertesHttpTest {
         ControleurAlertes.Cas cas = new ControleurAlertes.Cas(new GestionnaireParametresAlertes(new GestionnaireParametresAlertes.Dependances(depot, depot, annuaire, horloge),
                 () -> "id-" + n.incrementAndGet()),
                 new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, avis), () -> "al-" + n.incrementAndGet(), horloge),
-                new GestionnaireReceptionAlertes(depot, depot, horloge), new LectureAlertes(depot, annuaire));
+                new GestionnaireReceptionAlertes(depot, depot, horloge), new LectureAlertes(depot, annuaire, new DepotCascades(jdbc)));
         GardeAlertes garde = new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc));
         http = new ClientHttpEssai(new ControleurAlertes(garde, cas, horloge));
     }
@@ -262,7 +263,7 @@ class ControleurAlertesHttpTest {
         assertThat(registre.pour("alerte.etape")).isPresent();
         assertThat(registre.pour("alerte.relance")).isPresent();
         assertThat(c.casCascades(c.depotCascades(jdbc), depot, cascades, jdbc, Clock.systemUTC()).politiques()).isNotNull();
-        ControleurAlertes.Cas cas = c.casAlertes(depot, annuaire, PublicationAvis.MUET, cascades, Clock.systemUTC());
+        ControleurAlertes.Cas cas = c.casAlertes(depot, annuaire, PublicationAvis.MUET, cascades, c.depotCascades(jdbc), Clock.systemUTC());
         assertThat(c.gestionnaireAppelsAlertes(depot, jdbc, cas, durables, a -> "SIM", new ControleurWebhooksAlertes.Reglages(null, ""), Clock.systemUTC())).isNotNull();
         assertThat(registre.pour("alerte.appel")).isPresent();
         assertThat(cas.parametres().creerReponse(T, "Ok", ca.vina.nexu.alertes.domaine.Semantique.INFORMATION).id()).hasSize(36);

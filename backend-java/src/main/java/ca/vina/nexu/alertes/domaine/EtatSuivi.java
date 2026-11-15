@@ -5,12 +5,14 @@ import java.util.Optional;
 
 /**
  * <strong>Où en est une alerte</strong>, tel que le suivi le filtre (ST-G03) : prise en charge par quelqu'un, encore sans
- * prise en charge, ou pas encore lue de tous. Un ensemble fermé, converti une fois à la frontière.
+ * prise en charge, pas encore lue de tous, ou relancée par sa cascade (critère 11). Un ensemble fermé, converti une fois
+ * à la frontière.
  */
 public enum EtatSuivi {
     PRISE_EN_CHARGE("prise_en_charge"),
     SANS_PRISE_EN_CHARGE("sans_prise_en_charge"),
-    NON_LUE("non_lue");
+    NON_LUE("non_lue"),
+    RELANCEE("relancee");
 
     private final String code;
 
@@ -27,11 +29,13 @@ public enum EtatSuivi {
     }
 
     /** L'alerte est-elle dans cet état ? */
-    public boolean decrit(Alertes.Alerte a) {
+    public boolean decrit(AlerteSuivie s) {
+        Alertes.Alerte a = s.alerte();
         return switch (this) {
             case PRISE_EN_CHARGE -> a.bilan().premierePriseEnCharge().isPresent();
             case SANS_PRISE_EN_CHARGE -> a.bilan().premierePriseEnCharge().isEmpty();
             case NON_LUE -> a.remises().stream().anyMatch(r -> !r.lue());
+            case RELANCEE -> s.relancee();
         };
     }
 }

@@ -9,7 +9,9 @@ import { libelleEtatCascade, libelleEvenement, libelleResultatAppel, quand, type
 
 const TON: Record<string, string> = { armee: "en_cours", arretee: "approved", epuisee: "refusee" };
 
-export default function CascadeAlerte({ alerteId }: { alerteId: string }) {
+/** `noms` : les personnes de l'alerte, par identifiant ; une personne hors de l'alerte garde son identifiant. */
+export default function CascadeAlerte({ alerteId, noms = {} }: { alerteId: string; noms?: Record<string, string> }) {
+  const nom = (id: string) => noms[id] ?? id;
   const { lire, envoyer, erreur, succes, setSucces } = useApi();
   const [suivi, setSuivi] = useState<SuiviCascade | null>(null);
   const [etape, setEtape] = useState("1");
@@ -39,7 +41,7 @@ export default function CascadeAlerte({ alerteId }: { alerteId: string }) {
             <thead><tr><th scope="col">Quand</th><th scope="col">Événement</th><th scope="col">Étape</th><th scope="col">Personnes visées</th><th scope="col">Par</th></tr></thead>
             <tbody>{suivi.traces.map((t, i) => (
               <tr key={i}><td>{quand(t.instant)}</td><td>{libelleEvenement(t.evenement)}</td><td className="num">{t.etape}</td>
-                <td>{t.personnes.join(", ") || "—"}</td><td>{t.par}</td></tr>
+                <td>{t.personnes.map(nom).join(", ") || "—"}</td><td>{t.par}</td></tr>
             ))}</tbody>
           </table>
           {(suivi.appels ?? []).length > 0 && (
@@ -47,7 +49,7 @@ export default function CascadeAlerte({ alerteId }: { alerteId: string }) {
               <caption>Appels automatiques : le résultat et la durée de chacun</caption>
               <thead><tr><th scope="col">Personne</th><th scope="col">Étape</th><th scope="col">Résultat</th><th scope="col">Touche</th><th scope="col">Durée</th></tr></thead>
               <tbody>{(suivi.appels ?? []).map((a, i) => (
-                <tr key={i}><td>{a.personId}</td><td className="num">{a.etape}</td><td>{libelleResultatAppel(a.resultat)}</td>
+                <tr key={i}><td>{nom(a.personId)}</td><td className="num">{a.etape}</td><td>{libelleResultatAppel(a.resultat)}</td>
                   <td>{a.touche ?? "—"}</td><td className="num">{a.dureeSecondes == null ? "—" : `${a.dureeSecondes} s`}</td></tr>
               ))}</tbody>
             </table>

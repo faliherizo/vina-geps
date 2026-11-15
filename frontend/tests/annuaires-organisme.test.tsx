@@ -113,4 +113,25 @@ describe("AnnuairesOrganisme", () => {
     await act(async () => { tid("annuaire-ann-2-modifier")!.click(); });
     expect((tid("annuaire-modification-emetteur") as HTMLInputElement).value).toBe("http://localhost:8180/realms/vina-geps");
   });
+
+  it("LDAPS : l'adresse ldaps:// et le DN du compte de service remplacent l'émetteur et le client ; le corps porte le fournisseur", async () => {
+    await rendre();
+    await act(async () => { tid("annuaire-nouveau-ouvrir")!.click(); });
+    const choix = tid("annuaire-nouveau-fournisseur") as HTMLSelectElement;
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value")!.set!.call(choix, "ldaps");
+      choix.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expect(tid("annuaire-nouveau-locataire")).toBeNull();
+    expect(document.querySelector('label[for="annuaire-nouveau-ldaps"]')!.textContent).toContain("Adresse LDAPS et base de recherche");
+    expect(document.querySelector('label[for="annuaire-nouveau-client"]')!.textContent).toContain("DN du compte de service");
+    expect(document.getElementById("annuaire-nouveau-ldaps-aide")!.textContent).toContain("ldap:// en clair est refusé");
+    await act(async () => { (tid("annuaire-nouveau-emetteur") as HTMLInputElement).value = "ldaps://ad.us.local:636/OU=Personnel,DC=us,DC=local"; });
+    await act(async () => { (tid("annuaire-nouveau-client") as HTMLInputElement).value = "CN=svc-geps,DC=us,DC=local"; });
+    await act(async () => { (tid("annuaire-nouveau-formulaire") as HTMLFormElement).requestSubmit(); });
+    await attendre();
+    const envoi = apiFetch.mock.calls.find(([, init]) => (init as RequestInit | undefined)?.method === "POST")!;
+    expect(JSON.parse(String((envoi[1] as RequestInit).body))).toMatchObject({ fournisseur: "ldaps",
+      emetteur: "ldaps://ad.us.local:636/OU=Personnel,DC=us,DC=local", clientId: "CN=svc-geps,DC=us,DC=local" });
+  });
 });

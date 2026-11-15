@@ -11,6 +11,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -55,7 +56,7 @@ test("déclarer soi-même une absence d'effectifs, la retrouver et l'annuler", a
   await sa.dispose();
   await amorcer(tenantId, identifiant);
 
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);

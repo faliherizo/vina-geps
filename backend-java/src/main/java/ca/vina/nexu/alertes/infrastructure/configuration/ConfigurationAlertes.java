@@ -121,11 +121,12 @@ public class ConfigurationAlertes {
     }
 
     @Bean
-    public ControleurAlertes.Cas casAlertes(DepotAlertes depot, AdaptateurAnnuaireAlertes annuaire, PublicationAvis avis, GestionnaireCascades cascades, Clock horloge) {
+    public ControleurAlertes.Cas casAlertes(DepotAlertes depot, AdaptateurAnnuaireAlertes annuaire, PublicationAvis avis, GestionnaireCascades cascades,
+                                         DepotCascades relances, Clock horloge) {
         // L'identifiant est tiré ici, à la frontière : le domaine le reçoit, il ne le tire jamais.
         java.util.function.Supplier<String> ids = () -> UUID.randomUUID().toString();
         return new ControleurAlertes.Cas(new GestionnaireParametresAlertes(new GestionnaireParametresAlertes.Dependances(depot, depot, annuaire, horloge), ids),
                 new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, avis), ids, horloge, cascades),
-                new GestionnaireReceptionAlertes(depot, depot, horloge, cascades), new LectureAlertes(depot, annuaire));
+                new GestionnaireReceptionAlertes(depot, depot, horloge, cascades), new LectureAlertes(depot, annuaire, relances));
     }
 }

@@ -135,7 +135,7 @@ describe("Nouvelle alerte", () => {
     "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }],
     "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit" }],
     "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: false },
-    "POST /api/alertes": { ...ALERTE, bilan: { destinataires: 3, lues: 0, repondues: 0, priseEnChargePar: null, priseEnChargeLe: null }, remises: [] },
+    "POST /api/alertes": { ...ALERTE, bilan: { destinataires: 3, lues: 0, repondues: 0, relances: 0, priseEnChargePar: null, priseEnChargeLe: null }, remises: [] },
   };
 
   it("un modèle remplit l'alerte ; groupes et personnes par leur nom ; la critique le dit ; l'envoi part complet", async () => {
@@ -202,14 +202,16 @@ describe("Nouvelle alerte", () => {
 describe("Suivi des alertes", () => {
   it("le bilan par alerte, puis les destinataires au détail", async () => {
     api.etat.routes = { "GET /api/alertes/envoyees": [
-      { ...ALERTE, bilan: { destinataires: 2, lues: 1, repondues: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2026-11-14T14:03:00Z" },
+      { ...ALERTE, bilan: { destinataires: 2, lues: 1, repondues: 1, relances: 2, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2026-11-14T14:03:00Z" },
         remises: [{ ...REMISE, lueLe: "2026-11-14T14:03:00Z", reponseId: "r1", reponduLe: "2026-11-14T14:03:00Z" }, { ...REMISE, personId: "marc", nom: "Marc Dubé" }] },
-      { ...ALERTE, id: "a2", priorite: "information", bilan: { destinataires: 1, lues: 0, repondues: 0, priseEnChargePar: null, priseEnChargeLe: null }, remises: [] },
+      { ...ALERTE, id: "a2", priorite: "information", bilan: { destinataires: 1, lues: 0, repondues: 0, relances: 0, priseEnChargePar: null, priseEnChargeLe: null }, remises: [] },
     ] };
     await rendre(<SuiviAlertes />);
     expect($("als-alerte-a1")!.textContent).toContain("1 / 2");
     expect($("als-alerte-a1")!.textContent).toContain("Julie Roy");
     expect($("als-alerte-a2")!.textContent).toContain("Personne encore");
+    expect($("als-alerte-a1-relances")!.textContent).toBe("2");
+    expect($("als-alerte-a2-relances")!.textContent).toBe("0");
     await cliquer("als-alerte-a1-detail");
     expect($("als-remise-julie")!.textContent).toContain("Répondu : J'arrive");
     expect($("als-remise-marc")!.textContent).toContain("Envoyé");

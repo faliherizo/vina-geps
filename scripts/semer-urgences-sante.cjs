@@ -20,11 +20,7 @@
  * deux démonstrations.
  */
 const donnees = require("../e2e/donnees/urgences-sante/demonstration.json");
-
-const arg = (nom, defaut) => {
-  const i = process.argv.indexOf(`--${nom}`);
-  return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : defaut;
-};
+const { clientApi, argument: arg, jour } = require("./lib/api-semis.cjs");
 
 const API = arg("api", process.env.API_URL || "http://localhost:4000");
 const MDP = arg("mdp", process.env.DEMO_PASSWORD || "Passe!Demo2026");
@@ -42,6 +38,8 @@ const MODULES = [
    * (`/api/communication`) ; il ne requiert que le socle du module.
    */
   "effectifs_communication",
+  /** **La paie** (ADR 0076) : payée sur les seules feuilles approuvées — la démonstration en traite une semaine. */
+  "paie",
 ];
 
 /**
@@ -65,30 +63,7 @@ const MODULES = [
  */
 const SECTIONS_GARDEES = ["pilotage", "space", "admin", "urgencessante"];
 
-/** Un jour en avant ou en arrière d'aujourd'hui, au format `AAAA-MM-JJ`. */
-const jour = (decalage) => {
-  const d = new Date();
-  d.setDate(d.getDate() + decalage);
-  return d.toISOString().slice(0, 10);
-};
-
-async function appeler(chemin, { methode = "GET", corps, jeton, tenantId } = {}) {
-  const entetes = { "Content-Type": "application/json" };
-  if (jeton) entetes.Authorization = `Bearer ${jeton}`;
-  if (tenantId) entetes["X-Tenant-Id"] = tenantId;
-  const r = await fetch(`${API}${chemin}`, {
-    method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined,
-  });
-  const texte = await r.text();
-  if (!r.ok) throw new Error(`${methode} ${chemin} → ${r.status} ${texte.slice(0, 300)}`);
-  return texte ? JSON.parse(texte) : null;
-}
-
-async function connecter(identifiants) {
-  const r = await appeler("/api/auth/login", { methode: "POST", corps: identifiants });
-  if (!r?.token) throw new Error(`connexion refusée pour ${identifiants.username}`);
-  return r.token;
-}
+const { appeler, connecter } = clientApi(API);
 
 async function semer() {
   const jetonSa = await connecter(SUPERADMIN);
@@ -293,7 +268,39 @@ async function semer() {
   await poser("/api/effectifs/temps/feuilles/preparer",
     { uniteCode: donnees.unite.code, debut: jour(-6), fin: jour(0) });
 
+  await semerPaie(ctx, tenant.id, comptes)
+    .catch((e) => console.warn(`  paie non semée : ${e.message.slice(0, 200)}`));
+
   return { tenant, comptes, quarts, periode };
+}
+
+/**
+ * **Une semaine payée**, pour que « Mes bulletins » montre un vrai bulletin (ADR 0076).
+ *
+ * La paie ne lit que des feuilles **approuvées** : chaque personne planifiable déclare trois jours de huit heures sur
+ * sa feuille, la soumet, l'administration l'approuve. Son dossier de rémunération est posé (taux horaire), puis un
+ * cycle couvrant la semaine est préparé et traité — les feuilles deviennent « payées » et ne bougent plus.
+ */
+async function semerPaie(ctx, tenantId, comptes) {
+  const ressources = await appeler("/api/effectifs/planification/ressources", ctx);
+  const payables = comptes.filter((c) => ressources.some((r) => r.utilisateurId === c.compteId));
+  for (const [i, c] of payables.entries()) {
+    const jeton = await connecter({ username: c.username, password: MDP, tenantId });
+    const moi = { jeton, tenantId };
+    const feuille = (await appeler("/api/effectifs/temps/moi", moi)).find((f) => f.debut === jour(-6)) ?? null;
+    if (!feuille) throw new Error(`aucune feuille de la semaine pour ${c.username}`);
+    for (const d of [-6, -5, -4]) {
+      await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/segments`, { ...moi, methode: "POST",
+        corps: { date: jour(d), debut: `${jour(d)}T12:00:00Z`, fin: `${jour(d)}T20:00:00Z`, typeHeureCode: "REG" } });
+    }
+    await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/soumettre`, { ...moi, methode: "POST" });
+    await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/approuver`, { ...ctx, methode: "POST" });
+    const ressource = ressources.find((r) => r.utilisateurId === c.compteId);
+    await appeler(`/api/paie/dossiers/${ressource.id}`, { ...ctx, methode: "PUT",
+      corps: { mode: "horaire", frequence: "hebdomadaire", tauxHoraire: String(34 + i * 2.5) } });
+  }
+  const cycle = await appeler("/api/paie/cycles", { ...ctx, methode: "POST", corps: { debut: jour(-6), fin: jour(0), datePaie: jour(4) } });
+  await appeler(`/api/paie/cycles/${cycle.cycle.id}/traiter`, { ...ctx, methode: "POST" });
 }
 
 semer().then(({ tenant, comptes, quarts }) => {

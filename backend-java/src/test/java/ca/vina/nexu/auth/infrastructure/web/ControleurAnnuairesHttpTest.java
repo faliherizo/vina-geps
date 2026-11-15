@@ -21,6 +21,7 @@ import ca.vina.nexu.partage.securite.HoteEtablissement;
 import ca.vina.nexu.partage.securite.JetonDeSession;
 import ca.vina.nexu.partage.securite.ResolutionHote;
 import ca.vina.nexu.partage.web.GardeAcces;
+import ca.vina.nexu.securite.domaine.PareFeu;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,7 @@ import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -67,6 +69,8 @@ class ControleurAnnuairesHttpTest {
     private final Map<String, String> env = new HashMap<>();
     private final AtomicReference<Map<String, Object>> revendications = new AtomicReference<>();
     private final AtomicReference<Oidc.Configuration> configurationRecue = new AtomicReference<>();
+    /** La fausse liaison LDAPS : « marie / bon-mot » entre, membre du groupe des chefs ; « panne » simule un annuaire injoignable. */
+    private final List<String> liaisons = new java.util.ArrayList<>();
     private String tenantDeLHote;
     private String adresse = "https://app.nexu.ca";
 
@@ -115,6 +119,14 @@ class ControleurAnnuairesHttpTest {
                         throw new IllegalStateException("Connection refused");
                     }
                     return new Annuaires.Decouverte.Points(emetteur + "/protocol/openid-connect/auth", emetteur + "/protocol/openid-connect/token");
+                }, (annuaire, secretService, identifiant, motDePasse) -> {
+                    liaisons.add(annuaire.emetteur() + "|" + annuaire.clientId() + "|" + secretService + "|" + identifiant);
+                    if ("panne".equals(identifiant)) {
+                        throw new IllegalStateException("CONNECT_ERROR (ad.urgences-sante.local)");
+                    }
+                    return "marie".equals(identifiant) && "bon-mot".equals(motDePasse)
+                            ? Optional.of(new Annuaires.Personne("marie@urgences-sante.qc.ca", List.of("CN=GEPS-Chefs,OU=Groupes,DC=us,DC=local", "GEPS-Chefs")))
+                            : Optional.empty();
                 }), env, HORLOGE, alea);
         HoteEtablissement hote = new HoteEtablissement() {
             @Override
@@ -129,7 +141,8 @@ class ControleurAnnuairesHttpTest {
         };
         AdressePublique publique = t -> adresse;
         http = new ClientHttpEssai(new ControleurAnnuaires(new ControleurAnnuaires.Dependances(service, depot, depot,
-                new DepotRolesEtablissement(jdbc, acces, HORLOGE), new GardeAcces(acces), hote, publique, new JournalAudit(jdbc), sequence(), env, false)));
+                new DepotRolesEtablissement(jdbc, acces, HORLOGE), new GardeAcces(acces), hote, publique, new JournalAudit(jdbc), sequence(), env, false,
+                new PareFeu(new PareFeu.Reglages(PareFeu.Mode.BLOQUER, 0, 3, 15), HORLOGE::millis, (a, d) -> { }))));
         env.put("ANNUAIRE_SIEGE", "le-secret");
     }
 
@@ -320,5 +333,63 @@ class ControleurAnnuairesHttpTest {
     private String partirOidc() throws Exception {
         String url = http.get("/api/auth/sso/annuaires/ann-1/login", null).andExpect(status().isFound()).andReturn().getResponse().getRedirectedUrl();
         return URI.create(url).getQuery().replaceAll(".*state=([^&]*).*", "$1");
+    }
+
+    private static final String LDAPS = "{\"nom\":\"AD local\",\"fournisseur\":\"ldaps\",\"emetteur\":\"ldaps://ad.urgences-sante.local:636/OU=Personnel,DC=us,DC=local\","
+            + "\"clientId\":\"CN=svc-geps,OU=Services,DC=us,DC=local\",\"variableSecret\":\"ANNUAIRE_AD\",\"domaines\":[\"urgences-sante.qc.ca\"],"
+            + "\"correspondances\":[{\"groupe\":\"GEPS-Chefs\",\"role\":\"manager\"}]}";
+
+    private String connecterLdaps(String identifiant, String motDePasse) {
+        return "{\"identifiant\":\"" + identifiant + "\",\"motDePasse\":\"" + motDePasse + "\"}";
+    }
+
+    @Test
+    @DisplayName("critère 82 : un annuaire LDAPS — ldap:// refusé, liaison au compte de service, rôle par le CN du groupe, session posée")
+    void annuaireLdaps() throws Exception {
+        http.post("/api/auth/annuaires", ADMIN_T1, LDAPS.replace("ldaps://", "ldap://")).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]").value(containsString("ldap:// en clair est refusé")));
+        env.put("ANNUAIRE_AD", "secret-service");
+        // La saisie refusée a consommé « ann-1 » : l'annuaire LDAPS est « ann-2 ».
+        http.post("/api/auth/annuaires", ADMIN_T1, LDAPS).andExpect(status().isCreated()).andExpect(jsonPath("$.id").value("ann-2"))
+                .andExpect(jsonPath("$.fournisseur").value("ldaps"));
+        tenantDeLHote = "T1";
+        http.get("/api/auth/sso/annuaires", null).andExpect(jsonPath("$.annuaires[0].fournisseur").value("ldaps"));
+        // Pas de redirection pour un annuaire LDAP : il se connecte par identifiant et mot de passe.
+        http.get("/api/auth/sso/annuaires/ann-2/login", null).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0]").value("l'annuaire « AD local » se connecte par identifiant et mot de passe"));
+
+        http.post("/api/auth/sso/annuaires/ann-2/connexion", null, connecterLdaps(" marie ", "bon-mot")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("manager")).andExpect(jsonPath("$.retour").value("https://app.nexu.ca"))
+                .andExpect(header().stringValues("Set-Cookie", org.hamcrest.Matchers.hasItem(containsString("session="))));
+        assertThat(liaisons).containsExactly("ldaps://ad.urgences-sante.local:636/OU=Personnel,DC=us,DC=local|CN=svc-geps,OU=Services,DC=us,DC=local|secret-service|marie");
+        assertThat(comptes.lister().stream().filter(c -> "marie@urgences-sante.qc.ca".equals(c.email())).findFirst().orElseThrow().role()).isEqualTo("manager");
+        assertThat(audits("auth.sso.login.ok")).isOne();
+
+        http.post("/api/auth/sso/annuaires/ann-2/connexion", null, connecterLdaps("panne", "x")).andExpect(status().isServiceUnavailable())
+                .andExpect(jsonPath("$.errors[0]").value("l'annuaire « AD local » est injoignable : CONNECT_ERROR (ad.urgences-sante.local)"));
+        http.post("/api/auth/sso/annuaires/ann-2/connexion", null, "{\"identifiant\":\"marie\"}").andExpect(status().isBadRequest());
+        http.post("/api/auth/sso/annuaires/ann-2/connexion", null, null).andExpect(status().isBadRequest());
+        http.post("/api/auth/sso/annuaires/inconnu/connexion", null, connecterLdaps("marie", "bon-mot")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("critère 82 : un mauvais mot de passe est refusé sans dire pourquoi, consigné ; à la troisième rafale, le verrou se pose")
+    void ldapsRefusEtVerrou() throws Exception {
+        env.put("ANNUAIRE_AD", "secret-service");
+        http.post("/api/auth/annuaires", ADMIN_T1, LDAPS).andExpect(status().isCreated());
+        http.post("/api/auth/annuaires", ADMIN_T1, KEYCLOAK.replace("Keycloak", "Autre")).andExpect(status().isCreated());
+        for (int i = 0; i < 3; i++) {
+            http.post("/api/auth/sso/annuaires/ann-1/connexion", null, connecterLdaps("marie", "mauvais")).andExpect(status().isForbidden())
+                    .andExpect(jsonPath("$.errors[0]").value("identifiant ou mot de passe refusé par l'annuaire « AD local »"));
+        }
+        http.post("/api/auth/sso/annuaires/ann-1/connexion", null, connecterLdaps("marie", "bon-mot")).andExpect(status().isTooManyRequests());
+        assertThat(audits("auth.sso.annuaire.refus")).isEqualTo(3);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM audit_log WHERE details LIKE '%mauvais%'").query(Integer.class).single()).isZero();
+        // Un autre identifiant n'est pas verrouillé ; un annuaire OIDC ne prend pas de mot de passe.
+        http.post("/api/auth/sso/annuaires/ann-1/connexion", null, connecterLdaps("paul", "x")).andExpect(status().isForbidden());
+        http.post("/api/auth/sso/annuaires/ann-2/connexion", null, connecterLdaps("olivier", "x")).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0]").value("l'annuaire « Autre » se connecte par redirection"));
+        env.remove("ANNUAIRE_AD");
+        http.post("/api/auth/sso/annuaires/ann-1/connexion", null, connecterLdaps("paul", "x")).andExpect(status().isServiceUnavailable());
     }
 }

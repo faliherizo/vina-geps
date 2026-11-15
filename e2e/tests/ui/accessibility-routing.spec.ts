@@ -14,7 +14,7 @@ test.describe("Accessibilité & routage SPA", () => {
     await page.goto("/");
 
     // Le contenu principal est un landmark focusable.
-    const main = page.getByTestId ? page.locator("#main-content") : page.locator("#main-content");
+    const main = page.locator("#main-content");
     await expect(main).toHaveAttribute("id", "main-content");
 
     // Navigue vers les approbations via le menu.

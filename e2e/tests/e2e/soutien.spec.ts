@@ -9,6 +9,7 @@ import { GLOBAL_ACCOUNT, superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -169,7 +170,7 @@ test.describe.serial("Soutien — billets, délais, maintenances, disponibilité
     await expect(page.getByTestId(`sa-engagement-${tenantId}`)).toContainText(" par ");
     await expectNoA11yViolations(page);
 
-    const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+    const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
     const organisme = await ctx.newPage();
     await selectTenant(organisme, tenantId);
     await ouvrirNav(organisme, "nav-soutien");

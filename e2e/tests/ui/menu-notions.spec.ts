@@ -34,6 +34,26 @@ test.describe("Menu — une notion, une entrée", () => {
     await expect(page.getByTestId("nav-usmessages")).toHaveCount(0);
   });
 
+  test("avant la réponse des modules, aucun menu de module ne paraît — pas même le temps d'un éclair", async ({ page, mock }) => {
+    const souscrits = DEFAULT_MODULES.filter((m) => m !== "paie");
+    await mock(MODULES);
+    // La réponse tarde : c'est pendant cette attente que le menu affichait autrefois tous les modules.
+    let repondre: () => void = () => {};
+    const retenue = new Promise<void>((ok) => { repondre = ok; });
+    await page.route("**/api/saas/my-modules", async (route) => {
+      await retenue;
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ modules: souscrits, planCode: "enterprise" }) });
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await expect(page.getByTestId("nav-dashboard")).toBeVisible();
+    await expect(page.getByTestId("nav-paiecycles")).toHaveCount(0);
+    await expect(page.getByTestId("nav-alnouvelle")).toHaveCount(0);
+    repondre();
+    await expect(page.getByTestId("nav-alnouvelle")).toHaveCount(1);
+    await expect(page.getByTestId("nav-paiecycles")).toHaveCount(0);
+  });
+
   test("rubriques à titre fixe, une notion dépliée à la fois — et la page courante déplie la sienne", async ({ page, mock }) => {
     await mock(MODULES);
     await page.setViewportSize({ width: 1280, height: 900 });

@@ -11,6 +11,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -77,7 +78,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   const ids = await amorcer(tenantId, identifiant);
 
   // ── Julie, à son tour ───────────────────────────────────────────────────────────────────
-  const ctxJulie = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxJulie = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const julie = await ctxJulie.newPage();
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
@@ -91,7 +92,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   await ctxJulie.close();
 
   // ── Le planificateur : saisie du choix de Marc, clôture ──────────────────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-usagph");
@@ -113,7 +114,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   await adm.dispose();
   await ctxChef.close();
 
-  const ctxJulie2 = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxJulie2 = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const julie2 = await ctxJulie2.newPage();
   await julie2.goto("/");
   await uiLogin(julie2, identifiant, MDP, tenantId);
@@ -149,7 +150,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await adm.dispose();
 
   // ── Julie émet sa semaine type pour l'année ─────────────────────────────────────────────
-  const ctxJulie = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxJulie = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const julie = await ctxJulie.newPage();
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
@@ -168,7 +169,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await ctxJulie.close();
 
   // ── La planification : budget, semaine type de Marc, tour de rôle ───────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-usagph");

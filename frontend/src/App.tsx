@@ -192,6 +192,12 @@ function AppShell() {
   // chargé ou utilisateur global (superadmin) → aucun gating par module.
   const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
   /**
+   * **La première réponse de `my-modules` est-elle arrivée ?** Avant elle, `null` voulait dire « tout permis » : le
+   * menu affichait chaque module, puis se repliait une seconde plus tard — une infirmière voyait passer la paie et
+   * la confection AGPH. Tant qu'elle n'est pas arrivée, seuls les menus du cœur paraissent.
+   */
+  const [modulesCharges, setModulesCharges] = useState(false);
+  /**
    * Les vues de menu **masquées** pour cet établissement (Superadmin › Modules et accès).
    *
    * ⚠️ Ce n'est pas un contrôle d'accès : les routes d'API de la page restent ouvertes. C'est un
@@ -200,7 +206,7 @@ function AppShell() {
    */
   const [vuesMasquees, setVuesMasquees] = useState<Set<string>>(new Set());
   const refreshModules = useCallback(async () => {
-    if (!user) { setEnabledModules(null); setVuesMasquees(new Set()); return; }
+    if (!user) { setEnabledModules(null); setVuesMasquees(new Set()); setModulesCharges(false); return; }
     try {
       // `no-store` : on ne veut jamais une copie mise en cache — une désactivation par le
       // superadmin doit se refléter dès le prochain chargement/retour d'onglet.
@@ -223,6 +229,7 @@ function AppShell() {
       // entrée doit la voir disparaître au prochain chargement, pas le lendemain.
       setVuesMasquees(new Set<string>(Array.isArray(j?.vuesMasquees) ? j.vuesMasquees : []));
     } catch { setEnabledModules(null); setVuesMasquees(new Set()); }
+    setModulesCharges(true);
   }, [user, apiFetch]);
   useEffect(() => { refreshModules(); }, [refreshModules]);
   // Rafraîchit les modules quand l'onglet reprend le focus (le superadmin a pu en désactiver
@@ -235,7 +242,11 @@ function AppShell() {
   }, [refreshModules]);
 
   /** Un code de module est autorisé s'il n'est pas géré, si aucun gating (utilisateur global), ou s'il est activé. */
-  const moduleCodeAllowed = (mod?: string): boolean => !mod || enabledModules === null || enabledModules.has(mod);
+  const moduleCodeAllowed = (mod?: string): boolean => {
+    if (!mod) return true;
+    if (enabledModules !== null) return enabledModules.has(mod);
+    return !user || modulesCharges;
+  };
   /** Un module est autorisé si non géré (menu cœur) ou présent dans les modules activés du tenant. */
   const moduleAllowed = (key: Page): boolean => moduleCodeAllowed(PAGE_MODULE[key]);
   /** La clé d'une vue au catalogue du serveur : `page` pour une page, `page:onglet` pour un onglet. */
@@ -324,9 +335,10 @@ function AppShell() {
   // s'ouvre pas non plus par son URL. Le serveur refuse déjà les données (403) ; sans cette garde,
   // l'écran s'affichait quand même, vide ou en erreur — ce que l'essai « accès par rôle » a montré.
   useEffect(() => {
-    if (!user) return;
+    // Avant la réponse des modules, la page demandée par l'URL n'est pas encore « visible » : la garder.
+    if (!user || !modulesCharges) return;
     if (!visible.some((p) => p.key === page)) setPage(repli);
-  }, [page, user, visible.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, user, visible.length, modulesCharges]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Garde du **masquage** : une page dont le menu ne propose plus aucune vue ne s'ouvre pas par
@@ -389,11 +401,12 @@ function AppShell() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   useEffect(() => {
-    if (user && !visible.some((p) => p.key === page)) {
+    // Même règle que la garde par rôle : on ne juge la page qu'une fois les modules connus.
+    if (user && modulesCharges && !visible.some((p) => p.key === page)) {
       setPage(visible[0]?.key || "time");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, modulesCharges]);
 
   // Les onglets de la page courante que le menu propose : sans correspondance exacte, c'est
   // l'entrée principale de la page qui est marquée courante (arrivée par URL ou depuis la recherche).
@@ -565,7 +578,8 @@ function AppShell() {
       {/* Décoratif : la barre latérale se referme aussi par navigation ou par le bouton de menu. */}
       {open && <div className="backdrop" aria-hidden="true" onClick={() => setOpen(false)} />}
       <aside className={`sidebar ${open ? "open" : ""}`} data-testid="sidebar">
-        <nav aria-label={t("common.menu")} className="nav-groups">
+        {/* Occupé tant que les modules ne sont pas connus : les entrées de module n'y sont pas encore. */}
+        <nav aria-label={t("common.menu")} className="nav-groups" aria-busy={!!user && !modulesCharges}>
           {NAVIGATION.map((g) => {
             // Une notion sans vue visible n'apparaît pas ; une rubrique sans entrée non plus.
             const rendu = g.entrees.map((e) => {

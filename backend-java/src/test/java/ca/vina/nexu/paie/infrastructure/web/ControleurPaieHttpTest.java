@@ -63,10 +63,15 @@ class ControleurPaieHttpTest {
     private final Set<String> approuvees = new HashSet<>();
     /** Approuvées à la lecture, rappelées à l'instant du verrou : la course que le traitement doit refuser en bloc. */
     private final Set<String> rappeleesAuVerrou = new HashSet<>();
+    /** Le motif des effectifs quand les heures ne se calculent pas (paramétrage manquant) ; nul : elles se calculent. */
+    private String heuresIncalculables;
 
     private final HeuresApprouveesPort heures = new HeuresApprouveesPort() {
         @Override
         public List<FeuilleAPayer> approuvees(String tenantId, String debut, String fin) {
+            if (heuresIncalculables != null) {
+                throw new HeuresIncalculables(heuresIncalculables, null);
+            }
             return feuilles.stream().filter(f -> approuvees.contains(f.feuilleId()))
                     .filter(f -> f.debut().compareTo(debut) >= 0 && f.debut().compareTo(fin) <= 0).toList();
         }
@@ -207,6 +212,10 @@ class ControleurPaieHttpTest {
         http.post(P + "/cycles", ADMIN, "{\"debut\":\"2026-02-15\",\"fin\":\"2026-02-01\",\"datePaie\":\"2026-03-05\"}").andExpect(status().isBadRequest());
         http.post(P + "/cycles", ADMIN, "{\"debut\":20260215}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("« debut » doit être un texte"));
         http.post(P + "/cycles", ADMIN, "{\"debut\":\"2031-02-15\",\"fin\":\"2031-02-28\",\"datePaie\":\"2031-03-05\"}").andExpect(status().isBadRequest());
+        heuresIncalculables = "aucun type d'heure de comportement SUPPLEMENTAIRE n'est en vigueur";
+        http.post(P + "/cycles", ADMIN, PERIODE).andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]").value("aucun type d'heure de comportement SUPPLEMENTAIRE n'est en vigueur"));
+        heuresIncalculables = null;
         http.post(P + "/cycles", CHEF, PERIODE).andExpect(status().isForbidden());
     }
 

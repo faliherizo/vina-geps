@@ -17,15 +17,26 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 29 | 3 | 0 | 0 | 0 |
+| Fonctionnel | 1-32 | 30 | 2 | 0 | 0 | 0 |
 | Technique (postes, bureautique, réseau) | 33-49 | 14 | 1 | 0 | 2 | 0 |
-| Architecture et hébergement | 50-63 | 5 | 2 | 0 | 7 | 0 |
+| Architecture et hébergement | 50-63 | 7 | 0 | 0 | 7 | 0 |
 | Sauvegarde, surveillance | 64-70 | 6 | 0 | 0 | 1 | 0 |
-| Sécurité, identité, audit | 71-93 | 14 | 3 | 0 | 6 | 0 |
+| Sécurité, identité, audit | 71-93 | 17 | 0 | 0 | 6 | 0 |
 | Performance, fournisseur, soutien | 94-115 | 3 | 0 | 0 | 19 | 0 |
-| **Total** | **115** | **71** | **9** | **0** | **35** | **0** |
+| **Total** | **115** | **77** | **3** | **0** | **35** | **0** |
 
-Sur les **32 critères fonctionnels**, 29 sont acquis, 3 partiels (dont la note, livrée dans sa lecture « note interne » en attendant Q-DOS), aucun à bâtir ni à clarifier, après l'appel automatique (ST-G06, R3-a), la réponse par texto (ST-G05, R2-b), les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
+**Revue du 15 novembre 2026, contre le code.** Les neuf partiels ont été relus un à un. Trois étaient périmés :
+- 11 : l'état « relancée » manquait encore ; il est ajouté.
+- 51 et 61 : le guide d'installation était écrit.
+- 89 : la traçabilité des alertes était déjà complète.
+
+Deux ont été bâtis : 82 (LDAPS, ADR 0083) et 84 (certificat nominatif, Terraform). Les trois qui restent attendent
+quelqu'un d'autre que nous :
+- 2 : la réponse du client à Q-DOS.
+- 18 : l'application mobile, et le droit d'Apple (Q-ALC).
+- 39 : une exécution de veraPDF, branchée en CI mais jamais lancée.
+
+Sur les **32 critères fonctionnels**, 30 sont acquis, 2 partiels (la note, livrée dans sa lecture « note interne » en attendant Q-DOS, et l'alerte critique sur l'application mobile), aucun à bâtir ni à clarifier, après l'appel automatique (ST-G06, R3-a), la réponse par texto (ST-G05, R2-b), les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
 Les 18 critères partiels ou à bâtir forment le module « Communications cliniques » : modèles et
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
@@ -44,7 +55,7 @@ critiques.
 | 8 | Copie courriel si configurée par l'organisme | ✅ | **Réglage d'organisme** « copie par courriel » (Paramètres des alertes, `/api/alertes/reglages`) : une copie à chacun, sauf s'il l'a déjà reçue par courriel (R1-bis) | — |
 | 9 | Confirmation de réception, lecture ou prise en charge, simple et automatisée | ✅ | Accusé reçu et lu automatique (ADR 0072) ; **prise en charge d'un geste** à l'écran (ADR 0074) ou **par texto** « 1 » (ST-G05), qui arrête la cascade | — |
 | 10 | Réponses prédéfinies, configurées par l'administration | ✅ | **Réponses prédéfinies** à sémantique fermée (prise en charge, refus, information), `/api/alertes/reponses` | — |
-| 11 | Statut d'envoi, réception, lecture, réponse, relance, vu par l'expéditeur | 🟡 | Acheminement « Envoyé / Reçu par N / Lu par N » | Réponse et relance — ST-G03, ST-G04 |
+| 11 | Statut d'envoi, réception, lecture, réponse, relance, vu par l'expéditeur | ✅ | **Suivi des alertes** : par alerte, lues sur destinataires, réponses, **relances** (une par étape de cascade exécutée) et prise en charge ; filtre « relancée » ; export avec la colonne des relances. Au détail : chaque remise (envoyée, lue, répondue, horodatées) et la trace de la cascade, les personnes nommées (15 novembre 2026) | — |
 | 12 | Historique et statuts partagés entre expéditeurs | ✅ | **Suivi des alertes** partagé entre expéditeurs autorisés, filtrable (période, priorité, état, expéditeur) et exportable en CSV, XLSX, PDF, JSON (R1-bis) | PDF/A pour l'archive — ST-G10 |
 | 13 | Confirmer la réception d'un retour d'appel | ✅ | Appel à deux tracé (sonne, en cours, terminé, manqué) ; **appel automatique d'alerte** : « appuyez sur 1 » prend en charge et arrête la cascade, rappel signé (ST-G06, ADR 0079) | — |
 | 14 | Appel téléphonique automatique si non-réponse, délai programmable | ✅ | Étape de cascade de canal **« appel »**, à son délai (ST-G04) ; synthèse vocale française, touche 1/2, résultat (répondu, messagerie, occupé, sans réponse, échec) et durée tracés (ST-G06) | — |
@@ -86,7 +97,7 @@ critiques.
 | # | Statut | Preuve ou écart |
 |---|---|---|
 | 50 | ✅ | SaaS, ou installation dédiée par organisme : même image, configuration par environnement. |
-| 51, 61 | 🟡 | Java 25 et Docker : s'exécutent sur Windows Server 2019+ (Docker ou service Java) et sur VMware vSphere 8. Guide d'installation Windows à rédiger — ST-G13. |
+| 51, 61 | ✅ | Java 25, un seul `.jar` : service Windows (WinSW) sur Windows Server 2019+, sur une VM vSphere 8 chiffrée ; frontal IIS/ARR. Guide d'installation et de retour arrière : [09_exploitation_chez_l_etablissement.md](09_exploitation_chez_l_etablissement.md) — ST-G13. L'essai sur l'infrastructure de l'établissement se fait à l'implantation (R5). |
 | 52 | ✅ | Application web : accessible dans un navigateur publié par Citrix. |
 | 53 | ✅ | Données au Québec (clause 17.07.04 de 26-015-DO ; Terraform `ca-central-1`, OVH Beauharnois). |
 | 54, 55 | 📄 | Documents existants : `SECURITE-DES-TRANSMISSIONS.md`, architecture, `navigateurs`. À assembler pour la soumission. |
@@ -118,14 +129,14 @@ critiques.
 | 77, 78, 80 | ✅ | Rôles et capacités, refus par défaut, désactivation immédiate d'un compte. |
 | 79 | ✅ | Comptes nominatifs ; aucun compte générique requis. |
 | 81 | ✅ | OIDC Entra ID, SAML, plusieurs annuaires par organisme (P-TN-2). |
-| 82 | 🟡 | Pas de LDAP direct : l'annuaire passe par OIDC (Entra, Keycloak, AD FS — ADR 0075) ou SAML, qui couvrent un AD local fédéré. LDAPS **différé** (ADR 0082) : à bâtir si le client l'exige malgré la fédération — question Q-LDAP. |
+| 82 | ✅ | **Annuaire LDAP joint en LDAPS seulement** (ADR 0083) : `ldap://` refusé à la saisie, certificat et nom d'hôte vérifiés, liaison au nom de la personne, filtre échappé, verrou après échecs ; rôle par les groupes AD. Éprouvé contre un vrai serveur LDAPS en mémoire (`LiaisonLdapsTest`). La fédération OIDC (Entra, Keycloak, AD FS — ADR 0075) ou SAML reste offerte. |
 | 83 | 📄 | Remise de l'information GIA au pilote (`UTILISATEURS-PROFILS-ACCES.md`). |
-| 84 | 🟡 | Certificat **nominatif par hôte** à prévoir : le déploiement par sous-domaine utilise un wildcard. |
+| 84 | ✅ | **Certificat nominatif** demandé par Terraform à ACM (`infra/terraform/aws/certificat.tf`) pour les seuls hôtes nommés ; un nom en `*.` est refusé au `plan` (`tests/certificat-nominatif.tftest.hcl`, en CI). Profil B : le certificat de l'établissement, nominatif, sur le frontal. |
 | 85 | ✅ | 12 caractères et 4 classes (plus strict que l'exigence). |
 | 86 | ✅ | **Historique des 10 dernières empreintes** ; un mot de passe employé ces 6 derniers mois, le courant compris, est refusé sur tous les chemins (changement, premier mot de passe, réinitialisation, administration) — ST-G10, ADR 0081, changeset `0016`. |
 | 87 | ✅ | Navigateur sans privilège ; conteneur sans racine. |
 | 88 | 📄 | « Service F » à confirmer (GAP-11). |
-| 89 | 🟡 | Journal des actions et de la messagerie ; à étendre aux alertes — ST-G03. |
+| 89 | ✅ | Par alerte : expéditeur, contenu, envoi horodaté ; par destinataire : envoyée, lue, réponse, horodatées ; relances, escalades et reprises (trace de cascade en ajout seul, avec qui ou quel mécanisme) ; appels (résultat, durée) ; réponses par texto. Toute requête mutante est de plus au journal des actions (ADR 0041). Messagerie : journal propre. |
 | 90, 93 | ✅ | Journal en lecture seule, accès selon les droits ; export CSV, XLSX, PDF, JSON. |
 | 91, 92 | 📄 | Documenter la conservation des journaux ; accepter l'audit sans préavis. |
 

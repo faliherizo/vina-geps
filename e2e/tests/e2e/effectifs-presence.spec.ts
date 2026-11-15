@@ -12,6 +12,7 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -76,10 +77,10 @@ async function amorcer(tenantId: string, comptes: { julie: string; marc: string 
 }
 
 async function employe(browser: Browser, identifiant: string, tenantId: string, position: boolean) {
-  const ctx = await browser.newContext({
+  const ctx = await browser.newContext(optionsFilmees({
     storageState: { cookies: [], origins: [] },
     ...(position ? { geolocation: { ...CASERNE, accuracy: 10 }, permissions: ["geolocation"] } : { permissions: [] }),
-  });
+  }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
@@ -123,7 +124,7 @@ test("pointer à la caserne, pointer sans preuve, faire approuver l'écart", asy
   await marc.ctx.close();
 
   // ── Le planificateur tranche ───────────────────────────────────────────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-uspresence");

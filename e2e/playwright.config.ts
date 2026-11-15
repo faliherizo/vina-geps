@@ -21,7 +21,9 @@ const WORKERS = Number(process.env.PW_WORKERS ?? 1);
 
 export default defineConfig({
   testDir: "./tests",
-  timeout: 30_000,
+  // Le tournage du film (`E2E_RALENTI`) ralentit chaque geste : le budget par défaut suit, sinon un essai
+  // parfaitement vert expire au ralenti.
+  timeout: process.env.E2E_RALENTI ? 120_000 : 30_000,
   fullyParallel: false,
   workers: WORKERS,
   reporter: [
