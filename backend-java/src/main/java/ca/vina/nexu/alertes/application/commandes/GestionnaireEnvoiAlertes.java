@@ -8,6 +8,7 @@ import ca.vina.nexu.alertes.domaine.Alertes.Destinataire;
 import ca.vina.nexu.alertes.domaine.Alertes.Modele;
 import ca.vina.nexu.alertes.domaine.Alertes.Remise;
 import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
+import ca.vina.nexu.alertes.domaine.ArmementCascades;
 import ca.vina.nexu.alertes.domaine.EcritureAlertesPort;
 import ca.vina.nexu.alertes.domaine.LectureAlertesPort;
 import ca.vina.nexu.alertes.domaine.Priorite;
@@ -48,7 +49,12 @@ public final class GestionnaireEnvoiAlertes {
     }
 
     /** La demande d'envoi : ce qu'on dit, à qui, depuis quel modèle (nul : aucun), et si l'acteur a le droit du critique. */
-    public record Demande(Composition composition, Cibles cibles, String modeleId, boolean critiqueAutorisee) {
+    public record Demande(Composition composition, Cibles cibles, String modeleId, boolean critiqueAutorisee, String politiqueId) {
+
+        /** Sans politique de relance : l'alerte part une fois (le socle R1). */
+        public Demande(Composition composition, Cibles cibles, String modeleId, boolean critiqueAutorisee) {
+            this(composition, cibles, modeleId, critiqueAutorisee, null);
+        }
     }
 
     /** Les dépendances du geste, groupées pour garder le constructeur court. */
@@ -58,11 +64,18 @@ public final class GestionnaireEnvoiAlertes {
     private final Dependances d;
     private final Supplier<String> identifiants;
     private final Clock horloge;
+    private final ArmementCascades armement;
 
     public GestionnaireEnvoiAlertes(Dependances d, Supplier<String> identifiants, Clock horloge) {
+        this(d, identifiants, horloge, ArmementCascades.AUCUN);
+    }
+
+    /** Avec les cascades (ST-G04) : une alerte envoyée avec une politique arme sa cascade. */
+    public GestionnaireEnvoiAlertes(Dependances d, Supplier<String> identifiants, Clock horloge, ArmementCascades armement) {
         this.d = d;
         this.identifiants = identifiants;
         this.horloge = horloge;
+        this.armement = armement;
     }
 
     public Alerte envoyer(Acteur acteur, Demande demande) {
@@ -72,6 +85,7 @@ public final class GestionnaireEnvoiAlertes {
         Alerte a = Alertes.composer(identifiants.get(), acteur.tenantId(), acteur.personId(), Instant.now(horloge).toString(),
                 c, resolus, d.lecture().reponses(acteur.tenantId()));
         d.ecriture().creer(a);
+        armement.armer(a, demande.politiqueId());
         aviser(a);
         return a;
     }

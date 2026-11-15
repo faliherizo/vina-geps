@@ -11,6 +11,7 @@ import { FormulaireModal } from "../Modal";
 import { useApiEffectifs as useApi } from "../effectifs/api";
 import { liste } from "../formeRecue";
 import GroupesTransverses from "./GroupesTransverses";
+import PolitiquesRelance from "./PolitiquesRelance";
 import { PRIORITES, SEMANTIQUES, libellePriorite, libelleSemantique, quand, type Groupe, type Modele, type Priorite, type Reglages, type Reponse, type Semantique,
   type VersionModele } from "./types";
 
@@ -131,6 +132,8 @@ export default function ParametresAlertes() {
           </p>
         )}
       </section>
+
+      <PolitiquesRelance groupes={groupes} />
 
       <GroupesTransverses />
     </div>

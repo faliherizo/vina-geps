@@ -62,3 +62,46 @@ export function etatRemise(r: Remise, reponses: Reponse[]): string {
   if (r.reponseId) return `Répondu : ${reponses.find((x) => x.id === r.reponseId)?.libelle ?? r.reponseId}`;
   return r.lueLe ? "Lu" : "Envoyé";
 }
+
+/* ── Relances et cascades (ST-G04) ─────────────────────────────────────────── */
+
+export type CibleEtape = "initiaux" | "groupe" | "personne" | "prochain_disponible";
+export type CritereArret = "prise_en_charge" | "toutes_lues";
+export type CanalAlerte = "poussee" | "texto" | "courriel";
+export type EtatCascade = "armee" | "arretee" | "epuisee";
+
+export const CIBLES: ReadonlyArray<{ code: CibleEtape; libelle: string }> = [
+  { code: "initiaux", libelle: "Relancer les destinataires qui n'ont pas réagi" },
+  { code: "groupe", libelle: "Escalader à tout un groupe" },
+  { code: "personne", libelle: "Escalader à une personne" },
+  { code: "prochain_disponible", libelle: "Le prochain disponible d'un groupe" },
+];
+export const ARRETS: ReadonlyArray<{ code: CritereArret; libelle: string }> = [
+  { code: "prise_en_charge", libelle: "Dès qu'une personne prend en charge" },
+  { code: "toutes_lues", libelle: "Dès que tous ont lu" },
+];
+export const CANAUX: ReadonlyArray<{ code: CanalAlerte; libelle: string }> = [
+  { code: "poussee", libelle: "Poussée" }, { code: "texto", libelle: "Texto" }, { code: "courriel", libelle: "Courriel" },
+];
+const ETATS_CASCADE: Record<EtatCascade, string> = { armee: "En cours", arretee: "Arrêtée", epuisee: "Toutes les étapes sont parties" };
+const EVENEMENTS: Record<string, string> = { armee: "Armée à l'envoi", etape: "Étape exécutée", arretee: "Arrêtée", epuisee: "Épuisée", reprise: "Reprise manuelle" };
+
+export const libelleCible = (c: string) => CIBLES.find((x) => x.code === c)?.libelle ?? c;
+export const libelleArret = (c: string) => ARRETS.find((x) => x.code === c)?.libelle ?? c;
+export const libelleCanal = (c: string) => CANAUX.find((x) => x.code === c)?.libelle ?? c;
+export const libelleEtatCascade = (e: string) => ETATS_CASCADE[e as EtatCascade] ?? e;
+export const libelleEvenement = (e: string) => EVENEMENTS[e] ?? e;
+
+export interface EtapePolitique { cible: CibleEtape; cibleId: string | null; canaux: CanalAlerte[]; delaiMinutes: number }
+export interface Politique { id: string; nom: string; arret: CritereArret; version: number; actif: boolean; etapes: EtapePolitique[] }
+export interface TraceCascade { evenement: string; etape: number; personnes: string[]; instant: string; par: string }
+export interface SuiviCascade {
+  cascade: { politique: Politique; etape: number; etapes: number; echeanceLe: string | null; etat: EtatCascade } | null;
+  traces: TraceCascade[];
+}
+
+/** Une étape en mots : « Après 5 min : relancer…, par poussée ». */
+export function etapeEnMots(e: EtapePolitique): string {
+  const cible = e.cibleId ? `${libelleCible(e.cible)} (${e.cibleId})` : libelleCible(e.cible);
+  return `Après ${e.delaiMinutes} min : ${cible}, par ${e.canaux.map(libelleCanal).join(", ")}`;
+}

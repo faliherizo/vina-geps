@@ -140,6 +140,13 @@ const MODULES_AUDIT = {
   "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: true },
   "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit — liste" }],
   "GET /api/alertes/reglages": { copieCourriel: true },
+  // Relances et cascades (ST-G04).
+  "GET /api/alertes/politiques": [{ id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [
+    { cible: "initiaux", cibleId: null, canaux: ["poussee"], delaiMinutes: 5 }, { cible: "groupe", cibleId: "gt-1", canaux: ["texto", "courriel"], delaiMinutes: 10 }] }],
+  "GET /api/alertes/envoyees/al-1/cascade": { cascade: { politique: { id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [] },
+    etape: 2, etapes: 2, echeanceLe: "2030-03-04T14:15:00Z", etat: "armee" },
+    traces: [{ evenement: "armee", etape: 1, personnes: [], instant: "2030-03-04T14:02:00Z", par: "chef" },
+      { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:07:00Z", par: "cascade" }] },
   "GET /api/communication/groupes-transverses": [{ id: "gt-1", nom: "Garde de nuit", nature: "garde", actif: true,
     membres: [{ personId: "julie", nom: "Julie Roy", depuis: "2031-01-13", jusqua: "2031-01-19", moderateur: true }, { personId: "marc", nom: "Marc Dubé", depuis: null, jusqua: null, moderateur: false }] }],
   "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
@@ -826,6 +833,7 @@ const PAGES = [
     etats: [{ nom: "détail des destinataires", agir: async (page) => {
       await page.getByTestId("als-alerte-al-1-detail").click();
       await page.getByTestId("als-fiche").waitFor({ state: "visible" });
+      await page.getByTestId("als-cascade-trace").waitFor({ state: "visible" });
     } }] },
   { nom: "Mes alertes", nav: "nav-mesalertes",
     etats: [{ nom: "alerte dépliée, réponses offertes", agir: async (page) => {
@@ -839,6 +847,12 @@ const PAGES = [
       await page.getByTestId("alp-reponse-ouvrir").click();
       await page.getByTestId("alp-r-libelle").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } },
+    { nom: "dialogue « Nouvelle politique de relance », deux étapes", agir: async (page) => {
+      await page.getByTestId("alp-politique-ouvrir").click();
+      await page.getByTestId("alp-pol-ajouter-etape").click();
+      await page.getByTestId("alp-pol-e1-cible").selectOption("prochain_disponible");
+      await page.getByTestId("alp-pol-e1-groupe").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-politique-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
     { nom: "dialogue « Nouveau modèle »", agir: async (page) => {
       await page.getByTestId("alp-modele-ouvrir").click();
       await page.getByTestId("alp-m-titre").waitFor({ state: "visible" });

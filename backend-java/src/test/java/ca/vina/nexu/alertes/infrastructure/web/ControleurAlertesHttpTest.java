@@ -252,7 +252,16 @@ class ControleurAlertesHttpTest {
                 return List.of();
             }
         }, listes, jdbc);
-        ControleurAlertes.Cas cas = c.casAlertes(depot, annuaire, PublicationAvis.MUET, Clock.systemUTC());
+        ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs registre = new ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs();
+        ConfigurationAlertes.Durables durables = c.durablesAlertes(new ca.vina.nexu.ordonnanceur.infrastructure.persistance.DepotTaches(jdbc, registre), registre,
+                ca.vina.nexu.partage.disponibilite.DisponibiliteDestinatairesPort.TOUJOURS,
+                new org.springframework.transaction.support.TransactionTemplate(new org.springframework.jdbc.datasource.DataSourceTransactionManager(
+                        new org.springframework.jdbc.datasource.SimpleDriverDataSource())), PublicationAvis.MUET);
+        ca.vina.nexu.alertes.application.commandes.GestionnaireCascades cascades = c.gestionnaireCascades(c.depotCascades(jdbc), depot, annuaire, durables, Clock.systemUTC());
+        assertThat(registre.pour("alerte.etape")).isPresent();
+        assertThat(registre.pour("alerte.relance")).isPresent();
+        assertThat(c.casCascades(c.depotCascades(jdbc), depot, cascades, Clock.systemUTC()).politiques()).isNotNull();
+        ControleurAlertes.Cas cas = c.casAlertes(depot, annuaire, PublicationAvis.MUET, cascades, Clock.systemUTC());
         assertThat(cas.parametres().creerReponse(T, "Ok", ca.vina.nexu.alertes.domaine.Semantique.INFORMATION).id()).hasSize(36);
         assertThat(c.gardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc))).isNotNull();
     }

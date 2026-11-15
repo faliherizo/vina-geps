@@ -35,6 +35,8 @@ async function sansViolation(page: Page, etat: string): Promise<void> {
 }
 
 test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, suivre", () => {
+  // Le second test emprunte la réponse, le modèle et la garde que le premier a créés.
+  test.describe.configure({ mode: "serial" });
   let tenantId = "";
 
   test.beforeAll(async () => {
@@ -115,6 +117,45 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
     await ligne.locator('[data-testid$="-detail"]').click();
     await expect(chef.getByTestId("als-fiche")).toContainText("Répondu : J'arrive");
     await sansViolation(chef, "suivi, détail ouvert");
+    await chef.context().close();
+  });
+
+  test("ST-G04 : une politique de relance arme la cascade ; la reprise la fait partir par l'ordonnanceur réel", async ({ browser }) => {
+    test.setTimeout(240_000);
+    const admin = await ouvrir(browser, tenantId, "administration", "nav-alparametres", "alp-titre");
+    await admin.getByTestId("alp-politique-ouvrir").click();
+    await admin.getByTestId("alp-pol-nom").fill("Garde — relance");
+    await admin.getByTestId("alp-pol-e0-delai").fill("30");
+    await sansViolation(admin, "dialogue de politique ouvert");
+    await admin.getByTestId("alp-pol-enregistrer").click();
+    await expect(admin.getByTestId("alp-pol-succes")).toContainText("Politique « Garde — relance » créée : version 1.");
+    await admin.context().close();
+
+    const chef = await ouvrir(browser, tenantId, "planificateur", "nav-alnouvelle", "aln-titre");
+    await expect(chef.getByTestId("aln-politique").locator("option", { hasText: "Garde — relance" })).toHaveCount(1, { timeout: 30_000 });
+    await chef.getByTestId("aln-modele").selectOption({ label: "Code bleu" });
+    await chef.getByTestId("aln-titre-champ").fill("Relance de garde");
+    await chef.getByLabel("Tout le groupe Garde de nuit").check();
+    await chef.getByTestId("aln-politique").selectOption({ label: "Garde — relance" });
+    await chef.getByTestId("aln-envoyer").click();
+    await expect(chef.getByTestId("aln-envoyee")).toContainText("envoyée à 1 personne(s)");
+
+    await ouvrirNav(chef, "nav-alsuivi");
+    const ligne = chef.locator('[data-testid^="als-alerte-"]').filter({ hasText: "Relance de garde" }).first();
+    const detail = ligne.locator('[data-testid$="-detail"]');
+    await detail.click();
+    await expect(chef.getByTestId("als-cascade-etat")).toContainText("En cours");
+    await expect(chef.getByTestId("als-cascade-trace")).toContainText("Armée à l'envoi");
+    await sansViolation(chef, "suivi, cascade armée");
+    // La reprise met l'étape à maintenant ; l'ordonnanceur de la campagne (tic de 3 s) l'exécute.
+    await chef.getByTestId("als-cascade-reprendre").click();
+    await expect(chef.getByTestId("als-cascade-succes")).toContainText("Cascade reprise à l'étape 1");
+    await expect.poll(async () => {
+      await detail.click();
+      await detail.click();
+      return (await chef.getByTestId("als-cascade-trace").textContent()) ?? "";
+    }, { timeout: 60_000, intervals: [3_000] }).toContain("Étape exécutée");
+    await expect(chef.getByTestId("als-cascade-etat")).toContainText("Toutes les étapes sont parties");
     await chef.context().close();
   });
 });

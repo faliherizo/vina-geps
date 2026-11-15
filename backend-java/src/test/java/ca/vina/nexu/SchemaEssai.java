@@ -353,6 +353,11 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS alr_modele_version_reponses (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, version INTEGER NOT NULL, rang INTEGER NOT NULL, reponseId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, version, rang))",
             "CREATE TABLE IF NOT EXISTS alr_modele_groupes (tenantId TEXT NOT NULL, modeleId TEXT NOT NULL, groupeId TEXT NOT NULL, PRIMARY KEY (tenantId, modeleId, groupeId))",
             "CREATE TABLE IF NOT EXISTS alr_reglages (tenantId TEXT NOT NULL PRIMARY KEY, copieCourriel INTEGER NOT NULL DEFAULT 0)",
+            // 0013 — ST-G04 : politiques de relance, cascades et trace.
+            "CREATE TABLE IF NOT EXISTS alr_politiques (tenantId TEXT NOT NULL, id TEXT NOT NULL, version INTEGER NOT NULL, actif INTEGER NOT NULL DEFAULT 1, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS alr_politique_versions (tenantId TEXT NOT NULL, politiqueId TEXT NOT NULL, version INTEGER NOT NULL, nom TEXT NOT NULL, arret TEXT NOT NULL, etapes TEXT NOT NULL, creeLe TEXT NOT NULL, creePar TEXT NOT NULL, PRIMARY KEY (tenantId, politiqueId, version))",
+            "CREATE TABLE IF NOT EXISTS alr_cascades (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, politiqueId TEXT NOT NULL, politiqueVersion INTEGER NOT NULL, etape INTEGER NOT NULL, echeanceLe TEXT, etat TEXT NOT NULL, PRIMARY KEY (tenantId, alerteId))",
+            "CREATE TABLE IF NOT EXISTS alr_cascade_traces (tenantId TEXT NOT NULL, alerteId TEXT NOT NULL, rang INTEGER NOT NULL, evenement TEXT NOT NULL, etape INTEGER NOT NULL, personnes TEXT NOT NULL, instant TEXT NOT NULL, par TEXT NOT NULL, PRIMARY KEY (tenantId, alerteId, rang))",
             // 0012 — module de paie (ADR 0076).
             "CREATE TABLE IF NOT EXISTS paie_dossiers (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, mode TEXT NOT NULL, frequence TEXT NOT NULL, tauxHoraire TEXT, salaireAnnuel TEXT, montantPersonnelFederal TEXT NOT NULL, montantPersonnelQuebec TEXT NOT NULL, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId))",
             "CREATE TABLE IF NOT EXISTS paie_reglages (tenantId TEXT NOT NULL PRIMARY KEY, tauxFss TEXT NOT NULL, tauxCnesst TEXT NOT NULL, majorationSupplementaire TEXT NOT NULL, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL)",

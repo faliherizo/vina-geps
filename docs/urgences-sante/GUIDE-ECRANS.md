@@ -549,7 +549,8 @@ Envoyer une alerte priorisée à des groupes ou à des personnes, avec les répo
 1. Choisir un « Modèle » au besoin : il remplit le titre, le message, la priorité et les réponses ; tout reste modifiable.
 2. Écrire le « Titre » et le « Message », puis choisir la « Priorité ». Une alerte critique part sur tous les canaux, quelles que soient les préférences ; elle est réservée à qui en a le droit (direction, administration, ou un droit accordé par l'organisme).
 3. Choisir les destinataires : « Tout le groupe … » (une unité ou un groupe transverse, comme une garde), « La liste … » (une liste de distribution), ou des personnes, par leur nom, dans « Choisir des personnes dans un groupe ».
-4. Cocher les « Réponses proposées », puis « Envoyer l'alerte ».
+4. Au besoin, choisir des « Relances » : sans réaction, l'alerte est relancée puis escaladée selon la politique, jusqu'à son critère d'arrêt.
+5. Cocher les « Réponses proposées », puis « Envoyer l'alerte ».
 
 **Exemple de remplissage**
 
@@ -578,6 +579,7 @@ Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pr
 2. Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.
 3. « Détail » ouvre les destinataires : lue le, état, répondu le.
 4. « Exporter » le même suivi, au même filtre : CSV, Excel, PDF ou JSON. « Actualiser » relit les réponses arrivées depuis.
+5. Dans le détail, « Relances et escalades » montre la cascade : l'étape attendue et son heure, puis la trace de chaque étape (qui a été visé, par qui). « Reprendre à l'étape … » la relance aussitôt.
 
 **Exemple de remplissage**
 
@@ -838,7 +840,8 @@ Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
 3. « Modifier » un modèle en fait une nouvelle version ; « Versions » montre chaque version, qui l'a faite et quand.
 4. « Désactiver » retire une réponse ou un modèle des choix ; rien ne s'efface.
 5. Réglages : cocher « Envoyer aussi une copie par courriel » pour que chacun reçoive l'alerte par courriel en plus de ses canaux.
-6. Groupes transverses : « Nouveau groupe » (nom, nature : garde, spécialité, comité), puis « Gérer » pour inscrire une personne par son nom, pour une période, comme membre ou modératrice.
+6. Politiques de relance : « Nouvelle politique », un nom, quand s'arrêter (une prise en charge, ou tous ont lu), puis chaque étape — combien de minutes après la précédente, qui viser (relancer ceux qui n'ont pas réagi, tout un groupe, une personne, ou le prochain disponible d'un groupe), par quels canaux. « Modifier » fait une version nouvelle.
+7. Groupes transverses : « Nouveau groupe » (nom, nature : garde, spécialité, comité), puis « Gérer » pour inscrire une personne par son nom, pour une période, comme membre ou modératrice.
 
 **Exemple de remplissage**
 

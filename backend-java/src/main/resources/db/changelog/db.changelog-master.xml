@@ -22,5 +22,6 @@
   <include file="db/changelog/0010-groupes-transverses.xml"/>
   <include file="db/changelog/0011-feuilles-payees.xml"/>
   <include file="db/changelog/0012-paie.xml"/>
+  <include file="db/changelog/0013-alertes-cascades.xml"/>
 
 </databaseChangeLog>

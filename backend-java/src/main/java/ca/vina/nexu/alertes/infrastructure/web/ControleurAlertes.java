@@ -155,7 +155,7 @@ public class ControleurAlertes {
         return repondre(r, garde.capacite(r, CAPACITE_ENVOI), CREE, a -> VuesAlertes.suivi(cas.envoi().envoyer(a, new GestionnaireEnvoiAlertes.Demande(
                 new Composition(SaisiesAlertes.texte(d, "titre"), SaisiesAlertes.texte(d, "corps"), SaisiesAlertes.priorite(d), SaisiesAlertes.textes(d, "reponseIds")),
                 new GestionnaireEnvoiAlertes.Cibles(SaisiesAlertes.textes(d, "personnes"), SaisiesAlertes.textes(d, "groupes"), SaisiesAlertes.textes(d, "listes")),
-                SaisiesAlertes.texte(d, "modeleId"), critique))));
+                SaisiesAlertes.texte(d, "modeleId"), critique, SaisiesAlertes.texte(d, "politiqueId")))));
     }
 
     /** Le suivi, filtrable : période ({@code du}, {@code au}), priorité, état, expéditeur (ST-G03). */

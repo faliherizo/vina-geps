@@ -17,15 +17,15 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 21 | 7 | 3 | 0 | 1 |
+| Fonctionnel | 1-32 | 26 | 5 | 0 | 0 | 1 |
 | Technique (postes, bureautique, réseau) | 33-49 | 13 | 1 | 1 | 2 | 0 |
 | Architecture et hébergement | 50-63 | 5 | 2 | 0 | 7 | 0 |
 | Sauvegarde, surveillance | 64-70 | 5 | 1 | 0 | 1 | 0 |
 | Sécurité, identité, audit | 71-93 | 12 | 4 | 1 | 6 | 0 |
 | Performance, fournisseur, soutien | 94-115 | 2 | 1 | 0 | 19 | 0 |
-| **Total** | **115** | **58** | **16** | **5** | **35** | **1** |
+| **Total** | **115** | **63** | **14** | **2** | **35** | **1** |
 
-Sur les **32 critères fonctionnels**, 21 sont acquis, 7 partiels, 3 à bâtir et 1 à clarifier, après les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
+Sur les **32 critères fonctionnels**, 26 sont acquis, 5 partiels, aucun à bâtir et 1 à clarifier, après les relances et cascades (ST-G04, R2-a, 14 novembre 2026) et les compléments R1-bis (14 novembre 2026 : droit du critique, listes, copie par courriel, modèles versionnés à périmètre, suivi filtrable et exportable, groupes transverses). Le socle (ADR 0074) en donnait 17 acquis, 10 partiels et 4 à bâtir ; le dossier d'origine, 13, 12 et 6.
 Les 18 critères partiels ou à bâtir forment le module « Communications cliniques » : modèles et
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
@@ -48,24 +48,24 @@ critiques.
 | 12 | Historique et statuts partagés entre expéditeurs | ✅ | **Suivi des alertes** partagé entre expéditeurs autorisés, filtrable (période, priorité, état, expéditeur) et exportable en CSV, XLSX, PDF, JSON (R1-bis) | PDF/A pour l'archive — ST-G10 |
 | 13 | Confirmer la réception d'un retour d'appel | 🟡 | Appel à deux tracé (sonne, en cours, terminé, manqué) | Lier un retour d'appel à l'alerte — ST-G06 |
 | 14 | Appel téléphonique automatique si non-réponse, délai programmable | 🟡 | Port d'appel sortant au numéro de l'organisme (ADR 0022) | Appel déclenché par l'orchestrateur — ST-G06 |
-| 15 | Relances automatisées configurables | 🔴 | Ordonnanceur existant | Politique de relance — ST-G04 |
-| 16 | Cascades entre utilisateurs d'un groupe ou de groupes distincts | 🔴 | — | ST-G04 |
-| 17 | Délais, séquences, règles d'arrêt et de reprise des cascades | 🔴 | — | ST-G04 |
+| 15 | Relances automatisées configurables | ✅ | **Politiques de relance** (ST-G04, ADR 0077) : étapes (cible, canaux, délai) versionnées ; échéances durables dans l'ordonnanceur partagé | — |
+| 16 | Cascades entre utilisateurs d'un groupe ou de groupes distincts | ✅ | Étapes « tout un groupe », « une personne », « prochain disponible d'un groupe » ; les personnes escaladées rejoignent l'alerte | — |
+| 17 | Délais, séquences, règles d'arrêt et de reprise des cascades | ✅ | Délai par étape ; arrêt à la prise en charge ou quand tous ont lu ; **reprise manuelle** à l'étape choisie, journalisée (`/api/alertes/envoyees/{id}/cascade/reprendre`) | — |
 | 18 | Alertes critiques, lorsque disponible et permis | 🟡 | Poussée native (application installable) | Notification critique (iOS *Critical Alerts*, Android canal prioritaire) — Q-ALC, ST-G07 |
-| 19 | Traces des relances, appels, réponses, escalades | 🟡 | Journal des actions (ADR 0041), journal de la messagerie | Événements d'escalade — ST-G04 |
+| 19 | Traces des relances, appels, réponses, escalades | ✅ | Journal des actions (ADR 0041) ; **trace de cascade** en ajout seul : armement, chaque étape et les personnes visées, arrêt, épuisement, reprise (par qui) | Appels : ST-G06 |
 | 20 | Accès mobile par navigateur, sans équipement dédié | ✅ | Interface responsive (390 px auditée), application installable (PWA) | — |
 | 21 | Application mobile iOS et Android, si proposée | ✅ | PWA ; application native du dépôt `mobile` (poussée native) | — |
 | 22 | Préférences par destinataire sans contourner les règles obligatoires | ✅ | Préférences d'avis par événement, canal écrit obligatoire maintenu | Étendre aux alertes — ST-G07 |
 | 23 | Interface intuitive, rapide en contexte clinique | ✅ | SGQRI 008 / WCAG 2.2 AA audité ; tableau de bord en un clic | — |
 | 24 | Historique de ses messages et confirmations selon ses droits | ✅ | Messagerie : historique, recherche limitée à sa participation | — |
-| 25 | Calendrier interne de disponibilité, si activé | ✅ | Disponibilités, horaires, « Mon horaire » en calendrier (module effectifs) | Les cascades consultent la disponibilité — ST-G04 |
+| 25 | Calendrier interne de disponibilité, si activé | ✅ | Disponibilités, horaires, « Mon horaire » en calendrier (module effectifs) ; **les cascades « prochain disponible » le consultent** (absence acceptée, indisponibilité déclarée) | — |
 | 26 | Console de gestion centralisée pour l'administration | ✅ | Administration de l'organisme, superadmin | — |
 | 27 | Créer, modifier, désactiver des utilisateurs et des groupes par unité, service, spécialité, établissement | ✅ | Comptes, unités datées, organigramme ; **groupes transverses** (garde, spécialité, comité) à appartenance datée et modérateurs, visibles dans la messagerie, les listes et les alertes (R1-bis, `/api/communication/groupes-transverses`) | — |
 | 28 | Cloisonner les utilisateurs dans un ou plusieurs groupes | ✅ | Périmètres par unité, refus par défaut | — |
 | 29 | Coordonnées confidentielles | ✅ | Appel et texto au numéro de l'organisme : le numéro personnel n'est jamais montré (ADR 0022) | — |
 | 30 | Comptes utilisateur et administrateur, profils plus fins | ✅ | 7 rôles, rôles propres à l'organisme, capacités (E-TN-5) | — |
 | 31 | Écran de visionnement des messages envoyés et des statuts | ✅ | **Suivi des alertes** : lues, réponses, première prise en charge, détail par destinataire | — |
-| 32 | L'administration configure modèles, réponses, relances, groupes, cascades, droits, disponibilité | 🟡 | Droits, groupes (unités et transverses), réponses, **modèles versionnés à périmètre** (R1-bis) | Relances et cascades — ST-G04 |
+| 32 | L'administration configure modèles, réponses, relances, groupes, cascades, droits, disponibilité | ✅ | Droits, groupes (unités et transverses), réponses, modèles versionnés à périmètre (R1-bis), **politiques de relance et de cascade versionnées** (ST-G04) | — |
 
 ## 2. Technique (33 à 49)
 

@@ -12,7 +12,7 @@ import { EnTeteEcran, Message } from "../composants";
 import { useApiEffectifs as useApi } from "../effectifs/api";
 import { liste } from "../formeRecue";
 import { lienVersPage } from "../navigation";
-import { PRIORITES, libelleSemantique, type AlerteSuivie, type Droits, type Groupe, type Liste, type Modele, type Personne, type Priorite, type Reponse } from "./types";
+import { PRIORITES, libelleSemantique, type AlerteSuivie, type Droits, type Groupe, type Liste, type Modele, type Personne, type Priorite, type Reponse, type Politique } from "./types";
 
 export default function NouvelleAlerte() {
   const { lire, envoyer, erreur, setErreur } = useApi();
@@ -20,6 +20,8 @@ export default function NouvelleAlerte() {
   const [reponses, setReponses] = useState<Reponse[]>([]);
   const [groupes, setGroupes] = useState<Groupe[]>([]);
   const [listes, setListes] = useState<Liste[]>([]);
+  const [politiques, setPolitiques] = useState<Politique[]>([]);
+  const [politiqueId, setPolitiqueId] = useState("");
   const [droits, setDroits] = useState<Droits | null>(null);
   const [modeleId, setModeleId] = useState("");
   const [listesChoisies, setListesChoisies] = useState<string[]>([]);
@@ -37,6 +39,7 @@ export default function NouvelleAlerte() {
       setReponses(liste<Reponse>(await lire<Reponse[]>("/api/alertes/reponses")).filter((r) => r.active));
       setGroupes(liste<Groupe>(await lire<Groupe[]>("/api/alertes/groupes")));
       setListes(liste<Liste>(await lire<Liste[]>("/api/alertes/listes")));
+      setPolitiques(liste<Politique>(await lire<Politique[]>("/api/alertes/politiques")).filter((p) => p.actif));
       setDroits(await lire<Droits>("/api/alertes/droits"));
     })();
   }, [lire]);
@@ -54,7 +57,7 @@ export default function NouvelleAlerte() {
     setErreur(""); setEnvoyee(null);
     const a = await envoyer<AlerteSuivie>("/api/alertes", {
       titre, corps, priorite, reponseIds, groupes: groupesChoisis, listes: listesChoisies, personnes: personnes.map((p) => p.personId),
-      modeleId: modeleId || undefined,
+      modeleId: modeleId || undefined, politiqueId: politiqueId || undefined,
     });
     if (a) { setEnvoyee(a); setTitre(""); setCorps(""); setGroupesChoisis([]); setListesChoisies([]); setPersonnes([]); }
   };
@@ -115,6 +118,14 @@ export default function NouvelleAlerte() {
               </p>
             ))}
           </fieldset>
+        )}
+        {politiques.length > 0 && (
+          <p><label htmlFor="aln-politique">Relances (facultatif)</label>
+            <select id="aln-politique" data-testid="aln-politique" value={politiqueId} onChange={(e) => setPolitiqueId(e.target.value)} aria-describedby="aln-politique-aide">
+              <option value="">Aucune relance</option>
+              {politiques.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}
+            </select>
+            <span id="aln-politique-aide" className="muted"> Sans réaction, l'alerte est relancée puis escaladée selon la politique, jusqu'à son critère d'arrêt.</span></p>
         )}
         <fieldset>
           <legend>Réponses proposées</legend>

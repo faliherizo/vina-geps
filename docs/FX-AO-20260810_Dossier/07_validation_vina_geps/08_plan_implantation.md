@@ -111,6 +111,15 @@ s'exporte.
 
 **R2-a · Orchestration (3 semaines, ST-G04)** — ne dépend d'aucune décision externe.
 
+> **Livré le 14 novembre 2026** (ADR 0077) : politiques versionnées (changeset `0013`), cascades armées à l'envoi,
+> étapes « relancer les sans-réaction », « groupe », « personne », « prochain disponible » (port partagé
+> `DisponibiliteDestinatairesPort`, implanté par les effectifs) ; arrêt à la prise en charge ou quand tous ont lu,
+> aussitôt la réaction ; reprise manuelle tracée ; trace en ajout seul. Deux tâches durables par étape (`alerte.etape`
+> décide sous verrou optimiste, `alerte.relance` envoie). Vérifié : `CascadesTest`, `ControleurCascadesHttpTest`
+> (redémarrage avant et après l'écriture, concurrence), BDD `13-alertes.feature`, vitest `alertes-cascades.test.tsx`,
+> audit d'interface, e2e `urgences-sante-alertes.spec.ts` contre le Java (étape exécutée par l'ordonnanceur réel).
+> Grille fonctionnelle : 26 acquis sur 32.
+
 | Couche | Ce qu'on bâtit |
 |---|---|
 | Domaine | `Politique` (suite d'étapes : cible, canaux, délai ; critère d'arrêt `PRISE_EN_CHARGE` ou `TOUTES_LUES`), **versionnée** ; `Cascade` (état d'une alerte dans sa politique : étape courante, prochaine échéance, arrêtée et pourquoi). Pur, horloge injectée |

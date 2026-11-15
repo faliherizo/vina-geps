@@ -179,6 +179,15 @@ public class DepotAlertes implements LectureAlertesPort, EcritureAlertesPort {
     }
 
     @Override
+    public void ajouterRemises(String tenantId, String alerteId, List<Remise> remises) {
+        for (Remise r : remises) {
+            jdbc.sql("INSERT INTO alr_remises (tenantId, alerteId, personId, nom, compteAvis, envoyeeLe) VALUES (?, ?, ?, ?, ?, ?) "
+                            + "ON CONFLICT (tenantId, alerteId, personId) DO NOTHING")
+                    .params(tenantId, alerteId, r.destinataire().personId(), r.destinataire().nom(), r.destinataire().compteAvis(), r.envoyeeLe()).update();
+        }
+    }
+
+    @Override
     public void mettreAJour(String tenantId, String alerteId, Remise r) {
         jdbc.sql("UPDATE alr_remises SET lueLe = ?, reponseId = ?, reponduLe = ? WHERE tenantId = ? AND alerteId = ? AND personId = ?")
                 .params(r.lueLe(), r.reponseId(), r.reponduLe(), tenantId, alerteId, r.destinataire().personId()).update();

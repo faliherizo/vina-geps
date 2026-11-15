@@ -27,6 +27,11 @@ public enum Priorite {
         public String code() {
             return code;
         }
+
+        public static Canal de(String code) {
+            return Arrays.stream(values()).filter(c -> c.code.equals(code)).findFirst()
+                    .orElseThrow(() -> RefusAlerte.invalide("« canaux » : courriel, texto ou poussee"));
+        }
     }
 
     private final String code;

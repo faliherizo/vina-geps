@@ -121,3 +121,67 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
       """json
       { "priorite": "critique", "bilan": { "destinataires": 1 } }
       """
+
+  Scénario: Une politique de relance arme la cascade ; la prise en charge l'arrête ; le chef la reprend (ST-G04)
+    # Critères 15, 17, 19, 32. Les étapes à échéance (relance, escalade, prochain disponible : 15, 16, 25) sont
+    # éprouvées à horloge réglée dans ControleurCascadesHttpTest, redémarrage et concurrence compris.
+    Quand admin envoie POST /api/alertes/politiques avec :
+      """json
+      { "nom": "Code bleu", "arret": "prise_en_charge",
+        "etapes": [ { "cible": "initiaux", "canaux": ["poussee"], "delaiMinutes": 5 },
+                    { "cible": "personne", "cibleId": "{{n_marc}}", "canaux": ["texto"], "delaiMinutes": 10 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "nom": "Code bleu", "version": 1, "actif": true }
+      """
+    Et je retiens "id" sous le nom "politique"
+    Quand chef envoie POST /api/alertes/politiques avec :
+      """json
+      { "nom": "X", "arret": "toutes_lues", "etapes": [] }
+      """
+    Alors la réponse a le statut 403
+    Quand chef envoie GET /api/alertes/politiques
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu 512", "corps": "5e étage", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}"], "politiqueId": "{{politique}}" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "alerte"
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "cascade": { "etat": "armee", "etape": 1, "etapes": 2 } }
+      """
+    Quand julie envoie POST /api/alertes/recues/{{alerte}}/reponse avec :
+      """json
+      { "reponseId": "{{arrive}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse contient :
+      """json
+      { "cascade": { "etat": "arretee" } }
+      """
+    Et la réponse correspond à "evenement.{3}arretee"
+    Quand chef envoie POST /api/alertes/envoyees/{{alerte}}/cascade/reprendre avec :
+      """json
+      { "etape": 2 }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "cascade": { "etat": "armee", "etape": 2 } }
+      """
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse correspond à "evenement.{3}reprise"
+    Quand julie envoie POST /api/alertes/envoyees/{{alerte}}/cascade/reprendre avec :
+      """json
+      { "etape": 1 }
+      """
+    Alors la réponse a le statut 403

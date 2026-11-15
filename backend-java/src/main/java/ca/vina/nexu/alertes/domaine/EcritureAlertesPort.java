@@ -22,4 +22,7 @@ public interface EcritureAlertesPort {
     void creer(Alerte alerte);
 
     void mettreAJour(String tenantId, String alerteId, Remise remise);
+
+    /** Les personnes qu'une escalade ajoute à l'alerte : elles la lisent et y répondent comme les premières. */
+    void ajouterRemises(String tenantId, String alerteId, java.util.List<Remise> remises);
 }

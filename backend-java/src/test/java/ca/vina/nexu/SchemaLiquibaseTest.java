@@ -44,12 +44,13 @@ class SchemaLiquibaseTest {
                         "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe", "msg_distributions", "msg_message_versions",
                         "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs",
                         "alr_modele_versions", "alr_modele_version_reponses", "alr_modele_groupes", "alr_reglages",
-                        "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins")
+                        "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
+                        "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces")
                 // La paie est le contexte `paie` (ADR 0076), et non la table de règles de Nexu VINA ; la tarification et la
                 // facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(17);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(18);
     }
 
     @Test
@@ -64,9 +65,10 @@ class SchemaLiquibaseTest {
                 "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions",
                 "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs",
                 "alr_modele_versions", "alr_modele_version_reponses", "alr_modele_groupes", "alr_reglages",
-                "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins");
+                "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
+                "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED");
     }
 
     @Test

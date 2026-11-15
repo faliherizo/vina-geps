@@ -5,6 +5,7 @@
  * Le tableau se filtre (période, priorité, état, expéditeur) et s'exporte au même filtre (ST-G03).
  */
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import CascadeAlerte from "./CascadeAlerte";
 import ExportResultats from "../effectifs/ExportResultats";
 import { BadgeStatut, EnTeteEcran, EtatVide, Message, Tableau, type Colonne } from "../composants";
 import { useApiEffectifs as useApi } from "../effectifs/api";
@@ -96,6 +97,7 @@ export default function SuiviAlertes() {
                 <td>{r.nom}</td><td>{quand(r.lueLe)}</td><td>{etatRemise(r, fiche.reponses)}</td><td>{quand(r.reponduLe)}</td>
               </tr>
             )} />
+          <CascadeAlerte key={fiche.id} alerteId={fiche.id} />
         </section>
       )}
     </div>
