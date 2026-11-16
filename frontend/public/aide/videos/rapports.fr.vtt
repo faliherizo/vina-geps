@@ -1,25 +1,28 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.463
-Constructeur de rapports.
+00:00:00.000 --> 00:00:05.155
+Constructeur de rapports. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.913 --> 00:00:10.203
-Composer un rapport sur les données d'effectifs : source, colonnes, filtres, tri, agrégat ; l'exécuter, l'enregistrer et l'exporter.
+00:00:06.355 --> 00:00:19.219
+Relevés et rapports. Le gestionnaire construit un relevé de comblement : source, les places des effectifs ; regroupé par unité ; le taux de places pourvues et le nombre d'équipages sous le minimum ; pour la semaine du 13 janvier, quarts réguliers seulement.
 
-00:00:10.652 --> 00:00:13.834
-Qui s'en sert : Administration et planificateurs.
+00:00:22.658 --> 00:00:29.508
+Il produit le relevé : l'unité Opérations Est est pourvue à 66,67 pour cent, avec un équipage sous le minimum.
 
-00:00:14.284 --> 00:00:15.143
-Comment faire :
+00:00:32.672 --> 00:00:36.666
+Sans date de début, le relevé est refusé, et le message dit le format attendu.
 
-00:00:15.593 --> 00:00:18.217
-Choisir la Source de données , puis cocher les colonnes.
+00:00:39.836 --> 00:00:42.622
+Il enregistre le relevé sous le nom Comblement hebdomadaire.
 
-00:00:18.667 --> 00:00:23.450
-Ajouter un filtre : champ, opérateur, valeur (et seconde borne pour entre ).
+00:00:45.758 --> 00:00:53.003
+Après rechargement, il le reproduit d'un clic : mêmes paramètres, même résultat. Puis il l'exporte, en Excel et en PDF.
 
-00:00:23.900 --> 00:00:29.845
-Trier, agréger au besoin, puis exécuter ; nommer le rapport pour l'enregistrer et choisir le Format d'export.
+00:00:56.314 --> 00:00:59.867
+Il le renomme, Comblement par semaine, puis le retire de la liste.
 
-00:00:30.295 --> 00:00:35.403
-Résultat : Le rapport enregistré se relance tel quel ; l'export porte les mêmes colonnes et filtres.
+00:01:02.081 --> 00:01:10.603
+Constructeur de rapports : choisir la source, les colonnes, le format (CSV, Excel, PDF, JSON) et exporter.
+
+00:01:14.147 --> 00:01:23.528
+Constructeur de rapports : la source, les colonnes, les filtres, les regroupements et le tri sont définis par l'organisation, puis enregistrés comme relevé réutilisable.

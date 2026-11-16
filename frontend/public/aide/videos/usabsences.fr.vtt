@@ -1,25 +1,46 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.115
-Absences et comblement.
+00:00:00.000 --> 00:00:04.807
+Absences et comblement. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.565 --> 00:00:07.068
-Décider des absences de son périmètre en voyant leur impact sur le comblement, et suivre l'offre des places libérées.
+00:00:06.007 --> 00:00:14.459
+La règle de l'organisme refuse l'absence : le comblement tomberait à zéro pour cent. Le gestionnaire ouvre la demande refusée pour mesurer l'impact, quart par quart.
 
-00:00:07.518 --> 00:00:11.372
-Qui s'en sert : Planificateurs, chefs, direction.
+00:00:18.284 --> 00:00:23.787
+Il peut accorder par dérogation, mais le motif doit être réel : un motif de moins de dix caractères est refusé.
 
-00:00:11.822 --> 00:00:12.682
-Comment faire :
+00:00:25.690 --> 00:00:33.259
+Avec un motif complet, l'hospitalisation confirmée par billet médical, l'absence est accordée. Les deux places de Julie sont rendues vacantes.
 
-00:00:13.132 --> 00:00:16.452
-Filtrer par statut ( À approuver ), puis ouvrir une absence.
+00:00:35.623 --> 00:00:43.309
+Le lundi est attribué d'office au prioritaire, Marc Gagnon, avisé par courriel. Le mardi est offert aux admissibles, avisés à leur tour.
 
-00:00:16.902 --> 00:00:20.014
-Lire l'impact : places libérées et taux de comblement avant/après.
+00:00:47.573 --> 00:00:50.615
+Le gestionnaire attribue lui-même le quart du mardi à Léa Tremblay.
 
-00:00:20.464 --> 00:00:25.711
-Approuver ou Refuser ; une dérogation à un refus automatique exige un motif et un code d'absence attribué.
+00:00:52.547 --> 00:01:01.278
+Dernier cas : Théo Paquin est en congé de longue durée. Son quart est réservé au remplacement long terme, que le gestionnaire ouvre sur le poste EST-1, lié à cette absence.
 
-00:00:26.161 --> 00:00:33.313
-Résultat : Les places libérées sont offertes aux admissibles, attribuées d'office ou réservées au remplacement long terme ; le bilan s'affiche.
+00:01:05.412 --> 00:01:11.031
+Ouvrir une absence refusée par l'automatisation, puis « Déroger » : un motif et un code d'absence sont exigés.
+
+00:01:13.884 --> 00:01:19.874
+Après la dérogation, l'onglet montre le comblement des places libérées : qui a été retenu, qui a été avisé.
+
+00:01:21.628 --> 00:01:27.433
+Une absence accordée réserve ses places : l'onglet les montre comme vacantes, sans geste de planificateur.
+
+00:01:29.334 --> 00:01:34.906
+Ouvrir une demande d'absence de la liste : sa fiche calcule le taux de comblement qu'elle laisserait, avant toute décision.
+
+00:01:36.892 --> 00:01:41.861
+Les places libérées par l'absence accordée sont offertes d'elles-mêmes au comblement, sans les désigner une à une.
+
+00:01:43.819 --> 00:01:49.345
+Sur un quart au mode automatisé, le comblement attribue d'office à la ressource prioritaire que les règles acceptent.
+
+00:01:51.085 --> 00:01:57.517
+Une place offerte au comblement avise les ressources admissibles ; l'écran dit à qui, par quel canal, et ce que le canal a rendu.
+
+00:01:59.337 --> 00:02:03.772
+Une absence de moyen ou long terme réserve ses places et ouvre un remplacement long terme qui leur est lié.

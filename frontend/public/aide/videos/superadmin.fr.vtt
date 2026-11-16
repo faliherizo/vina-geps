@@ -1,22 +1,10 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.858
-Organismes (exploitation).
+00:00:00.000 --> 00:00:05.550
+Organismes (exploitation). Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:02.308 --> 00:00:06.905
-Créer un organisme, lui accorder ses modules, régler ses sous-menus et ses sauvegardes.
+00:00:06.750 --> 00:00:10.140
+Le superadmin se connecte à la console globale et ouvre Modules et accès.
 
-00:00:07.355 --> 00:00:10.351
-Qui s'en sert : Exploitant de la plateforme seulement.
-
-00:00:10.801 --> 00:00:11.660
-Comment faire :
-
-00:00:12.110 --> 00:00:14.594
-Créer l'organisme, puis cocher ses modules.
-
-00:00:15.044 --> 00:00:18.040
-Masquer au besoin des vues de menu ; planifier les sauvegardes.
-
-00:00:18.490 --> 00:00:23.180
-Résultat : Le menu de l'organisme suit ses modules ; un module coupé ferme aussi ses routes.
+00:00:11.720 --> 00:00:16.155
+Pour l'organisme choisi, la case du module figure dans la famille Gestion des effectifs.

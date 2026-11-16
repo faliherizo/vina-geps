@@ -1,31 +1,13 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.068
-Validation des temps.
+00:00:00.000 --> 00:00:04.760
+Validation des temps. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.518 --> 00:00:06.464
-Relire, avant la paie, les feuilles de la période et leurs anomalies, puis les valider ou les retourner.
+00:00:05.960 --> 00:00:16.223
+Le contrôle signale une anomalie : Marc Dubé n'a pas de taux, son échelon manque dans l'échelle. Le comptable retourne la feuille de Léa Côté avec son motif : le quart du lundi doit être codé en formation.
 
-00:00:06.914 --> 00:00:14.786
-Qui s'en sert : Administration, RH et comptabilité (capacité paie.gerer ). Valider ne remplace pas l'approbation du gestionnaire.
+00:00:19.345 --> 00:00:25.406
+Il valide d'un geste toutes les feuilles sans anomalie, puis celle de Marc, une à une. Chaque validation est signée de son nom.
 
-00:00:15.236 --> 00:00:16.095
-Comment faire :
-
-00:00:16.545 --> 00:00:18.542
-Choisir la période, puis Afficher .
-
-00:00:18.992 --> 00:00:28.164
-Lire les anomalies de chaque feuille : non approuvée, incalculable, sans dossier, sans taux, plus de 60 heures, validation périmée ; et les personnes sans feuille.
-
-00:00:28.614 --> 00:00:33.095
-Valider les feuilles sans anomalie d'un coup, puis Valider les autres une à une après vérification.
-
-00:00:33.545 --> 00:00:38.793
-Retourner une feuille approuvée qui contient une erreur : dire ce qu'il faut corriger ; elle revient à la personne.
-
-00:00:39.243 --> 00:00:44.793
-Résultat : Quand l'organisme exige la validation, seules les feuilles validées entrent dans le prochain cycle de paie.
-
-00:00:45.243 --> 00:00:52.998
-Attention : Une feuille validée dont les heures changent ensuite (rouverte, corrigée, réapprouvée) perd sa validation : elle est à revalider.
+00:00:27.141 --> 00:00:40.887
+Il prépare le cycle de paie. L'écran avertit que Marc Dubé n'a pas de taux : il n'est pas payé tant que la RH n'a pas complété l'échelle. Seule Julie a un bulletin : 816 dollars d'heures régulières, la prime de soins critiques, la prime de soir et l'allocation de rétention.

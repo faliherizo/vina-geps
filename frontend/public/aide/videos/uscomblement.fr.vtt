@@ -1,25 +1,22 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:00.697
-Comblement.
+00:00:00.000 --> 00:00:04.389
+Comblement. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.147 --> 00:00:06.464
-Le tableau du matin : taux de comblement, quarts sous leur minimum opérationnel, jours sous le quota.
+00:00:05.589 --> 00:00:11.742
+Planification. La planificatrice ouvre le comblement : un quart de la Caserne 12 est sous le minimum opérationnel.
 
-00:00:06.914 --> 00:00:10.769
-Qui s'en sert : Planificateurs, chefs, direction.
+00:00:14.410 --> 00:00:21.724
+Elle passe aux équipages du jour et attribue les deux places du quart, à Julie Roy puis à Marc Dubé. Le quart doit devenir opérationnel, deux sur deux.
 
-00:00:11.219 --> 00:00:12.078
-Comment faire :
+00:00:24.348 --> 00:00:34.704
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : la planificatrice comble un quart sous son minimum, depuis le tableau du matin. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:12.528 --> 00:00:13.666
-Choisir la Période .
+00:00:38.617 --> 00:00:43.934
+Clore la campagne : les quarts restés sans titulaire apparaissent au tableau de comblement de la gestion régulière.
 
-00:00:14.116 --> 00:00:18.156
-Lire Quarts sous leur minimum opérationnel ; Combler ouvre la place à pourvoir.
+00:00:46.876 --> 00:00:52.495
+Le tableau du matin, hors campagne annuelle : taux de comblement, quarts sous minimum, quotas manqués.
 
-00:00:18.606 --> 00:00:26.036
-Choisir la personne ; forcer une attribution qu'une règle écarte exige une justification (10 caractères au moins), consignée au journal.
-
-00:00:26.486 --> 00:00:30.457
-Résultat : Le quart remonte vers opérationnel et le taux de comblement se met à jour.
+00:00:54.319 --> 00:00:59.195
+Les quarts non couverts à la clôture de la campagne sont pris en charge ici, et non laissés dans l'AGPH.

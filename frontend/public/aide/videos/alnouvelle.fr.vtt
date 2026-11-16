@@ -1,34 +1,31 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:00.859
-Nouvelle alerte.
+00:00:00.000 --> 00:00:04.528
+Nouvelle alerte. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.309 --> 00:00:06.371
-Envoyer une alerte priorisée à des groupes ou à des personnes, avec les réponses qu'elles pourront donner d'un geste.
+00:00:05.728 --> 00:00:14.784
+La planificatrice ouvre Nouvelle alerte et choisit le modèle Code bleu. La priorité critique ne lui est pas permise : l'écran le dit. Elle vise tout le groupe Garde de nuit et envoie l'alerte.
 
-00:00:06.821 --> 00:00:12.812
-Qui s'en sert : Administration, direction et planificateurs (capacité alertes.envoyer ).
+00:00:21.292 --> 00:00:30.139
+Au suivi des alertes, filtré sur les prises en charge, la planificatrice voit le Code bleu pris en charge, une personne sur une, par Julie, avec sa réponse.
 
-00:00:13.262 --> 00:00:14.121
-Comment faire :
+00:00:32.703 --> 00:00:38.137
+La planificatrice envoie une alerte de garde avec cette politique : la cascade de relances est armée dès l'envoi.
 
-00:00:14.571 --> 00:00:21.235
-Choisir un Modèle au besoin : il remplit le titre, le message, la priorité et les réponses ; tout reste modifiable.
+00:00:41.530 --> 00:00:49.518
+Console web d'envoi centralisée ; alerte par application mobile ou texto selon la préférence du destinataire. Ses commandes doivent être présentes à l'écran.
 
-00:00:21.685 --> 00:00:34.155
-Écrire le Titre et le Message , puis choisir la Priorité . Une alerte critique part sur tous les canaux, quelles que soient les préférences ; elle est réservée à qui en a le droit (direction, administration, ou un droit accordé par l'organisme).
+00:00:52.613 --> 00:00:57.118
+Recherche de destinataire par nom, prénom. Ses commandes doivent être présentes à l'écran.
 
-00:00:34.605 --> 00:00:46.075
-Choisir les destinataires : Tout le groupe … (une unité ou un groupe transverse, comme une garde), La liste … (une liste de distribution), ou des personnes, par leur nom, dans Choisir des personnes dans un groupe .
+00:00:59.000 --> 00:01:04.945
+Envoi à un utilisateur, plusieurs, ou un groupe configurable. Ses commandes doivent être présentes à l'écran.
 
-00:00:46.525 --> 00:00:53.724
-Au besoin, choisir des Relances : sans réaction, l'alerte est relancée puis escaladée selon la politique, jusqu'à son critère d'arrêt.
+00:01:06.981 --> 00:01:10.673
+Diffusion d'alertes en temps réel. Ses commandes doivent être présentes à l'écran.
 
-00:00:54.174 --> 00:00:57.006
-Cocher les Réponses proposées , puis Envoyer l'alerte .
+00:01:12.441 --> 00:01:17.480
+Alertes critiques, lorsque disponibles et permises. Ses commandes doivent être présentes à l'écran.
 
-00:00:57.456 --> 00:01:04.028
-Résultat : Alerte … envoyée à N personne(s) ; les destinataires sont figés à l'envoi, et Suivre les réponses ouvre le suivi.
-
-00:01:04.478 --> 00:01:15.113
-Attention : Vous n'êtes jamais destinataire de votre propre alerte, même si vous êtes dans le groupe visé. Sans le droit du critique, la priorité Critique est grisée, et les modèles critiques ne vous sont pas proposés.
+00:01:34.261 --> 00:01:39.393
+Interface intuitive, rapide en contexte clinique. Ses commandes doivent être présentes à l'écran.

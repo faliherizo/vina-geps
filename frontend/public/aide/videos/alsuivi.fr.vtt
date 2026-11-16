@@ -1,34 +1,31 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.091
-Suivi des alertes.
+00:00:00.000 --> 00:00:04.760
+Suivi des alertes. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.541 --> 00:00:06.928
-Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pris en charge.
+00:00:05.960 --> 00:00:12.299
+Elle reprend la cascade à la main, et la reprise est tracée. L'ordonnanceur exécute l'étape, et toutes les étapes sont parties.
 
-00:00:07.378 --> 00:00:13.718
-Qui s'en sert : Administration, direction et planificateurs : le suivi est partagé entre expéditeurs.
+00:00:17.240 --> 00:00:23.184
+La planificatrice ouvre le suivi des alertes et filtre sur les alertes relancées : le Code bleu a été relancé une fois.
 
-00:00:14.168 --> 00:00:15.027
-Comment faire :
+00:00:26.183 --> 00:00:35.494
+Dans le détail, la trace de la cascade nomme Julie. La planificatrice pose une note sur la destinataire, joindre sur le cellulaire de garde, visible des autres expéditeurs.
 
-00:00:15.477 --> 00:00:24.208
-Filtrer au besoin : Du , Au , Priorité , État (prise en charge, sans prise en charge, pas encore lue de tous), Expéditeur , puis Filtrer .
+00:00:39.663 --> 00:00:42.867
+Enfin, elle exporte le suivi des alertes en fichier CSV.
 
-00:00:24.658 --> 00:00:29.603
-Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.
+00:00:45.542 --> 00:00:49.931
+Insertion d'une note au dossier des destinataires. Ses commandes doivent être présentes à l'écran.
 
-00:00:30.053 --> 00:00:33.676
-Détail ouvre les destinataires : lue le, état, répondu le.
+00:00:53.434 --> 00:01:00.749
+Statut d'envoi, réception, lecture, réponse et relance, vu par l'expéditeur. Ses commandes doivent être présentes à l'écran.
 
-00:00:34.126 --> 00:00:41.579
-Exporter le même suivi, au même filtre : CSV, Excel, PDF ou JSON. Actualiser relit les réponses arrivées depuis.
+00:01:02.674 --> 00:01:07.806
+Historique des échanges et statuts partagés entre expéditeurs. Ses commandes doivent être présentes à l'écran.
 
-00:00:42.029 --> 00:00:52.432
-Dans le détail, Relances et escalades montre la cascade : l'étape attendue et son heure, puis la trace de chaque étape (qui a été visé, par qui). Reprendre à l'étape … la relance aussitôt.
+00:01:09.481 --> 00:01:15.054
+Traces des relances, appels, réponses, escalades. Ses commandes doivent être présentes à l'écran.
 
-00:00:52.882 --> 00:01:03.912
-Dans le détail, la colonne Note montre la note de chaque destinataire ; Ajouter ou Modifier l'écrit (280 caractères, datée et signée), Effacer la retire. Elle ne figure jamais en clair au journal.
-
-00:01:04.362 --> 00:01:10.306
-Résultat : Lecture seule : le suivi ne change rien aux alertes ; l'export est une pièce datée, à archiver.
+00:01:17.274 --> 00:01:21.918
+Écran de visionnement des messages envoyés et des statuts. Ses commandes doivent être présentes à l'écran.

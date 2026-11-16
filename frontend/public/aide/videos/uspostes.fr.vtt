@@ -1,25 +1,25 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:00.581
-Postes.
+00:00:00.000 --> 00:00:04.273
+Postes. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.031 --> 00:00:09.297
-Définir les postes (lignes de quarts) : code, libellé, milieu, corps d'emploi, statut offert et cycle ; les publier, les modifier en lot.
+00:00:05.473 --> 00:00:09.513
+Postes : la planificatrice coche deux postes pour les modifier d'un seul geste.
 
-00:00:09.747 --> 00:00:12.789
-Qui s'en sert : Planificateurs et administration.
+00:00:11.794 --> 00:00:19.061
+Sans changement choisi, l'enregistrement est refusé. Elle remplace le cycle par la plage de nuit : les deux postes et leurs quarts publiés sont déplacés.
 
-00:00:13.239 --> 00:00:14.098
-Comment faire :
+00:00:24.887 --> 00:00:33.617
+Dans la période publiée, elle ajuste un quart : début à 19 heures, minimum d'une personne, et une note qui explique le retard. Le changement est tracé au journal.
 
-00:00:14.548 --> 00:00:19.146
-Créer un poste avec son code, son libellé, son milieu et son Premier jour du cycle .
+00:00:37.708 --> 00:00:41.655
+« Nouveau poste » : code, libellé, cycle de quarts et début de cycle.
 
-00:00:19.596 --> 00:00:24.147
-Décrire le cycle (les quarts de chaque jour) ; publier pour qu'il entre dans la planification.
+00:00:44.825 --> 00:00:50.653
+Sélectionner des postes, « Modifier en lot » : le cycle est remplacé pour tous, les conflits sont listés avant d'écrire.
 
-00:00:24.597 --> 00:00:30.680
-Modifier plusieurs postes d'un geste ( Remplacer le cycle par une semaine commune ) : les conflits sont listés avant d'écrire.
+00:00:53.498 --> 00:00:58.003
+« Publier » : les postes passent de brouillon à publié, et leurs quarts entrent dans la planification.
 
-00:00:31.130 --> 00:00:38.027
-Résultat : Les quarts futurs déjà générés suivent la modification ; le bilan dit combien ont été déplacés, requalifiés ou retirés.
+00:00:59.747 --> 00:01:06.109
+Fiche du poste : statut d'emploi, corps, milieu, nature et cycle — les paramètres fonctionnels du poste.

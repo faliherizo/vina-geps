@@ -1,28 +1,31 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.208
-Mes disponibilités.
+00:00:00.000 --> 00:00:04.899
+Mes disponibilités. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.657 --> 00:00:05.187
-Déposer ses disponibilités pour une période dont la collecte est ouverte.
+00:00:06.099 --> 00:00:15.016
+Disponibilités. Julie Roy, paramédic à temps partiel, ouvre Mes disponibilités : la période de la semaine 10 est en collecte, et elle n'a encore rien déposé.
 
-00:00:05.637 --> 00:00:08.447
-Qui s'en sert : Toute personne planifiable.
+00:00:16.541 --> 00:00:23.391
+Elle offre un seul quart et dépose. La règle de l'organisme exige au moins deux quarts par semaine : le dépôt est refusé, avec ce motif.
 
-00:00:08.897 --> 00:00:09.756
-Comment faire :
+00:00:26.101 --> 00:00:35.204
+Elle ajoute une préférence, puis un samedi, et dépose à nouveau. Le dépôt est conforme, mais une fin de semaine offerte demande l'accord du chef : il attend son approbation.
 
-00:00:10.206 --> 00:00:13.108
-Choisir la Période (seules celles en collecte apparaissent).
+00:00:37.228 --> 00:00:46.911
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée dépose une plage, après avoir lu la règle qui la juge. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:13.558 --> 00:00:18.411
-Ajouter une plage pour chaque jour : jour, début, fin, et le type Disponibilité .
+00:00:49.988 --> 00:00:52.728
+L'employé choisit la période et dépose ses plages par jour.
 
-00:00:18.861 --> 00:00:23.157
-Enregistrer : les règles jugent le dépôt aussitôt ; un refus nomme ce qu'il faut corriger.
+00:00:55.438 --> 00:01:00.941
+Déposer une plage non conforme : le dépôt est refusé ou signalé selon le réglage de la règle, à la saisie.
 
-00:00:23.607 --> 00:00:29.644
-Résultat : Le dépôt rejoint le bassin de candidats de la période ; À surveiller dans votre dépôt liste les avertissements.
+00:01:02.605 --> 00:01:08.062
+Le refus nomme la règle et ce qu'elle exige : l'employé lit le motif de son inadmissibilité, pas un code.
 
-00:00:30.094 --> 00:00:34.994
-Attention : Une fin avant le début (22:00 → 06:00) veut dire que la plage passe minuit.
+00:01:09.761 --> 00:01:17.238
+Tant que la collecte de la période est ouverte, l'employé dépose et ajuste ses disponibilités ; fermée, l'écran passe en lecture seule.
+
+00:01:18.991 --> 00:01:24.215
+Calendrier interne de disponibilité des destinataires. Ses commandes doivent être présentes à l'écran.

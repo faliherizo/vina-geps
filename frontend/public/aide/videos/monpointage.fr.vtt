@@ -1,28 +1,25 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:00.859
-Mon pointage.
+00:00:00.000 --> 00:00:04.551
+Mon pointage. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.309 --> 00:00:07.161
-Pointer l'entrée et la sortie d'un quart, avec la preuve exigée par le milieu, ou déclarer après coup un quart non pointé.
+00:00:05.751 --> 00:00:17.268
+Présence et pointage. Julie Roy ouvre Mon pointage depuis la Caserne 12, où se trouve son quart. Sa position est fournie. Elle pointe son entrée : conforme, à zéro mètre du milieu. Puis elle commence sa pause.
 
-00:00:07.611 --> 00:00:11.163
-Qui s'en sert : Toute personne planifiable qui a un quart en cours.
+00:00:21.526 --> 00:00:31.023
+Marc Dubé pointe sans partager sa position, alors que le géorepérage est exigé à la caserne. Le pointage est enregistré, mais en écart : son gestionnaire devra l'approuver.
 
-00:00:11.613 --> 00:00:12.473
-Comment faire :
+00:00:33.676 --> 00:00:44.590
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée déclare après coup un quart qu'elle n'a pas pu pointer, dans le dialogue prévu pour cela. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:12.923 --> 00:00:19.099
-Choisir Où êtes-vous ? (le milieu du quart) et, si demandé, saisir le Code affiché au milieu ou joindre sa position.
+00:00:49.037 --> 00:00:54.703
+« Déclarer » : l'employé pointe son entrée et sa sortie en temps réel, selon le profil de pointage qui lui est posé.
 
-00:00:19.549 --> 00:00:24.588
-Entrée au début du quart, Sortie à la fin ; une pause se déclare par Début de pause et Fin de pause .
+00:00:58.480 --> 00:01:05.144
+Saisie a posteriori : date, entrée, sortie, activité et justification, sous le profil qui l'autorise.
 
-00:00:25.038 --> 00:00:30.704
-Un oubli : Déclarer un quart non pointé , avec la date, les heures et Pourquoi ce quart n'a-t-il pas été pointé ? .
+00:01:08.083 --> 00:01:12.750
+« Déclarer un temps » : l'employé saisit après coup, dans la fenêtre que son profil autorise.
 
-00:00:31.154 --> 00:00:38.677
-Résultat : Le pointage est jugé (conforme, écart de lieu, preuve absente) ; un écart part à l'approbation du planificateur.
-
-00:00:39.127 --> 00:00:44.537
-Attention : La position n'est lue qu'une fois, au geste, et seulement si vous cochez Joindre ma position .
+00:01:14.578 --> 00:01:22.241
+Déclarer un temps avec une pause : la nature de la période non payée est exigée dès que la pause est bornée — un segment, puis un autre, sur le même quart.

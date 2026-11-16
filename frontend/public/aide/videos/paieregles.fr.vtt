@@ -1,37 +1,25 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.277
-Règles de paie variable.
+00:00:00.000 --> 00:00:04.946
+Règles de paie variable. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.727 --> 00:00:05.791
-Tenir l'échelle salariale et les primes de l'organisme, sans livraison du produit.
+00:00:06.146 --> 00:00:11.417
+Dans les paramètres, elle exige la validation des temps avant toute paie : une feuille non validée ne sera pas payée.
 
-00:00:06.241 --> 00:00:13.509
-Qui s'en sert : Administration et RH (capacité paie.configurer ) ; la comptabilité paie selon ces règles sans les modifier.
+00:00:12.960 --> 00:00:20.228
+Elle ajoute la règle Infirmière, échelon 3 : taux de base de 34 dollars de l'heure, pour le titre d'emploi INF, échelon 3.
 
-00:00:13.959 --> 00:00:14.818
-Comment faire :
+00:00:21.937 --> 00:00:28.392
+Elle ajoute la règle Préposé, échelon 1 : taux de base de 24 dollars de l'heure, pour le titre d'emploi PAB, échelon 1.
 
-00:00:15.268 --> 00:00:22.141
-Nouvelle règle : choisir le type — taux de base (échelle), prime en pourcentage du taux, prime horaire, ou forfait par paie.
+00:00:30.239 --> 00:00:35.394
+Elle ajoute la règle Prime de soins critiques : 2 dollars de plus par heure, pour le titre d'emploi INF.
 
-00:00:22.591 --> 00:00:26.515
-Donner le code du gain (il paraît sur la fiche de paie), le libellé et la valeur.
+00:00:37.157 --> 00:00:40.106
+Elle ajoute la règle Prime de soir : 10 pour cent de plus.
 
-00:00:26.965 --> 00:00:32.840
-Dire qui est visé : titre d'emploi, convention, échelon ; vides, la règle vise tout le personnel.
+00:00:42.303 --> 00:00:47.249
+Elle ajoute la règle Allocation de rétention : 100 dollars par paie, pour le titre d'emploi INF.
 
-00:00:33.290 --> 00:00:41.045
-Pour une prime, dire quelles heures : la plage (heure de Montréal ; une fin avant le début passe minuit), les jours, les fériés, les codes de paie.
-
-00:00:41.495 --> 00:00:48.345
-Donner la période de validité. Une augmentation se saisit comme une nouvelle règle qui commence à sa date ; l'ancienne se termine la veille.
-
-00:00:48.795 --> 00:00:52.255
-Désactiver retire une règle des prochains calculs, sans l'effacer.
-
-00:00:52.705 --> 00:00:57.930
-Résultat : Le prochain cycle préparé ou recalculé paie la prime ; une paie déjà traitée garde ses gains.
-
-00:00:58.380 --> 00:01:05.369
-Attention : Une heure se paie au taux de base du jour où elle est travaillée : un cycle à cheval sur une augmentation montre deux lignes d'heures, une par taux.
+00:00:50.789 --> 00:00:59.984
+Dans les dossiers de rémunération, elle place chaque personne à son échelon : Julie Roy et Léa Côté à l'échelon 3, Marc Dubé à l'échelon 2, qui n'existe pas encore dans l'échelle.

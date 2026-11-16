@@ -1,22 +1,10 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.161
-Journal des décisions.
+00:00:00.000 --> 00:00:04.830
+Journal des décisions. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.611 --> 00:00:07.370
-Retrouver qui a fait quoi, quand, et par quel mécanisme : chaque décision des règles et chaque geste de l'encadrement.
+00:00:06.030 --> 00:00:12.415
+Le journal : chaque action horodatée avec son auteur ou le mécanisme qui l'a posée ; filtrable par période et par origine.
 
-00:00:07.820 --> 00:00:11.976
-Qui s'en sert : Administration, direction, vérification.
-
-00:00:12.426 --> 00:00:13.285
-Comment faire :
-
-00:00:13.735 --> 00:00:17.892
-Filtrer par période (du, au exclu), unité, acteur ou action.
-
-00:00:18.342 --> 00:00:21.175
-Ouvrir le Détail d'une entrée ; exporter au format voulu.
-
-00:00:21.625 --> 00:00:24.550
-Résultat : L'export porte les mêmes filtres que l'écran.
+00:00:15.345 --> 00:00:21.591
+Filtrer le journal sur une période passée, puis « Exporter » : l'audit a posteriori se lit à l'écran et s'emporte en CSV.

@@ -17,6 +17,9 @@ const EN_TOURNAGE = process.env.E2E_RECIT === "1";
 const DOSSIER = path.join(__dirname, "..", "..", "..", "test-results");
 const VOIX = path.join(DOSSIER, "recit-voix");
 const JOURNAL = path.join(DOSSIER, "recit.jsonl");
+/** Chaque navigation des pages racontées : le montage range un passage sous l'écran qu'il montre le plus longtemps. */
+const NAVIGATIONS = path.join(DOSSIER, "recit-navigations.jsonl");
+const suivies = new WeakSet<Page>();
 const VOIX_NOM = "Amélie";
 const DEBIT_MOTS_MINUTE = "180";
 /** Le temps de regarder l'écran après la phrase, avant le geste suivant. */
@@ -46,6 +49,15 @@ function voix(texte: string): { fichier: string; duree: number } {
   return { fichier, duree: Number(sortie.trim()) };
 }
 
+/** Note l'écran courant, puis chaque changement d'adresse de la page (navigations de l'application comprises). */
+function suivreLesNavigations(page: Page, video: string): void {
+  if (suivies.has(page)) return;
+  suivies.add(page);
+  const noter = (url: string) => appendFileSync(NAVIGATIONS, JSON.stringify({ t: Date.now(), video, url }) + "\n");
+  noter(page.url());
+  page.on("framenavigated", (cadre) => { if (cadre === page.mainFrame()) noter(cadre.url()); });
+}
+
 /**
  * Dit ce que l'essai va faire sur `page`, puis attend la fin de la phrase. La phrase nomme le cas éprouvé : qui agit, sur
  * quel écran, et ce qui doit se produire.
@@ -57,6 +69,7 @@ export async function raconter(page: Page, texte: string): Promise<void> {
   const chemin = await video.path();
   // L'enregistreur crée le fichier un peu après la page : sur une machine chargée, la première phrase arrive avant lui.
   for (let essai = 0; !existsSync(chemin) && essai < ATTENTE_FICHIER_ESSAIS; essai++) await page.waitForTimeout(ATTENTE_FICHIER_MS);
+  suivreLesNavigations(page, chemin);
   const dit = pourLOreille(texte);
   const { fichier, duree } = voix(dit);
   const attente = Math.round(duree * 1000) + REGARD_MS;

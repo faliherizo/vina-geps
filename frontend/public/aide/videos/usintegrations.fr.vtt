@@ -1,22 +1,16 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.556
-Intégrations des effectifs.
+00:00:00.000 --> 00:00:05.248
+Intégrations des effectifs. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:02.006 --> 00:00:08.322
-Régler les connecteurs (paie, bus d'entreprise, entrepôt de données, horodateurs) et suivre leur boîte d'envoi.
+00:00:06.448 --> 00:00:16.270
+Intégrations. L'administrateur ouvre les connecteurs : tous sont coupés. Il active le système d'aide à la répartition, le SAAV, puis le bus d'entreprise, en mode simulateur.
 
-00:00:08.772 --> 00:00:10.978
-Qui s'en sert : Administration.
+00:00:20.171 --> 00:00:27.787
+Il publie les équipages du 15 janvier pour l'unité Opérations Est vers le SAAV, puis relaie le journal vers le bus. Les deux messages déposés sont listés.
 
-00:00:11.428 --> 00:00:12.287
-Comment faire :
+00:00:31.191 --> 00:00:40.293
+Il configure ensuite le lot de paie vers le système de paie externe. Une adresse en http est refusée : un protocole sécurisé est exigé. La clé saisie est mise en majuscules.
 
-00:00:12.737 --> 00:00:14.803
-Activer un connecteur et choisir son mode.
-
-00:00:15.253 --> 00:00:19.456
-Suivre la Boîte d'envoi : état de chaque message, reprise d'un envoi en échec.
-
-00:00:19.906 --> 00:00:25.827
-Résultat : Les lots de paie et les équipages partent selon le connecteur ; un échec reste en boîte jusqu'à sa reprise.
+00:00:43.708 --> 00:00:51.858
+En SFTP, l'empreinte de la clé d'hôte est exigée : sans elle, la configuration est refusée. Avec l'empreinte, le connecteur est enregistré.

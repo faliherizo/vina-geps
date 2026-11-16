@@ -124,6 +124,34 @@ function ecranDe(url) {
 // Les passages, d'une phrase à la suivante.
 
 if (!existsSync(JOURNAL)) throw new Error(`aucun récit : ${JOURNAL} — lancer le tournage avec E2E_RECIT=1`);
+const lignes = (f) => (existsSync(f) ? readFileSync(f, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)) : []);
+/** Les adresses successives de chaque vidéo, triées dans le temps. */
+const navigations = new Map();
+for (const n of lignes(join(RACINE, "e2e", "test-results", "recit-navigations.jsonl")).sort((a, b) => a.t - b.t)) {
+  if (!navigations.has(n.video)) navigations.set(n.video, []);
+  navigations.get(n.video).push(n);
+}
+
+/**
+ * **L'écran qu'un passage montre** : celui qui reste affiché le plus longtemps entre `de` et `a` (instants absolus). Une
+ * phrase précède souvent le geste qui change d'écran, et une boucle navigue juste avant la phrase suivante : ni l'écran
+ * du début ni celui de la fin ne suffisent.
+ */
+function ecranMontre(video, de, a, repli) {
+  const suite = navigations.get(video) ?? [];
+  const temps = new Map();
+  let courant = repli;
+  for (const n of suite) if (n.t <= de) courant = ecranDe(n.url);
+  let depuis = de;
+  for (const n of suite.filter((x) => x.t > de && x.t < a)) {
+    temps.set(courant, (temps.get(courant) ?? 0) + (n.t - depuis));
+    courant = ecranDe(n.url);
+    depuis = n.t;
+  }
+  temps.set(courant, (temps.get(courant) ?? 0) + (a - depuis));
+  return [...temps.entries()].filter(([e]) => e).sort((x, y) => y[1] - x[1])[0]?.[0] ?? repli;
+}
+
 const entrees = readFileSync(JOURNAL, "utf8").split("\n").filter(Boolean).map((l) => JSON.parse(l)).sort((a, b) => a.t - b.t);
 const { chapitres } = JSON.parse(readFileSync(join(RACINE, "scripts", "vitrine-chapitres.json"), "utf8"));
 
@@ -136,11 +164,9 @@ function passagesDe(fichier) {
     let fin = suivante && suivante.titre === e.titre ? (suivante.t - e.naissance) / 1000 : debut + e.duree + QUEUE_S;
     fin = Math.min(fin, debut + Math.max(PASSAGE_MAX_S, e.duree + 2), total);
     fin = Math.max(fin, debut + e.duree + 0.3);
-    const memeVideo = suivante && suivante.video === e.video;
     return {
       chapitre: fichier, video: e.video, debut, longueur: fin - debut, voix: e.voix, duree: e.duree, texte: e.texte,
-      // L'écran où le passage aboutit : la phrase précède souvent le geste qui y mène (« elle ouvre Mes absences »).
-      ecran: ecranDe(memeVideo ? suivante.url : e.url),
+      ecran: ecranMontre(e.video, e.t, e.naissance + fin * 1000, ecranDe(e.url)),
     };
   });
 }
@@ -200,6 +226,7 @@ for (const c of cartonsAide) {
   const choisis = [];
   let cumul = 0;
   for (const p of candidats) {
+    if (choisis.some((x) => x.texte === p.texte)) continue;
     if (choisis.length && cumul + p.longueur > AIDE_MAX_S) continue;
     choisis.push(p);
     cumul += p.longueur;

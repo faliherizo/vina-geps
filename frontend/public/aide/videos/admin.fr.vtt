@@ -1,28 +1,10 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.208
-Utilisateurs et rôles.
+00:00:00.000 --> 00:00:04.899
+Utilisateurs et rôles. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.657 --> 00:00:08.507
-Créer les comptes de l'organisme, leur donner un rôle, tenir les clés d'API, l'audit, la confidentialité et les tâches différées.
+00:00:06.099 --> 00:00:11.231
+Console de gestion centralisée pour les administrateurs. Ses commandes doivent être présentes à l'écran.
 
-00:00:08.957 --> 00:00:11.883
-Qui s'en sert : Administration de l'organisme.
-
-00:00:12.333 --> 00:00:13.192
-Comment faire :
-
-00:00:13.642 --> 00:00:19.262
-Comptes et rôles : identifiant, rôle, mot de passe provisoire, lien facultatif à l'employé.
-
-00:00:19.712 --> 00:00:23.752
-Rôles et accès : composer un rôle propre à l'organisme à partir des capacités.
-
-00:00:24.202 --> 00:00:28.242
-Journal d'audit , Confidentialité (droit à l'oubli), Clés d'API .
-
-00:00:28.692 --> 00:00:37.005
-Résultat : La personne se connecte, change son mot de passe et configure son second facteur ; avec Entra ID, le compte se crée à la première connexion.
-
-00:00:37.455 --> 00:00:43.934
-Attention : Avec l'authentification Entra ID, le rôle vient des groupes de l'annuaire : voir UTILISATEURS-PROFILS-ACCES.md.
+00:00:14.700 --> 00:00:23.640
+Créer, modifier, désactiver utilisateurs et groupes (unité, service, spécialité, établissement). Ses commandes doivent être présentes à l'écran.

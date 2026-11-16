@@ -1,28 +1,7 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:01.324
-Dossiers de rémunération.
+00:00:00.000 --> 00:00:05.016
+Dossiers de rémunération. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:01.774 --> 00:00:05.233
-Dire, pour chaque personne des effectifs, comment elle est payée.
-
-00:00:05.683 --> 00:00:10.095
-Qui s'en sert : Administration et RH (capacité paie.configurer ).
-
-00:00:10.545 --> 00:00:11.404
-Comment faire :
-
-00:00:11.854 --> 00:00:14.153
-Créer ou Modifier sur la ligne de la personne.
-
-00:00:14.603 --> 00:00:18.644
-Choisir la rémunération (à l'heure ou au salaire annuel) et la fréquence de paie.
-
-00:00:19.094 --> 00:00:29.589
-À l'heure, saisir l'échelon : le taux vient alors de l'échelle salariale ( Règles de paie variable ). Un taux horaire saisi est un taux hors échelle, qui l'emporte. Au salaire, saisir le salaire annuel.
-
-00:00:30.039 --> 00:00:39.002
-Au besoin, les montants personnels déclarés sur les formulaires TP-1015.3-V (Québec) et TD1 (fédéral) ; laissés vides, ce sont ceux de base de l'année.
-
-00:00:39.452 --> 00:00:43.005
-Résultat : La prochaine paie préparée ou recalculée applique ce dossier.
+00:00:06.216 --> 00:00:14.087
+Il tente de préparer un cycle de paie en 2031. Aucun barème fiscal n'est publié pour cette année : la préparation est refusée, et le message nomme l'année.
