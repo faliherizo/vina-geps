@@ -1,8 +1,8 @@
 {
   "$commentaire": "Les chapitres du film de la vitrine, dans l'ordre : chacun est un essai e2e joué contre le Java, qui affirme ce qu'il montre. La narration est dite au début du chapitre (voix française du Québec) et devient les sous-titres, mot pour mot. Lu par scripts/monter-video-vitrine.sh et scripts/narrer-vitrine.mjs.",
   "chapitres": [
-    { "fichier": "tests/e2e/urgences-sante-demonstration.spec.ts", "titre": "Urgences-santé — l'organisme de démonstration : tableau de bord, quarts du jour, sites",
-      "narration": ["Voici VINA GEPS, la gestion des personnels de la santé, sur l'organisme de démonstration d'Urgences-santé.", "Le menu suit les planches de l'appel d'offres : chaque entrée est une page, et chaque écran passe le contrôle d'accessibilité."] },
+    { "fichier": "tests/e2e/urgences-sante-demonstration.spec.ts", "titre": "VINA GePS — l'organisme de démonstration : tableau de bord, quarts du jour, sites",
+      "narration": ["Voici VINA GePS, la gestion des personnels de la santé, présentée sur un organisme de démonstration.", "Le menu suit les planches de l'appel d'offres : chaque entrée est une page, et chaque écran passe le contrôle d'accessibilité."] },
     { "fichier": "tests/e2e/effectifs-socle.spec.ts", "titre": "Socle des effectifs : référentiels datés, unités, ressources, périmètres",
       "narration": ["Le socle des effectifs : des référentiels datés, des unités, des ressources et des périmètres d'encadrement.", "Une valeur ne se modifie jamais en place : elle se remplace à partir d'une date, et le passé reste lisible."] },
     { "fichier": "tests/e2e/effectifs-planification.spec.ts", "titre": "Planification : périodes, postes, quarts ad hoc, attribution et règles",

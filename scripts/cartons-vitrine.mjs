@@ -26,22 +26,22 @@ const echapper = (t) => t.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/
 
 /** Un carton : l'avis en surtitre, le numéro, le titre, et l'essai e2e qui joue le chapitre. */
 function carton(c, n) {
-  const [avis, ...reste] = c.titre.startsWith("FX-AO — ") ? ["FX-AO-20260810 · Santé Québec Laurentides", c.titre.slice(8)]
-    : ["26-015-DO · Urgences-santé", c.titre];
+  const [avis, ...reste] = c.titre.startsWith("FX-AO — ") ? ["VINA GePS · avis FX-AO-20260810", c.titre.slice(8)]
+    : ["VINA GePS · avis 26-015-DO", c.titre];
   return `<!doctype html><html lang="fr"><meta charset="utf-8"><style>
     html,body{margin:0;width:${largeur}px;height:${hauteur}px;background:#0f2a44;color:#fff;font-family:"Helvetica Neue",Arial,sans-serif}
     main{box-sizing:border-box;height:100%;padding:0 96px;display:flex;flex-direction:column;justify-content:center;gap:20px}
-    .avis{font-size:24px;letter-spacing:.08em;text-transform:uppercase;color:#c9d8e8}
+    .avis{font-size:24px;letter-spacing:.04em;color:#c9d8e8}
     .num{font-size:30px;font-weight:600;color:#c9d8e8}
     h1{margin:0;font-size:52px;line-height:1.15;font-weight:700;border-left:8px solid #5fb3f0;padding-left:28px}
     .essai{font-size:22px;color:#c9d8e8;font-family:Menlo,monospace}
-    .marque{position:absolute;right:48px;bottom:36px;font-size:22px;font-weight:700;letter-spacing:.06em;color:#c9d8e8}
+    .marque{position:absolute;right:48px;bottom:36px;font-size:22px;font-weight:700;color:#c9d8e8}
   </style><main>
     <div class="avis">${echapper(avis)}</div>
     <div class="num">Chapitre ${n} sur ${chapitres.length}</div>
     <h1>${echapper(majuscule(reste.join("")))}</h1>
     <div class="essai">Essai joué contre le serveur : ${echapper(c.fichier.replace(/^tests\/e2e\//, ""))}</div>
-  </main><div class="marque">VINA GEPS</div></html>`;
+  </main><div class="marque">VINA GePS</div></html>`;
 }
 
 const navigateur = await chromium.launch();

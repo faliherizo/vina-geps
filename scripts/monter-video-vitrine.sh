@@ -1,5 +1,5 @@
 #!/bin/zsh
-# **Le film de la vitrine de VINA GEPS** — chaque chapitre est un essai e2e joué contre le Java.
+# **Le film de la vitrine de VINA GePS** — chaque chapitre est un essai e2e joué contre le Java.
 #
 #   scripts/monter-video-vitrine.sh            # filme les chapitres, puis monte le film
 #   REJEU=0 scripts/monter-video-vitrine.sh    # monte à partir des vidéos déjà filmées
