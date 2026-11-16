@@ -71,8 +71,10 @@ public class ConfigurationTempsEffectifs {
     /** Les feuilles approuvées et le verrou PAYEE, offerts à la paie par les ports de {@code partage.paie} (ADR 0076). */
     @Bean
     public FeuillesPourPaie feuillesPourPaie(LectureFeuillesTemps lecture, ExportPaieTemps export, EcritureFeuillesTempsPort depot,
-                                             JournalEffectifsPort journal, DepotRessourcesPort ressources, Clock horloge) {
-        return new FeuillesPourPaie(new FeuillesPourPaie.Dependances(lecture, export, depot, journal, ressources), () -> Iso.de(horloge.instant()));
+                                             JournalEffectifsPort journal, DepotRessourcesPort ressources,
+                                             GestionnaireApprobationTemps approbation, Clock horloge) {
+        FeuillesPourPaie.Dependances d = new FeuillesPourPaie.Dependances(lecture, export, depot, journal, ressources);
+        return new FeuillesPourPaie(d, approbation, () -> Iso.de(horloge.instant()));
     }
 
     @Bean

@@ -32,6 +32,7 @@ import Usperiodes from "./pages/usperiodes";
 import Usressources from "./pages/usressources";
 import Usquotas from "./pages/usquotas";
 import Usreferentiels from "./pages/usreferentiels";
+import Uscodesabsence from "./pages/uscodesabsence";
 import Usregles from "./pages/usregles";
 import Usmilieux from "./pages/usmilieux";
 import Usperimetres from "./pages/usperimetres";
@@ -65,6 +66,7 @@ export const PAGES_US: Record<string, ComponentType> = {
   usressources: Usressources,
   usquotas: Usquotas,
   usreferentiels: Usreferentiels,
+  uscodesabsence: Uscodesabsence,
   usregles: Usregles,
   usmilieux: Usmilieux,
   usperimetres: Usperimetres,

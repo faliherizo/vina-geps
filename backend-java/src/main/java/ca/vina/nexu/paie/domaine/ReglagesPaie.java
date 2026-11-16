@@ -4,10 +4,10 @@ import java.math.BigDecimal;
 
 /**
  * Ce qui varie d'un organisme à l'autre : le taux du FSS (selon sa masse salariale et son secteur), celui de la
- * CNESST (son unité de classification) et la majoration des heures supplémentaires (50 % au minimum, LNT art. 55,
- * davantage si la convention collective le prévoit).
+ * CNESST (son unité de classification), la majoration des heures supplémentaires (50 % au minimum, LNT art. 55,
+ * davantage si la convention collective le prévoit), et l'exigence d'une validation des temps par la paie (ADR 0084).
  */
-public record ReglagesPaie(BigDecimal tauxFss, BigDecimal tauxCnesst, BigDecimal majorationSupplementaire) {
+public record ReglagesPaie(BigDecimal tauxFss, BigDecimal tauxCnesst, BigDecimal majorationSupplementaire, boolean validationTempsExigee) {
 
     /** La majoration minimale de la Loi sur les normes du travail. */
     public static final BigDecimal MAJORATION_LEGALE = new BigDecimal("0.5");
@@ -21,9 +21,12 @@ public record ReglagesPaie(BigDecimal tauxFss, BigDecimal tauxCnesst, BigDecimal
                 "« majorationSupplementaire » : au moins 0,5 (LNT, art. 55) et au plus 1");
     }
 
-    /** Les réglages d'un organisme qui n'en a pas encore enregistré : ceux du barème, et la majoration légale. */
+    /**
+     * Les réglages d'un organisme qui n'en a pas encore enregistré : ceux du barème, la majoration légale, et pas de
+     * validation exigée — le comportement de l'ADR 0076.
+     */
     public static ReglagesPaie parDefaut(Bareme b) {
-        return new ReglagesPaie(b.tauxFssParDefaut(), b.tauxCnesstParDefaut(), MAJORATION_LEGALE);
+        return new ReglagesPaie(b.tauxFssParDefaut(), b.tauxCnesstParDefaut(), MAJORATION_LEGALE, false);
     }
 
     private static void exigerEntre(BigDecimal v, BigDecimal min, BigDecimal max, String message) {

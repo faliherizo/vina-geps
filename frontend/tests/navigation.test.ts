@@ -90,7 +90,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     // Chaque écran du module porte le **socle** : sans lui, tous disparaissent, le tableau de bord reste.
     const ecransDuModule = NAVIGATION.flatMap((g) => g.entrees).flatMap((e) => (estConcept(e) ? e.vues : [e]))
       .filter((v) => v.module !== "alertes" && v.module !== "paie" && (v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page)));
-    expect(ecransDuModule).toHaveLength(30);
+    expect(ecransDuModule).toHaveLength(31);
     expect(ecransDuModule.filter((v) => v.module !== "effectifs").map((v) => v.page)).toEqual([]);
     expect((section!.entrees[0] as Vue).module).toBeUndefined();
 

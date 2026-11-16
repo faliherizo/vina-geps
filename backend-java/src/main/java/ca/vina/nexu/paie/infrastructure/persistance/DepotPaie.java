@@ -7,6 +7,7 @@ import ca.vina.nexu.paie.domaine.DossierRemuneration;
 import ca.vina.nexu.paie.domaine.EcriturePaiePort;
 import ca.vina.nexu.paie.domaine.EtatCycle;
 import ca.vina.nexu.paie.domaine.Frequence;
+import ca.vina.nexu.paie.domaine.Gain;
 import ca.vina.nexu.paie.domaine.LecturePaiePort;
 import ca.vina.nexu.paie.domaine.ModeRemuneration;
 import ca.vina.nexu.paie.domaine.ReglagesPaie;
@@ -23,17 +24,18 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
-/** La paie en base : dossiers, réglages, cycles et bulletins (changeset 0012). */
+/** La paie en base : dossiers, réglages, cycles et bulletins (changesets 0012 et 0018). */
 public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
 
     private static final String DOSSIERS = "SELECT ressourceId, mode, frequence, tauxHoraire, salaireAnnuel, montantPersonnelFederal, "
-            + "montantPersonnelQuebec FROM paie_dossiers WHERE tenantId = ?";
+            + "montantPersonnelQuebec, echelon FROM paie_dossiers WHERE tenantId = ?";
     private static final String CYCLES = "SELECT id, debut, fin, datePaie, etat, prepareLe, preparePar, traiteLe, traitePar FROM paie_cycles WHERE tenantId = ?";
     private static final String BULLETINS = "SELECT b.id, b.cycleId, b.ressourceId, b.matricule, b.nom, b.datePaie, b.heuresRegulieres, "
-            + "b.heuresSupplementaires, b.calcul, b.feuilles FROM paie_bulletins b";
+            + "b.heuresSupplementaires, b.calcul, b.feuilles, b.gains FROM paie_bulletins b";
     private static final String TRAITES = BULLETINS + " JOIN paie_cycles c ON c.tenantId = b.tenantId AND c.id = b.cycleId "
             + "WHERE b.tenantId = ? AND c.etat = ?";
     private static final TypeReference<List<String>> LISTE = new TypeReference<>() { };
+    private static final TypeReference<List<Gain>> GAINS = new TypeReference<>() { };
 
     private final JdbcClient jdbc;
     private final ObjectMapper json = JsonMapper.builder().build();
@@ -51,8 +53,9 @@ public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
 
     @Override
     public Optional<ReglagesPaie> reglages(String tenantId) {
-        return jdbc.sql("SELECT tauxFss, tauxCnesst, majorationSupplementaire FROM paie_reglages WHERE tenantId = ?").params(tenantId)
-                .query((rs, i) -> new ReglagesPaie(decimal(rs, "tauxFss"), decimal(rs, "tauxCnesst"), decimal(rs, "majorationSupplementaire")))
+        return jdbc.sql("SELECT tauxFss, tauxCnesst, majorationSupplementaire, validationTempsExigee FROM paie_reglages WHERE tenantId = ?").params(tenantId)
+                .query((rs, i) -> new ReglagesPaie(decimal(rs, "tauxFss"), decimal(rs, "tauxCnesst"), decimal(rs, "majorationSupplementaire"),
+                        rs.getInt("validationTempsExigee") == 1))
                 .optional();
     }
 
@@ -89,21 +92,23 @@ public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
     @Override
     public void enregistrerDossier(Trace t, DossierRemuneration d) {
         jdbc.sql("INSERT INTO paie_dossiers (tenantId, ressourceId, mode, frequence, tauxHoraire, salaireAnnuel, montantPersonnelFederal, "
-                        + "montantPersonnelQuebec, modifieLe, modifiePar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (tenantId, ressourceId) DO UPDATE SET "
+                        + "montantPersonnelQuebec, echelon, modifieLe, modifiePar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (tenantId, ressourceId) DO UPDATE SET "
                         + "mode = excluded.mode, frequence = excluded.frequence, tauxHoraire = excluded.tauxHoraire, salaireAnnuel = excluded.salaireAnnuel, "
                         + "montantPersonnelFederal = excluded.montantPersonnelFederal, montantPersonnelQuebec = excluded.montantPersonnelQuebec, "
-                        + "modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
+                        + "echelon = excluded.echelon, modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
                 .params(t.tenantId(), d.ressourceId(), d.mode().code(), d.frequence().code(), texte(d.tauxHoraire()), texte(d.salaireAnnuel()),
-                        texte(d.montants().federal()), texte(d.montants().quebec()), t.instant(), t.acteur())
+                        texte(d.montants().federal()), texte(d.montants().quebec()), d.echelon(), t.instant(), t.acteur())
                 .update();
     }
 
     @Override
     public void enregistrerReglages(Trace t, ReglagesPaie r) {
-        jdbc.sql("INSERT INTO paie_reglages (tenantId, tauxFss, tauxCnesst, majorationSupplementaire, modifieLe, modifiePar) VALUES (?, ?, ?, ?, ?, ?) "
-                        + "ON CONFLICT (tenantId) DO UPDATE SET tauxFss = excluded.tauxFss, tauxCnesst = excluded.tauxCnesst, "
-                        + "majorationSupplementaire = excluded.majorationSupplementaire, modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
-                .params(t.tenantId(), texte(r.tauxFss()), texte(r.tauxCnesst()), texte(r.majorationSupplementaire()), t.instant(), t.acteur())
+        jdbc.sql("INSERT INTO paie_reglages (tenantId, tauxFss, tauxCnesst, majorationSupplementaire, validationTempsExigee, modifieLe, modifiePar) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (tenantId) DO UPDATE SET tauxFss = excluded.tauxFss, tauxCnesst = excluded.tauxCnesst, "
+                        + "majorationSupplementaire = excluded.majorationSupplementaire, validationTempsExigee = excluded.validationTempsExigee, "
+                        + "modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
+                .params(t.tenantId(), texte(r.tauxFss()), texte(r.tauxCnesst()), texte(r.majorationSupplementaire()), r.validationTempsExigee() ? 1 : 0,
+                        t.instant(), t.acteur())
                 .update();
     }
 
@@ -117,9 +122,10 @@ public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
     public void remplacerBulletins(String tenantId, String cycleId, List<Bulletin> bulletins) {
         jdbc.sql("DELETE FROM paie_bulletins WHERE tenantId = ? AND cycleId = ?").params(tenantId, cycleId).update();
         bulletins.forEach(b -> jdbc.sql("INSERT INTO paie_bulletins (id, tenantId, cycleId, ressourceId, matricule, nom, datePaie, heuresRegulieres, "
-                        + "heuresSupplementaires, calcul, feuilles) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                        + "heuresSupplementaires, calcul, feuilles, gains) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 .params(b.id(), tenantId, cycleId, b.ressourceId(), b.matricule(), b.nom(), b.datePaie(), texte(b.heuresRegulieres()),
-                        texte(b.heuresSupplementaires()), json.writeValueAsString(b.retenues()), json.writeValueAsString(b.feuilles()))
+                        texte(b.heuresSupplementaires()), json.writeValueAsString(b.retenues()), json.writeValueAsString(b.feuilles()),
+                        json.writeValueAsString(b.gains()))
                 .update());
     }
 
@@ -136,7 +142,7 @@ public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
     private static DossierRemuneration dossier(ResultSet rs) throws SQLException {
         return new DossierRemuneration(rs.getString("ressourceId"), ModeRemuneration.de(rs.getString("mode")), Frequence.de(rs.getString("frequence")),
                 decimal(rs, "tauxHoraire"), decimal(rs, "salaireAnnuel"),
-                new CalculRetenues.MontantsPersonnels(decimal(rs, "montantPersonnelFederal"), decimal(rs, "montantPersonnelQuebec")));
+                new CalculRetenues.MontantsPersonnels(decimal(rs, "montantPersonnelFederal"), decimal(rs, "montantPersonnelQuebec")), entier(rs, "echelon"));
     }
 
     private static CyclePaie cycle(ResultSet rs) throws SQLException {
@@ -147,7 +153,17 @@ public class DepotPaie implements LecturePaiePort, EcriturePaiePort {
     private Bulletin bulletin(ResultSet rs) throws SQLException {
         return new Bulletin(rs.getString("id"), rs.getString("cycleId"), rs.getString("ressourceId"), rs.getString("matricule"), rs.getString("nom"),
                 rs.getString("datePaie"), decimal(rs, "heuresRegulieres"), decimal(rs, "heuresSupplementaires"),
-                json.readValue(rs.getString("calcul"), Retenues.class), json.readValue(rs.getString("feuilles"), LISTE));
+                json.readValue(rs.getString("calcul"), Retenues.class), json.readValue(rs.getString("feuilles"), LISTE), gains(rs.getString("gains")));
+    }
+
+    /** Un bulletin d'avant le changeset 0018 n'a pas de gains détaillés : son brut reste dans son calcul. */
+    private List<Gain> gains(String texte) {
+        return texte == null ? List.of() : json.readValue(texte, GAINS);
+    }
+
+    private static Integer entier(ResultSet rs, String colonne) throws SQLException {
+        int v = rs.getInt(colonne);
+        return rs.wasNull() ? null : v;
     }
 
     private static BigDecimal decimal(ResultSet rs, String colonne) throws SQLException {

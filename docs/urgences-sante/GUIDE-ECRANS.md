@@ -618,19 +618,45 @@ Lire les alertes qui vous visent et y répondre d'un geste.
 
 > **Attention :** Une alerte critique vous arrive aussi par poussée, texto et courriel, même si vous avez fermé ces canaux pour les autres avis. Sans l'application, répondez au texto reçu : « 1 » (ou « OK ») pour prendre en charge, « 2 » (ou « NON ») pour refuser ; tout autre mot reçoit l'aide et ne compte pas.
 
+### Validation des temps
+
+*Adresse : `/admin/paietemps` — Administration, RH et comptabilité (capacité « paie.gerer »). Valider ne remplace pas l'approbation du gestionnaire.*
+
+Relire, avant la paie, les feuilles de la période et leurs anomalies, puis les valider ou les retourner.
+
+**Comment faire**
+
+1. Choisir la période, puis « Afficher ».
+2. Lire les anomalies de chaque feuille : non approuvée, incalculable, sans dossier, sans taux, plus de 60 heures, validation périmée ; et les personnes sans feuille.
+3. « Valider les feuilles sans anomalie » d'un coup, puis « Valider » les autres une à une après vérification.
+4. « Retourner » une feuille approuvée qui contient une erreur : dire ce qu'il faut corriger ; elle revient à la personne.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Du | 2026-02-15 |
+| Au | 2026-02-28 |
+| Motif d'un retour | Le quart du 23 février manque |
+
+**Résultat :** Quand l'organisme exige la validation, seules les feuilles validées entrent dans le prochain cycle de paie.
+
+> **Attention :** Une feuille validée dont les heures changent ensuite (rouverte, corrigée, réapprouvée) perd sa validation : elle est à revalider.
+
 ### Cycles de paie
 
-*Adresse : `/admin/paiecycles` — Administration (capacité « paie.gerer »).*
+*Adresse : `/admin/paiecycles` — Administration, RH et comptabilité (capacité « paie.gerer »).*
 
 Préparer une paie à partir des feuilles de temps approuvées, la relire, puis la traiter.
 
 **Comment faire**
 
 1. « Préparer un cycle » : le début et la fin de la période de travail, puis la date de paie. Seules les feuilles approuvées dont la semaine commence dans la période entrent.
-2. Relire les bulletins : heures régulières et supplémentaires, brut, retenues, net, coût pour l'employeur ; « Détail » montre chaque retenue.
-3. Une personne approuvée sans dossier est nommée en avertissement : créez son dossier, puis « Recalculer ».
-4. « Traiter la paie » : le cycle est recalculé une dernière fois, puis figé ; ses feuilles passent « payées ».
-5. « Annuler le cycle » abandonne un cycle préparé ; ses feuilles restent approuvées.
+2. Relire les bulletins : heures régulières et supplémentaires, brut, retenues, net, coût pour l'employeur ; « Détail » montre chaque gain (heures, primes, forfaits) et chaque retenue.
+3. « Registre de paie (PDF) » : une ligne par personne et les totaux, à relire avant de traiter ; « Fiche PDF » produit la fiche de paie d'une personne.
+4. Les avertissements nomment qui n'est pas payé : sans dossier, sans taux (ni au dossier, ni à l'échelle), ou feuilles que la paie n'a pas validées quand l'organisme l'exige. Corrigez, puis « Recalculer ».
+5. « Traiter la paie » : le cycle est recalculé une dernière fois, puis figé ; ses feuilles passent « payées ».
+6. « Annuler le cycle » abandonne un cycle préparé ; ses feuilles restent approuvées.
 
 **Exemple de remplissage**
 
@@ -646,7 +672,7 @@ Préparer une paie à partir des feuilles de temps approuvées, la relire, puis 
 
 ### Dossiers de rémunération
 
-*Adresse : `/admin/paiedossiers` — Administration (capacité « paie.gerer »).*
+*Adresse : `/admin/paiedossiers` — Administration et RH (capacité « paie.configurer »).*
 
 Dire, pour chaque personne des effectifs, comment elle est payée.
 
@@ -654,7 +680,7 @@ Dire, pour chaque personne des effectifs, comment elle est payée.
 
 1. « Créer » ou « Modifier » sur la ligne de la personne.
 2. Choisir la rémunération (à l'heure ou au salaire annuel) et la fréquence de paie.
-3. Saisir le taux horaire (au salaire, il sert à payer les heures supplémentaires) ou le salaire annuel.
+3. À l'heure, saisir l'échelon : le taux vient alors de l'échelle salariale (« Règles de paie variable »). Un taux horaire saisi est un taux hors échelle, qui l'emporte. Au salaire, saisir le salaire annuel.
 4. Au besoin, les montants personnels déclarés sur les formulaires TP-1015.3-V (Québec) et TD1 (fédéral) ; laissés vides, ce sont ceux de base de l'année.
 
 **Exemple de remplissage**
@@ -663,13 +689,13 @@ Dire, pour chaque personne des effectifs, comment elle est payée.
 |---|---|
 | Rémunération | À l'heure |
 | Fréquence de paie | Aux deux semaines (26 paies) |
-| Taux horaire | 32,50 |
+| Échelon | 3 |
 
 **Résultat :** La prochaine paie préparée ou recalculée applique ce dossier.
 
 ### Remises et relevés
 
-*Adresse : `/admin/paiedeclarations` — Administration (capacité « paie.gerer »).*
+*Adresse : `/admin/paiedeclarations` — Administration, RH et comptabilité (capacité « paie.gerer »).*
 
 Lire ce qu'il faut verser chaque mois et les cases des relevés de l'année.
 
@@ -698,7 +724,8 @@ Lire ses propres bulletins de paie, du brut au net.
 **Comment faire**
 
 1. Ouvrir « Mes bulletins de paie » : la paie la plus récente d'abord.
-2. « Détail » montre le brut, chaque retenue, le net et ce que paie l'employeur.
+2. « Détail » montre les gains (heures, primes), chaque retenue, le net et ce que paie l'employeur.
+3. « Fiche PDF » télécharge la fiche de paie, avec le cumul de l'année, à conserver.
 
 **Exemple de remplissage**
 
@@ -861,7 +888,7 @@ Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
 
 ### Paramètres de la paie
 
-*Adresse : `/admin/paieparametres` — Administration (capacité « paie.gerer »).*
+*Adresse : `/admin/paieparametres` — Administration et RH (capacité « paie.configurer »).*
 
 Régler les taux propres à l'organisme et lire le barème de l'année.
 
@@ -870,7 +897,8 @@ Régler les taux propres à l'organisme et lire le barème de l'année.
 1. Saisir le taux du Fonds des services de santé (selon la masse salariale et le secteur ; 4,26 % au secteur public).
 2. Saisir le taux de la CNESST indiqué sur l'avis de cotisation de l'organisme.
 3. Saisir la majoration des heures supplémentaires : au moins 50 % (Loi sur les normes du travail), davantage si la convention le prévoit.
-4. « Enregistrer les réglages ».
+4. Cocher « Exiger la validation des temps par la paie » pour que seules les feuilles validées entrent dans un cycle.
+5. « Enregistrer les réglages ».
 
 **Exemple de remplissage**
 
@@ -881,6 +909,37 @@ Régler les taux propres à l'organisme et lire le barème de l'année.
 | Majoration des heures supplémentaires | 50 |
 
 **Résultat :** Les prochains calculs appliquent ces taux ; les paies déjà traitées ne changent pas.
+
+### Règles de paie variable
+
+*Adresse : `/admin/paieregles` — Administration et RH (capacité « paie.configurer ») ; la comptabilité paie selon ces règles sans les modifier.*
+
+Tenir l'échelle salariale et les primes de l'organisme, sans livraison du produit.
+
+**Comment faire**
+
+1. « Nouvelle règle » : choisir le type — taux de base (échelle), prime en pourcentage du taux, prime horaire, ou forfait par paie.
+2. Donner le code du gain (il paraît sur la fiche de paie), le libellé et la valeur.
+3. Dire qui est visé : titre d'emploi, convention, échelon ; vides, la règle vise tout le personnel.
+4. Pour une prime, dire quelles heures : la plage (heure de Montréal ; une fin avant le début passe minuit), les jours, les fériés, les codes de paie.
+5. Donner la période de validité. Une augmentation se saisit comme une nouvelle règle qui commence à sa date ; l'ancienne se termine la veille.
+6. « Désactiver » retire une règle des prochains calculs, sans l'effacer.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Type | Prime en pourcentage du taux |
+| Code | PRIME_NUIT |
+| Libellé | Prime de nuit |
+| Valeur | 12 % |
+| De | 00:00 |
+| À | 08:00 |
+| En vigueur à partir du | 2026-01-01 |
+
+**Résultat :** Le prochain cycle préparé ou recalculé paie la prime ; une paie déjà traitée garde ses gains.
+
+> **Attention :** Une heure se paie au taux de base du jour où elle est travaillée : un cycle à cheval sur une augmentation montre deux lignes d'heures, une par taux.
 
 ### Référentiels
 
@@ -905,6 +964,32 @@ Tenir les listes de valeurs datées dont tout dépend : unités, corps d'emploi,
 | En vigueur le | 2026-01-01 |
 
 **Résultat :** La valeur devient choisissable à partir de sa date ; une valeur fermée ne s'offre plus, mais les données passées la gardent.
+
+### Codes d'absence
+
+*Adresse : `/admin/uscodesabsence` — Administration (capacité « effectifs.configure »).*
+
+Tenir la liste des motifs qu'une personne choisit en déclarant une absence : maladie, vacances, formation, congé parental…
+
+**Comment faire**
+
+1. « Ajouter une valeur » : le code, le libellé en français (et en anglais au besoin), le comportement dans le logiciel (payée ou non), la durée et la planification, puis la date d'entrée en vigueur.
+2. « Remplacer » pour modifier un code à partir d'une date : le libellé, la durée ou le comportement changent pour l'avenir, le passé reste tel qu'il était.
+3. « Fermer » pour retirer un code à une date : il ne s'offre plus dans « Mes absences », mais les absences déjà déclarées le gardent.
+4. « Historique » montre toutes les versions d'un code.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Code | FORM |
+| Libellé (français) | Formation |
+| Comportement dans le logiciel | Absence payée |
+| En vigueur le | 2026-12-01 |
+
+**Résultat :** Le code apparaît (ou disparaît) dans la liste « Code d'absence » de « Mes absences » et de « Absences » à la date choisie.
+
+> **Attention :** On ne supprime pas un code : on le ferme. Une absence passée doit toujours pouvoir dire sous quel code elle a été déclarée.
 
 ### Règles des effectifs
 

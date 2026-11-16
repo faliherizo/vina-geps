@@ -60,11 +60,11 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
   uscomblement: "effectifs-planification", usequipages: "effectifs-planification", usdisponibilites: "effectifs-planification", usabsences: "effectifs-planification",
   usechanges: "effectifs-planification", usagph: "effectifs-planification", uspresence: "effectifs-planification", ustemps: "effectifs-planification",
   uspostes: "effectifs-planification", usperiodes: "effectifs-planification", usressources: "effectifs-planification", usquotas: "effectifs-planification",
-  usreferentiels: "effectifs-planification", usregles: "effectifs-planification", usmilieux: "effectifs-planification", usperimetres: "effectifs-planification",
+  usreferentiels: "effectifs-planification", uscodesabsence: "effectifs-planification", usregles: "effectifs-planification", usmilieux: "effectifs-planification", usperimetres: "effectifs-planification",
   usintegrations: "effectifs-planification", usretention: "effectifs-planification", usjournal: "effectifs-planification",
   usmessages: "communication", usappels: "communication", usdiffusion: "communication",
   alnouvelle: "alertes", alsuivi: "alertes", mesalertes: "alertes", alparametres: "alertes",
-  paiecycles: "paie", paiedossiers: "paie", paiedeclarations: "paie", mesbulletins: "paie", paieparametres: "paie",
+  paiecycles: "paie", paiedossiers: "paie", paiedeclarations: "paie", mesbulletins: "paie", paieparametres: "paie", paieregles: "paie", paietemps: "paie",
 
   // Encadrement et exploitation
   approvals: "approbations", access: "organisation",

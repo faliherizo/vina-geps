@@ -279,9 +279,19 @@
   },
   "paie.gerer": {
     "roles": [
-      "admin"
+      "admin",
+      "rh",
+      "accountant"
     ],
-    "libelle": "Préparer et traiter la paie, tenir les dossiers de rémunération, lire les remises et les relevés",
-    "portee": "Lire ses propres bulletins n'exige que le module (ADR 0076)."
+    "libelle": "Valider les temps, préparer et traiter la paie, produire le registre et les fiches de paie, lire les remises et les relevés",
+    "portee": "Lire ses propres bulletins n'exige que le module (ADR 0076). Valider les temps ne réapprouve pas une feuille : l'approbation reste au gestionnaire (ADR 0084)."
+  },
+  "paie.configurer": {
+    "roles": [
+      "admin",
+      "rh"
+    ],
+    "libelle": "Tenir les règles de paie variable, l'échelle salariale, les dossiers de rémunération et les réglages de la paie",
+    "portee": "Le comptable paie selon des règles qu'il ne modifie pas (ADR 0084)."
   }
 }

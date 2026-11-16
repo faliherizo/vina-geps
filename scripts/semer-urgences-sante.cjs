@@ -183,6 +183,22 @@ async function semer() {
     })).id);
   }
   await poser("/api/effectifs/planification/postes/publier", { ids: postes });
+  await semerAgph(postes).catch((e) => console.warn(`  AGPH non semée : ${e.message.slice(0, 200)}`));
+
+  /**
+   * **Une campagne AGPH en cours**, pour que « Mon AGPH » ait quelque chose à montrer : l'année suivante, l'unité et le
+   * corps d'emploi de la démonstration, ouverte puis démarrée — le tour de rôle suit l'ancienneté, et la première
+   * personne peut choisir son poste. Un remplacement long terme est ouvert aux manifestations d'intérêt.
+   */
+  async function semerAgph(ids) {
+    const annee = Number(jour(0).slice(0, 4)) + 1;
+    const campagne = await poser("/api/effectifs/agph/campagnes",
+      { uniteCode: donnees.unite.code, corpsEmploiCode: donnees.corpsEmploi.code, annee, delaiChoixMinutes: 2880 });
+    await poser(`/api/effectifs/agph/campagnes/${campagne.id}/ouvrir`, {});
+    await poser(`/api/effectifs/agph/campagnes/${campagne.id}/demarrer`, {});
+    await poser("/api/effectifs/agph/remplacements",
+      { posteId: ids[ids.length - 1], origine: "POSTE_VACANT", debut: jour(30), fin: jour(60), finManifestation: jour(14) });
+  }
 
   // ── Une période publiée, et les trois quarts du jour (planche s01) ───────
   /**
@@ -275,13 +291,18 @@ async function semer() {
 }
 
 /**
- * **Une semaine payée**, pour que « Mes bulletins » montre un vrai bulletin (ADR 0076).
+ * **Une semaine payée**, pour que « Mes bulletins » montre un vrai bulletin (ADR 0076, 0084).
  *
- * La paie ne lit que des feuilles **approuvées** : chaque personne planifiable déclare trois jours de huit heures sur
- * sa feuille, la soumet, l'administration l'approuve. Son dossier de rémunération est posé (taux horaire), puis un
- * cycle couvrant la semaine est préparé et traité — les feuilles deviennent « payées » et ne bougent plus.
+ * La paie est d'abord **configurée** comme le ferait la RH : la validation des temps est exigée, l'échelle salariale et
+ * les primes sont posées (`demonstration.json`, rubrique `paie`). Chaque personne planifiable déclare trois jours de
+ * huit heures, la soumet, l'administration l'approuve ; son dossier porte son **échelon**, pas un taux saisi. La paie
+ * valide les feuilles sans anomalie, prépare le cycle et le traite — les feuilles deviennent « payées ».
  */
 async function semerPaie(ctx, tenantId, comptes) {
+  const reglages = await appeler("/api/paie/reglages", ctx);
+  await appeler("/api/paie/reglages", { ...ctx, methode: "PUT", corps: { tauxFss: String(reglages.tauxFss), tauxCnesst: String(reglages.tauxCnesst),
+    majorationSupplementaire: String(reglages.majorationSupplementaire), validationTempsExigee: donnees.paie.validationTempsExigee } });
+  for (const r of donnees.paie.regles) await appeler("/api/paie/regles", { ...ctx, methode: "POST", corps: r });
   const ressources = await appeler("/api/effectifs/planification/ressources", ctx);
   const payables = comptes.filter((c) => ressources.some((r) => r.utilisateurId === c.compteId));
   for (const [i, c] of payables.entries()) {
@@ -296,9 +317,11 @@ async function semerPaie(ctx, tenantId, comptes) {
     await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/soumettre`, { ...moi, methode: "POST" });
     await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/approuver`, { ...ctx, methode: "POST" });
     const ressource = ressources.find((r) => r.utilisateurId === c.compteId);
+    const echelon = donnees.paie.echelons[c.username];
     await appeler(`/api/paie/dossiers/${ressource.id}`, { ...ctx, methode: "PUT",
-      corps: { mode: "horaire", frequence: "hebdomadaire", tauxHoraire: String(34 + i * 2.5) } });
+      corps: echelon ? { mode: "horaire", frequence: "hebdomadaire", echelon } : { mode: "horaire", frequence: "hebdomadaire", tauxHoraire: String(34 + i * 2.5) } });
   }
+  await appeler("/api/paie/temps/valider-sans-anomalie", { ...ctx, methode: "POST", corps: { debut: jour(-6), fin: jour(0) } });
   const cycle = await appeler("/api/paie/cycles", { ...ctx, methode: "POST", corps: { debut: jour(-6), fin: jour(0), datePaie: jour(4) } });
   await appeler(`/api/paie/cycles/${cycle.cycle.id}/traiter`, { ...ctx, methode: "POST" });
 }

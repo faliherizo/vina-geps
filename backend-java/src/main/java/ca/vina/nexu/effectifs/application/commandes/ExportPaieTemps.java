@@ -46,9 +46,10 @@ public class ExportPaieTemps {
 
     /**
      * Les lignes de paie d'une feuille, et les codes qui y marquent des heures supplémentaires (la paie les majore) : tous
-     * ceux des types de comportement SUPPLEMENTAIRE, pas seulement le premier — un organisme peut en avoir plusieurs.
+     * ceux des types de comportement SUPPLEMENTAIRE, pas seulement le premier — un organisme peut en avoir plusieurs. Les
+     * segments payés suivent, bornés par leurs instants : les primes de quart se jugent à l'heure du jour (ADR 0084).
      */
-    public record LignesFeuille(List<TempsEffectifs.LignePaie> lignes, Set<String> codesSupplementaires) { }
+    public record LignesFeuille(List<TempsEffectifs.LignePaie> lignes, Set<String> codesSupplementaires, List<TempsEffectifs.SegmentPaye> segments) { }
 
     /** Codées selon les types d'heure en vigueur au début de la feuille, heures supplémentaires reclassées. */
     public LignesFeuille lignesDe(Contexte ctx, FeuilleTemps f) {
@@ -61,7 +62,8 @@ public class ExportPaieTemps {
         Map<String, Long> supplementaires = TempsEffectifs.heuresSupplementaires(segments, lecture.parametres(ctx.tenantId())).parJour();
         Set<String> codesSupplementaires = types.stream().filter(t -> t.comportement() == Comportements.TypeHeure.SUPPLEMENTAIRE)
                 .map(LectureFeuillesTemps.TypeHeureTemps::codePaie).collect(Collectors.toSet());
-        return new LignesFeuille(TempsEffectifs.lignesDePaie(f.matricule(), segments, codes, supplementaires), codesSupplementaires);
+        return new LignesFeuille(TempsEffectifs.lignesDePaie(f.matricule(), segments, codes, supplementaires), codesSupplementaires,
+                TempsEffectifs.segmentsPayes(segments, codes));
     }
 
     private void journaliser(Contexte ctx, LotPaie lot) {

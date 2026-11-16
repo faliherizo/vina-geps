@@ -2,6 +2,7 @@ package ca.vina.nexu.paie.infrastructure.web;
 
 import ca.vina.nexu.paie.application.commandes.GestionnaireCyclesPaie;
 import ca.vina.nexu.paie.application.commandes.GestionnaireDossiersPaie;
+import ca.vina.nexu.paie.application.requetes.DocumentsPaie;
 import ca.vina.nexu.paie.application.requetes.LecturePaie;
 import ca.vina.nexu.paie.domaine.CyclePaie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +24,7 @@ import java.util.Map;
 import static ca.vina.nexu.paie.infrastructure.web.SaisiesPaie.corps;
 
 /**
- * {@code /api/paie} — la paie (ADR 0076). Le contrôleur traduit HTTP en commande ou requête : les règles sont dans le
+ * {@code /api/paie} — la paie (ADR 0076, 0084). Le contrôleur traduit HTTP en commande ou requête : les règles sont dans le
  * domaine, la garde dans {@link GardePaie}.
  */
 @RestController
@@ -35,7 +36,7 @@ public class ControleurPaie {
     /** L'année civile de la paie se lit à Montréal : à 20 h le 31 décembre, c'est encore l'année qui finit. */
     private static final ZoneId FUSEAU = ZoneId.of("America/Montreal");
 
-    public record Cas(GestionnaireDossiersPaie dossiers, GestionnaireCyclesPaie cycles, LecturePaie lecture) { }
+    public record Cas(GestionnaireDossiersPaie dossiers, GestionnaireCyclesPaie cycles, LecturePaie lecture, DocumentsPaie documents) { }
 
     private final GardePaie garde;
     private final Cas cas;
@@ -51,30 +52,30 @@ public class ControleurPaie {
 
     @GetMapping("/dossiers")
     public ResponseEntity<Object> dossiers(HttpServletRequest r) {
-        return garde.repondre(r, garde.gestion(r), OK, t -> cas.lecture().dossiers(t.tenantId()).stream().map(VuesPaie::dossier).toList());
+        return garde.repondre(r, garde.configuration(r), OK, t -> cas.lecture().dossiers(t.tenantId()).stream().map(VuesPaie::dossier).toList());
     }
 
     @PutMapping("/dossiers/{ressourceId}")
     public ResponseEntity<Object> enregistrerDossier(HttpServletRequest r, @PathVariable String ressourceId, @RequestBody(required = false) Map<String, Object> c) {
-        return garde.repondre(r, garde.gestion(r), OK, t -> VuesPaie.dossier(cas.dossiers().enregistrer(t,
+        return garde.repondre(r, garde.configuration(r), OK, t -> VuesPaie.dossier(cas.dossiers().enregistrer(t,
                 SaisiesPaie.dossier(ressourceId, corps(c), cas.lecture().bareme(anneeCourante())))));
     }
 
     @GetMapping("/reglages")
     public ResponseEntity<Object> reglages(HttpServletRequest r) {
         int annee = anneeCourante();
-        return garde.repondre(r, garde.gestion(r), OK, t -> VuesPaie.reglages(cas.lecture().reglages(t.tenantId(), annee), annee));
+        return garde.repondre(r, garde.configuration(r), OK, t -> VuesPaie.reglages(cas.lecture().reglages(t.tenantId(), annee), annee));
     }
 
     @PutMapping("/reglages")
     public ResponseEntity<Object> regler(HttpServletRequest r, @RequestBody(required = false) Map<String, Object> c) {
-        return garde.repondre(r, garde.gestion(r), OK, t -> VuesPaie.reglages(cas.dossiers().regler(t, SaisiesPaie.reglages(corps(c))), anneeCourante()));
+        return garde.repondre(r, garde.configuration(r), OK, t -> VuesPaie.reglages(cas.dossiers().regler(t, SaisiesPaie.reglages(corps(c))), anneeCourante()));
     }
 
     /** Le barème de l'année : ce que la paie applique, lisible par qui la gère. */
     @GetMapping("/bareme")
     public ResponseEntity<Object> bareme(HttpServletRequest r, @RequestParam(required = false) String annee) {
-        return garde.repondre(r, garde.gestion(r), OK, t -> cas.lecture().bareme(SaisiesPaie.annee(annee, anneeCourante())));
+        return garde.repondre(r, garde.configuration(r), OK, t -> cas.lecture().bareme(SaisiesPaie.annee(annee, anneeCourante())));
     }
 
     // ── Cycles ──────────────────────────────────────────────────────────────
@@ -112,6 +113,17 @@ public class ControleurPaie {
         return garde.repondre(r, garde.gestion(r), OK, t -> VuesPaie.cycle(cas.cycles().annuler(t, id)));
     }
 
+    /** Le registre du cycle : une ligne par personne, et les totaux — ce que le comptable relit avant de traiter. */
+    @GetMapping("/cycles/{id}/registre.pdf")
+    public ResponseEntity<Object> registre(HttpServletRequest r, @PathVariable String id) {
+        return garde.fichier(r, garde.gestion(r), t -> cas.documents().registre(t.tenantId(), id));
+    }
+
+    @GetMapping("/cycles/{id}/bulletins/{bulletinId}/pdf")
+    public ResponseEntity<Object> fiche(HttpServletRequest r, @PathVariable String id, @PathVariable String bulletinId) {
+        return garde.fichier(r, garde.gestion(r), t -> cas.documents().ficheDuCycle(t.tenantId(), id, bulletinId));
+    }
+
     // ── Déclarations ────────────────────────────────────────────────────────
 
     @GetMapping("/remises")
@@ -130,6 +142,12 @@ public class ControleurPaie {
     public ResponseEntity<Object> mesBulletins(HttpServletRequest r) {
         return garde.repondre(r, garde.socle(r), OK, t -> cas.lecture().mesBulletins(t.tenantId(), GardePaie.utilisateur(r))
                 .stream().map(VuesPaie::bulletin).toList());
+    }
+
+    /** Sa propre fiche, d'un cycle traité : celle d'un autre est introuvable. */
+    @GetMapping("/mes-bulletins/{bulletinId}/pdf")
+    public ResponseEntity<Object> maFiche(HttpServletRequest r, @PathVariable String bulletinId) {
+        return garde.fichier(r, garde.socle(r), t -> cas.documents().maFiche(t.tenantId(), GardePaie.utilisateur(r), bulletinId));
     }
 
     private int anneeCourante() {

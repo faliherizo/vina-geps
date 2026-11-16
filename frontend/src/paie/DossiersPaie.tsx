@@ -11,7 +11,7 @@ import { liste } from "../formeRecue";
 import { argent, FREQUENCES, libelleFrequence, MODES, type Dossier, type Frequence, type Mode, type PersonneDossier } from "./types";
 
 const COL: ReadonlyArray<Colonne<PersonneDossier>> = [
-  { id: "nom", libelle: "Personne", tri: (p) => p.nom }, { id: "matricule", libelle: "Matricule" },
+  { id: "nom", libelle: "Personne", tri: (p) => p.nom }, { id: "matricule", libelle: "Matricule" }, { id: "titre", libelle: "Titre d'emploi" },
   { id: "mode", libelle: "Rémunération" }, { id: "frequence", libelle: "Fréquence" }, { id: "actions", libelle: "Actions", actions: true },
 ];
 
@@ -36,9 +36,8 @@ export default function DossiersPaie() {
           vide={<EtatVide titre="Aucune personne" compact testId="pdo-vide">Les ressources actives des effectifs apparaissent ici.</EtatVide>}
           rendre={(p) => (
             <tr key={p.ressourceId} data-testid={`pdo-${p.ressourceId}`}>
-              <td>{p.nom}</td><td>{p.matricule}</td>
-              <td>{p.dossier ? (p.dossier.mode === "horaire" ? `${argent(p.dossier.tauxHoraire)} l'heure` : `${argent(p.dossier.salaireAnnuel)} par année`)
-                : <BadgeStatut statut="en_attente">Sans dossier</BadgeStatut>}</td>
+              <td>{p.nom}</td><td>{p.matricule}</td><td>{p.titreEmploi ?? "—"}</td>
+              <td>{p.dossier ? remuneration(p.dossier) : <BadgeStatut statut="en_attente">Sans dossier</BadgeStatut>}</td>
               <td>{p.dossier ? libelleFrequence(p.dossier.frequence) : "—"}</td>
               <td><button type="button" className="secondary" data-testid={`pdo-${p.ressourceId}-modifier`} onClick={() => setChoisie(p)}>
                 {p.dossier ? "Modifier" : "Créer"}<span className="sr-only"> le dossier de {p.nom}</span></button></td>
@@ -54,6 +53,12 @@ export default function DossiersPaie() {
   );
 }
 
+/** À l'heure : le taux hors échelle s'il est saisi, sinon l'échelon de l'échelle salariale (ADR 0084). */
+function remuneration(d: Dossier): string {
+  if (d.mode === "salaire") return `${argent(d.salaireAnnuel)} par année`;
+  return d.tauxHoraire != null ? `${argent(d.tauxHoraire)} l'heure (hors échelle)` : `Échelle, échelon ${d.echelon ?? "—"}`;
+}
+
 type Envoyer = ReturnType<typeof useApi>["envoyer"];
 const texte = (v: number | null | undefined) => (v == null ? "" : String(v));
 
@@ -63,11 +68,13 @@ function FormulaireDossier({ personne, envoyer, apres }: { personne: PersonneDos
   const [frequence, setFrequence] = useState<Frequence>(d?.frequence ?? "aux-deux-semaines");
   const [tauxHoraire, setTauxHoraire] = useState(texte(d?.tauxHoraire));
   const [salaireAnnuel, setSalaireAnnuel] = useState(texte(d?.salaireAnnuel));
+  const [echelon, setEchelon] = useState(texte(d?.echelon));
   const [federal, setFederal] = useState(texte(d?.montantPersonnelFederal));
   const [quebec, setQuebec] = useState(texte(d?.montantPersonnelQuebec));
   const soumettre = async (e: FormEvent) => {
     e.preventDefault();
-    const corps = { mode, frequence, tauxHoraire, salaireAnnuel, montantPersonnelFederal: federal, montantPersonnelQuebec: quebec };
+    const corps = { mode, frequence, tauxHoraire, salaireAnnuel, montantPersonnelFederal: federal, montantPersonnelQuebec: quebec,
+      echelon: echelon === "" ? null : Number(echelon) };
     if (await envoyer<Dossier>(`/api/paie/dossiers/${personne.ressourceId}`, corps, "PUT")) await apres();
   };
   return (
@@ -80,9 +87,14 @@ function FormulaireDossier({ personne, envoyer, apres }: { personne: PersonneDos
         <select id="pdo-frequence" data-testid="pdo-frequence" value={frequence} onChange={(e) => setFrequence(e.target.value as Frequence)}>
           {FREQUENCES.map((f) => <option key={f.code} value={f.code}>{f.libelle}</option>)}
         </select></p>
-      <p><label htmlFor="pdo-taux">Taux horaire ($){mode === "salaire" ? " — paie les heures supplémentaires" : ""}</label>
-        <input id="pdo-taux" data-testid="pdo-taux" type="number" min="0" step="0.01" inputMode="decimal" required={mode === "horaire"}
+      <p><label htmlFor="pdo-echelon">Échelon dans l'échelle salariale{personne.titreEmploi ? ` (${personne.titreEmploi})` : ""}</label>
+        <input id="pdo-echelon" data-testid="pdo-echelon" type="number" min="1" max="30" step="1" inputMode="numeric"
+          aria-describedby="pdo-taux-aide" value={echelon} onChange={(e) => setEchelon(e.target.value)} /></p>
+      <p><label htmlFor="pdo-taux">Taux horaire hors échelle ($){mode === "salaire" ? " — paie les heures supplémentaires" : ""}</label>
+        <input id="pdo-taux" data-testid="pdo-taux" type="number" min="0" step="0.01" inputMode="decimal"
+          required={mode === "horaire" && echelon === ""} aria-describedby="pdo-taux-aide"
           value={tauxHoraire} onChange={(e) => setTauxHoraire(e.target.value)} /></p>
+      <p id="pdo-taux-aide" className="muted">À l'heure, un échelon suffit : le taux vient alors des règles « Taux de base ». Un taux saisi ici l'emporte sur l'échelle.</p>
       {mode === "salaire" && (
         <p><label htmlFor="pdo-salaire">Salaire annuel ($)</label>
           <input id="pdo-salaire" data-testid="pdo-salaire" type="number" min="0" step="0.01" inputMode="decimal" required

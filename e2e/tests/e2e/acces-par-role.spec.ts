@@ -36,10 +36,14 @@ const US_EQUIPE = ["monequipe"];
 const US_ENCADREMENT = ["usdisponibilites", "usabsences", "usagph", "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas",
   "uspresence", "ustemps", "usechanges", "usreferentiels", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal"];
 
+/** Ce que seule l'administration configure : les codes d'absence (`effectifs.configure`). */
+const US_CONFIGURATION = ["uscodesabsence"];
+
 /** Le menu attendu, par rôle — les groupes ne sont pas listés, seules les pages le sont. Relevé contre `PAGES` d'`App.tsx`. */
 const MENU: Record<Role, string[]> = {
   superadmin: ["superadmin"],
-  admin: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "access", "notifications", "admin", "apidocs", "integrations", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT],
+  admin: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "access", "notifications", "admin", "apidocs", "integrations", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT,
+    ...US_CONFIGURATION],
   rh: ["dashboard", "help", "soutien", "notifications", ...US_TOUS, ...US_EQUIPE],
   manager: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "notifications", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT],
   director: ["dashboard", "help", "soutien", "approvals", "apidocs", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT],

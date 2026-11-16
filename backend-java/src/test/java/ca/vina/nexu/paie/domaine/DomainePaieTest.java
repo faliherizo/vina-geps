@@ -24,13 +24,13 @@ class DomainePaieTest {
     static final Trace TRACE = new Trace("T", "paie.admin", "2026-03-02T15:00:00Z");
 
     static DossierRemuneration horaire(String ressourceId, String taux) {
-        return new DossierRemuneration(ressourceId, ModeRemuneration.HORAIRE, Frequence.AUX_DEUX_SEMAINES, d(taux), null, BASE);
+        return new DossierRemuneration(ressourceId, ModeRemuneration.HORAIRE, Frequence.AUX_DEUX_SEMAINES, d(taux), null, BASE, null);
     }
 
     static FeuilleAPayer feuille(String id, String ressourceId, String regulieres, String supplementaires) {
         return new FeuilleAPayer(id, ressourceId, "M-" + ressourceId, "Nom " + ressourceId, "2026-02-16", List.of(
                 new LigneHeures("2026-02-16", "REG", NatureHeures.REGULIERE, d(regulieres)),
-                new LigneHeures("2026-02-17", "HS", NatureHeures.SUPPLEMENTAIRE, d(supplementaires))));
+                new LigneHeures("2026-02-17", "HS", NatureHeures.SUPPLEMENTAIRE, d(supplementaires))), List.of());
     }
 
     static void refus(Runnable geste, RefusPaie.Nature nature, String message) {
@@ -55,28 +55,41 @@ class DomainePaieTest {
     @Test
     @DisplayName("un dossier à l'heure exige un taux ; au salaire, un salaire ; rien de négatif")
     void dossiers() {
-        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, null, null, BASE),
-                RefusPaie.Nature.INVALIDE, "à l'heure, « tauxHoraire » est obligatoire et positif");
-        refus(() -> new DossierRemuneration("r1", ModeRemuneration.SALAIRE, Frequence.MENSUELLE, null, d("0"), BASE),
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, null, null, BASE, null),
+                RefusPaie.Nature.INVALIDE, "à l'heure, un « tauxHoraire » (hors échelle) ou un « echelon » (échelle salariale) est obligatoire");
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.SALAIRE, Frequence.MENSUELLE, null, d("0"), BASE, null),
                 RefusPaie.Nature.INVALIDE, "au salaire, « salaireAnnuel » est obligatoire et positif");
-        refus(() -> new DossierRemuneration(" ", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("30"), null, BASE),
+        refus(() -> new DossierRemuneration(" ", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("30"), null, BASE, null),
                 RefusPaie.Nature.INVALIDE, "« ressourceId » est obligatoire");
-        refus(() -> new DossierRemuneration(null, ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("30"), null, BASE),
+        refus(() -> new DossierRemuneration(null, ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("30"), null, BASE, null),
                 RefusPaie.Nature.INVALIDE, "« ressourceId » est obligatoire");
-        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("-1"), null, BASE),
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("-1"), null, BASE, null),
                 RefusPaie.Nature.INVALIDE, "« tauxHoraire » ne peut pas être négatif");
         refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("30"), null,
-                new CalculRetenues.MontantsPersonnels(d("-5"), d("0"))), RefusPaie.Nature.INVALIDE, "« montantPersonnelFederal » ne peut pas être négatif");
+                new CalculRetenues.MontantsPersonnels(d("-5"), d("0")), null), RefusPaie.Nature.INVALIDE, "« montantPersonnelFederal » ne peut pas être négatif");
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, d("0"), null, BASE, 3),
+                RefusPaie.Nature.INVALIDE, "« tauxHoraire » est positif");
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, null, null, BASE, 31),
+                RefusPaie.Nature.INVALIDE, "« echelon » : de 1 à 30");
+        refus(() -> new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, null, null, BASE, 0),
+                RefusPaie.Nature.INVALIDE, "« echelon » : de 1 à 30");
+        assertThat(new DossierRemuneration("r1", ModeRemuneration.HORAIRE, Frequence.MENSUELLE, null, null, BASE, 4).echelon()).isEqualTo(4);
     }
 
     @Test
     @DisplayName("le brut : heures au taux, supplémentaires majorées ; au salaire, la part de l'année, et les supplémentaires au taux s'il y en a un")
     void brut() {
-        assertThat(horaire("r1", "32.50").brut(d("70"), d("4"), d("0.5"))).isEqualByComparingTo("2470.00");
-        DossierRemuneration salarie = new DossierRemuneration("r2", ModeRemuneration.SALAIRE, Frequence.AUX_DEUX_SEMAINES, null, d("65000"), BASE);
-        assertThat(salarie.brut(d("70"), d("4"), d("0.5"))).isEqualByComparingTo("2500.00");
-        DossierRemuneration avecTaux = new DossierRemuneration("r3", ModeRemuneration.SALAIRE, Frequence.AUX_DEUX_SEMAINES, d("30"), d("65000"), BASE);
-        assertThat(avecTaux.brut(d("70"), d("2"), d("1"))).isEqualByComparingTo("2620.00");
+        CalculGains.Contexte c = new CalculGains.Contexte(List.of(), java.util.Set.of(), d("0.5"), java.time.LocalDate.parse("2026-03-05"));
+        ProfilPaie profil = new ProfilPaie(null, null, null);
+        assertThat(CalculGains.brut(CalculGains.calculer(new CalculGains.Personne(horaire("r1", "32.50"), profil),
+                List.of(feuille("f", "r1", "70", "4")), c).orElseThrow())).isEqualByComparingTo("2470.00");
+        DossierRemuneration salarie = new DossierRemuneration("r2", ModeRemuneration.SALAIRE, Frequence.AUX_DEUX_SEMAINES, null, d("65000"), BASE, null);
+        assertThat(CalculGains.brut(CalculGains.calculer(new CalculGains.Personne(salarie, profil), List.of(feuille("f", "r2", "70", "4")), c)
+                .orElseThrow())).isEqualByComparingTo("2500.00");
+        DossierRemuneration avecTaux = new DossierRemuneration("r3", ModeRemuneration.SALAIRE, Frequence.AUX_DEUX_SEMAINES, d("30"), d("65000"), BASE, null);
+        CalculGains.Contexte double_ = new CalculGains.Contexte(List.of(), java.util.Set.of(), d("1"), java.time.LocalDate.parse("2026-03-05"));
+        assertThat(CalculGains.brut(CalculGains.calculer(new CalculGains.Personne(avecTaux, profil), List.of(feuille("f", "r3", "70", "2")), double_)
+                .orElseThrow())).isEqualByComparingTo("2620.00");
     }
 
     @Test
@@ -84,11 +97,11 @@ class DomainePaieTest {
     void reglages() {
         assertThat(REGLAGES.tauxFss()).isEqualByComparingTo("0.0426");
         assertThat(REGLAGES.majorationSupplementaire()).isEqualByComparingTo("0.5");
-        refus(() -> new ReglagesPaie(d("0.3"), d("0.01"), d("0.5")), RefusPaie.Nature.INVALIDE, "« tauxFss » : une fraction entre 0 et 0,2");
-        refus(() -> new ReglagesPaie(d("0.01"), null, d("0.5")), RefusPaie.Nature.INVALIDE, "« tauxCnesst » : une fraction entre 0 et 0,2");
-        refus(() -> new ReglagesPaie(d("0.01"), d("0.01"), d("0.25")), RefusPaie.Nature.INVALIDE,
+        refus(() -> new ReglagesPaie(d("0.3"), d("0.01"), d("0.5"), false), RefusPaie.Nature.INVALIDE, "« tauxFss » : une fraction entre 0 et 0,2");
+        refus(() -> new ReglagesPaie(d("0.01"), null, d("0.5"), false), RefusPaie.Nature.INVALIDE, "« tauxCnesst » : une fraction entre 0 et 0,2");
+        refus(() -> new ReglagesPaie(d("0.01"), d("0.01"), d("0.25"), false), RefusPaie.Nature.INVALIDE,
                 "« majorationSupplementaire » : au moins 0,5 (LNT, art. 55) et au plus 1");
-        refus(() -> new ReglagesPaie(d("0.01"), d("-0.01"), d("0.5")), RefusPaie.Nature.INVALIDE, "« tauxCnesst » : une fraction entre 0 et 0,2");
+        refus(() -> new ReglagesPaie(d("0.01"), d("-0.01"), d("0.5"), false), RefusPaie.Nature.INVALIDE, "« tauxCnesst » : une fraction entre 0 et 0,2");
     }
 
     @Test
@@ -124,7 +137,7 @@ class DomainePaieTest {
         CyclePaie cycle = CyclePaie.prepare("c1", new CyclePaie.Periode("2026-02-15", "2026-02-28", "2026-03-05"), TRACE);
         AtomicInteger n = new AtomicInteger();
         PreparationPaie.Sources s = new PreparationPaie.Sources(B2026, REGLAGES, Map.of("r1", horaire("r1", "30")),
-                r -> Cumuls.AUCUN, () -> "b" + n.incrementAndGet());
+                r -> Cumuls.AUCUN, () -> "b" + n.incrementAndGet(), PreparationPaie.Variables.AUCUNE);
         PreparationPaie.Resultat r = PreparationPaie.preparer(cycle, List.of(feuille("f1", "r1", "35", "2"), feuille("f2", "r1", "35", "0"),
                 feuille("f3", "r9", "40", "0")), s);
         assertThat(r.bulletins()).singleElement().satisfies(b -> {
@@ -146,9 +159,9 @@ class DomainePaieTest {
         Retenues janvier = CalculRetenuesTest.calculer("2000", Frequence.AUX_DEUX_SEMAINES, Cumuls.AUCUN);
         Retenues fevrier = CalculRetenuesTest.calculer("2000", Frequence.AUX_DEUX_SEMAINES, Cumuls.AUCUN.plus(janvier));
         List<Bulletin> bulletins = List.of(
-                new Bulletin("b1", "c1", "r1", "M1", "Julie Roy", "2026-01-15", d("70"), d("0"), janvier, List.of("f1")),
-                new Bulletin("b2", "c2", "r1", "M1", "Julie Roy", "2026-02-12", d("70"), d("0"), fevrier, List.of("f2")),
-                new Bulletin("b3", "c2", "r2", "M2", "Marc Dubé", "2026-02-12", d("70"), d("0"), janvier, List.of("f3")));
+                new Bulletin("b1", "c1", "r1", "M1", "Julie Roy", "2026-01-15", d("70"), d("0"), janvier, List.of("f1"), List.of()),
+                new Bulletin("b2", "c2", "r1", "M1", "Julie Roy", "2026-02-12", d("70"), d("0"), fevrier, List.of("f2"), List.of()),
+                new Bulletin("b3", "c2", "r2", "M2", "Marc Dubé", "2026-02-12", d("70"), d("0"), janvier, List.of("f3"), List.of()));
         List<Declarations.Remise> remises = Declarations.remises(bulletins);
         assertThat(remises).extracting(Declarations.Remise::mois).containsExactly("2026-01", "2026-02");
         Declarations.Remise jan = remises.getFirst();
@@ -198,7 +211,7 @@ class DomainePaieTest {
         assertThat(deux.gainsAe()).isEqualByComparingTo("4000");
         assertThat(deux.rqap()).isEqualByComparingTo("17.20");
         List<String> feuilles = new java.util.ArrayList<>(List.of("f1"));
-        Bulletin b = new Bulletin("b", "c", "r", "m", "n", "2026-01-01", BigDecimal.ONE, BigDecimal.ZERO, r, feuilles);
+        Bulletin b = new Bulletin("b", "c", "r", "m", "n", "2026-01-01", BigDecimal.ONE, BigDecimal.ZERO, r, feuilles, List.of());
         feuilles.add("f2");
         assertThat(b.feuilles()).containsExactly("f1");
     }

@@ -17,8 +17,8 @@ describe("Urgences-santé — le menu et ses pages", () => {
   it("chaque entrée a sa page, et chaque page son entrée", () => {
     expect(ENTREES_US.filter((e) => !PAGES_US[e.cle]).map((e) => e.cle)).toEqual([]);
     expect(Object.keys(PAGES_US).filter((c) => !CLES_US.includes(c))).toEqual([]);
-    // Vingt-neuf : dix-neuf écrans de pilotage, sept personnels, trois de communication.
-    expect(CLES_US).toHaveLength(30);
+    // Trente et un : vingt écrans de pilotage (codes d'absence compris), huit personnels (Mon équipe comprise), trois de communication.
+    expect(CLES_US).toHaveLength(31);
   });
 
   it("aucune clé en double : une page ne s'atteint que par une entrée", () => {

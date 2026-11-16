@@ -33,7 +33,8 @@ normale impose mot de passe fort, second facteur et trois questions au premier a
 | `julie.roy` | Julie Roy | **Paramédic — temps complet** | Son horaire, ses disponibilités, son pointage, sa feuille de temps, ses absences, ses échanges. | s02, s03 |
 | `marc.dube` | Marc Dubé | **Paramédic — temps partiel régulier** | La même chose : il faut **deux** personnes pour qu'un échange de quarts existe. | s07 |
 | `ana.cote` | Ana Côté | **Paramédic — temps partiel occasionnel** | Le même espace personnel ; son statut la place en fin de tour de rôle à l'AGPH. | s04, s07 |
-| `sophie.marchand` | Sophie Marchand | **Ressources humaines** | Les écrans personnels seulement : elle n'est pas planifiable, donc ni horaire ni feuille de temps. | — |
+| `sophie.marchand` | Sophie Marchand | **Ressources humaines** | Les écrans personnels, et toute la paie : règles de paie variable, dossiers, réglages, validation des temps, cycles (ADR 0084). Elle n'est pas planifiable, donc ni horaire ni feuille de temps. | — |
+| `luc.gagnon` | Luc Gagnon | **Comptabilité — paie** | Valide les temps, prépare et traite la paie, télécharge le registre et les fiches en PDF, lit remises et relevés ; il ne voit ni les règles ni les dossiers (ADR 0084). | — |
 
 ## Ce que la différence prouve
 

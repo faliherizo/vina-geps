@@ -262,7 +262,7 @@ describe("Paramètres de la paie", () => {
     await saisir("ppa-fss", "1.65");
     await saisir("ppa-cnesst", "3.1");
     await soumettre("Réglages de la paie");
-    expect(envoisVers("/api/paie/reglages").at(-1)!.corps).toEqual({ tauxFss: "0.0165", tauxCnesst: "0.031", majorationSupplementaire: "0.5" });
+    expect(envoisVers("/api/paie/reglages").at(-1)!.corps).toEqual({ tauxFss: "0.0165", tauxCnesst: "0.031", majorationSupplementaire: "0.5", validationTempsExigee: false });
     expect($("ppa-succes")!.textContent).toContain("Réglages de la paie enregistrés");
   });
 

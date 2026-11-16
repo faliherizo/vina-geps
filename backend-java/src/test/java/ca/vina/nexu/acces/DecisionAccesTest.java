@@ -29,9 +29,9 @@ class DecisionAccesTest {
     private static final Map<String, Boolean> SANS_SURCHARGE = Map.of();
 
     @Test
-    @DisplayName("les 37 capacités sont chargées, libellé et portée compris")
+    @DisplayName("les 38 capacités sont chargées, libellé et portée compris")
     void tableComplete() {
-        assertThat(politique.capacites()).hasSize(37);
+        assertThat(politique.capacites()).hasSize(38);
         PolitiqueAcces.Regle r = politique.regle("employee.create");
         assertThat(r.roles()).containsExactly("admin", "rh", "manager");
         assertThat(r.libelle()).isEqualTo("Créer un employé");
@@ -43,16 +43,18 @@ class DecisionAccesTest {
     @Test
     @DisplayName("chaque rôle intégré retrouve exactement son décompte de capacités")
     void decomptesParRole() {
-        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(37);
+        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(38);
         assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(27);
-        assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(12);
+        // La RH produit et configure la paie (ADR 0084) : paie.gerer et paie.configurer.
+        assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(14);
         assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(8);
         // Aucun droit par défaut : l'employé n'agit que sur ses propres données, par des routes en
         // libre-service qui ne passent pas par cette table.
         assertThat(decision.capacitesDe("employee", SANS_SURCHARGE)).isEmpty();
-        // Le comptable tient les fiches clients, leur risque et leur recouvrement — jamais le confidentiel.
+        // Le comptable tient les fiches clients, leur risque et leur recouvrement — jamais le confidentiel ; il produit la
+        // paie, sans en modifier les règles ni les dossiers (ADR 0084).
         assertThat(decision.capacitesDe("accountant", SANS_SURCHARGE))
-                .containsExactly("clients.manage", "clients.risque", "clients.recouvrement");
+                .containsExactly("clients.manage", "clients.risque", "clients.recouvrement", "paie.gerer");
     }
 
     @Test
@@ -111,7 +113,7 @@ class DecisionAccesTest {
         for (String c : politique.capacites()) {
             toutRetire.put(c, false);
         }
-        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(37);
+        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(38);
         assertThat(decision.peut("admin", "org.manage", toutRetire)).isTrue();
 
         // Le gestionnaire, lui, perd bien tout : la garde ne vaut que pour l'administrateur.
@@ -124,7 +126,7 @@ class DecisionAccesTest {
         // Une surcharge enregistrée hier ne doit pas rendre un droit que le produit ne connaît
         // plus — sinon la suppression d'une capacité laisserait une porte ouverte.
         Map<String, Boolean> fantome = Map.of("capacite.disparue", true);
-        assertThat(decision.capacitesDe("rh", fantome)).hasSize(12);
+        assertThat(decision.capacitesDe("rh", fantome)).hasSize(14);
         assertThat(decision.peut("rh", "capacite.disparue", fantome)).isFalse();
     }
 

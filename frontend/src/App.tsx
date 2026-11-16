@@ -13,6 +13,8 @@ import DeclarationsPaie from "./paie/DeclarationsPaie";
 import DossiersPaie from "./paie/DossiersPaie";
 import MesBulletins from "./paie/MesBulletins";
 import ParametresPaie from "./paie/ParametresPaie";
+import ReglesPaie from "./paie/ReglesPaie";
+import ValidationTemps from "./paie/ValidationTemps";
 import ApiDocs from "./ApiDocs";
 import MaintenanceBanner from "./MaintenanceBanner";
 import { EmpruntBandeau } from "./admin/EmpruntIdentite";
@@ -49,7 +51,7 @@ import { I18nProvider, useT, LANGUAGES, Lang } from "./i18n";
  * (AO 2027-005) : elles sont déclarées par `santequebec/menu.ts` et rendues par son registre.
  * L'union tient sur une seule ligne — un garde-fou du dépôt la lit ainsi.
  */
-export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres" | "paiecycles" | "paiedossiers" | "paiedeclarations" | "mesbulletins" | "paieparametres";
+export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "uscodesabsence" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres" | "paiecycles" | "paiedossiers" | "paiedeclarations" | "mesbulletins" | "paieparametres" | "paieregles" | "paietemps";
 type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant" | "director";
 
 /**
@@ -91,12 +93,15 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
   { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
   { key: "alparametres", i18nKey: "nav.alparametres", icon: "⚙️", roles: ["admin"] },
-  // Paie (ADR 0076) : la gestion exige « paie.gerer » au serveur ; chacun lit ses propres bulletins.
-  { key: "paiecycles", i18nKey: "nav.paiecycles", icon: "💵", roles: ["admin"] },
-  { key: "paiedossiers", i18nKey: "nav.paiedossiers", icon: "🗂️", roles: ["admin"] },
-  { key: "paiedeclarations", i18nKey: "nav.paiedeclarations", icon: "🧾", roles: ["admin"] },
+  // Paie (ADR 0076, 0084) : produire la paie exige « paie.gerer » au serveur (administration, RH, comptable) ; tenir
+  // les règles, les dossiers et les réglages, « paie.configurer » (administration, RH). Chacun lit ses propres bulletins.
+  { key: "paietemps", i18nKey: "nav.paietemps", icon: "🕵️", roles: ["admin", "rh", "accountant"] },
+  { key: "paiecycles", i18nKey: "nav.paiecycles", icon: "💵", roles: ["admin", "rh", "accountant"] },
+  { key: "paiedossiers", i18nKey: "nav.paiedossiers", icon: "🗂️", roles: ["admin", "rh"] },
+  { key: "paiedeclarations", i18nKey: "nav.paiedeclarations", icon: "🧾", roles: ["admin", "rh", "accountant"] },
   { key: "mesbulletins", i18nKey: "nav.mesbulletins", icon: "📄", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
-  { key: "paieparametres", i18nKey: "nav.paieparametres", icon: "⚙️", roles: ["admin"] },
+  { key: "paieparametres", i18nKey: "nav.paieparametres", icon: "⚙️", roles: ["admin", "rh"] },
+  { key: "paieregles", i18nKey: "nav.paieregles", icon: "📐", roles: ["admin", "rh"] },
   { key: "rapports", i18nKey: "nav.rapports", icon: "📑", roles: ["admin", "manager"] },
   { key: "account", i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee"] },
   { key: "help", i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
@@ -677,6 +682,8 @@ function AppShell() {
         {page === "paiedeclarations" && <DeclarationsPaie />}
         {page === "mesbulletins" && <MesBulletins />}
         {page === "paieparametres" && <ParametresPaie />}
+        {page === "paieregles" && <ReglesPaie />}
+        {page === "paietemps" && <ValidationTemps />}
         {page === "apidocs" && <ApiDocs />}
         {page === "integrations" && <Integrations />}
         {page === "notifications" && <Notifications />}

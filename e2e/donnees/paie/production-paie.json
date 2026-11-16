@@ -1,0 +1,51 @@
+{
+  "$commentaire": "Produire la paie d'un personnel de la santé (ADR 0084), joué par paie-production.spec.ts. Les heures sont en UTC ; jour = décalage en jours depuis aujourd'hui. Les montants attendus ne reposent que sur des règles indépendantes de l'heure d'été : la prime de soir n'est vérifiée qu'en présence.",
+  "referentiels": [
+    { "type": "unites", "corps": { "code": "URG", "libelleFr": "Urgence" } },
+    { "type": "corps_emploi", "corps": { "code": "SOINS", "libelleFr": "Soins infirmiers" } },
+    { "type": "titres_emploi", "corps": { "code": "INF", "libelleFr": "Infirmière", "attributs": { "corps": "SOINS" } } },
+    { "type": "titres_emploi", "corps": { "code": "PAB", "libelleFr": "Préposé aux bénéficiaires", "attributs": { "corps": "SOINS" } } },
+    { "type": "types_heure", "corps": { "code": "REG", "libelleFr": "Régulier", "comportement": "TRAVAILLEE", "attributs": { "codePaie": "REG" } } },
+    { "type": "types_heure", "corps": { "code": "HS", "libelleFr": "Heures supplémentaires", "comportement": "SUPPLEMENTAIRE", "attributs": { "codePaie": "HS", "majorationPourcent": 50 } } }
+  ],
+  "comptes": {
+    "rh": { "role": "rh" },
+    "comptable": { "role": "accountant" }
+  },
+  "personnes": [
+    {
+      "cle": "julie", "matricule": "INF-001", "nom": "Julie Roy", "titreEmploi": "INF",
+      "segments": [ { "jour": -6, "debut": "14:00", "fin": "22:00" }, { "jour": -5, "debut": "14:00", "fin": "22:00" }, { "jour": -4, "debut": "14:00", "fin": "22:00" } ],
+      "dossier": { "mode": "horaire", "frequence": "hebdomadaire", "echelon": "3" }
+    },
+    {
+      "cle": "marc", "matricule": "PAB-002", "nom": "Marc Dubé", "titreEmploi": "PAB",
+      "segments": [ { "jour": -6, "debut": "12:00", "fin": "20:00" } ],
+      "dossier": { "mode": "horaire", "frequence": "hebdomadaire", "echelon": "2" }
+    },
+    {
+      "cle": "lea", "matricule": "INF-003", "nom": "Léa Côté", "titreEmploi": "INF",
+      "segments": [ { "jour": -6, "debut": "12:00", "fin": "20:00" } ],
+      "dossier": { "mode": "horaire", "frequence": "hebdomadaire", "echelon": "3" }
+    }
+  ],
+  "reglages": { "validationTempsExigee": true },
+  "regles": [
+    { "type": "taux-de-base", "code": "TAUX_INF_E3", "libelle": "Infirmière, échelon 3", "valeur": "34", "titreEmploi": "INF", "echelon": "3", "du": "2026-01-01" },
+    { "type": "taux-de-base", "code": "TAUX_PAB_E1", "libelle": "Préposé, échelon 1", "valeur": "24", "titreEmploi": "PAB", "echelon": "1", "du": "2026-01-01" },
+    { "type": "prime-horaire", "code": "PRIME_SOINS", "libelle": "Prime de soins critiques", "valeur": "2", "titreEmploi": "INF", "du": "2026-01-01" },
+    { "type": "prime-pourcentage", "code": "PRIME_SOIR", "libelle": "Prime de soir", "valeur": "10", "debut": "16:00", "fin": "00:00", "jours": [1, 2, 3, 4, 5, 6, 7], "codes": "REG", "du": "2026-01-01" },
+    { "type": "forfait", "code": "RETENTION", "libelle": "Allocation de rétention", "valeur": "100", "titreEmploi": "INF", "du": "2026-01-01" }
+  ],
+  "retour": { "cle": "lea", "motif": "Le quart du lundi doit être codé en formation" },
+  "attendu": {
+    "menusRh": ["nav-paietemps", "nav-paiecycles", "nav-paiedossiers", "nav-paiedeclarations", "nav-paieparametres", "nav-paieregles"],
+    "menusComptable": ["nav-paietemps", "nav-paiecycles", "nav-paiedeclarations"],
+    "absentsComptable": ["nav-paieregles", "nav-paiedossiers", "nav-paieparametres"],
+    "anomalies": { "marc": ["sans-taux"], "julie": [], "lea": [] },
+    "payee": "julie",
+    "gains": { "REG": "816,00", "PRIME_SOINS": "48,00", "RETENTION": "100,00" },
+    "gainsPresents": ["PRIME_SOIR"],
+    "sansTaux": "Marc Dubé"
+  }
+}

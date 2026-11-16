@@ -5,11 +5,17 @@ import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.acces.infrastructure.persistance.RegistrePolitiqueAcces;
 import ca.vina.nexu.paie.application.commandes.GestionnaireCyclesPaie;
 import ca.vina.nexu.paie.application.commandes.GestionnaireDossiersPaie;
+import ca.vina.nexu.paie.application.commandes.GestionnaireReglesPaie;
+import ca.vina.nexu.paie.application.commandes.GestionnaireValidationTemps;
+import ca.vina.nexu.paie.application.requetes.DocumentsPaie;
 import ca.vina.nexu.paie.application.requetes.LecturePaie;
+import ca.vina.nexu.paie.application.requetes.LectureVariablesPaie;
 import ca.vina.nexu.paie.domaine.Bareme;
 import ca.vina.nexu.paie.domaine.Baremes;
 import ca.vina.nexu.paie.infrastructure.persistance.BaremesFichiers;
 import ca.vina.nexu.paie.infrastructure.persistance.DepotPaie;
+import ca.vina.nexu.paie.infrastructure.persistance.DepotReglesPaie;
+import ca.vina.nexu.paie.infrastructure.persistance.DepotValidationsTemps;
 import ca.vina.nexu.paie.infrastructure.persistance.UniteDeTravailSpring;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
 import ca.vina.nexu.partage.modules.infrastructure.DepotModulesActives;
@@ -54,6 +60,9 @@ class ControleurPaieHttpTest {
     private static final ContexteRequete CHEF = new ContexteRequete("u-chef", "chef", "manager", null, T);
     private static final ContexteRequete JULIE = new ContexteRequete("u-julie", "julie", "employee", null, T);
     private static final ContexteRequete MARC = new ContexteRequete("u-marc", "marc", "employee", null, T);
+    private static final ContexteRequete RH = new ContexteRequete("u-rh", "rh.paie", "rh", null, T);
+    private static final ContexteRequete COMPTABLE = new ContexteRequete("u-cpt", "comptable", "accountant", null, T);
+    private static final String TEMPS = P + "/temps?debut=2026-02-15&fin=2026-02-28";
     private static final String PERIODE = "{\"debut\":\"2026-02-15\",\"fin\":\"2026-02-28\",\"datePaie\":\"2026-03-05\"}";
 
     private JdbcClient jdbc;
@@ -65,6 +74,12 @@ class ControleurPaieHttpTest {
     private final Set<String> rappeleesAuVerrou = new HashSet<>();
     /** Le motif des effectifs quand les heures ne se calculent pas (paramétrage manquant) ; nul : elles se calculent. */
     private String heuresIncalculables;
+    /** Les feuilles payées par un cycle traité, et celles que les effectifs ne savent pas coder (ADR 0084). */
+    private final Set<String> payees = new HashSet<>();
+    private final Set<String> incalculables = new HashSet<>();
+    private final Set<java.time.LocalDate> feries = new HashSet<>();
+    /** Les retours demandés par la paie : « feuille:motif:acteur ». */
+    private final List<String> retours = new ArrayList<>();
 
     private final HeuresApprouveesPort heures = new HeuresApprouveesPort() {
         @Override
@@ -76,6 +91,37 @@ class ControleurPaieHttpTest {
                     .filter(f -> f.debut().compareTo(debut) >= 0 && f.debut().compareTo(fin) <= 0).toList();
         }
 
+        @Override
+        public List<FeuilleDeLaPeriode> feuilles(String tenantId, String debut, String fin) {
+            return feuilles.stream().filter(f -> f.debut().compareTo(debut) >= 0 && f.debut().compareTo(fin) <= 0).map(this::deLaPeriode).toList();
+        }
+
+        @Override
+        public Optional<FeuilleDeLaPeriode> feuille(String tenantId, String feuilleId) {
+            return feuilles.stream().filter(f -> f.feuilleId().equals(feuilleId)).findFirst().map(this::deLaPeriode);
+        }
+
+        private FeuilleDeLaPeriode deLaPeriode(FeuilleAPayer f) {
+            EtatFeuille etat = payees.contains(f.feuilleId()) ? EtatFeuille.PAYEE : approuvees.contains(f.feuilleId()) ? EtatFeuille.APPROUVEE : EtatFeuille.SOUMISE;
+            boolean incalculable = incalculables.contains(f.feuilleId());
+            return new FeuilleDeLaPeriode(f.feuilleId(), f.ressourceId(), f.matricule(), f.nom(), f.debut(), etat,
+                    incalculable ? Optional.empty() : Optional.of(f), incalculable ? "type d'heure manquant" : null);
+        }
+
+        @Override
+        public Set<java.time.LocalDate> joursFeries(String tenantId, java.time.LocalDate debut, java.time.LocalDate fin) {
+            return feries.stream().filter(j -> !j.isBefore(debut) && !j.isAfter(fin)).collect(java.util.stream.Collectors.toSet());
+        }
+
+        /** Rouvrir comme les effectifs : une feuille qui n'est plus approuvée refuse — y compris à l'instant du geste. */
+        @Override
+        public void retourner(Verrou verrou, String feuilleId, String motif) {
+            if (rappeleesAuVerrou.contains(feuilleId) || !approuvees.remove(feuilleId)) {
+                throw new FeuilleNonApprouvee("la feuille " + feuilleId + " n'est plus approuvée", null);
+            }
+            retours.add(feuilleId + ":" + motif + ":" + verrou.acteurId());
+        }
+
         /** Écrit chaque verrou en base avant de refuser : l'essai prouve ainsi que le refus défait ce qui précède. */
         @Override
         public void marquerPayees(Verrou verrou, List<String> ids) {
@@ -84,6 +130,7 @@ class ControleurPaieHttpTest {
                 if (rappeleesAuVerrou.contains(id) || !approuvees.remove(id)) {
                     throw new FeuilleNonApprouvee("la feuille " + id + " n'est plus approuvée : elle n'entre pas dans cette paie", null);
                 }
+                payees.add(id);
             }
         }
     };
@@ -91,7 +138,8 @@ class ControleurPaieHttpTest {
     private final PersonnesPourPaiePort personnes = new PersonnesPourPaiePort() {
         @Override
         public List<Personne> personnes(String tenantId) {
-            return List.of(new Personne("r-julie", "P1", "Julie Roy"), new Personne("r-marc", "P2", "Marc Dubé"), new Personne("r-lea", "P3", "Léa Côté"));
+            return List.of(new Personne("r-julie", "P1", "Julie Roy", "INF", "FIQ"), new Personne("r-marc", "P2", "Marc Dubé", "PAB", null),
+                    new Personne("r-lea", "P3", "Léa Côté", null, null));
         }
 
         @Override
@@ -131,10 +179,18 @@ class ControleurPaieHttpTest {
         };
         Clock horloge = Clock.fixed(Instant.parse("2026-03-02T15:00:00Z"), ZoneOffset.UTC);
         LecturePaie lecture = new LecturePaie(depot, new BaremesFichiers(), personnes);
+        DepotReglesPaie regles = new DepotReglesPaie(jdbc);
+        DepotValidationsTemps validations = new DepotValidationsTemps(jdbc);
+        LectureVariablesPaie variables = new LectureVariablesPaie(new LectureVariablesPaie.Dependances(regles, validations, heures, personnes, lecture));
+        UniteDeTravailSpring unite = new UniteDeTravailSpring(new TransactionTemplate(new DataSourceTransactionManager(source)));
         ControleurPaie.Cas cas = new ControleurPaie.Cas(new GestionnaireDossiersPaie(depot, personnes),
-                new GestionnaireCyclesPaie(new GestionnaireCyclesPaie.Dependances(lecture, depot, heures,
-                        new UniteDeTravailSpring(new TransactionTemplate(new DataSourceTransactionManager(source))), sequence)), lecture);
-        http = new ClientHttpEssai(new ControleurPaie(new GardePaie(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc), horloge), cas, horloge));
+                new GestionnaireCyclesPaie(new GestionnaireCyclesPaie.Dependances(lecture, variables, depot, heures, unite, sequence)), lecture,
+                new DocumentsPaie(lecture, depot, new RenduPdfPaie()));
+        GardePaie garde = new GardePaie(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc), horloge);
+        http = new ClientHttpEssai(new ControleurPaie(garde, cas, horloge),
+                new ControleurReglesPaie(garde, variables, new GestionnaireReglesPaie(variables, regles, sequence)),
+                new ControleurValidationTemps(garde, variables, new GestionnaireValidationTemps(
+                        new GestionnaireValidationTemps.Dependances(variables, heures, validations, unite, sequence))));
         feuilles.add(feuille("f-julie-1", "r-julie", "2026-02-16", "35", "2"));
         feuilles.add(feuille("f-julie-2", "r-julie", "2026-02-23", "35", "0"));
         feuilles.add(feuille("f-marc", "r-marc", "2026-02-16", "40", "0"));
@@ -146,7 +202,8 @@ class ControleurPaieHttpTest {
         return new HeuresApprouveesPort.FeuilleAPayer(id, ressourceId, ressourceId.equals("r-julie") ? "P1" : "P2",
                 ressourceId.equals("r-julie") ? "Julie Roy" : "Marc Dubé", debut, List.of(
                 new HeuresApprouveesPort.LigneHeures(debut, "REG", HeuresApprouveesPort.NatureHeures.REGULIERE, new BigDecimal(regulieres)),
-                new HeuresApprouveesPort.LigneHeures(debut, "HS", HeuresApprouveesPort.NatureHeures.SUPPLEMENTAIRE, new BigDecimal(supplementaires))));
+                new HeuresApprouveesPort.LigneHeures(debut, "HS", HeuresApprouveesPort.NatureHeures.SUPPLEMENTAIRE, new BigDecimal(supplementaires))),
+                List.of(new HeuresApprouveesPort.Plage(java.time.LocalDate.parse(debut).atTime(16, 0), java.time.LocalDate.parse(debut).atTime(23, 0), "REG")));
     }
 
     private static String corps(ResultActions r) throws Exception {
@@ -296,5 +353,160 @@ class ControleurPaieHttpTest {
         Baremes b = new BaremesFichiers();
         Bareme bareme = b.pour(2026).orElseThrow();
         assertThat(b.pour(2026)).containsSame(bareme);
+    }
+
+    // ── ADR 0084 : rôles, règles de paie variable, validation des temps, documents ──
+
+    private String regle(ContexteRequete qui, String json) throws Exception {
+        return JsonPath.read(corps(http.post(P + "/regles", qui, json).andExpect(status().isCreated())), "$.id");
+    }
+
+    @Test
+    @DisplayName("les rôles : le comptable paie mais ne configure pas ; la RH configure et paie ; le gestionnaire ne fait ni l'un ni l'autre")
+    void roles() throws Exception {
+        http.get(P + "/cycles", COMPTABLE).andExpect(status().isOk());
+        http.get(TEMPS, COMPTABLE).andExpect(status().isOk());
+        http.get(P + "/remises", COMPTABLE).andExpect(status().isOk());
+        http.get(P + "/regles", COMPTABLE).andExpect(status().isForbidden());
+        http.get(P + "/dossiers", COMPTABLE).andExpect(status().isForbidden());
+        http.put(P + "/reglages", COMPTABLE, "{}").andExpect(status().isForbidden());
+        http.get(P + "/bareme", COMPTABLE).andExpect(status().isForbidden());
+        http.get(P + "/regles", RH).andExpect(status().isOk());
+        http.get(P + "/dossiers", RH).andExpect(status().isOk());
+        http.get(P + "/cycles", RH).andExpect(status().isOk());
+        http.get(P + "/regles", CHEF).andExpect(status().isForbidden());
+        http.get(TEMPS, CHEF).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("les règles : créer, lister, modifier, désactiver ; chaque saisie fautive répond 400 en nommant le champ")
+    void regles() throws Exception {
+        String taux = regle(RH, "{\"code\":\"TAUX_INF_E3\",\"libelle\":\"Infirmière, échelon 3\",\"type\":\"taux-de-base\",\"valeur\":31.5,"
+                + "\"titreEmploi\":\"INF\",\"convention\":\"FIQ\",\"echelon\":3,\"valideDu\":\"2026-01-01\"}");
+        String soir = regle(RH, "{\"code\":\"PRIME_SOIR\",\"libelle\":\"Prime de soir\",\"type\":\"prime-pourcentage\",\"valeur\":\"0.05\","
+                + "\"heureDebut\":\"16:00\",\"heureFin\":\"00:00\",\"jours\":[1,2,3,4,5],\"codesPaie\":[\"REG\"],\"valideDu\":\"2026-01-01\",\"valideAu\":\"2026-12-31\"}");
+        http.get(P + "/regles", ADMIN).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].code").value("PRIME_SOIR")).andExpect(jsonPath("$[0].heureDebut").value("16:00"))
+                .andExpect(jsonPath("$[0].jours.length()").value(5)).andExpect(jsonPath("$[0].codesPaie[0]").value("REG"))
+                .andExpect(jsonPath("$[0].valideAu").value("2026-12-31")).andExpect(jsonPath("$[1].echelon").value(3))
+                .andExpect(jsonPath("$[1].heureDebut").isEmpty()).andExpect(jsonPath("$[1].valideAu").isEmpty());
+        http.put(P + "/regles/" + soir, RH, "{\"code\":\"PRIME_SOIR\",\"libelle\":\"Prime de soir\",\"type\":\"prime-pourcentage\",\"valeur\":0.06,"
+                + "\"valideDu\":\"2026-01-01\",\"actif\":false,\"feriesSeulement\":true}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.actif").value(false)).andExpect(jsonPath("$.id").value(soir)).andExpect(jsonPath("$.feriesSeulement").value(true));
+        http.put(P + "/regles/inconnue", RH, "{\"code\":\"X1\",\"libelle\":\"x1\",\"type\":\"forfait\",\"valeur\":1,\"valideDu\":\"2026-01-01\"}")
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.errors[0]").value("règle de paie « inconnue » introuvable"));
+        String base = "\"code\":\"X1\",\"libelle\":\"x1\",\"type\":\"prime-horaire\",\"valeur\":1,\"valideDu\":\"2026-01-01\"";
+        for (String[] cas : new String[][] {
+                {"\"jours\":[8]", "« jours » : des numéros de 1 (lundi) à 7 (dimanche)"},
+                {"\"jours\":[\"lundi\"]", "« jours » : des numéros de 1 (lundi) à 7 (dimanche)"},
+                {"\"jours\":\"lundi\"", "« jours » doit être une liste"},
+                {"\"codesPaie\":[1]", "« codesPaie » : une liste de codes"},
+                {"\"codesPaie\":[\" \"]", "« codesPaie » : une liste de codes"},
+                {"\"heureDebut\":\"25h\",\"heureFin\":\"08:00\"", "« heureDebut » : une heure HH:MM"},
+                {"\"heureDebut\":\"22:00\"", "« heureFin » : une heure HH:MM"},
+                {"\"echelon\":2.5", "« echelon » doit être un entier"},
+                {"\"echelon\":\"trois\"", "« echelon » doit être un entier"},
+                {"\"actif\":\"oui\"", "« actif » doit être vrai ou faux"},
+                {"\"valideAu\":\"31/12/2026\"", "« valideAu » : une date AAAA-MM-JJ"}}) {
+            http.post(P + "/regles", RH, "{" + base + "," + cas[0] + "}").andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value(cas[1]));
+        }
+        http.post(P + "/regles", RH, "{\"type\":\"bonus\"}").andExpect(status().isBadRequest());
+        http.post(P + "/regles", RH, null).andExpect(status().isBadRequest());
+        http.post(P + "/regles", COMPTABLE, "{" + base + "}").andExpect(status().isForbidden());
+        assertThat(taux).isNotBlank();
+    }
+
+    @Test
+    @DisplayName("valider les temps : anomalies, valider, valider en lot ce qui est sans anomalie, retourner avec motif ; ce qui n'est pas approuvé ne se valide pas")
+    void validationDesTemps() throws Exception {
+        http.get(TEMPS, COMPTABLE).andExpect(status().isOk()).andExpect(jsonPath("$.feuilles.length()").value(3))
+                .andExpect(jsonPath("$.feuilles[0].anomalies[0]").value("sans-dossier")).andExpect(jsonPath("$.feuilles[0].validable").value(true))
+                .andExpect(jsonPath("$.feuilles[0].etat").value("approuvee")).andExpect(jsonPath("$.sansFeuille[0].ressourceId").value("r-lea"))
+                .andExpect(jsonPath("$.sansFeuille[0].anomalies[0]").value("aucune-feuille"));
+        http.get(P + "/temps?debut=2026-02-15", COMPTABLE).andExpect(status().isBadRequest());
+        http.post(P + "/temps/f-julie-1/valider", COMPTABLE, null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.decision").value("validee")).andExpect(jsonPath("$.acteur").value("comptable"));
+        http.post(P + "/temps/inconnue/valider", COMPTABLE, null).andExpect(status().isNotFound());
+        approuvees.remove("f-marc");
+        http.post(P + "/temps/f-marc/valider", COMPTABLE, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("feuille non validable : non-approuvee"));
+        http.post(P + "/temps/f-marc/retourner", COMPTABLE, "{\"motif\":\"x\"}").andExpect(status().isConflict());
+        approuvees.add("f-marc");
+        // Sans dossier, une feuille se valide une à une, mais pas en lot : le lot ne prend que ce qui est sans anomalie.
+        http.put(P + "/dossiers/r-marc", ADMIN, "{\"mode\":\"horaire\",\"frequence\":\"aux-deux-semaines\",\"tauxHoraire\":\"25\"}").andExpect(status().isOk());
+        http.post(P + "/temps/valider-sans-anomalie", COMPTABLE, "{\"debut\":\"2026-02-15\",\"fin\":\"2026-02-28\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.validees.length()").value(1)).andExpect(jsonPath("$.validees[0].feuilleId").value("f-marc"));
+        http.get(TEMPS, COMPTABLE).andExpect(jsonPath("$.feuilles[2].validee").value(true)).andExpect(jsonPath("$.feuilles[2].validation.decision").value("validee"));
+        http.post(P + "/temps/f-julie-2/retourner", COMPTABLE, "{\"motif\":\"  \"}").andExpect(status().isBadRequest());
+        http.post(P + "/temps/f-julie-2/retourner", COMPTABLE, "{\"motif\":\"" + "x".repeat(501) + "\"}").andExpect(status().isBadRequest());
+        http.post(P + "/temps/f-julie-2/retourner", COMPTABLE, null).andExpect(status().isBadRequest());
+        http.post(P + "/temps/f-julie-2/retourner", COMPTABLE, "{\"motif\":\"Le 23 février manque\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.decision").value("retournee")).andExpect(jsonPath("$.motif").value("Le 23 février manque"));
+        assertThat(retours).containsExactly("f-julie-2:Le 23 février manque:comptable");
+        http.get(TEMPS, COMPTABLE).andExpect(jsonPath("$.feuilles[1].etat").value("soumise")).andExpect(jsonPath("$.feuilles[1].anomalies[0]").value("non-approuvee"));
+        // Approuvée à la lecture, rouverte par le gestionnaire à l'instant du retour : le refus des effectifs devient un 409.
+        rappeleesAuVerrou.add("f-marc");
+        http.post(P + "/temps/f-marc/retourner", COMPTABLE, "{\"motif\":\"x\"}").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("la feuille f-marc n'est plus approuvée"));
+        rappeleesAuVerrou.remove("f-marc");
+        payees.add("f-marc");
+        http.post(P + "/temps/f-marc/valider", COMPTABLE, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("feuille non validable : elle est déjà payée"));
+        incalculables.add("f-julie-1");
+        http.post(P + "/temps/f-julie-1/valider", COMPTABLE, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("feuille non validable : incalculable"));
+        http.get(TEMPS, COMPTABLE).andExpect(jsonPath("$.feuilles[0].incalculable").value("type d'heure manquant"));
+    }
+
+    @Test
+    @DisplayName("préparer avec validation exigée et règles : les feuilles non validées sont nommées ; sans taux, nommée ; les primes de soir paient")
+    void preparationAvecReglesEtValidation() throws Exception {
+        http.put(P + "/reglages", RH, "{\"tauxFss\":\"0.0426\",\"tauxCnesst\":\"0.0178\",\"majorationSupplementaire\":\"0.5\",\"validationTempsExigee\":true}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.validationTempsExigee").value(true));
+        http.put(P + "/reglages", RH, "{\"tauxFss\":\"0.0426\",\"tauxCnesst\":\"0.0178\",\"majorationSupplementaire\":\"0.5\",\"validationTempsExigee\":\"oui\"}")
+                .andExpect(status().isBadRequest());
+        regle(RH, "{\"code\":\"TAUX_INF_E3\",\"libelle\":\"Infirmière, échelon 3\",\"type\":\"taux-de-base\",\"valeur\":30,\"titreEmploi\":\"INF\",\"echelon\":3,\"valideDu\":\"2026-01-01\"}");
+        regle(RH, "{\"code\":\"PRIME_SOIR\",\"libelle\":\"Prime de soir\",\"type\":\"prime-pourcentage\",\"valeur\":0.1,\"heureDebut\":\"16:00\",\"heureFin\":\"00:00\",\"valideDu\":\"2026-01-01\"}");
+        http.put(P + "/dossiers/r-julie", RH, "{\"mode\":\"horaire\",\"frequence\":\"aux-deux-semaines\",\"echelon\":3}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.echelon").value(3)).andExpect(jsonPath("$.tauxHoraire").isEmpty());
+        http.put(P + "/dossiers/r-marc", RH, "{\"mode\":\"horaire\",\"frequence\":\"aux-deux-semaines\",\"echelon\":2}").andExpect(status().isOk());
+        http.get(P + "/dossiers", RH).andExpect(jsonPath("$[0].titreEmploi").value("INF")).andExpect(jsonPath("$[0].convention").value("FIQ"));
+        http.post(P + "/temps/f-julie-1/valider", COMPTABLE, null).andExpect(status().isOk());
+        http.post(P + "/temps/f-marc/valider", COMPTABLE, null).andExpect(status().isOk());
+        String prep = corps(http.post(P + "/cycles", COMPTABLE, PERIODE).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nonValidees[0].feuilleId").value("f-julie-2"))
+                .andExpect(jsonPath("$.sansTaux[0].ressourceId").value("r-marc"))
+                .andExpect(jsonPath("$.bulletins.length()").value(1))
+                .andExpect(jsonPath("$.bulletins[0].feuilles[0]").value("f-julie-1")));
+        // 35 h à 30 $, 2 h supplémentaires à 45 $, et 7 h de soir (16 h – 23 h) à 3 $ : 1 050 + 90 + 21.
+        assertThat((List<String>) JsonPath.read(prep, "$.bulletins[0].gains[*].code")).containsExactly("REG", "HS", "PRIME_SOIR");
+        assertThat(new BigDecimal(JsonPath.read(prep, "$.bulletins[0].retenues.brut").toString())).isEqualByComparingTo("1161.00");
+        assertThat((String) JsonPath.read(prep, "$.bulletins[0].gains[2].nature")).isEqualTo("prime-pourcentage");
+    }
+
+    @Test
+    @DisplayName("les documents : registre et fiches en PDF pour qui gère ; chacun sa fiche, d'un cycle traité seulement")
+    void documents() throws Exception {
+        String cycle = preparerCycle();
+        String bulletin = JsonPath.read(corps(http.get(P + "/cycles/" + cycle, ADMIN)), "$.bulletins[0].id");
+        byte[] registre = http.get(P + "/cycles/" + cycle + "/registre.pdf", COMPTABLE).andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Type", "application/pdf"))
+                .andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(registre, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        byte[] fiche = http.get(P + "/cycles/" + cycle + "/bulletins/" + bulletin + "/pdf", COMPTABLE).andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().string("Content-Disposition",
+                        "attachment; filename=\"fiche-paie-P1-2026-03-05.pdf\"")).andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(fiche, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        http.get(P + "/cycles/" + cycle + "/bulletins/inconnu/pdf", COMPTABLE).andExpect(status().isNotFound());
+        http.get(P + "/cycles/inconnu/registre.pdf", COMPTABLE).andExpect(status().isNotFound());
+        http.get(P + "/cycles/" + cycle + "/registre.pdf", JULIE).andExpect(status().isForbidden());
+        http.get(P + "/mes-bulletins/" + bulletin + "/pdf", JULIE).andExpect(status().isNotFound());
+        http.post(P + "/cycles/" + cycle + "/traiter", COMPTABLE, null).andExpect(status().isOk());
+        // Traiter recalcule : les bulletins figés ont leurs propres identifiants.
+        bulletin = JsonPath.read(corps(http.get(P + "/cycles/" + cycle, ADMIN)), "$.bulletins[0].id");
+        byte[] sienne = http.get(P + "/mes-bulletins/" + bulletin + "/pdf", JULIE).andExpect(status().isOk()).andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(sienne, 0, 5, StandardCharsets.US_ASCII)).isEqualTo("%PDF-");
+        http.get(P + "/mes-bulletins/" + bulletin + "/pdf", MARC).andExpect(status().isNotFound());
+        http.get(P + "/cycles/" + cycle + "/registre.pdf", RH).andExpect(status().isOk());
     }
 }

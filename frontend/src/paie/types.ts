@@ -19,24 +19,95 @@ export interface Retenues {
   gainsRrq: number; gainsAe: number; gainsRqap: number; employeur: CotisationsEmployeur;
 }
 
+export type NatureGain = "heures-regulieres" | "heures-supplementaires" | "salaire" | "prime-pourcentage" | "prime-horaire" | "forfait";
+
+/** Une ligne de gains de la fiche de paie (ADR 0084). */
+export interface Gain { code: string; libelle: string; nature: NatureGain; quantite: number; taux: number; montant: number }
+
 export interface Bulletin {
   id: string; cycleId: string; ressourceId: string; matricule: string; nom: string; datePaie: string;
   heuresRegulieres: number; heuresSupplementaires: number; retenues: Retenues;
   totalRetenues: number; net: number; cotisationsEmployeur: number; coutEmployeur: number; feuilles: string[];
+  /** Absents des bulletins d'avant l'ADR 0084 : leur brut reste dans `retenues`. */
+  gains?: Gain[];
 }
 
 export interface Personne { ressourceId: string; matricule: string; nom: string }
 
-export interface Preparation { cycle: Cycle; bulletins: Bulletin[]; sansDossier: Personne[] }
+export interface FeuilleNonValidee { feuilleId: string; ressourceId: string; nom: string; debut: string }
+
+export interface Preparation {
+  cycle: Cycle; bulletins: Bulletin[]; sansDossier: Personne[];
+  sansTaux?: Personne[]; nonValidees?: FeuilleNonValidee[];
+}
 
 export interface Dossier {
   ressourceId: string; mode: Mode; frequence: Frequence; tauxHoraire: number | null; salaireAnnuel: number | null;
-  montantPersonnelFederal: number; montantPersonnelQuebec: number;
+  montantPersonnelFederal: number; montantPersonnelQuebec: number; echelon?: number | null;
 }
 
-export interface PersonneDossier extends Personne { dossier: Dossier | null }
+export interface PersonneDossier extends Personne { dossier: Dossier | null; titreEmploi?: string | null; convention?: string | null }
 
-export interface Reglages { annee: number; tauxFss: number; tauxCnesst: number; majorationSupplementaire: number }
+export interface Reglages { annee: number; tauxFss: number; tauxCnesst: number; majorationSupplementaire: number; validationTempsExigee?: boolean }
+
+// ── Règles de paie variable (ADR 0084) ──────────────────────────────────────
+
+export type TypeRegle = "taux-de-base" | "prime-pourcentage" | "prime-horaire" | "forfait";
+
+export interface Regle {
+  id: string; code: string; libelle: string; type: TypeRegle; valeur: number;
+  titreEmploi: string | null; convention: string | null; echelon: number | null;
+  heureDebut: string | null; heureFin: string | null; jours: number[]; feriesSeulement: boolean; codesPaie: string[];
+  valideDu: string; valideAu: string | null; actif: boolean;
+}
+
+export const TYPES_REGLE: ReadonlyArray<{ code: TypeRegle; libelle: string; unite: string }> = [
+  { code: "taux-de-base", libelle: "Taux de base (échelle salariale)", unite: "$ par heure" },
+  { code: "prime-pourcentage", libelle: "Prime en pourcentage du taux", unite: "% du taux de base" },
+  { code: "prime-horaire", libelle: "Prime horaire", unite: "$ par heure admissible" },
+  { code: "forfait", libelle: "Forfait par paie", unite: "$ par paie" },
+];
+
+export const libelleTypeRegle = (t: TypeRegle): string => TYPES_REGLE.find((x) => x.code === t)?.libelle ?? t;
+
+/** Les jours en numéros ISO, du lundi (1) au dimanche (7). */
+export const JOURS: ReadonlyArray<{ numero: number; court: string; long: string }> = [
+  { numero: 1, court: "lun", long: "lundi" }, { numero: 2, court: "mar", long: "mardi" }, { numero: 3, court: "mer", long: "mercredi" },
+  { numero: 4, court: "jeu", long: "jeudi" }, { numero: 5, court: "ven", long: "vendredi" }, { numero: 6, court: "sam", long: "samedi" },
+  { numero: 7, court: "dim", long: "dimanche" },
+];
+
+// ── Validation des temps (ADR 0084) ─────────────────────────────────────────
+
+export type AnomalieTemps = "aucune-feuille" | "non-approuvee" | "incalculable" | "sans-dossier" | "sans-taux" | "heures-elevees" | "validation-perimee";
+
+export const ANOMALIES: Record<AnomalieTemps, { libelle: string; bloquante: boolean }> = {
+  "aucune-feuille": { libelle: "Aucune feuille dans la période", bloquante: false },
+  "non-approuvee": { libelle: "Pas encore approuvée par le gestionnaire", bloquante: true },
+  incalculable: { libelle: "Heures incalculables (paramétrage des effectifs)", bloquante: true },
+  "sans-dossier": { libelle: "Sans dossier de rémunération : ne sera pas payée", bloquante: false },
+  "sans-taux": { libelle: "Aucun taux (ni au dossier, ni à l'échelle) : ne sera pas payée", bloquante: false },
+  "heures-elevees": { libelle: "Plus de 60 heures dans la semaine : à vérifier", bloquante: false },
+  "validation-perimee": { libelle: "Validée, mais ses heures ont changé depuis : à revalider", bloquante: false },
+};
+
+export const libelleAnomalie = (a: string): string => ANOMALIES[a as AnomalieTemps]?.libelle ?? a;
+
+export interface Validation { id: string; feuilleId: string; decision: "validee" | "retournee"; motif: string | null; acteur: string; instant: string }
+
+export interface LigneControle {
+  feuilleId: string; ressourceId: string; matricule: string; nom: string; debut: string;
+  etat: "brouillon" | "soumise" | "retournee" | "approuvee" | "payee";
+  heuresRegulieres: number; heuresSupplementaires: number; anomalies: string[]; incalculable: string | null;
+  validee: boolean; validable: boolean; validation: Validation | null;
+}
+
+export interface Controle { feuilles: LigneControle[]; sansFeuille: Array<Personne & { anomalies: string[] }> }
+
+const ETATS_FEUILLE: Record<LigneControle["etat"], string> = {
+  brouillon: "Brouillon", soumise: "Soumise", retournee: "Retournée", approuvee: "Approuvée", payee: "Payée",
+};
+export const libelleEtatFeuille = (e: LigneControle["etat"]): string => ETATS_FEUILLE[e] ?? e;
 
 export interface Remise {
   mois: string; echeance: string; impotQuebec: number; rrq: number; rqap: number; fss: number; revenuQuebec: number;

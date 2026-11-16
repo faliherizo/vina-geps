@@ -42,7 +42,10 @@ import ca.vina.nexu.paie.domaine.ModeRemuneration;
 import ca.vina.nexu.paie.domaine.Trace;
 import ca.vina.nexu.paie.domaine.UniteDeTravail;
 import ca.vina.nexu.paie.infrastructure.persistance.BaremesFichiers;
+import ca.vina.nexu.paie.application.requetes.LectureVariablesPaie;
 import ca.vina.nexu.paie.infrastructure.persistance.DepotPaie;
+import ca.vina.nexu.paie.infrastructure.persistance.DepotReglesPaie;
+import ca.vina.nexu.paie.infrastructure.persistance.DepotValidationsTemps;
 import ca.vina.nexu.partage.paie.HeuresApprouveesPort;
 import ca.vina.nexu.partage.paie.PersonnesPourPaiePort;
 import ca.vina.nexu.effectifs.application.requetes.LectureJournalEffectifs;
@@ -251,15 +254,17 @@ class ControleurTempsEffectifsHttpTest {
         SourcesFeuillesTemps sources = new SourcesFeuillesTemps(depot, quarts);
         CalculFeuillesTemps calcul = new CalculFeuillesTemps(lectureTemps, sources, evaluateur, flux.lecture());
         GenerationSegmentsTemps generation = new GenerationSegmentsTemps(lectureTemps, sources);
+        GestionnaireApprobationTemps approbation = new GestionnaireApprobationTemps(lectureTemps, calcul, flux.flux(),
+                new GestionnaireApprobationTemps.Ecritures(depot, journal, seq));
         ControleurTempsEffectifs temps = new ControleurTempsEffectifs(garde, new ControleurTempsEffectifs.Lectures(lectureTemps, calcul, new RapportsTemps(lectureTemps, calcul),
                 flux.lecture()),
                 new ControleurTempsEffectifs.Gestes(new GestionnaireParametresTemps(lectureTemps, depot, journal),
                         new GestionnairePreparationTemps(new GestionnairePreparationTemps.Lectures(lectureTemps, calcul, generation, perimetres),
                                 new GestionnairePreparationTemps.Ecritures(depot, journal, seq)),
                         new GestionnaireSegmentsTemps(lectureTemps, calcul, flux.restriction(), new GestionnaireSegmentsTemps.Ecritures(depot, journal, seq)),
-                        new GestionnaireApprobationTemps(lectureTemps, calcul, flux.flux(), new GestionnaireApprobationTemps.Ecritures(depot, journal, seq)),
-                        export, flux.flux()));
-        feuillesPourPaie = new FeuillesPourPaie(new FeuillesPourPaie.Dependances(lectureTemps, export, depot, journal, depotRes), () -> "2031-01-25T12:00:00.000Z");
+                        approbation, export, flux.flux()));
+        feuillesPourPaie = new FeuillesPourPaie(new FeuillesPourPaie.Dependances(lectureTemps, export, depot, journal, depotRes), approbation,
+                () -> "2031-01-25T12:00:00.000Z");
         // `/ma-ressource` : la lecture que les écrans personnels interrogent avant d'offrir un geste.
         ControleurMaRessource maRessource = new ControleurMaRessource(garde, lectRes);
         http = new ClientHttpEssai(socle, regles, planification, temps, maRessource);
@@ -669,6 +674,15 @@ class ControleurTempsEffectifsHttpTest {
         http.post(f1 + "/soumettre", JULIE, null).andExpect(status().isOk());
         http.post(f1 + "/approuver", CHEF, null).andExpect(jsonPath("$.statut").value("APPROUVEE"));
 
+        // La paie la retourne (ADR 0084) : le geste « rouvrir », au nom de la paie, avec son motif ; puis le circuit reprend.
+        feuillesPourPaie.retourner(new HeuresApprouveesPort.Verrou(T, "comptable", "2031-01-24T12:00:00.000Z", null), ids.get("f_P1"), "Il manque le 17");
+        http.get(f1, JULIE).andExpect(jsonPath("$.statut").value("RETOURNEE")).andExpect(jsonPath("$.decisions[-1].motif").value("Il manque le 17"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> feuillesPourPaie.retourner(
+                        new HeuresApprouveesPort.Verrou(T, "comptable", "x", null), ids.get("f_P1"), "encore"))
+                .isInstanceOf(HeuresApprouveesPort.FeuilleNonApprouvee.class);
+        http.post(f1 + "/soumettre", JULIE, null).andExpect(status().isOk());
+        http.post(f1 + "/approuver", CHEF, null).andExpect(jsonPath("$.statut").value("APPROUVEE"));
+
         // La paie la prend : plus rien ne la change, et rien ne se paie deux fois.
         // La paie la voit par le port partagé (ADR 0076) : ses heures régulières, la personne, son compte.
         List<HeuresApprouveesPort.FeuilleAPayer> aPayer = feuillesPourPaie.approuvees(T, "2031-01-13", "2031-01-19");
@@ -676,12 +690,29 @@ class ControleurTempsEffectifsHttpTest {
         assertThat(sienne.lignes()).isNotEmpty().allSatisfy(l -> assertThat(l.heures()).isPositive());
         assertThat(sienne.lignes()).extracting(HeuresApprouveesPort.LigneHeures::nature).contains(HeuresApprouveesPort.NatureHeures.REGULIERE);
         assertThat(feuillesPourPaie.approuvees(T, "2031-01-20", "2031-01-26")).isEmpty();
+        // Les plages sont en heure de Montréal : un segment de 13 h UTC en janvier commence à 8 h.
+        assertThat(sienne.plages()).isNotEmpty().allSatisfy(pl -> assertThat(pl.fin()).isAfter(pl.debut()));
+        assertThat(sienne.plages()).anySatisfy(pl -> assertThat(pl.debut().getHour()).isEqualTo(8));
+        assertThat(feuillesPourPaie.feuilles(T, "2031-01-13", "2031-01-19")).filteredOn(f -> f.feuilleId().equals(ids.get("f_P1")))
+                .singleElement().satisfies(f -> {
+                    assertThat(f.etat()).isEqualTo(HeuresApprouveesPort.EtatFeuille.APPROUVEE);
+                    assertThat(f.heures()).isPresent();
+                });
+        assertThat(feuillesPourPaie.feuille(T, ids.get("f_P1"))).isPresent();
+        assertThat(feuillesPourPaie.feuille(T, "inconnue")).isEmpty();
+        assertThat(feuillesPourPaie.joursFeries(T, java.time.LocalDate.parse("2031-01-13"), java.time.LocalDate.parse("2031-01-19")))
+                .containsExactly(java.time.LocalDate.parse("2031-01-16"));
         // Sans type d'heure supplémentaire en vigueur, les heures ne se calculent pas : le motif passe dans le
         // vocabulaire du port, que la paie rend à l'administration (et non une erreur 500).
         String sansHs = "UPDATE eff_referentiels SET comportement = ? WHERE tenantId = ? AND type = 'types_heure' AND code = 'HS'";
         jdbc.sql(sansHs).params("TRAVAILLEE", T).update();
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> feuillesPourPaie.approuvees(T, "2031-01-13", "2031-01-19"))
                 .isInstanceOf(HeuresApprouveesPort.HeuresIncalculables.class).hasMessageContaining("SUPPLEMENTAIRE");
+        // La validation des temps, elle, voit la feuille et la raison : elle ne se calcule pas, elle ne se valide pas.
+        assertThat(feuillesPourPaie.feuille(T, ids.get("f_P1"))).hasValueSatisfying(f -> {
+            assertThat(f.heures()).isEmpty();
+            assertThat(f.incalculable()).contains("SUPPLEMENTAIRE");
+        });
         jdbc.sql(sansHs).params("SUPPLEMENTAIRE", T).update();
         assertThat(feuillesPourPaie.personnes(T)).extracting(PersonnesPourPaiePort.Personne::ressourceId).contains(sienne.ressourceId());
         assertThat(feuillesPourPaie.ressourceDe(T, JULIE.userId())).contains(sienne.ressourceId());
@@ -712,14 +743,17 @@ class ControleurTempsEffectifsHttpTest {
         Bareme bareme = new BaremesFichiers().pour(2026).orElseThrow();
         LecturePaie lecturePaie = new LecturePaie(depotPaie, annee -> Optional.of(bareme), feuillesPourPaie);
         new GestionnaireDossiersPaie(depotPaie, feuillesPourPaie).enregistrer(trace, new DossierRemuneration(ressourceId, ModeRemuneration.HORAIRE,
-                Frequence.AUX_DEUX_SEMAINES, new BigDecimal("30"), null, CalculRetenues.MontantsPersonnels.deBase(bareme)));
+                Frequence.AUX_DEUX_SEMAINES, new BigDecimal("30"), null, CalculRetenues.MontantsPersonnels.deBase(bareme), null));
         UniteDeTravail direct = new UniteDeTravail() {
             @Override
             public <R> R executer(java.util.function.Supplier<R> geste) {
                 return geste.get();
             }
         };
-        GestionnaireCyclesPaie cycles = new GestionnaireCyclesPaie(new GestionnaireCyclesPaie.Dependances(lecturePaie, depotPaie, feuillesPourPaie, direct, sequence()));
+        LectureVariablesPaie variables = new LectureVariablesPaie(new LectureVariablesPaie.Dependances(new DepotReglesPaie(jdbc),
+                new DepotValidationsTemps(jdbc), feuillesPourPaie, feuillesPourPaie, lecturePaie));
+        GestionnaireCyclesPaie cycles = new GestionnaireCyclesPaie(new GestionnaireCyclesPaie.Dependances(lecturePaie, variables, depotPaie,
+                feuillesPourPaie, direct, sequence()));
         GestionnaireCyclesPaie.Preparation p = cycles.preparer(trace, new CyclePaie.Periode("2031-01-13", "2031-01-19", "2031-01-23"));
         assertThat(p.bulletins()).singleElement().satisfies(b -> {
             assertThat(b.feuilles()).containsExactly(ids.get("f_P1"));

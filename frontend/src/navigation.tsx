@@ -102,7 +102,8 @@ export const NAVIGATION: GroupeNav[] = [
     ] },
     // Paie (ADR 0076) : la gestion de la paie et les bulletins de chacun, sous une notion.
     { key: "paienotion", i18nKey: "concept.paienotion", icon: "💵", vues: [
-      { page: "paiecycles", module: "paie" }, { page: "paiedossiers", module: "paie" }, { page: "paiedeclarations", module: "paie" },
+      { page: "paietemps", module: "paie" }, { page: "paiecycles", module: "paie" }, { page: "paiedossiers", module: "paie" },
+      { page: "paiedeclarations", module: "paie" },
       { page: "mesbulletins", module: "paie" },
     ] },
     { page: "rapports" },
@@ -112,6 +113,7 @@ export const NAVIGATION: GroupeNav[] = [
     ...NOTIONS_US.filter((n) => n.cle === NOTION_PARAMETRES_US).map(entreeDuModule),
     { page: "alparametres", module: "alertes" },
     { page: "paieparametres", module: "paie" },
+    { page: "paieregles", module: "paie" },
     { page: "admin" },
     { key: "access", i18nKey: "concept.access", icon: "🔒", vues: [
       { page: "access", i18nKey: "vue.access.objets", principale: true },

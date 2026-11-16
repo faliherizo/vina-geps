@@ -1,6 +1,7 @@
 package ca.vina.nexu.paie.application.commandes;
 
 import ca.vina.nexu.paie.application.requetes.LecturePaie;
+import ca.vina.nexu.paie.application.requetes.LectureVariablesPaie;
 import ca.vina.nexu.paie.domaine.Bulletin;
 import ca.vina.nexu.paie.domaine.Cumuls;
 import ca.vina.nexu.paie.domaine.CyclePaie;
@@ -24,10 +25,14 @@ import java.util.function.Function;
  */
 public class GestionnaireCyclesPaie {
 
-    /** Le résultat d'une préparation : le cycle, ses bulletins, et les personnes approuvées sans dossier, non payées. */
-    public record Preparation(CyclePaie cycle, List<Bulletin> bulletins, List<PreparationPaie.Personne> sansDossier) { }
+    /**
+     * Le résultat d'une préparation : le cycle, ses bulletins, et ce qui n'a pas été payé — personnes sans dossier ou sans
+     * taux, feuilles que la paie n'a pas validées quand l'organisme l'exige (ADR 0084).
+     */
+    public record Preparation(CyclePaie cycle, List<Bulletin> bulletins, List<PreparationPaie.Personne> sansDossier,
+                              List<PreparationPaie.Personne> sansTaux, List<PreparationPaie.FeuilleNonValidee> nonValidees) { }
 
-    public record Dependances(LecturePaie lecture, EcriturePaiePort ecriture, HeuresApprouveesPort heures,
+    public record Dependances(LecturePaie lecture, LectureVariablesPaie variables, EcriturePaiePort ecriture, HeuresApprouveesPort heures,
                               UniteDeTravail unite, Sequence sequence) { }
 
     private final Dependances d;
@@ -93,9 +98,10 @@ public class GestionnaireCyclesPaie {
         int annee = cycle.periode().annee();
         Map<String, DossierRemuneration> dossiers = d.lecture().dossiersParPersonne(tenantId);
         Function<String, Cumuls> cumuls = d.lecture().cumulsAvant(tenantId, annee);
-        PreparationPaie.Resultat r = PreparationPaie.preparer(cycle, heuresApprouvees(tenantId, cycle),
-                new PreparationPaie.Sources(d.lecture().bareme(annee), d.lecture().reglages(tenantId, annee), dossiers, cumuls, d.sequence()::uuid));
+        List<HeuresApprouveesPort.FeuilleAPayer> feuilles = heuresApprouvees(tenantId, cycle);
+        PreparationPaie.Resultat r = PreparationPaie.preparer(cycle, feuilles, new PreparationPaie.Sources(d.lecture().bareme(annee),
+                d.lecture().reglages(tenantId, annee), dossiers, cumuls, d.sequence()::uuid, d.variables().pourPreparer(tenantId, cycle, feuilles)));
         d.ecriture().remplacerBulletins(tenantId, cycle.id(), r.bulletins());
-        return new Preparation(cycle, r.bulletins(), r.sansDossier());
+        return new Preparation(cycle, r.bulletins(), r.sansDossier(), r.sansTaux(), r.nonValidees());
     }
 }

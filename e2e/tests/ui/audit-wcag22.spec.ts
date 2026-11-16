@@ -126,7 +126,23 @@ const MODULES_AUDIT = {
     retenues: { brut: 2190, impotFederal: 150.1, impotQuebec: 190.2, rrq: 129.49, rrq2: 0, ae: 28.47, rqap: 9.42, gainsRrq: 2190, gainsAe: 2190, gainsRqap: 2190,
       employeur: { rrq: 129.49, rrq2: 0, ae: 39.86, rqap: 13.18, fss: 93.29, cnt: 1.31, cnesst: 38.98 } },
     totalRetenues: 507.68, net: 1682.32, cotisationsEmployeur: 316.11, coutEmployeur: 2506.11, feuilles: ["ft-1", "ft-2"] }],
-  "GET /api/paie/reglages": { annee: 2030, tauxFss: 0.0426, tauxCnesst: 0.0178, majorationSupplementaire: 0.5 },
+  "GET /api/paie/reglages": { annee: 2030, tauxFss: 0.0426, tauxCnesst: 0.0178, majorationSupplementaire: 0.5, validationTempsExigee: true },
+  // ADR 0084 : règles de paie variable et validation des temps.
+  "GET /api/paie/regles": [
+    { id: "rg-1", code: "TAUX_INF_E3", libelle: "Infirmière, échelon 3", type: "taux-de-base", valeur: 34, titreEmploi: "INF", convention: "FIQ", echelon: 3,
+      heureDebut: null, heureFin: null, jours: [], feriesSeulement: false, codesPaie: [], valideDu: "2030-01-01", valideAu: null, actif: true },
+    { id: "rg-2", code: "PRIME_NUIT", libelle: "Prime de nuit", type: "prime-pourcentage", valeur: 0.12, titreEmploi: null, convention: null, echelon: null,
+      heureDebut: "00:00", heureFin: "08:00", jours: [1, 2, 3, 4, 5], feriesSeulement: false, codesPaie: ["REG"], valideDu: "2030-01-01", valideAu: "2030-12-31", actif: true },
+  ],
+  "GET /api/paie/temps": {
+    feuilles: [
+      { feuilleId: "ft-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", debut: "2030-02-17", etat: "approuvee", heuresRegulieres: 35, heuresSupplementaires: 2,
+        anomalies: [], incalculable: null, validee: false, validable: true, validation: null },
+      { feuilleId: "ft-2", ressourceId: "rs-2", matricule: "P2", nom: "Marc Dubé", debut: "2030-02-17", etat: "soumise", heuresRegulieres: 62, heuresSupplementaires: 0,
+        anomalies: ["non-approuvee", "sans-taux", "heures-elevees"], incalculable: null, validee: false, validable: false, validation: null },
+    ],
+    sansFeuille: [{ ressourceId: "rs-3", matricule: "P3", nom: "Léa Côté", anomalies: ["aucune-feuille"] }],
+  },
   "GET /api/paie/bareme": { annee: 2030, rrq: { tauxBase: 0.053, tauxSupplementaire: 0.01, exemption: 3500, mga: 74600, plafondSupplementaire: 85000, tauxRrq2: 0.04 },
     ae: { tauxEmploye: 0.013, maximumAssurable: 68900 }, rqap: { tauxEmploye: 0.0043, tauxEmployeur: 0.00602, maximumAssurable: 103000 },
     federal: { montantPersonnel: 16452 }, quebec: { montantPersonnel: 18952 } },
@@ -768,6 +784,7 @@ const PAGES = [
   { nom: "Ressources", nav: "nav-usressources" },
   { nom: "Quotas", nav: "nav-usquotas" },
   { nom: "Référentiels", nav: "nav-usreferentiels" },
+  { nom: "Codes d'absence", nav: "nav-uscodesabsence" },
   { nom: "Règles des effectifs", nav: "nav-usregles", onglets: ["rgl-vue-regles", "rgl-vue-simulateur", "rgl-vue-decisions"] },
   { nom: "Milieux physiques", nav: "nav-usmilieux" },
   { nom: "Périmètres", nav: "nav-usperimetres" },
@@ -914,6 +931,16 @@ const PAGES = [
       await page.getByTestId("mbu-b-employeur").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Paramètres de la paie", nav: "nav-paieparametres" },
+  { nom: "Règles de paie variable", nav: "nav-paieregles",
+    etats: [{ nom: "dialogue d'une prime", agir: async (page) => {
+      await page.getByTestId("prg-rg-2-modifier").click();
+      await page.getByTestId("prg-heures").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("prg-regle-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  { nom: "Validation des temps", nav: "nav-paietemps",
+    etats: [{ nom: "dialogue de retour", agir: async (page) => {
+      await page.getByTestId("pvt-ft-1-retourner").click();
+      await page.getByTestId("pvt-motif").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pvt-retour-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mon horaire", nav: "nav-monhoraire",
     // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {
@@ -1221,7 +1248,7 @@ async function amenerLeLienDansLEcran(page: import("@playwright/test").Page, nav
 const SANS_FORMULAIRE_EN_LIGNE = new Set([
   "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges", "nav-monequipe",
   "nav-uscomblement", "nav-usequipages", "nav-usdisponibilites", "nav-usabsences", "nav-usechanges", "nav-usagph", "nav-uspresence",
-  "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-usregles",
+  "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-uscodesabsence", "nav-usregles",
   "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal", "nav-alparametres",
   "nav-paiecycles", "nav-paiedossiers", "nav-mesbulletins",
 ]);

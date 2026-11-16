@@ -27,15 +27,17 @@ export default function ParametresPaie() {
   const [fss, setFss] = useState("");
   const [cnesst, setCnesst] = useState("");
   const [majoration, setMajoration] = useState("");
+  const [validation, setValidation] = useState(false);
   const charger = useCallback(async () => {
     const r = await lire<Reglages>("/api/paie/reglages");
-    if (r) { setReglages(r); setFss(enPourcent(r.tauxFss)); setCnesst(enPourcent(r.tauxCnesst)); setMajoration(enPourcent(r.majorationSupplementaire)); }
+    if (r) { setReglages(r); setFss(enPourcent(r.tauxFss)); setCnesst(enPourcent(r.tauxCnesst)); setMajoration(enPourcent(r.majorationSupplementaire)); setValidation(r.validationTempsExigee === true); }
     setBareme(await lire<BaremeLu>("/api/paie/bareme"));
   }, [lire]);
   useEffect(() => { void charger(); }, [charger]);
   const soumettre = async (e: FormEvent) => {
     e.preventDefault();
-    const r = await envoyer<Reglages>("/api/paie/reglages", { tauxFss: enFraction(fss), tauxCnesst: enFraction(cnesst), majorationSupplementaire: enFraction(majoration) }, "PUT");
+    const r = await envoyer<Reglages>("/api/paie/reglages", { tauxFss: enFraction(fss), tauxCnesst: enFraction(cnesst), majorationSupplementaire: enFraction(majoration),
+      validationTempsExigee: validation }, "PUT");
     if (r) { setReglages(r); setSucces("Réglages de la paie enregistrés : ils s'appliquent aux prochains calculs."); }
   };
 
@@ -55,6 +57,10 @@ export default function ParametresPaie() {
           <p><label htmlFor="ppa-majoration">Majoration des heures supplémentaires (%, au moins 50)</label>
             <input id="ppa-majoration" data-testid="ppa-majoration" type="number" min="50" max="100" step="1" required value={majoration}
               onChange={(e) => setMajoration(e.target.value)} /></p>
+          <p className="checkbox-line"><input id="ppa-validation" data-testid="ppa-validation" type="checkbox" checked={validation}
+            aria-describedby="ppa-validation-aide" onChange={(e) => setValidation(e.target.checked)} />
+            <label htmlFor="ppa-validation">Exiger la validation des temps par la paie avant de payer</label></p>
+          <p id="ppa-validation-aide" className="muted">Cochée, une feuille approuvée n'entre dans un cycle qu'une fois validée dans « Validation des temps ».</p>
           <p><button type="submit" className="primary" data-testid="ppa-enregistrer">Enregistrer les réglages</button></p>
         </form>
       </section>

@@ -265,6 +265,19 @@
    "profil": "Ressources humaines",
    "voit": "Les écrans personnels ; elle n'est pas planifiable et n'a donc ni horaire ni feuille de temps.",
    "planche": "— (profil de l'application, hors planches)"
+  },
+  {
+   "matricule": null,
+   "nom": "Luc Gagnon",
+   "statutEmploiCode": null,
+   "anciennete": null,
+   "compte": {
+    "username": "luc.gagnon",
+    "role": "accountant"
+   },
+   "profil": "Comptabilité — paie",
+   "voit": "La validation des temps, les cycles de paie, les registres et les fiches en PDF, les remises et relevés ; ni les règles ni les dossiers.",
+   "planche": "— (profil de l'application, hors planches ; ADR 0084)"
   }
  ],
  "regles": [
@@ -309,6 +322,97 @@
     "Le 412 sort à 23 h avec un seul paramédic : je cherche un deuxième jusqu'à 7 h.",
     "Je peux prendre la nuit si on décale mon début de demain à 11 h."
    ]
+  }
+ },
+ "paie": {
+  "$commentaire": "Règles de paie variable de la démonstration (ADR 0084) : l'échelle des paramédics par échelon, une prime de soir, une prime de fin de semaine et une allocation. La paie exige la validation des temps.",
+  "validationTempsExigee": true,
+  "regles": [
+   {
+    "code": "TAUX_PARA_E1",
+    "libelle": "Paramédic, échelon 1",
+    "type": "taux-de-base",
+    "valeur": 29.5,
+    "titreEmploi": null,
+    "echelon": 1,
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "TAUX_PARA_E2",
+    "libelle": "Paramédic, échelon 2",
+    "type": "taux-de-base",
+    "valeur": 32,
+    "titreEmploi": null,
+    "echelon": 2,
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "TAUX_PARA_E3",
+    "libelle": "Paramédic, échelon 3",
+    "type": "taux-de-base",
+    "valeur": 34,
+    "titreEmploi": null,
+    "echelon": 3,
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "TAUX_PARA_E4",
+    "libelle": "Paramédic, échelon 4",
+    "type": "taux-de-base",
+    "valeur": 36.5,
+    "titreEmploi": null,
+    "echelon": 4,
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "PRIME_SOIR",
+    "libelle": "Prime de soir",
+    "type": "prime-pourcentage",
+    "valeur": 0.05,
+    "heureDebut": "16:00",
+    "heureFin": "00:00",
+    "codesPaie": [
+     "100"
+    ],
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "PRIME_NUIT",
+    "libelle": "Prime de nuit",
+    "type": "prime-pourcentage",
+    "valeur": 0.12,
+    "heureDebut": "00:00",
+    "heureFin": "08:00",
+    "codesPaie": [
+     "100"
+    ],
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "PRIME_FDS",
+    "libelle": "Prime de fin de semaine",
+    "type": "prime-horaire",
+    "valeur": 1.5,
+    "jours": [
+     6,
+     7
+    ],
+    "valideDu": "2026-01-01"
+   },
+   {
+    "code": "ALLOC_UNIFORME",
+    "libelle": "Allocation d'uniforme",
+    "type": "forfait",
+    "valeur": 12,
+    "valideDu": "2026-01-01"
+   }
+  ],
+  "echelons": {
+   "julie.roy": 3,
+   "marc.dube": 2,
+   "ana.cote": 1,
+   "claire.nadeau": 4,
+   "denis.lavoie": 4
   }
  }
 }

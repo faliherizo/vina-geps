@@ -582,6 +582,15 @@ public final class TempsEffectifs {
                 .sorted(Comparator.comparing(LignePaie::date).thenComparing(LignePaie::codePaie)).toList();
     }
 
+    /** Un segment payé, borné par ses instants ISO et codé pour la paie : la paie y lit l'heure du jour (ADR 0084). */
+    public record SegmentPaye(String debut, String fin, String codePaie) { }
+
+    /** Les segments payés d'une feuille, dans leur ordre, avec le code de paie de leur type d'heure. */
+    public static List<SegmentPaye> segmentsPayes(List<? extends SegmentDeTemps> segments, CodesPaie codes) {
+        return segments.stream().filter(s -> estPaye(s.comportement()))
+                .map(s -> new SegmentPaye(s.debut(), s.fin(), codes.codePaieDe(s.typeHeureCode()))).toList();
+    }
+
     private static Number heures(long minutes) {
         double h = Math.round(minutes / (double) MINUTES_HEURE * CENTIEMES) / CENTIEMES;
         return h == Math.rint(h) ? (Number) (long) h : (Number) h;

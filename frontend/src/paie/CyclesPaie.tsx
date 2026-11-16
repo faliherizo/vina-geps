@@ -9,7 +9,8 @@ import { ConfirmModal, FormulaireModal } from "../Modal";
 import { useApiEffectifs as useApi } from "../effectifs/api";
 import { liste } from "../formeRecue";
 import DetailBulletin from "./DetailBulletin";
-import { argent, heures, libelleEtat, statutBadge, type Bulletin, type Cycle, type Preparation, type Personne } from "./types";
+import { useTelechargementPdf } from "./telecharger";
+import { argent, heures, libelleEtat, statutBadge, type Bulletin, type Cycle, type FeuilleNonValidee, type Preparation, type Personne } from "./types";
 
 const COL_CYCLES: ReadonlyArray<Colonne<Cycle>> = [
   { id: "periode", libelle: "Période", tri: (c) => c.debut }, { id: "datePaie", libelle: "Date de paie", tri: (c) => c.datePaie },
@@ -26,6 +27,7 @@ type Geste = "traiter" | "annuler";
 
 export default function CyclesPaie() {
   const { lire, envoyer, erreur, succes, setSucces } = useApi();
+  const { telecharger, erreurPdf } = useTelechargementPdf();
   const [cycles, setCycles] = useState<Cycle[]>([]);
   const [ouvert, setOuvert] = useState<Preparation | null>(null);
   const [bulletin, setBulletin] = useState<Bulletin | null>(null);
@@ -35,7 +37,7 @@ export default function CyclesPaie() {
 
   const ouvrir = async (c: Cycle) => {
     const d = await lire<{ cycle: Cycle; bulletins: Bulletin[] }>(`/api/paie/cycles/${c.id}`);
-    if (d) setOuvert({ cycle: d.cycle, bulletins: liste<Bulletin>(d.bulletins), sansDossier: [] });
+    if (d) setOuvert({ cycle: d.cycle, bulletins: liste<Bulletin>(d.bulletins), sansDossier: [], sansTaux: [], nonValidees: [] });
   };
   const recalculer = async (c: Cycle) => {
     const p = await envoyer<Preparation>(`/api/paie/cycles/${c.id}/recalculer`, {});
@@ -57,6 +59,7 @@ export default function CyclesPaie() {
         description="Seules les feuilles de temps approuvées entrent dans une paie. Tant que le cycle n'est pas traité, une feuille peut encore être rappelée ou rouverte ; traité, il fige ses feuilles." />
       {erreur && <Message variante="erreur" testId="pcy-erreur">{erreur}</Message>}
       {succes && <Message variante="succes" testId="pcy-succes">{succes}</Message>}
+      {erreurPdf && <Message variante="erreur" testId="pcy-erreur-pdf">{erreurPdf}</Message>}
 
       <section className="card" aria-labelledby="pcy-liste-h">
         <h2 id="pcy-liste-h">Cycles</h2>
@@ -83,6 +86,13 @@ export default function CyclesPaie() {
         <section className="card" aria-labelledby="pcy-cycle-h" data-testid="pcy-ouvert">
           <h2 id="pcy-cycle-h">Paie du {ouvert.cycle.datePaie} — {libelleEtat(ouvert.cycle.etat)}</h2>
           <SansDossier personnes={ouvert.sansDossier} />
+          <SansTaux personnes={ouvert.sansTaux ?? []} />
+          <NonValidees feuilles={ouvert.nonValidees ?? []} />
+          <div className="eff-actions">
+            <button type="button" className="secondary" data-testid="pcy-registre"
+              onClick={() => void telecharger(`/api/paie/cycles/${ouvert.cycle.id}/registre.pdf`, `registre-paie-${ouvert.cycle.datePaie}.pdf`)}>
+              Registre de paie (PDF)</button>
+          </div>
           {ouvert.cycle.etat === "prepare" && (
             <div className="eff-actions">
               <button type="button" className="secondary" data-testid="pcy-recalculer" onClick={() => void recalculer(ouvert.cycle)}>Recalculer</button>
@@ -97,8 +107,13 @@ export default function CyclesPaie() {
                 <td>{b.nom}</td><td className="num">{heures(b.heuresRegulieres)}</td><td className="num">{heures(b.heuresSupplementaires)}</td>
                 <td className="num">{argent(b.retenues.brut)}</td><td className="num">{argent(b.totalRetenues)}</td>
                 <td className="num">{argent(b.net)}</td><td className="num">{argent(b.coutEmployeur)}</td>
-                <td><button type="button" className="secondary" data-testid={`pcy-bulletin-${b.ressourceId}-voir`} onClick={() => setBulletin(b)}>
-                  Détail<span className="sr-only"> du bulletin de {b.nom}</span></button></td>
+                <td><div className="eff-actions">
+                  <button type="button" className="secondary" data-testid={`pcy-bulletin-${b.ressourceId}-voir`} onClick={() => setBulletin(b)}>
+                    Détail<span className="sr-only"> du bulletin de {b.nom}</span></button>
+                  <button type="button" className="secondary" data-testid={`pcy-bulletin-${b.ressourceId}-pdf`}
+                    onClick={() => void telecharger(`/api/paie/cycles/${ouvert.cycle.id}/bulletins/${b.id}/pdf`, `fiche-paie-${b.matricule}.pdf`)}>
+                    Fiche PDF<span className="sr-only"> de {b.nom}</span></button>
+                </div></td>
               </tr>
             )} />
         </section>
@@ -124,6 +139,26 @@ function SansDossier({ personnes }: { personnes: Personne[] }) {
     <Message variante="avertissement" testId="pcy-sans-dossier">
       Feuilles approuvées sans dossier de rémunération, donc non payées : {personnes.map((p) => `${p.nom} (${p.matricule})`).join(", ")}.
       Créez leur dossier dans « Dossiers de rémunération », puis recalculez.
+    </Message>
+  );
+}
+
+function SansTaux({ personnes }: { personnes: Personne[] }) {
+  if (personnes.length === 0) return null;
+  return (
+    <Message variante="avertissement" testId="pcy-sans-taux">
+      Aucun taux pour ces personnes, ni au dossier ni à l'échelle salariale, donc non payées : {personnes.map((p) => `${p.nom} (${p.matricule})`).join(", ")}.
+      Ajoutez la règle « Taux de base » de leur titre d'emploi et échelon, ou un taux hors échelle au dossier, puis recalculez.
+    </Message>
+  );
+}
+
+function NonValidees({ feuilles }: { feuilles: FeuilleNonValidee[] }) {
+  if (feuilles.length === 0) return null;
+  return (
+    <Message variante="avertissement" testId="pcy-non-validees">
+      Feuilles approuvées que la paie n'a pas encore validées, donc écartées de ce cycle : {feuilles.map((f) => `${f.nom} (semaine du ${f.debut})`).join(", ")}.
+      Validez-les dans « Validation des temps », puis recalculez.
     </Message>
   );
 }
