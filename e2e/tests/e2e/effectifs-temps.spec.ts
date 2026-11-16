@@ -12,6 +12,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -73,6 +74,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
   await ouvrirNav(julie, "nav-matemps");
+  await raconter(julie, "Feuilles de temps. Julie Roy ouvre Ma feuille de temps et prépare celle de la semaine du 13 janvier. La feuille se remplit depuis son horaire et ses pointages ; un quart non pointé est signalé comme anomalie.");
   await expect(julie.getByTestId("mft-vide")).toBeVisible();
   // Préparer crée une feuille : un dialogue depuis le 8 novembre 2026.
   await julie.getByTestId("mft-preparation-ouvrir").click();
@@ -83,6 +85,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await expect(julie.getByTestId("mft-segments")).toContainText("Horaire (non pointé)");
   await expect(julie.getByTestId("mft-anomalies")).toContainText("n'a pas été pointé");
   await expectNoA11yViolations(julie);
+  await raconter(julie, "Elle corrige un segment : fin à 17 heures, avec le motif, départ plus tôt accordé par le chef. Le segment n'est pas écrasé : il passe à sa deuxième version.");
   await julie.locator('[data-testid^="mft-s-"][data-testid$="-modifier"]').click();
   await expect(julie.getByTestId("mft-edition")).toBeVisible();
   await julie.getByTestId("mft-e-fin").fill("17:00");
@@ -91,6 +94,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await julie.getByTestId("mft-e-enregistrer").click();
   await expect(julie.getByTestId("mft-info")).toContainText("Segment du 2031-01-15 corrigé.");
   await expect(julie.getByTestId("mft-segments")).toContainText("corrigé (v2)");
+  await raconter(julie, "Elle soumet sa feuille, qui attend la décision. Puis elle la rappelle, pour la reprendre : la feuille revient au brouillon. Elle la soumet de nouveau.");
   await julie.getByTestId("mft-soumettre").click();
   await expect(julie.getByTestId("mft-info")).toContainText("Feuille soumise : elle attend la décision.");
   await expect(julie.getByTestId("mft-statut")).toContainText("Soumise");
@@ -110,6 +114,7 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-ustemps");
+  await raconter(chef, "Le chef ouvre les feuilles de temps de la semaine, lit les totaux par code de paie, et approuve la feuille de Julie.");
   await chef.getByTestId("pla-tps-debut").fill("2031-01-13");
   const ouvrir = chef.locator('[data-testid^="pla-tps-"][data-testid$="-ouvrir"]');
   await expect(ouvrir).toHaveCount(1);
@@ -118,12 +123,14 @@ test("préparer, corriger et soumettre sa feuille ; l'approuver et produire le l
   await expectNoA11yViolations(chef);
   await chef.getByTestId("pla-tps-approuver").click();
   await expect(chef.getByTestId("pla-tps-bilan")).toContainText("Feuille de Julie Roy : approuvée.");
+  await raconter(chef, "Il produit le lot de paie : une feuille, avec son empreinte qui garantit que le lot n'a pas été modifié.");
   await chef.getByTestId("pla-tps-paie").locator("summary").click();
   await chef.getByTestId("pla-tps-produire").click();
   await expect(chef.getByTestId("pla-tps-lot")).toContainText("1 feuille(s)");
   await expect(chef.getByTestId("pla-tps-lot")).toContainText("Empreinte");
   await expectNoA11yViolations(chef);
   // Approuvée, pas encore payée : le chef la rouvre pour correction, avec un motif ; l'historique le dit.
+  await raconter(chef, "Enfin, il rouvre la feuille approuvée, avec son motif : la formation du 17 est en heures régulières. La feuille retourne à Julie.");
   await chef.getByTestId("pla-tps-filtre").selectOption("APPROUVEE");
   await chef.locator('[data-testid^="pla-tps-"][data-testid$="-ouvrir"]').first().click();
   await chef.getByTestId("pla-tps-motif-rouvrir").fill("La formation du 17 est en heures régulières");

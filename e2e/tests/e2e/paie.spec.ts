@@ -14,6 +14,7 @@ import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { jour } from "./helpers/urgences-sante";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -57,6 +58,7 @@ test("tenir le dossier de rémunération ; une année sans barème est refusée 
   const ctxAdmin = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const admin = await ctxAdmin.newPage();
   await selectTenant(admin, tenantId);
+  await raconter(admin, "Paie québécoise. L'administrateur ouvre les dossiers de rémunération : une personne n'a pas encore de dossier. Il ouvre celui de Julie Roy et fixe son taux horaire à 32 dollars 50.");
   await ouvrirNav(admin, "nav-paiedossiers");
   const ligne = admin.locator('[data-testid^="pdo-"][data-testid$="-modifier"]');
   await expect(ligne).toHaveCount(1);
@@ -68,6 +70,7 @@ test("tenir le dossier de rémunération ; une année sans barème est refusée 
   await expect(admin.getByTestId("pdo-succes")).toContainText("Dossier de Julie Roy enregistré.");
   await expect(admin.getByTestId("pdo-manquants")).toHaveCount(0);
 
+  await raconter(admin, "Il tente de préparer un cycle de paie en 2031. Aucun barème fiscal n'est publié pour cette année : la préparation est refusée, et le message nomme l'année.");
   await ouvrirNav(admin, "nav-paiecycles");
   await expect(admin.getByTestId("pcy-vide")).toBeVisible();
   await admin.getByTestId("pcy-preparer-ouvrir").click();
@@ -79,6 +82,7 @@ test("tenir le dossier de rémunération ; une année sans barème est refusée 
   await expect(admin.getByTestId("pcy-preparer-erreur")).toContainText("aucun barème de paie publié pour 2031");
   await admin.keyboard.press("Escape");
 
+  await raconter(admin, "Les paramètres de la paie montrent le barème en vigueur, dont le taux du Fonds des services de santé.");
   await ouvrirNav(admin, "nav-paieparametres");
   await expect(admin.getByTestId("ppa-bareme")).toBeVisible();
   await expect(admin.getByTestId("ppa-fss")).toHaveValue("4.26");
@@ -90,6 +94,7 @@ test("tenir le dossier de rémunération ; une année sans barème est refusée 
   const julie = await ctxJulie.newPage();
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
+  await raconter(julie, "Julie Roy ouvre Mes bulletins : elle n'en a encore aucun, et elle n'a pas accès aux cycles de paie.");
   await ouvrirNav(julie, "nav-mesbulletins");
   await expect(julie.getByTestId("mbu-vide")).toBeVisible();
   await expect(julie.getByTestId("nav-paiecycles")).toHaveCount(0);
@@ -134,6 +139,7 @@ test("la chaîne complète : feuille approuvée, cycle préparé et traité à l
   const ctxAdmin = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const admin = await ctxAdmin.newPage();
   await selectTenant(admin, tenantId);
+  await raconter(admin, "Deuxième cas, la chaîne complète. La feuille de temps de Julie, 24 heures, est approuvée. L'administrateur prépare le cycle de la semaine : le bulletin de Julie paraît, avec 816 dollars de salaire brut.");
   await ouvrirNav(admin, "nav-paiecycles");
   await admin.getByTestId("pcy-preparer-ouvrir").click();
   await admin.getByTestId("pcy-debut").fill(jour(-6));
@@ -147,6 +153,7 @@ test("la chaîne complète : feuille approuvée, cycle préparé et traité à l
   await expect(admin.getByTestId("pcy-b-brut")).toContainText("816");
   await expectNoA11yViolations(admin);
   await admin.keyboard.press("Escape");
+  await raconter(admin, "Il traite le cycle. Les retenues sont calculées : impôts fédéral et du Québec, RRQ, assurance-emploi et RQAP. Les remises du mois et le relevé de Julie sont prêts.");
   await admin.getByTestId("pcy-traiter").click();
   await admin.getByTestId("pcy-confirmer-traiter-confirm").click();
   await expect(admin.getByTestId("pcy-succes")).toBeVisible();
@@ -162,6 +169,7 @@ test("la chaîne complète : feuille approuvée, cycle préparé et traité à l
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
   await ouvrirNav(julie, "nav-mesbulletins");
+  await raconter(julie, "Julie ouvre son bulletin dans son espace : salaire brut de 816 dollars, et son salaire net.");
   const ligne = julie.locator('[data-testid^="mbu-"][data-testid$="-voir"]').first();
   await ligne.click();
   await expect(julie.getByTestId("mbu-b-brut")).toContainText("816");

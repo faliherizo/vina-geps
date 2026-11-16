@@ -1,6 +1,6 @@
-# VINA GEPS — VINA Gestion des Personnels de la Santé
+# VINA GePS — VINA Gestion des Personnels de la Santé
 
-**VINA GEPS** est la gestion des effectifs des personnels de la santé : horaires, disponibilités,
+**VINA GePS** est la gestion des effectifs des personnels de la santé : horaires, disponibilités,
 absences, confection annuelle (AGPH), quarts, pointage, feuilles de temps et messagerie sécurisée.
 Son premier client est **Urgences-santé** (AO 26-015-DO, Corporation d'urgences-santé), dont il
 reprend le module né dans Nexu VINA, séparé pour vivre dans son propre dépôt : un serveur **Java seul** (Spring Boot 4, Java 25), une

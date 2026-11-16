@@ -1,7 +1,7 @@
 # FX-AO-20260810 : feuille de route et stories du module « Communications cliniques »
 
 > Écrit pour l'équipe de réalisation et pour la soumission (plan d'implantation, critère 102). La
-> feuille de route part de VINA GEPS tel qu'il est ; elle remplace les phases P1 et P2 du dossier
+> feuille de route part de VINA GePS tel qu'il est ; elle remplace les phases P1 et P2 du dossier
 > d'origine, qui supposaient tout à construire. Ce n'est **pas** un plan d'implantation à engager
 > tant que l'ADR 0074 n'est pas accepté.
 >

@@ -15,6 +15,7 @@ import { auditA11y } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
 import { amorcerOrganisme, identifiantDe, modulesDeLOrganisme, seConnecterProfil, type Profil } from "./helpers/urgences-sante";
 import jeu from "../../donnees/urgences-sante/profils.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -42,7 +43,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
   test.beforeAll(async () => {
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("US-ALR"));
+      tenantId = await createTenant(sa, uniq("Demo-Alertes"));
       await setTenantModules(sa, tenantId, [...modulesDeLOrganisme, "alertes"]);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId, { profils: PROFILS });
@@ -54,11 +55,13 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
 
     // ── L'administration : une réponse, puis un modèle qui la propose ─────────────────────
     const admin = await ouvrir(browser, tenantId, "administration", "nav-alparametres", "alp-titre");
+    await raconter(admin, "Communications cliniques. L'administration paramètre les alertes. Elle crée une réponse, J'arrive, qui vaut prise en charge.");
     await admin.getByTestId("alp-reponse-ouvrir").click();
     await admin.getByTestId("alp-r-libelle").fill("J'arrive");
     await admin.getByTestId("alp-r-semantique").selectOption("prise_en_charge");
     await admin.getByTestId("alp-r-creer").click();
     await expect(admin.getByTestId("alp-succes")).toContainText("Réponse « J'arrive » créée");
+    await raconter(admin, "Puis un modèle d'alerte, Code bleu : chambre 512, cinquième étage, priorité urgente, avec la réponse J'arrive.");
     await admin.getByTestId("alp-modele-ouvrir").click();
     await admin.getByTestId("alp-m-titre").fill("Code bleu");
     await admin.getByTestId("alp-m-corps").fill("Chambre 512, 5e étage : répondez à la prise en charge");
@@ -68,6 +71,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
     await expect(admin.getByTestId("alp-modeles")).toContainText("Code bleu");
     await sansViolation(admin, "paramètres, réponse et modèle créés");
     // ST-G09 : une garde transverse, Julie inscrite par son nom.
+    await raconter(admin, "Elle crée le groupe Garde de nuit, et y inscrit Julie Roy en cherchant son nom.");
     await admin.getByTestId("alp-gt-nouveau-ouvrir").click();
     await admin.getByTestId("alp-gt-nom").fill("Garde de nuit");
     await admin.getByTestId("alp-gt-nature").selectOption("garde");
@@ -83,6 +87,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
 
     // ── La planificatrice envoie, à Julie choisie par son nom ─────────────────────────────
     const chef = await ouvrir(browser, tenantId, "planificateur", "nav-alnouvelle", "aln-titre");
+    await raconter(chef, "La planificatrice ouvre Nouvelle alerte et choisit le modèle Code bleu. La priorité critique ne lui est pas permise : l'écran le dit. Elle vise tout le groupe Garde de nuit et envoie l'alerte.");
     await expect(chef.getByTestId("aln-modele").locator("option", { hasText: "Code bleu" })).toHaveCount(1, { timeout: 30_000 });
     await chef.getByTestId("aln-modele").selectOption({ label: "Code bleu" });
     // ST-G01 : la priorité critique est réservée ; la gestionnaire la voit, inactive, avec la raison.
@@ -96,6 +101,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
 
     // ── Julie lit et prend en charge ──────────────────────────────────────────────────────
     const page = await ouvrir(browser, tenantId, "paramedic", "nav-mesalertes", "mal-titre");
+    await raconter(page, "Julie Roy ouvre Mes alertes : le Code bleu est là, non lu. Elle le déplie et répond J'arrive.");
     const alerte = page.locator('[data-testid^="mal-alerte-"][data-testid$="-resume"]').first();
     await expect(alerte).toContainText("Code bleu");
     await expect(alerte).toContainText("Non lue");
@@ -108,6 +114,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
     await page.context().close();
 
     // ── Le suivi : filtré sur les prises en charge ; lue, répondue, prise en charge par Julie ──
+    await raconter(chef, "Au suivi des alertes, filtré sur les prises en charge, la planificatrice voit le Code bleu pris en charge, une personne sur une, par Julie, avec sa réponse.");
     await ouvrirNav(chef, "nav-alsuivi");
     await chef.getByTestId("als-etat").selectOption("prise_en_charge");
     await chef.getByTestId("als-filtrer").click();
@@ -123,6 +130,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
   test("ST-G04 : une politique de relance arme la cascade ; la reprise la fait partir par l'ordonnanceur réel", async ({ browser }) => {
     test.setTimeout(240_000);
     const admin = await ouvrir(browser, tenantId, "administration", "nav-alparametres", "alp-titre");
+    await raconter(admin, "Deuxième cas, les relances. L'administration crée une politique de relance, Garde, relance, dont la première étape part après trente secondes.");
     await admin.getByTestId("alp-politique-ouvrir").click();
     await admin.getByTestId("alp-pol-nom").fill("Garde — relance");
     await admin.getByTestId("alp-pol-e0-delai").fill("30");
@@ -132,6 +140,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
     await admin.context().close();
 
     const chef = await ouvrir(browser, tenantId, "planificateur", "nav-alnouvelle", "aln-titre");
+    await raconter(chef, "La planificatrice envoie une alerte de garde avec cette politique : la cascade de relances est armée dès l'envoi.");
     await expect(chef.getByTestId("aln-politique").locator("option", { hasText: "Garde — relance" })).toHaveCount(1, { timeout: 30_000 });
     await chef.getByTestId("aln-modele").selectOption({ label: "Code bleu" });
     await chef.getByTestId("aln-titre-champ").fill("Relance de garde");
@@ -148,6 +157,7 @@ test.describe("FX-AO-20260810 — alertes : paramétrer, envoyer, répondre, sui
     await expect(chef.getByTestId("als-cascade-trace")).toContainText("Armée à l'envoi");
     await sansViolation(chef, "suivi, cascade armée");
     // La reprise met l'étape à maintenant ; l'ordonnanceur de la campagne (tic de 3 s) l'exécute.
+    await raconter(chef, "Elle reprend la cascade à la main, et la reprise est tracée. L'ordonnanceur exécute l'étape, et toutes les étapes sont parties.");
     await chef.getByTestId("als-cascade-reprendre").click();
     await expect(chef.getByTestId("als-cascade-succes")).toContainText("Cascade reprise à l'étape 1");
     await expect.poll(async () => {

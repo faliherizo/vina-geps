@@ -11,6 +11,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -22,10 +23,12 @@ test("construire une règle de disponibilité, la simuler, lire sa décision", a
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-usregles");
   await expect(page.getByTestId("rgl-ecran")).toBeVisible();
+  await raconter(page, "Moteur de règles. L'administrateur ouvre les règles du contexte des disponibilités, encore vide.");
   await page.getByTestId("rgl-contexte").selectOption("DISPONIBILITE");
   await expect(page.getByTestId("rgl-vide")).toBeVisible();
 
   // ── Construire : « si quarts par semaine < 3, alors bloquer » ─────────────────────────────
+  await raconter(page, "Il construit une règle, sans programmer : si le nombre de quarts par semaine est inférieur à trois, alors bloquer, avec un message que la personne lira. Il publie la règle.");
   await page.getByTestId("rgl-nouvelle").click();
   await page.getByTestId("rgl-form-cle").fill("minimum-quarts");
   await page.getByTestId("rgl-ajouter-cond-r").click();
@@ -40,6 +43,7 @@ test("construire une règle de disponibilité, la simuler, lire sa décision", a
   await expect(page.getByTestId("rgl-ligne-minimum-quarts")).toContainText(/Bloquer/i);
 
   // ── Simuler un dossier non conforme : le motif rend la valeur du fait ─────────────────────
+  await raconter(page, "Il la simule : avec deux quarts déclarés, la règle bloque et nomme son motif. Avec quatre quarts, aucune règle ne s'y oppose.");
   await page.getByTestId("rgl-vue-simulateur").click();
   await page.getByTestId("rgl-sim-quartsParSemaine").fill("2");
   await page.getByTestId("rgl-sim-evaluer").click();
@@ -53,6 +57,7 @@ test("construire une règle de disponibilité, la simuler, lire sa décision", a
   await expect(page.getByTestId("rgl-sim-verdict")).toContainText("Aucune règle ne s'y oppose");
 
   // ── La décision est tracée ─────────────────────────────────────────────────────────────
+  await raconter(page, "Le registre des décisions garde la trace de chaque évaluation, simulations comprises.");
   await page.getByTestId("rgl-vue-decisions").click();
   await expect(page.getByTestId("rgl-decisions")).toContainText("simulation");
   await expectNoA11yViolations(page);

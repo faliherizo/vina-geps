@@ -68,7 +68,8 @@ const { appeler, connecter } = clientApi(API);
 async function semer() {
   const jetonSa = await connecter(SUPERADMIN);
   const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ");
-  const nom = `${donnees.organisme.nom} (${horodatage})`;
+  // `SEMIS_NOM_ORGANISME` : le tournage du film nomme l'organisme sans client ni appel d'offres (monter-video-vitrine.sh).
+  const nom = `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`;
 
   /**
    * **`/api/superadmin/tenants`, et non `/api/saas/tenants`.**

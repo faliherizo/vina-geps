@@ -1,5 +1,5 @@
 /**
- * **Mon équipe** — ce que Nexu VINA donnait au gestionnaire, dans VINA GEPS : la liste des personnes
+ * **Mon équipe** — ce que Nexu VINA donnait au gestionnaire, dans VINA GePS : la liste des personnes
  * qui relèvent de lui (directement ou non), leur réorganisation dans ses bornes, les feuilles de
  * temps qui attendent sa décision, et sa **suppléance** quand il s'absente.
  *

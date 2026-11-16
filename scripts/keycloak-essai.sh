@@ -1,5 +1,5 @@
 #!/bin/zsh
-# Keycloak d'essai pour l'OIDC de VINA GEPS (ADR 0075, docs/urgences-sante/OIDC-KEYCLOAK.md).
+# Keycloak d'essai pour l'OIDC de VINA GePS (ADR 0075, docs/urgences-sante/OIDC-KEYCLOAK.md).
 #
 #   scripts/keycloak-essai.sh start    # démarre Keycloak sur :8180 et importe e2e/donnees/keycloak/realm-vina-geps.json
 #   scripts/keycloak-essai.sh stop     # arrête et supprime le conteneur (le royaume est réimporté au prochain départ)

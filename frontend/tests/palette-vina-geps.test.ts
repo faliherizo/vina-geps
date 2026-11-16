@@ -1,5 +1,5 @@
 /**
- * **Le chrome de VINA GEPS** (planche s01, ADR 0073) — contraste calculé, jamais jugé à l'œil.
+ * **Le chrome de VINA GePS** (planche s01, ADR 0073) — contraste calculé, jamais jugé à l'œil.
  *
  * La barre du haut est devenue marine et la colonne du menu blanche. Chaque texte posé
  * directement sur l'une ou l'autre est mesuré ici contre sa surface ; les commandes de la barre
@@ -33,7 +33,7 @@ function rapport(a: string, b: string): number {
 
 const BLANC = "#ffffff";
 
-describe("Chrome VINA GEPS — barre marine, colonne blanche", () => {
+describe("Chrome VINA GePS — barre marine, colonne blanche", () => {
   it("la marque en blanc tient 4,5:1 sur la barre marine", () => {
     expect(rapport(BLANC, jeton("marine"))).toBeGreaterThanOrEqual(4.5);
   });

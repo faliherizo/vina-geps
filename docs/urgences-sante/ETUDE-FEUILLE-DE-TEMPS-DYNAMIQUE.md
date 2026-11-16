@@ -1,6 +1,6 @@
 # Étude : une feuille de temps qui s'adapte à n'importe quel type d'emploi
 
-> Écrit pour l'équipe produit de VINA GEPS et pour l'administration d'un organisme client. Ce
+> Écrit pour l'équipe produit de VINA GePS et pour l'administration d'un organisme client. Ce
 > document étudie comment la feuille de temps peut servir un paramédic, une répartitrice, un
 > technicien de garde ou une adjointe administrative sans changer de code. Il dit ce qui est livré
 > le 14 novembre 2026, et ce qui reste à décider.

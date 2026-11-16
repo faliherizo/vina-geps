@@ -1,4 +1,4 @@
-# ADR 0073 — VINA GEPS : le chrome de la planche s01, un menu à trois rubriques, un tableau de bord qui chiffre la journée
+# ADR 0073 — VINA GePS : le chrome de la planche s01, un menu à trois rubriques, un tableau de bord qui chiffre la journée
 
 - **Statut** : accepté. Remplace la décision de l'ADR 0069 sur le « marine en bandeau de page ».
 - **Date** : 13 novembre 2026
@@ -17,7 +17,7 @@
 
 ## Contexte
 
-Le produit, séparé de Nexu VINA le 13 novembre 2026, s'appelle désormais **VINA GEPS** (VINA
+Le produit, séparé de Nexu VINA le 13 novembre 2026, s'appelle désormais **VINA GePS** (VINA
 Gestion des Personnels de la Santé). Urgences-santé en est le premier client.
 
 Le menu avait hérité de l'application mère :
@@ -34,7 +34,7 @@ il restait deux chromes empilés.
 
 ## Décisions
 
-1. **La barre d'application est marine** (`--marine: #13294b`). Elle porte la marque `VINA GEPS`,
+1. **La barre d'application est marine** (`--marine: #13294b`). Elle porte la marque `VINA GePS`,
    le nom de l'organisme (sa charte, P-TN-9) et les commandes, qui sont des pastilles à fond
    blanc. **La colonne du menu est blanche** et l'entrée courante est marquée en bleu pâle, en
    gras et par un filet. La couleur seule ne porte donc jamais l'information (1.4.1).

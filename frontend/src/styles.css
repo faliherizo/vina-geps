@@ -34,7 +34,7 @@
   --warning: #8a5000;        /* 6,10:1 — la maquette proposait #B66A00, à 3,90 */
   --sidebar: #073f70;        /* le bleu marine de P17, mesuré au pixel ; blanc dessus : 10,75:1 */
   --sidebar-hover: #0f4c8f;
-  /* VINA GEPS (planche s01, ADR 0073) : barre marine, colonne blanche, entrée courante bleu pâle. */
+  /* VINA GePS (planche s01, ADR 0073) : barre marine, colonne blanche, entrée courante bleu pâle. */
   --marine: #13294b;         /* blanc dessus : 14,5:1 */
   --nav-courant: #dbe8f7;    /* --text dessus : 10,6:1 */
   /* Ombres douces et étagées (profondeur discrète, rendu moderne) */

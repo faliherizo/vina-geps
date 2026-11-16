@@ -42,8 +42,8 @@ class PdfAConformiteTest {
         try (PDDocument relu = Loader.loadPDF(octets)) {
             String xmp = new String(relu.getDocumentCatalog().getMetadata().toByteArray(), StandardCharsets.UTF_8);
             assertThat(xmp).contains("<pdfaid:part>2</pdfaid:part>").contains("<pdfaid:conformance>B</pdfaid:conformance>")
-                    .contains("<pdf:Producer>VINA GEPS</pdf:Producer>");
-            assertThat(relu.getDocumentInformation().getProducer()).isEqualTo("VINA GEPS");
+                    .contains("<pdf:Producer>VINA GePS</pdf:Producer>");
+            assertThat(relu.getDocumentInformation().getProducer()).isEqualTo("VINA GePS");
             assertThat(relu.getDocumentCatalog().getOutputIntents()).singleElement()
                     .satisfies(i -> assertThat(i.getOutputConditionIdentifier()).isEqualTo("sRGB IEC61966-2.1"));
             assertThat(relu.getDocument().getTrailer().getCOSArray(COSName.ID)).hasSize(2);

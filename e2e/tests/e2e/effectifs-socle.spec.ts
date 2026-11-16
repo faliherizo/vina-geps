@@ -14,6 +14,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -44,10 +45,12 @@ test("le module se coupe et s'active depuis le superadmin, et le menu suit", asy
   try { await setTenantModules(sa, tenantId, []); } finally { await sa.dispose(); }
 
   await selectTenant(page, tenantId);
+  await raconter(page, "Le module des effectifs est coupé pour ce nouvel organisme par le superadmin : l'entrée Administration des effectifs n'apparaît pas dans le menu.");
   await expect(page.getByTestId("nav-usreferentiels")).toHaveCount(0);
 
   const sa2 = await superadminContext();
   try { await setTenantModules(sa2, tenantId, ["effectifs"]); } finally { await sa2.dispose(); }
+  await raconter(page, "Le superadmin active maintenant le module. On recharge la page : l'entrée revient dans le menu, sans reconnexion.");
   await page.goto("/");
   await expect(page.getByTestId("nav-usreferentiels")).toHaveCount(1);
 });
@@ -59,9 +62,11 @@ test("la case du module figure dans la famille « Gestion des effectifs » du su
   await page.getByTestId("login-pass").fill("superadmin");
   await page.getByTestId("login-tenant").selectOption("__global__");
   await page.getByTestId("login-submit").click();
+  await raconter(page, "Le superadmin se connecte à la console globale et ouvre Modules et accès.");
   await ouvrirNav(page, "nav-superadmin");
   await page.getByTestId("sa-tab-modules").click();
   await page.getByTestId("modmgr-tenant").selectOption(tenantId);
+  await raconter(page, "Pour l'organisme choisi, la case du module figure dans la famille Gestion des effectifs.");
   await expect(page.getByTestId("modmgr-famille-effectifs")).toBeVisible();
   await expect(page.getByTestId("modmgr-toggle-effectifs")).toHaveCount(1);
 });
@@ -74,9 +79,11 @@ test("paramétrer un référentiel, refuser une modification rétroactive, crée
   await ouvrirParametrage(page, tenantId);
 
   // ── Référentiels : le formulaire se construit depuis le descripteur ────────────────────────
+  await raconter(page, "Paramétrage des référentiels : l'administrateur choisit le référentiel des types de milieu, encore vide.");
   await page.getByTestId("ref-type").selectOption("types_milieu");
   await expect(page.getByTestId("ref-vide")).toBeVisible();
   await expectNoA11yViolations(page);
+  await raconter(page, "Il ajoute une valeur : le code CASERNE, libellé Caserne, en vigueur depuis le premier janvier 2026.");
   await page.getByTestId("ref-ajouter").click();
   await expect(page.getByTestId("ref-formulaire")).toBeVisible();
   await page.getByTestId("ref-form-code").fill("CASERNE");
@@ -89,6 +96,7 @@ test("paramétrer un référentiel, refuser une modification rétroactive, crée
   await expect(page.getByTestId("ref-ligne-CASERNE")).toBeVisible();
 
   // ── E-GR-9 : un remplacement daté d'hier est refusé, et l'écran dit pourquoi ───────────────
+  await raconter(page, "Une valeur ne se modifie jamais en place : on la remplace à partir d'une date. Ici, l'administrateur tente un remplacement daté de 2020, avant le début de la valeur. Le serveur doit refuser cette modification rétroactive.");
   await page.getByTestId("ref-remplacer-CASERNE").click();
   await page.getByTestId("ref-form-libelleFr").fill("Caserne (renommée)");
   await page.getByTestId("ref-form-date").fill("2020-01-01");
@@ -98,6 +106,7 @@ test("paramétrer un référentiel, refuser une modification rétroactive, crée
   await page.keyboard.press("Escape");
 
   // ── Milieux : coordonnées en champs, puis preuves de présence ──────────────────────────────
+  await raconter(page, "Refus affiché, avec son motif. On passe aux milieux : l'administrateur crée la Caserne 12, rattachée à l'unité Opérations Est, avec ses coordonnées et un rayon de 150 mètres.");
   await ouvrirNav(page, "nav-usmilieux");
   await expect(page.getByTestId("mil-vide")).toBeVisible();
   await page.getByTestId("mil-ajouter").click();
@@ -111,6 +120,7 @@ test("paramétrer un référentiel, refuser une modification rétroactive, crée
   await page.getByTestId("mil-form-enregistrer").click();
   await expect(page.getByTestId("mil-ligne-C12")).toBeVisible();
 
+  await raconter(page, "Il choisit les preuves de présence acceptées à la caserne : le géorepérage, rendu obligatoire, et le code QR du lieu.");
   await page.getByTestId("mil-preuves-C12").click();
   await page.getByTestId("mil-preuve-GEOREPERAGE").check();
   await page.getByTestId("mil-exige-GEOREPERAGE").check();
@@ -120,6 +130,7 @@ test("paramétrer un référentiel, refuser une modification rétroactive, crée
   await expect(page.getByTestId("mil-ligne-C12")).toContainText(/Georeperage \(exigée\)/i);
 
   // ── Journal : les actions précédentes y sont, filtrables ───────────────────────────────────
+  await raconter(page, "Enfin, le journal des actions : filtré sur la création de milieu, il trace l'opération qui vient d'être faite.");
   await ouvrirNav(page, "nav-usjournal");
   await page.getByTestId("jrn-filtre-action").fill("milieu.cree");
   await page.getByTestId("jrn-filtrer").click();

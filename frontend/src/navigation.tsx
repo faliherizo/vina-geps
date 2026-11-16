@@ -84,7 +84,7 @@ function entreeDuModule(n: NotionUs): Concept | Vue {
 const NOTION_PARAMETRES_US = "usadministration";
 
 /**
- * **Le menu de VINA GEPS** (planche s01, ADR 0073) — trois rubriques fixes, deux niveaux au plus.
+ * **Le menu de VINA GePS** (planche s01, ADR 0073) — trois rubriques fixes, deux niveaux au plus.
  *
  * La rubrique est un **titre**, pas un accordéon : on atteignait un écran en trois clics (section,
  * notion, vue), et le tableau de bord était une section qui ne contenait… que le tableau de bord.

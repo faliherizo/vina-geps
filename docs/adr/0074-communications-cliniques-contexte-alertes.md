@@ -1,4 +1,4 @@
-# ADR 0074 — Les communications cliniques sont un contexte `alertes` de VINA GEPS, activable par organisme
+# ADR 0074 — Les communications cliniques sont un contexte `alertes` de VINA GePS, activable par organisme
 
 - **Statut** : accepté pour le **socle** (phase R1), le 14 novembre 2026. Les phases R2 et
   suivantes restent soumises aux réponses du client (section « Points ouverts »).
@@ -13,7 +13,7 @@
 ## Contexte
 
 L'appel d'offres FX-AO-20260810 (Santé Québec Laurentides) demande une distribution de
-communications cliniques. Sur ses 32 critères fonctionnels, VINA GEPS en sert déjà 13 et 12 en
+communications cliniques. Sur ses 32 critères fonctionnels, VINA GePS en sert déjà 13 et 12 en
 partie : identité, messagerie, avis multi-canaux, groupes, disponibilités, journal. Il manque
 l'**alerte** : un objet ciblé, priorisé et suivi, que le fil de discussion n'est pas.
 

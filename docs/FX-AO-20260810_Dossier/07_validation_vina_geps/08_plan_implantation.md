@@ -1,6 +1,6 @@
 # FX-AO-20260810 : plan d'implantation du module « Communications cliniques »
 
-> Écrit pour l'équipe de réalisation de VINA GEPS. Ce plan part de l'état réel du dépôt au
+> Écrit pour l'équipe de réalisation de VINA GePS. Ce plan part de l'état réel du dépôt au
 > 14 novembre 2026 : socle des alertes livré (ADR 0074, phase R1), branche `develop` au commit
 > `b89a874`. Il remplace, pour l'exécution, la feuille de route de
 > [05_roadmap_et_stories.md](05_roadmap_et_stories.md), qui reste la référence des stories et de
@@ -77,7 +77,7 @@ Le code du socle est dans `backend-java/.../alertes/{domaine,application,infrast
 |---|---|---|
 | Q-TEL : fournisseur voix et texto — **tranché : Twilio** (décision technologique de l'équipe VINA, 14 novembre 2026). Reste : les numéros par organisme | Équipe VINA | Plus rien : R2-b et R3-a peuvent suivre R2-a |
 | Q-ALC : demande d'autorisation *Critical Alerts* à Apple | Client (compte développeur) | R3-b, côté iOS. **Délai d'Apple inconnu : déposer la demande dès R0** |
-| Q-DOS : « note au dossier » = note interne à VINA GEPS, ou écriture au dossier patient ? | Client (clinique) | ST-G12 seulement |
+| Q-DOS : « note au dossier » = note interne à VINA GePS, ou écriture au dossier patient ? | Client (clinique) | ST-G12 seulement |
 | Profil d'hébergement A (infonuagique) ou B (chez l'établissement : Windows Server, VMware) | Client et TI | R5 |
 | ADR 0074 accepté pour les phases R2 et suivantes | Équipe VINA | Tout R2 |
 

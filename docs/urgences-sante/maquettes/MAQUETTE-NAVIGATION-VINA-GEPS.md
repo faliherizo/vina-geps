@@ -1,11 +1,11 @@
-# VINA GEPS : gabarit d'écran, menu par profil et tableau de bord
+# VINA GePS : gabarit d'écran, menu par profil et tableau de bord
 
-> Écrit pour qui conçoit, développe ou évalue l'interface de **VINA GEPS** (VINA Gestion des
+> Écrit pour qui conçoit, développe ou évalue l'interface de **VINA GePS** (VINA Gestion des
 > Personnels de la Santé), livré à Urgences-santé dans le cadre de l'AO 26-015-DO. Ce document
 > présente le chrome des écrans, la place de chaque écran dans le menu, ce que voit chaque profil,
 > et l'exigence que chaque entrée sert.
 
-![Gabarit VINA GEPS](maquette-navigation-vina-geps.svg)
+![Gabarit VINA GePS](maquette-navigation-vina-geps.svg)
 
 ## 1. Ce qui n'allait pas
 
@@ -24,7 +24,7 @@ Relevé le 13 novembre 2026 avec le compte `admin` de l'organisme de démonstrat
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ VINA GEPS   Urgences-santé — démonstration         ✉ 2  🔔  ? Aide  Claire ▾ │  barre marine
+│ VINA GePS   Urgences-santé — démonstration         ✉ 2  🔔  ? Aide  Claire ▾ │  barre marine
 ├────────────────────┬─────────────────────────────────────────────────────────┤
 │ MENU PRINCIPAL     │ Tableau de bord › Gestion des quarts › Comblement       │  fil d'Ariane
 │ ▣ Tableau de bord  │                                                         │
@@ -38,7 +38,7 @@ Relevé le 13 novembre 2026 avec le compte `admin` de l'organisme de démonstrat
 └────────────────────┴─────────────────────────────────────────────────────────┘
 ```
 
-- **La barre du haut est marine sur tous les écrans.** Elle porte la marque *VINA GEPS*, le nom de
+- **La barre du haut est marine sur tous les écrans.** Elle porte la marque *VINA GePS*, le nom de
   l'organisme (ou celui de sa charte, P-TN-9), la messagerie, les avis, l'aide de l'écran et le
   menu du profil. Le bandeau marine de page de l'ADR 0069 devient un simple surtitre en texte :
   il ne peut plus y avoir deux chromes empilés (ADR 0073).

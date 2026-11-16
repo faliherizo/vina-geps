@@ -150,7 +150,7 @@ public final class AppelsAlertes {
 
     /** Le message dit au téléphone : la priorité, le titre, le début du message, puis la consigne. */
     public static String message(Alerte a) {
-        String texte = "Alerte " + a.priorite().code() + " de VINA GEPS : " + a.titre() + ". " + a.corps();
+        String texte = "Alerte " + a.priorite().code() + " de VINA GePS : " + a.titre() + ". " + a.corps();
         String borne = texte.length() > MESSAGE_MAX ? texte.substring(0, MESSAGE_MAX) : texte;
         return borne + ". Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.";
     }

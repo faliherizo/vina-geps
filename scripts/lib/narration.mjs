@@ -4,8 +4,8 @@
  * exactement le temps de sa phrase. Les sous-titres ne sont donc pas une transcription approximative : ils sont l'audio
  * (WCAG 2.2, critère 1.2.2).
  *
- * Utilisée par le tournage des fiches d'aide (`scripts/tourner-aides.mjs`) et par le film de la vitrine
- * (`scripts/narrer-vitrine.mjs`).
+ * Utilisée par le tournage des fiches d'aide (`scripts/tourner-aides.mjs`) et pour leurs horodatages par le montage raconté
+ * (`scripts/monter-recit.mjs`).
  */
 import { execFileSync } from "node:child_process";
 import { mkdirSync, writeFileSync } from "node:fs";

@@ -1,7 +1,7 @@
 /**
  * **Une démonstration commentée par fiche d'aide** : chaque écran de `fichesEcrans.ts` a sa vidéo avec voix et ses
- * sous-titres français (`public/aide/videos`, tournés par `scripts/tourner-aides.mjs`), et la page d'aide les montre.
- * Une fiche ajoutée sans sa vidéo fait échouer cet essai : `node scripts/tourner-aides.mjs --seulement <écran>`.
+ * sous-titres français (`public/aide/videos`, montés par `scripts/monter-recit.mjs`), et la page d'aide les montre.
+ * Une fiche ajoutée sans sa vidéo fait échouer cet essai : jouer un essai e2e qui la raconte (`raconter`), ou `node scripts/tourner-aides.mjs --seulement <écran>`.
  */
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";

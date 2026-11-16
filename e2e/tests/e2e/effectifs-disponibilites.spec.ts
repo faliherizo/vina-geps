@@ -14,6 +14,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -94,14 +95,17 @@ test("déposer ses disponibilités, être refusé avec le motif, puis approuvé 
   await uiLogin(julie, identifiant, MDP, tenantId);
   await ouvrirNav(julie, "nav-mesdisponibilites");
   await expect(julie.getByTestId("mdi-titre")).toBeVisible();
+  await raconter(julie, "Disponibilités. Julie Roy, paramédic à temps partiel, ouvre Mes disponibilités : la période de la semaine 10 est en collecte, et elle n'a encore rien déposé.");
   await expect(julie.getByTestId("mdi-etat")).toContainText("Collecte ouverte jusqu'au 2030-03-01");
   await expect(julie.getByTestId("mdi-conformite")).toContainText("Aucun dépôt");
 
+  await raconter(julie, "Elle offre un seul quart et dépose. La règle de l'organisme exige au moins deux quarts par semaine : le dépôt est refusé, avec ce motif.");
   await julie.getByTestId("mdi-ajouter").click();
   await julie.getByTestId("mdi-deposer").click();
   await expect(julie.getByTestId("mdi-refus")).toContainText("Au moins 2 quarts par semaine (1 offert)");
   await expectNoA11yViolations(julie);
 
+  await raconter(julie, "Elle ajoute une préférence, puis un samedi, et dépose à nouveau. Le dépôt est conforme, mais une fin de semaine offerte demande l'accord du chef : il attend son approbation.");
   await julie.getByTestId("mdi-ajouter").click();
   await julie.getByTestId("mdi-plage-1-type").selectOption("PREFERENCE");
   await julie.getByTestId("mdi-ajouter").click();
@@ -118,6 +122,7 @@ test("déposer ses disponibilités, être refusé avec le motif, puis approuvé 
   const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
+  await raconter(chef, "Côté gestion, le chef ouvre les disponibilités de l'équipe. Celles de Julie sont en attente d'approbation : tant qu'elles le sont, Julie est exclue des candidats d'une place.");
   await ouvrirNav(chef, "nav-usdisponibilites");
   await expect(chef.getByTestId("pla-dispo-P1-conformite")).toContainText("En attente d'approbation");
   await chef.getByTestId("pla-dispo-place").selectOption({ index: 1 });
@@ -125,6 +130,7 @@ test("déposer ses disponibilités, être refusé avec le motif, puis approuvé 
   await expect(chef.getByTestId("pla-dispo-exclus")).toContainText("en attente d'approbation");
   await expectNoA11yViolations(chef);
 
+  await raconter(chef, "Il ouvre la fiche de Julie, lit le motif, la fin de semaine, et approuve. Julie devient conforme, et figure parmi les candidats admissibles.");
   await chef.getByTestId("pla-dispo-P1-voir").click();
   await expect(chef.getByTestId("pla-dispo-fiche-motifs")).toContainText("fin de semaine");
   await expectNoA11yViolations(chef);
@@ -138,6 +144,7 @@ test("déposer ses disponibilités, être refusé avec le motif, puis approuvé 
   const sa = await superadminContext();
   await poser(sa, tenantId, `/api/effectifs/planification/periodes/${periodeId}/etat`, { etat: "CONFECTION" });
   await sa.dispose();
+  await raconter(chef, "La période passe en confection : l'attribution automatique devient possible. Le chef la lance, et les deux places vacantes sont attribuées.");
   await chef.reload();
   await chef.getByTestId("pla-dispo-attribuer").click();
   await expect(chef.getByTestId("pla-dispo-bilan")).toContainText("2 place(s) attribuée(s)");

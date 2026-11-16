@@ -1,7 +1,7 @@
-# FX-AO-20260810 : conformité des 115 critères de la grille, contre VINA GEPS
+# FX-AO-20260810 : conformité des 115 critères de la grille, contre VINA GePS
 
 > Écrit pour l'équipe de soumission. Chaque critère de la grille reçoit un statut, la preuve dans
-> VINA GEPS (module, écran ou route) et, s'il y a lieu, l'écart et la story qui le comble.
+> VINA GePS (module, écran ou route) et, s'il y a lieu, l'écart et la story qui le comble.
 
 **Statuts.**
 - ✅ **Acquis** : servi aujourd'hui, preuve citée.
@@ -43,7 +43,7 @@ critiques.
 
 ## 1. Fonctionnel (1 à 32)
 
-| # | Critère (résumé) | Statut | Preuve dans VINA GEPS | Écart, story |
+| # | Critère (résumé) | Statut | Preuve dans VINA GePS | Écart, story |
 |---|---|---|---|---|
 | 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | ✅ | **Nouvelle alerte** (ADR 0074) : priorité, modèle, groupes et personnes ; canaux selon les préférences, tous imposés si critique | — |
 | 2 | Note au dossier des destinataires | 🟡 | **Note courte et datée sur la fiche du destinataire** (ST-G12, 15 novembre 2026) : tenue et lue par les expéditeurs autorisés dans le suivi, jamais au journal en clair (`/api/alertes/notes`, changeset `0017`) | Livré dans la lecture « note interne » ; si Q-DOS répond « dossier patient », c'est une intégration distincte |

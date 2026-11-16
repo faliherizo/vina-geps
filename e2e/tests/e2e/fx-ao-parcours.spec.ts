@@ -17,6 +17,7 @@ import { auditA11y } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
 import { adminDeLOrganisme, amorcerOrganisme, identifiantDe, MDP_PROFIL, modulesDeLOrganisme, seConnecterProfil, type Profil } from "./helpers/urgences-sante";
 import jeu from "../../donnees/urgences-sante/profils.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -60,7 +61,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
     test.setTimeout(240_000);
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("FXAO-PARC"));
+      tenantId = await createTenant(sa, uniq("Demo-Parcours"));
       await setTenantModules(sa, tenantId, [...modulesDeLOrganisme, "alertes"]);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId, { profils: PROFILS });
@@ -82,6 +83,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
   test("l'administration : copie par courriel, utilisateurs actifs du mois, annuaire LDAPS (ldap:// refusé)", async ({ browser }) => {
     test.setTimeout(240_000);
     const admin = await ouvrir(browser, tenantId, "administration", "nav-alparametres", "alp-titre");
+    await raconter(admin, "Alertes, suite. L'administration coche la copie par courriel : chaque destinataire d'une alerte recevra aussi un courriel. Le réglage tient après rechargement. Plus bas, les utilisateurs actifs du mois : Julie Roy, comptée une fois.");
     const copie = admin.getByTestId("alp-copie");
     await expect(copie).not.toBeChecked();
     // La case ne bascule qu'une fois le réglage enregistré : l'écran ne montre que ce que le serveur a retenu.
@@ -95,6 +97,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
     await expect(admin.getByTestId("alp-actifs-table")).toContainText(profil("paramedic").nom);
     await sansViolation(admin, "paramètres, copie cochée, utilisateurs actifs");
 
+    await raconter(admin, "Elle déclare ensuite l'annuaire de l'établissement, son Active Directory. Une adresse ldap en clair est refusée : seul LDAPS, chiffré, est accepté. Avec l'adresse ldaps, l'annuaire est déclaré.");
     await ouvrirNav(admin, "nav-admin");
     await admin.getByTestId("admin-tab-organisme").click();
     await admin.getByTestId("annuaire-nouveau-ouvrir").click();
@@ -120,6 +123,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
     test.setTimeout(240_000);
     const julie = profil("paramedic");
     const chef = await ouvrir(browser, tenantId, "planificateur", "nav-alsuivi", "als-titre");
+    await raconter(chef, "La planificatrice ouvre le suivi des alertes et filtre sur les alertes relancées : le Code bleu a été relancé une fois.");
     const ligne = chef.locator('[data-testid^="als-alerte-"]').filter({ hasText: titre }).first();
     const relances = ligne.locator('[data-testid$="-relances"]');
     // L'ordonnanceur exécute l'étape reprise : la colonne passe à 1.
@@ -132,6 +136,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
     await expect(chef.locator('[data-testid^="als-alerte-"][data-testid$="-relances"]')).toHaveCount(1);
     await sansViolation(chef, "suivi filtré sur les alertes relancées");
 
+    await raconter(chef, "Dans le détail, la trace de la cascade nomme Julie. La planificatrice pose une note sur la destinataire, joindre sur le cellulaire de garde, visible des autres expéditeurs.");
     await ligne.locator('[data-testid$="-detail"]').click();
     await expect(chef.getByTestId("als-cascade-trace")).toContainText("Étape exécutée");
     await expect(chef.getByTestId("als-cascade-trace")).toContainText(julie.nom);
@@ -143,6 +148,7 @@ test.describe("FX-AO-20260810 — copie par courriel, LDAPS, utilisateurs actifs
     await expect(chef.getByTestId(`als-note-${personne}`)).toContainText("Joindre sur le cellulaire de garde");
     await sansViolation(chef, "fiche, note posée");
 
+    await raconter(chef, "Enfin, elle exporte le suivi des alertes en fichier CSV.");
     await chef.getByTestId("als-export-format").selectOption("csv");
     const telechargement = chef.waitForEvent("download");
     await chef.getByTestId("als-export-exporter").click();

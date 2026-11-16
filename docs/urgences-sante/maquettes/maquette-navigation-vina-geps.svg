@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 560" font-family="system-ui,sans-serif" font-size="12" role="img" aria-labelledby="t d">
-<title id="t">VINA GEPS — gabarit d'écran et menu principal</title>
-<desc id="d">Barre marine en tête avec la marque VINA GEPS et le profil connecté ; colonne de gauche « Menu principal » à une entrée par sujet ; tableau de bord gestionnaire avec onglets, quatre tuiles chiffrées et la table des quarts à couvrir.</desc>
+<title id="t">VINA GePS — gabarit d'écran et menu principal</title>
+<desc id="d">Barre marine en tête avec la marque VINA GePS et le profil connecté ; colonne de gauche « Menu principal » à une entrée par sujet ; tableau de bord gestionnaire avec onglets, quatre tuiles chiffrées et la table des quarts à couvrir.</desc>
 <rect width="960" height="560" fill="#f3f6fa"/>
 <rect width="960" height="44" fill="#13294b"/>
-<text x="18" y="27" fill="#fff" font-weight="700" font-size="15">VINA GEPS</text>
+<text x="18" y="27" fill="#fff" font-weight="700" font-size="15">VINA GePS</text>
 <text x="112" y="27" fill="#c9d6ea">Urgences-santé — démonstration</text>
 <text x="700" y="27" fill="#c9d6ea">✉ 2   🔔   ? Aide</text>
 <rect x="830" y="11" width="116" height="22" rx="11" fill="#244470"/><text x="845" y="26" fill="#fff">Claire N. ▾</text>

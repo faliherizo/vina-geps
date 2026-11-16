@@ -13,6 +13,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -92,6 +93,7 @@ test("Mon équipe : voir, rattacher, désigner un suppléant ; la feuille va au 
 
   // ── Marc : son équipe, Léa rattachée, Diane suppléante ────────────────────────────────────
   const { ctx: ctxMarc, page: marc } = await seConnecter(browser, comptes.marc, tenantId);
+  await raconter(marc, "Mon équipe. Marc Lavoie, gestionnaire, voit sa ligne hiérarchique : Julie Roy relève directement de lui. Il rattache Léa Morin à son équipe.");
   await ouvrirNav(marc, "nav-monequipe");
   await expect(marc.getByTestId("monequipe-titre")).toBeVisible();
   const julie = marc.locator('[data-testid^="meq-membre-"]').filter({ hasText: "Julie Roy" });
@@ -103,6 +105,7 @@ test("Mon équipe : voir, rattacher, désigner un suppléant ; la feuille va au 
   await expect(marc.getByTestId("meq-info")).toHaveText("Léa Morin rejoint votre équipe.");
   await expect(marc.locator('[data-testid^="meq-membre-"]').filter({ hasText: "Léa Morin" })).toContainText("Marc Lavoie");
 
+  await raconter(marc, "Avant de s'absenter, il désigne Diane comme suppléante : la suppléance est en cours.");
   await marc.getByTestId("meq-suppleance-ouvrir").click();
   await marc.getByTestId("meq-suppleant").fill("Diane");
   const option = marc.locator('[data-testid^="meq-suppleant-option-"]').first();
@@ -116,6 +119,7 @@ test("Mon équipe : voir, rattacher, désigner un suppléant ; la feuille va au 
 
   // ── Julie : sa feuille part vers la suppléante, et elle le lit ────────────────────────────
   const { ctx: ctxJulie, page: pJulie } = await seConnecter(browser, comptes.julie, tenantId);
+  await raconter(pJulie, "Julie prépare et soumet sa feuille de temps de la semaine du 10 mars. L'écran dit qui la décidera : Marc, et en son absence, sa suppléante Diane.");
   await ouvrirNav(pJulie, "nav-matemps");
   await pJulie.getByTestId("mft-preparation-ouvrir").click();
   await pJulie.getByTestId("mft-debut").fill("2031-03-10");
@@ -130,6 +134,7 @@ test("Mon équipe : voir, rattacher, désigner un suppléant ; la feuille va au 
 
   // ── Diane, sans périmètre sur l'unité : la feuille lui parvient, elle l'approuve ──────────
   const { ctx: ctxDiane, page: diane } = await seConnecter(browser, comptes.diane, tenantId);
+  await raconter(diane, "Diane, la suppléante, voit la feuille de Julie dans son équipe. Elle l'ouvre dans la console des feuilles de temps et l'approuve.");
   await ouvrirNav(diane, "nav-monequipe");
   await expect(diane.getByTestId("meq-feuilles-table")).toContainText("Julie Roy (P1)");
   await expectNoA11yViolations(diane);
@@ -144,6 +149,7 @@ test("Mon équipe : voir, rattacher, désigner un suppléant ; la feuille va au 
 
   // ── Marc revient : il met fin à la suppléance ─────────────────────────────────────────────
   const { ctx: ctxRetour, page: retour } = await seConnecter(browser, comptes.marc, tenantId);
+  await raconter(retour, "Marc revient et met fin à la suppléance : les feuilles de son équipe lui reviennent.");
   await ouvrirNav(retour, "nav-monequipe");
   await retour.locator('[data-testid^="meq-deleg-"][data-testid$="-terminer"]').first().click();
   await retour.getByTestId("meq-fin-confirm").click();

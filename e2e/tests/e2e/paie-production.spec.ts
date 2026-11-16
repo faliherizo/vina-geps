@@ -22,6 +22,7 @@ import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { jour } from "./helpers/urgences-sante";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -114,6 +115,7 @@ async function connecter(browser: import("@playwright/test").Browser, tenantId: 
 }
 
 async function saisirRegle(page: Page, r: Regle): Promise<void> {
+  await raconter(page, `Elle ajoute la règle ${r.libelle} : ${({ "taux-de-base": `taux de base de ${r.valeur} dollars de l'heure`, "prime-horaire": `${r.valeur} dollars de plus par heure`, "prime-pourcentage": `${r.valeur} pour cent de plus`, forfait: `${r.valeur} dollars par paie` } as Record<string, string>)[r.type] ?? r.valeur}${r.titreEmploi ? `, pour le titre d'emploi ${r.titreEmploi}` : ""}${r.echelon ? `, échelon ${r.echelon}` : ""}.`);
   await page.getByTestId("prg-nouvelle-ouvrir").click();
   await page.getByTestId("prg-type").selectOption(r.type);
   await page.getByTestId("prg-code").fill(r.code);
@@ -140,14 +142,17 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
 
   // ── RH : réglages, règles, dossiers ──────────────────────────────────────────────────
   const rh = await connecter(browser, tenantId, comptes.rh);
+  await raconter(rh, "Produire la paie d'un personnel de la santé. La responsable des ressources humaines se connecte : elle a les six écrans de la paie, dont les règles de paie variables.");
   for (const m of A.menusRh) {
     await ouvrirNav(rh, m);
     await expect(rh.locator("main h1")).toBeVisible();
   }
+  await raconter(rh, "Dans les paramètres, elle exige la validation des temps avant toute paie : une feuille non validée ne sera pas payée.");
   await ouvrirNav(rh, "nav-paieparametres");
   await rh.getByTestId("ppa-validation").check();
   await rh.getByTestId("ppa-enregistrer").click();
   await expect(rh.getByTestId("ppa-succes")).toBeVisible();
+  await raconter(rh, "Elle ouvre les règles de paie variables. L'échelle salariale est vide : elle la construit, puis ajoute les primes.");
   await ouvrirNav(rh, "nav-paieregles");
   await expect(rh.getByTestId("prg-echelle-vide")).toBeVisible();
   await expectNoA11yViolations(rh);
@@ -156,6 +161,7 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
   await rh.getByTestId("prg-nouvelle-ouvrir").click();
   await expectNoA11yViolations(rh);
   await rh.keyboard.press("Escape");
+  await raconter(rh, "Dans les dossiers de rémunération, elle place chaque personne à son échelon : Julie Roy et Léa Côté à l'échelon 3, Marc Dubé à l'échelon 2, qui n'existe pas encore dans l'échelle.");
   await ouvrirNav(rh, "nav-paiedossiers");
   for (const p of JEU.personnes) {
     await rh.getByTestId(`pdo-${ressources[p.cle]}-modifier`).click();
@@ -170,6 +176,7 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
 
   // ── Comptable : ce qu'il voit, valider les temps, produire la paie ──────────────────────
   const cpt = await connecter(browser, tenantId, comptes.comptable);
+  await raconter(cpt, "Le comptable se connecte. Il ne voit ni les règles, ni les dossiers, ni les paramètres : la séparation des tâches est respectée. Il ouvre la validation des temps de la semaine.");
   for (const m of A.absentsComptable) await expect(cpt.getByTestId(m)).toHaveCount(0);
   await ouvrirNav(cpt, "nav-paietemps");
   await cpt.getByTestId("pvt-debut").fill(jour(-6));
@@ -182,6 +189,7 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
     if (attendues.length === 0) await expect(ligne).toContainText("Aucune");
   }
   await expectNoA11yViolations(cpt);
+  await raconter(cpt, "Le contrôle signale une anomalie : Marc Dubé n'a pas de taux, son échelon manque dans l'échelle. Le comptable retourne la feuille de Léa Côté avec son motif : le quart du lundi doit être codé en formation.");
   const retour = JEU.retour;
   await cpt.getByTestId(`pvt-${feuilles[retour.cle]}-retourner`).click();
   await cpt.getByTestId("pvt-motif").fill(retour.motif);
@@ -189,12 +197,14 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
   await cpt.getByTestId("pvt-retour-confirmer").click();
   await expect(cpt.getByTestId("pvt-succes")).toContainText("retournée");
   await expect(cpt.getByTestId(`pvt-${feuilles[retour.cle]}`)).toContainText("Retournée");
+  await raconter(cpt, "Il valide d'un geste toutes les feuilles sans anomalie, puis celle de Marc, une à une. Chaque validation est signée de son nom.");
   await cpt.getByTestId("pvt-valider-lot").click();
   await expect(cpt.getByTestId("pvt-succes")).toContainText("sans anomalie validée");
   await cpt.getByTestId(`pvt-${feuilles.marc}-valider`).click();
   await expect(cpt.getByTestId(`pvt-${feuilles.marc}-validation`)).toContainText("Validée par");
   await expect(cpt.getByTestId(`pvt-${feuilles[A.payee]}-validation`)).toContainText("Validée par");
 
+  await raconter(cpt, "Il prépare le cycle de paie. L'écran avertit que Marc Dubé n'a pas de taux : il n'est pas payé tant que la RH n'a pas complété l'échelle. Seule Julie a un bulletin : 816 dollars d'heures régulières, la prime de soins critiques, la prime de soir et l'allocation de rétention.");
   await ouvrirNav(cpt, "nav-paiecycles");
   await cpt.getByTestId("pcy-preparer-ouvrir").click();
   await cpt.getByTestId("pcy-debut").fill(jour(-6));
@@ -210,6 +220,7 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
   for (const code of A.gainsPresents) await expect(cpt.getByTestId(`pcy-b-gain-${code}`)).toBeVisible();
   await expectNoA11yViolations(cpt);
   await cpt.keyboard.press("Escape");
+  await raconter(cpt, "Il télécharge le registre de paie en PDF, et la fiche de paie de Julie. Puis il traite le cycle : les relevés sont produits.");
   const [registre] = await Promise.all([cpt.waitForEvent("download"), cpt.getByTestId("pcy-registre").click()]);
   expect(registre.suggestedFilename()).toBe(`registre-paie-${jour(4)}.pdf`);
   const [fiche] = await Promise.all([cpt.waitForEvent("download"), cpt.getByTestId(`pcy-bulletin-${payee}-pdf`).click()]);
@@ -224,6 +235,7 @@ test("RH configure, le comptable valide les temps et produit la paie, la personn
 
   // ── La personne payée télécharge sa fiche ──────────────────────────────────────────────
   const moi = await connecter(browser, tenantId, comptes[A.payee]);
+  await raconter(moi, "Julie Roy ouvre Mes bulletins. Elle n'a pas accès à la validation des temps. Elle télécharge sa fiche de paie en PDF, et relit son allocation de rétention.");
   await ouvrirNav(moi, "nav-mesbulletins");
   await expect(moi.getByTestId("nav-paietemps")).toHaveCount(0);
   const pdf = moi.locator('[data-testid^="mbu-"][data-testid$="-pdf"]');

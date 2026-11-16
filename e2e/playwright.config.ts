@@ -18,12 +18,20 @@ const API_PORT = process.env.E2E_API_PORT ?? "4020";
 const BASE_URL = process.env.E2E_BASE_URL ?? `http://localhost:${WEB_PORT}`;
 const START_LOCAL = !process.env.E2E_BASE_URL;
 const WORKERS = Number(process.env.PW_WORKERS ?? 1);
+/**
+ * **Le tournage raconté** (`E2E_RECIT=1`, `scripts/monter-video-vitrine.sh`) : chaque contexte enregistre directement
+ * dans `test-results/films`, sous un nom stable — le lanceur, lui, filme dans un dossier temporaire qu'il efface après
+ * copie, et le montage ne pourrait pas y retrouver l'instant de chaque phrase (`helpers/recit.ts`).
+ */
+const RECIT = process.env.E2E_RECIT === "1";
+const LARGEUR_FILM = Number(process.env.E2E_VIDEO_LARGEUR ?? 1280);
+const TAILLE_FILM = { width: LARGEUR_FILM, height: Math.round(LARGEUR_FILM * 9 / 16) };
 
 export default defineConfig({
   testDir: "./tests",
   // Le tournage du film (`E2E_RALENTI`) ralentit chaque geste : le budget par défaut suit, sinon un essai
   // parfaitement vert expire au ralenti.
-  timeout: process.env.E2E_RALENTI ? 120_000 : 30_000,
+  timeout: process.env.E2E_RALENTI || RECIT ? 120_000 : 30_000,
   fullyParallel: false,
   workers: WORKERS,
   reporter: [
@@ -37,7 +45,7 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: "on-first-retry",
     // Sans taille donnée, Playwright réduit le film à 800 px de large : illisible à la vitrine.
-    video: process.env.E2E_VIDEO_LARGEUR
+    video: RECIT ? "off" : process.env.E2E_VIDEO_LARGEUR
       ? { mode: "on", size: { width: Number(process.env.E2E_VIDEO_LARGEUR), height: Math.round(Number(process.env.E2E_VIDEO_LARGEUR) * 9 / 16) } }
       : (process.env.E2E_VIDEO as "on" | "off" | "retain-on-failure") ?? "retain-on-failure",
     // **Le film de la vitrine** (`scripts/monter-video-vitrine.sh`) : une image lisible demande un
@@ -47,6 +55,7 @@ export default defineConfig({
       viewport: { width: Number(process.env.E2E_VIDEO_LARGEUR), height: Math.round(Number(process.env.E2E_VIDEO_LARGEUR) * 9 / 16) },
       locale: "fr-CA", timezoneId: "America/Toronto",
     } : {}),
+    ...(RECIT ? { contextOptions: { recordVideo: { dir: "test-results/films", size: TAILLE_FILM } } } : {}),
     screenshot: "only-on-failure",
     storageState: "./.auth/admin.json",
   },

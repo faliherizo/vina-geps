@@ -1,12 +1,12 @@
-# FX-AO-20260810 : écarts fonctionnels de VINA GEPS
+# FX-AO-20260810 : écarts fonctionnels de VINA GePS
 
-> Écrit pour l'équipe produit. Ce document liste ce qui manque à VINA GEPS pour satisfaire la grille
+> Écrit pour l'équipe produit. Ce document liste ce qui manque à VINA GePS pour satisfaire la grille
 > de Santé Québec Laurentides, l'estime et le rattache à une story. Le détail par critère est dans
 > [02_conformite_115_criteres.md](02_conformite_115_criteres.md).
 
 ## 1. Ce qui existe déjà et sera réutilisé
 
-| Capacité | Où dans VINA GEPS | Critères servis |
+| Capacité | Où dans VINA GePS | Critères servis |
 |---|---|---|
 | Messagerie bidirectionnelle à deux et en groupe, réponse privée, réactions | `communication` (ADR 0072) | 4, 5, 24 |
 | Accusés « reçu » et « lu » automatiques, acheminement vu par l'auteur | `Messagerie.Acheminement` | 9 et 11 (en partie) |

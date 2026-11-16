@@ -1,6 +1,6 @@
-# VINA GEPS et Keycloak : connexion OIDC, utilisateurs, rôles et groupes
+# VINA GePS et Keycloak : connexion OIDC, utilisateurs, rôles et groupes
 
-> Écrit pour l'équipe TI qui branche VINA GEPS sur un Keycloak (ou tout autre fournisseur OpenID
+> Écrit pour l'équipe TI qui branche VINA GePS sur un Keycloak (ou tout autre fournisseur OpenID
 > Connect), et pour les développeurs qui maintiennent l'essai de bout en bout. Ce document décrit le
 > processus validé le 14 novembre 2026 : comment un compte Keycloak devient un compte de
 > l'organisme, avec quel rôle, et ce qui se passe quand il change de groupe, quitte ou est
@@ -14,11 +14,11 @@
 |---|---|
 | Protocole | OpenID Connect 1.0, flux *Authorization Code* avec **PKCE** (S256), `state` et `nonce` |
 | Où se déclare Keycloak | Par organisme : Administration › Organisme › « Déclarer un annuaire », fournisseur **OpenID Connect** |
-| Ce que VINA GEPS lit de Keycloak | Le document de découverte (`{émetteur}/.well-known/openid-configuration`) : adresses d'autorisation et d'échange, clés publiques (JWKS) |
+| Ce que VINA GePS lit de Keycloak | Le document de découverte (`{émetteur}/.well-known/openid-configuration`) : adresses d'autorisation et d'échange, clés publiques (JWKS) |
 | Jeton vérifié | L'`id_token` : signature RS256 par le JWKS, émetteur (`iss`) égal à l'émetteur déclaré, audience (`aud`) égale au client, expiration, `nonce` |
-| Rôle dans VINA GEPS | Déduit des **rôles de royaume** (revendication `roles`) ou des **groupes** (revendication `groups`), par des règles ordonnées : la première qui correspond l'emporte |
+| Rôle dans VINA GePS | Déduit des **rôles de royaume** (revendication `roles`) ou des **groupes** (revendication `groups`), par des règles ordonnées : la première qui correspond l'emporte |
 | Source de vérité des appartenances | Keycloak. Le rôle est recalculé **à chaque connexion** |
-| Mesure d'urgence | Désactiver le compte dans VINA GEPS : il est refusé, quoi qu'en dise Keycloak |
+| Mesure d'urgence | Désactiver le compte dans VINA GePS : il est refusé, quoi qu'en dise Keycloak |
 
 Avant ce changement, le module OIDC ne savait parler qu'à Microsoft Entra ID. Les adresses
 `login.microsoftonline.com/…/oauth2/v2.0/…` étaient écrites en dur, et un identifiant de client
@@ -32,7 +32,7 @@ changé.
 sequenceDiagram
     autonumber
     actor U as Personne
-    participant App as VINA GEPS (navigateur)
+    participant App as VINA GePS (navigateur)
     participant API as Serveur Java
     participant KC as Keycloak (royaume)
     U->>App: choisit l'organisme, puis « Se connecter avec Keycloak »
@@ -66,16 +66,16 @@ sert de modèle. Il s'importe tel quel dans un Keycloak 26.
 
 | Réglage | Valeur | Pourquoi |
 |---|---|---|
-| Client ID | `vina-geps` | Ce que VINA GEPS envoie, et ce que l'audience du jeton doit porter |
+| Client ID | `vina-geps` | Ce que VINA GePS envoie, et ce que l'audience du jeton doit porter |
 | Client authentication | **On** (client confidentiel) | L'échange du code exige le secret du client |
 | Standard flow | On ; *Direct access grants* et *Implicit flow* : **Off** | Seul le flux Authorization Code est employé |
 | PKCE | `S256` (attribut `pkce.code.challenge.method`) | Keycloak refuse alors une demande sans PKCE |
 | Valid redirect URIs | `https://{adresse publique}/api/auth/sso/annuaires/callback`, exactement | L'adresse de retour s'affiche dans l'écran des annuaires ; pas de joker en production |
-| Mappeurs du client | `roles` : *User Realm Role*, revendication `roles`, multivaluée, **dans l'ID token**<br>`groups` : *Group Membership*, revendication `groups`, *Full group path* **Off**, **dans l'ID token** | Par défaut, Keycloak range les rôles dans `realm_access.roles` du jeton d'accès seulement. VINA GEPS lit l'`id_token`, et une revendication plate |
+| Mappeurs du client | `roles` : *User Realm Role*, revendication `roles`, multivaluée, **dans l'ID token**<br>`groups` : *Group Membership*, revendication `groups`, *Full group path* **Off**, **dans l'ID token** | Par défaut, Keycloak range les rôles dans `realm_access.roles` du jeton d'accès seulement. VINA GePS lit l'`id_token`, et une revendication plate |
 
 ### 3.2 Les rôles : une hiérarchie par composition
 
-| Rôle de royaume | Contient (composite) | Rôle VINA GEPS |
+| Rôle de royaume | Contient (composite) | Rôle VINA GePS |
 |---|---|---|
 | `vina-admin` | `vina-directeur` | `admin` |
 | `vina-directeur` | `vina-chef` | `director` |
@@ -85,7 +85,7 @@ sert de modèle. Il s'importe tel quel dans un Keycloak 26.
 
 Le mappeur *User Realm Role* émet les rôles **effectifs**, composites développés. Diane, qui n'a
 que `vina-admin`, reçoit donc `[vina-admin, vina-directeur, vina-chef, vina-employe]`. C'est
-**l'ordre des règles** déclarées dans VINA GEPS qui choisit : la plus élevée d'abord.
+**l'ordre des règles** déclarées dans VINA GePS qui choisit : la plus élevée d'abord.
 
 ### 3.3 Les groupes : la hiérarchie de l'organisation
 
@@ -106,16 +106,16 @@ mutation ne se fait alors qu'à un endroit.
 
 ### 3.4 Les utilisateurs
 
-- **Courriel vérifié** (`emailVerified`) : VINA GEPS refuse un courriel que Keycloak déclare non
+- **Courriel vérifié** (`emailVerified`) : VINA GePS refuse un courriel que Keycloak déclare non
   vérifié, car n'importe qui aurait pu le saisir.
 - **Domaine** : le courriel doit appartenir à un domaine déclaré pour l'annuaire. Un invité
   `@gmail.com` est refusé, même dans le bon groupe.
 - **Prénom et nom** remplis : avec le profil utilisateur déclaratif de Keycloak 26, un profil
   incomplet fait apparaître un écran « Mettre à jour le compte » à la première connexion.
-- **MFA** : il s'impose dans Keycloak (flux *browser*, OTP ou WebAuthn). VINA GEPS ne le
+- **MFA** : il s'impose dans Keycloak (flux *browser*, OTP ou WebAuthn). VINA GePS ne le
   redemande pas après une fédération.
 
-## 4. Déclarer l'annuaire dans VINA GEPS
+## 4. Déclarer l'annuaire dans VINA GePS
 
 Administration › Organisme › **Déclarer un annuaire** (réservé au rôle `admin` de l'organisme) :
 
@@ -132,13 +132,13 @@ Administration › Organisme › **Déclarer un annuaire** (réservé au rôle `
 
 ## 5. Gestion des utilisateurs : le cycle de vie
 
-| Événement | Où agir | Effet dans VINA GEPS |
+| Événement | Où agir | Effet dans VINA GePS |
 |---|---|---|
 | Arrivée | Keycloak : créer la personne, la placer dans son groupe | Compte **créé** dans l'organisme à la première connexion. Identifiant = courriel ; aucun mot de passe utilisable |
 | Promotion, mutation | Keycloak : changer de groupe | Rôle **recalculé** à la connexion suivante ; même compte, pas de doublon |
 | Retrait de tous les groupes | Keycloak | Connexion **refusée** : « aucun groupe … ne donne accès » |
-| Désactivation dans Keycloak | Keycloak : *Enabled* Off | Keycloak refuse lui-même ; VINA GEPS ne voit rien passer |
-| Mesure d'urgence | VINA GEPS : désactiver le compte (Administration › Comptes) | Refusé au retour de Keycloak : « le compte … est désactivé dans l'application » |
+| Désactivation dans Keycloak | Keycloak : *Enabled* Off | Keycloak refuse lui-même ; VINA GePS ne voit rien passer |
+| Mesure d'urgence | VINA GePS : désactiver le compte (Administration › Comptes) | Refusé au retour de Keycloak : « le compte … est désactivé dans l'application » |
 | Départ | Keycloak : supprimer ou désactiver | Plus aucune connexion. Une session déjà ouverte dure jusqu'à son expiration (voir § 8) |
 
 Chaque connexion, admise ou refusée, est consignée au journal d'audit : `auth.sso.login.ok` avec
@@ -183,7 +183,7 @@ Pour chaque profil admis, l'essai vérifie quatre choses :
 
 **Hiérarchie dynamique** : par l'API d'administration de Keycloak, Julie est ajoutée à
 « Chefs d'équipe ». Elle devient gestionnaire, sur le **même** compte. Retirée du groupe, elle
-redevient employée. Désactivée dans VINA GEPS, elle est refusée.
+redevient employée. Désactivée dans VINA GePS, elle est refusée.
 
 ### 6.3 Lancer l'essai
 
@@ -222,7 +222,7 @@ avec un attendu faussé (Luc en `manager`), l'essai échoue sur « cumul : rôle
 | Écart | Conséquence | Correctif proposé |
 |---|---|---|
 | Un refus au retour (domaine, courriel non vérifié, aucun groupe, compte désactivé) s'affiche en **JSON brut** sur la route de rappel | Le motif est juste, mais la personne lit `{"errors":[…]}` au lieu d'un message dans la page de connexion | Rediriger vers la page de connexion avec un code de refus, et afficher le motif traduit (à décider) |
-| Pas de déconnexion fédérée | Se déconnecter de VINA GEPS ne ferme pas la session Keycloak. La connexion suivante, sur le même poste, passe sans mot de passe | Appeler `end_session_endpoint` à la déconnexion ; ajouter la déconnexion par canal arrière |
+| Pas de déconnexion fédérée | Se déconnecter de VINA GePS ne ferme pas la session Keycloak. La connexion suivante, sur le même poste, passe sans mot de passe | Appeler `end_session_endpoint` à la déconnexion ; ajouter la déconnexion par canal arrière |
 | Pas de provisionnement SCIM ni d'événements de Keycloak | Un départ n'est constaté qu'à la tentative de connexion suivante. Une session déjà ouverte dure jusqu'à son expiration | SCIM 2.0, ou écoute des événements d'administration de Keycloak |
 | Les groupes ne portent que le **rôle** | L'unité, le périmètre et le supérieur hiérarchique (`employees.managerId`) ne viennent pas de Keycloak | Mapper un attribut `unite` ou `manager` du jeton vers le périmètre et l'organigramme |
 | La route d'instance `/api/auth/sso/entra/*` (configurée par `AZURE_*`) crée des comptes **sans organisme** et ne reclasse pas le rôle | Elle ne doit servir qu'à la démonstration | Déjà signalé dans UTILISATEURS-PROFILS-ACCES.md § 6 |

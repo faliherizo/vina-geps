@@ -12,6 +12,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -65,6 +66,7 @@ test("configurer les connecteurs, publier les équipages et relayer le journal",
   const page = await ctx.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-usintegrations");
+  await raconter(page, "Intégrations. L'administrateur ouvre les connecteurs : tous sont coupés. Il active le système d'aide à la répartition, le SAAV, puis le bus d'entreprise, en mode simulateur.");
   await expect(page.getByTestId("int-c-SAAV")).toContainText("Coupé");
   await expectNoA11yViolations(page);
 
@@ -77,6 +79,7 @@ test("configurer les connecteurs, publier les équipages et relayer le journal",
   await activer("SAAV");
   await activer("ESB");
 
+  await raconter(page, "Il publie les équipages du 15 janvier pour l'unité Opérations Est vers le SAAV, puis relaie le journal vers le bus. Les deux messages déposés sont listés.");
   await page.getByTestId("int-gestes").locator("summary").click();
   await page.getByTestId("int-date").fill("2031-01-15");
   await page.getByTestId("int-unite").selectOption("EST");
@@ -88,6 +91,7 @@ test("configurer les connecteurs, publier les équipages et relayer le journal",
   await expect(page.getByTestId("int-messages")).toContainText("ESB · EVENEMENT");
   await expectNoA11yViolations(page);
 
+  await raconter(page, "Il configure ensuite le lot de paie vers le système de paie externe. Une adresse en http est refusée : un protocole sécurisé est exigé. La clé saisie est mise en majuscules.");
   await page.getByTestId("int-c-PFT-configurer").click();
   await page.getByTestId("int-mode").selectOption("HTTP");
   await page.getByTestId("int-url").fill("http://paie.exemple.ca");
@@ -98,6 +102,7 @@ test("configurer les connecteurs, publier les équipages et relayer le journal",
   await expectNoA11yViolations(page);
 
   // Les lots par SFTP (addenda 06, réponse 3) : sans empreinte de l'hôte, refusé ; avec, enregistré.
+  await raconter(page, "En SFTP, l'empreinte de la clé d'hôte est exigée : sans elle, la configuration est refusée. Avec l'empreinte, le connecteur est enregistré.");
   await page.getByTestId("int-mode").selectOption("SFTP");
   await expect(page.getByTestId("int-url")).toHaveAttribute("aria-describedby", "int-url-aide");
   await page.getByTestId("int-url").fill("sftp://nexu@sftp.exemple.ca/depot");

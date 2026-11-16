@@ -1,6 +1,6 @@
 {
-  "name": "VINA GEPS — Gestion des personnels de la santé",
-  "short_name": "VINA GEPS",
+  "name": "VINA GePS — Gestion des personnels de la santé",
+  "short_name": "VINA GePS",
   "description": "Horaires, disponibilités, absences, pointage, feuilles de temps et messagerie du personnel de la santé — installable sur le téléphone, rien à télécharger.",
   "lang": "fr-CA",
   "start_url": "/admin/dashboard",

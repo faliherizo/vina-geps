@@ -477,7 +477,7 @@ class ControleurCascadesHttpTest {
         assertThat(avis).isEmpty();
         assertThat(voix).singleElement().satisfies(a -> {
             assertThat(a.numero()).isEqualTo("+15145550101");
-            assertThat(a.message()).startsWith("Alerte urgente de VINA GEPS : Code bleu 512. 5e.").endsWith("Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.");
+            assertThat(a.message()).startsWith("Alerte urgente de VINA GePS : Code bleu 512. 5e.").endsWith("Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.");
             assertThat(a.urlChiffre()).isEqualTo(URL + "/api/alertes/webhooks/voix?appel=" + a.reference());
         });
         String appel = voix.getFirst().reference();

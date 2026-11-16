@@ -15,7 +15,7 @@
 | `04_questions_client` | Questions de clarification et décisions attendues |
 | `05_maquettes` | Maquettes d'écrans en SVG éditable et PNG |
 | `06_gouvernance` | Hypothèses, risques, validation et critères d'acceptation |
-| `07_validation_vina_geps` | **Validation du dossier** contre les sources et contre VINA GEPS : conformité des 115 critères, écarts, ADR 0074 (module ou projet), feuille de route, stories et maquettes |
+| `07_validation_vina_geps` | **Validation du dossier** contre les sources et contre VINA GePS : conformité des 115 critères, écarts, ADR 0074 (module ou projet), feuille de route, stories et maquettes |
 
 ## Démontrer et vérifier
 

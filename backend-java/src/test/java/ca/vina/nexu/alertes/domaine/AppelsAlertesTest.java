@@ -61,7 +61,7 @@ class AppelsAlertesTest {
     @DisplayName("le message dit la priorité, le titre et le début du texte, puis la consigne ; un long texte est borné")
     void message() {
         Alertes.Alerte court = new Alertes.Alerte("a", "T", "Code bleu", "5e étage", Priorite.CRITIQUE, "chef", "x", List.of(), List.of(), null);
-        assertThat(AppelsAlertes.message(court)).isEqualTo("Alerte critique de VINA GEPS : Code bleu. 5e étage. Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.");
+        assertThat(AppelsAlertes.message(court)).isEqualTo("Alerte critique de VINA GePS : Code bleu. 5e étage. Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.");
         Alertes.Alerte long_ = new Alertes.Alerte("a", "T", "T", "x".repeat(800), Priorite.URGENTE, "chef", "x", List.of(), List.of(), null);
         assertThat(AppelsAlertes.message(long_)).hasSize(AppelsAlertes.MESSAGE_MAX + ". Appuyez sur 1 pour prendre en charge, sur 2 pour refuser.".length());
     }

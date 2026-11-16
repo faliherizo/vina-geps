@@ -15,6 +15,7 @@ import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { jour } from "./helpers/urgences-sante";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -60,6 +61,7 @@ async function amorcer(tenantId: string, identifiant: string): Promise<void> {
 }
 
 async function ajouter(page: Page, a: Ajout): Promise<void> {
+  await raconter(page, `L'administration ajoute le code ${a.code}, ${a.libelleFr}, ${a.planifiable ? "planifiable" : "non planifiable"}, en vigueur à partir d'aujourd'hui.`);
   await page.getByTestId("ref-ajouter").click();
   await page.getByTestId("ref-form-code").fill(a.code);
   await page.getByTestId("ref-form-libelleFr").fill(a.libelleFr);
@@ -87,11 +89,13 @@ test("l'administration tient les codes d'absence ; Julie déclare avec les codes
   await ouvrirNav(admin, "nav-uscodesabsence");
   await expect(admin.getByTestId("uscodesabsence-titre")).toBeVisible();
   await expect(admin.getByTestId("ref-type")).toHaveCount(0);
+  await raconter(admin, "Codes d'absence. L'administrateur de l'organisme ouvre la page des codes d'absence : Maladie et Congé sans solde y sont déjà.");
   for (const c of JEU.codesInitiaux) await expect(admin.getByTestId(`ref-ligne-${String(c.code)}`)).toBeVisible();
   await expectNoA11yViolations(admin);
   for (const a of JEU.ajouts) await ajouter(admin, a);
 
   const r = JEU.remplacement;
+  await raconter(admin, `Il remplace ensuite le code ${r.code} à partir d'aujourd'hui : son nouveau libellé est ${r.libelleFr}. L'ancienne version reste dans l'historique.`);
   await admin.getByTestId(`ref-remplacer-${r.code}`).click();
   await admin.getByTestId("ref-form-libelleFr").fill(r.libelleFr);
   await admin.getByTestId("ref-form-date").fill(date(r.date));
@@ -100,6 +104,7 @@ test("l'administration tient les codes d'absence ; Julie déclare avec les codes
   await expect(admin.getByTestId(`ref-ligne-${r.code}`)).toContainText(r.libelleFr);
 
   const f = JEU.fermeture;
+  await raconter(admin, "Puis il ferme le Congé sans solde à partir d'aujourd'hui : le code disparaît de la liste en vigueur. L'historique du code Maladie montre ses deux versions.");
   await admin.getByTestId(`ref-fermer-${f.code}`).click();
   await admin.getByTestId("ref-fermeture-date").fill(date(f.date));
   await admin.getByTestId("ref-fermeture-confirmer").click();
@@ -115,6 +120,7 @@ test("l'administration tient les codes d'absence ; Julie déclare avec les codes
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
   await ouvrirNav(page, "nav-mesabsences");
+  await raconter(page, "Julie Roy ouvre Mes absences. Elle ne voit pas la page d'administration des codes, et la liste qu'on lui offre ne porte que les codes en vigueur aujourd'hui, avec leur libellé du jour : jamais le congé sans solde fermé.");
   await expect(page.getByTestId("nav-uscodesabsence")).toHaveCount(0);
   await page.getByTestId("mab-declarer").click();
   const liste = page.getByTestId("abs-eff-code");
@@ -122,6 +128,7 @@ test("l'administration tient les codes d'absence ; Julie déclare avec les codes
   for (const code of JEU.attendu.absents) await expect(liste.locator(`option[value="${code}"]`)).toHaveCount(0);
   await expectNoA11yViolations(page);
   for (const d of JEU.declarations) {
+    await raconter(page, `Julie déclare une absence, code ${d.code}, du ${d.du} au ${d.au}.${d.erreur ? " Ce code ne se planifie pas d'avance : la déclaration doit être refusée." : " Elle doit être acceptée."}`);
     if (!(await page.getByTestId("abs-eff-code").isVisible())) await page.getByTestId("mab-declarer").click();
     await page.getByTestId("abs-eff-code").selectOption(d.code);
     await page.getByTestId("abs-start").fill(d.du);
@@ -137,6 +144,7 @@ test("l'administration tient les codes d'absence ; Julie déclare avec les codes
   }
   await expect(page.getByTestId("mab-table").locator("tbody tr")).toHaveCount(JEU.declarations.filter((d) => !d.erreur).length);
   const a = JEU.annuler;
+  await raconter(page, `Julie annule son absence du ${a.du}.`);
   await page.getByTestId("mab-table").locator("tr", { hasText: `Du ${a.du} au ${a.au}` }).locator('[data-testid$="-annuler"]').click();
   await expect(page.getByTestId("mab-info")).toContainText(`Absence du ${a.du} au ${a.au} annulée.`);
   await expectNoA11yViolations(page);

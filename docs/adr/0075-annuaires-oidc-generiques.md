@@ -27,7 +27,7 @@ exploitent.
 ## Options considérées
 
 1. **Un annuaire « OIDC générique », adresses lues dans le document de découverte** (retenue).
-2. **Keycloak en courtier devant Entra** : VINA GEPS ne parlerait qu'à Entra, et Keycloak serait
+2. **Keycloak en courtier devant Entra** : VINA GePS ne parlerait qu'à Entra, et Keycloak serait
    déclaré comme fournisseur d'Entra. Aucun code ne change, mais l'organisme dépend d'une
    fédération Entra qu'il n'a pas forcément. C'est un contournement, pas une prise en charge.
 3. **Gabarit Keycloak en dur** (`{base}/realms/{r}/protocol/openid-connect/…`) : simple, mais

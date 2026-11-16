@@ -19,6 +19,7 @@ import { commandePresente, poser, type Geste } from "./helpers/gestes";
 import { amorcerOrganisme, modulesDeLOrganisme, seConnecterOrganisme } from "./helpers/urgences-sante";
 import jeu from "../../donnees/fx-ao/exigences.json";
 import comportements from "../../donnees/fx-ao/comportements.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ timeout: 32 * 8_000 + 240_000 });
@@ -37,7 +38,7 @@ test.describe.serial("FX-AO-20260810 — la grille de conformité, à l'écran",
   test.beforeAll(async () => {
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("FXAO-EXIG"));
+      tenantId = await createTenant(sa, uniq("Demo-Alertes"));
       await setTenantModules(sa, tenantId, [...modulesDeLOrganisme, "alertes"]);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId);
@@ -50,6 +51,7 @@ test.describe.serial("FX-AO-20260810 — la grille de conformité, à l'écran",
     const auditees = new Set<string>();
     for (const c of CRITERES.filter((x) => x.page)) {
       await page.goto(`/${c.page}`);
+      await raconter(page, `${c.intitule}. Ses commandes doivent être présentes à l'écran.`);
       for (const geste of c.prealable ?? []) await poser(page, geste);
       for (const commande of c.preuve ?? []) {
         if (!(await commandePresente(page, commande))) manquants.push(`critère ${c.id} — /${c.page} : ${commande}`);

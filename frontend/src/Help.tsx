@@ -380,12 +380,12 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
   );
 }
 
-/** Le chemin des vidéos d'aide : un fichier par écran, tourné par `scripts/tourner-aides.mjs` dans `public/aide/videos`. */
+/** Le chemin des vidéos d'aide : un fichier par écran dans `public/aide/videos`, monté depuis les essais (`scripts/monter-recit.mjs`) ou, à défaut, tourné par `scripts/tourner-aides.mjs`. */
 export const videoDeFiche = (page: string) => ({ video: `/aide/videos/${page}.webm`, sousTitres: `/aide/videos/${page}.fr.vtt` });
 
 /**
- * **La démonstration commentée d'un écran** : le chemin dans le menu et le sous-menu, l'écran, et l'exemple de
- * remplissage, dits à voix haute. Les sous-titres français reprennent exactement la voix (WCAG 1.2.2) et le texte de la
+ * **La démonstration commentée d'un écran** : les passages des essais e2e joués sur cet écran (`scripts/monter-recit.mjs`),
+ * chacun expliqué à voix haute — le menu qui y mène, puis l'ajout, la modification, le refus motivé ou l'envoi qu'on y fait. Les sous-titres français reprennent exactement la voix (WCAG 1.2.2) et le texte de la
  * fiche qui suit en est la transcription (1.2.1). `preload="none"` : rien ne se télécharge avant qu'on la lance.
  */
 function VideoFiche({ page, titre }: { page: Page; titre: string }) {
@@ -394,12 +394,12 @@ function VideoFiche({ page, titre }: { page: Page; titre: string }) {
   return (
     <figure className="fiche-video">
       <video controls preload="none" src={video} data-testid={`help-video-${page}`} aria-describedby={description}>
-        <track kind="captions" srcLang="fr" label="Français" src={sousTitres} default />
+        <track kind="captions" srcLang="fr" label="Français (facultatif)" src={sousTitres} />
         <a href={video}>Télécharger la démonstration de l'écran {titre}</a>
       </video>
       <figcaption id={description} className="muted">
-        Démonstration commentée de l'écran « {titre} » : où le trouver dans le menu, à quoi il ressemble, et l'exemple ci-dessous saisi.
-        Sous-titres en français ; le texte de la fiche en est la transcription.
+        Démonstration commentée de l'écran « {titre} » : des cas réels joués dans l'application — ajout, modification, refus
+        motivé, envoi — chacun expliqué à voix haute. Sous-titres français facultatifs ; la fiche ci-dessous décrit les mêmes gestes.
       </figcaption>
     </figure>
   );

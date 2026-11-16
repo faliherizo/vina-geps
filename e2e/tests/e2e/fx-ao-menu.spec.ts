@@ -13,6 +13,7 @@ import path from "node:path";
 import { test, expect, type Page } from "@playwright/test";
 import { menuPret } from "./helpers/nav";
 import donnees from "../../donnees/fx-ao/demonstration.json";
+import { raconter } from "./helpers/recit";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 const SCRIPT = path.join(__dirname, "..", "..", "..", "scripts", "semer-fx-ao.cjs");
@@ -59,10 +60,12 @@ test.describe("FX-AO-20260810 — un menu réduit à l'avis", () => {
     test(`${identifiant} : chaque entrée est une vue gardée, et les écrans de la grille y sont`, async ({ page }) => {
       test.setTimeout(identifiant === "admin" ? 360_000 : 120_000);
       const vues = await menu(page, identifiant);
+      await raconter(page, `Cet organisme n'a reçu que les alertes cliniques et la communication. ${({ admin: "L'administrateur", "coord.urgence": "Sophie Lalonde, coordonnatrice des mesures d'urgence,", "inf.roy": "Julie Roy, infirmière," } as Record<string, string>)[identifiant] ?? identifiant} se connecte. Chaque entrée de son menu doit être un écran accordé à l'organisme, et ses écrans de travail doivent y être : jamais l'horaire, la paie ni les intégrations.`);
       expect(vues.filter((v) => !GARDEES.has(v)), "entrées hors de l'avis FX-AO").toEqual([]);
       for (const a of attendus) expect(vues, `écran de la grille absent : ${a}`).toContain(a);
       for (const j of JAMAIS) expect(vues).not.toContain(j);
 
+      await raconter(page, "Le guide suit le menu : il ne montre l'aide que des écrans gardés. Pas de section sur la paie, mais bien celle des alertes.");
       await page.goto("/admin/help");
       await expect(page.getByTestId("help-page")).toBeVisible({ timeout: 60_000 });
       const fiches = await page.locator('[data-testid^="help-fiche-"]').evaluateAll((els) =>

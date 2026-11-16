@@ -49,7 +49,7 @@ public final class DocumentPdf implements AutoCloseable {
 
     private static final String POLICE_NORMALE = "/polices/LiberationSans-Regular.ttf";
     private static final String POLICE_GRASSE = "/polices/LiberationSans-Bold.ttf";
-    private static final String PRODUCTEUR = "VINA GEPS";
+    private static final String PRODUCTEUR = "VINA GePS";
     private static final String SRGB = "sRGB IEC61966-2.1";
     /** Les métadonnées d'un PDF/A-2b : partie 2, conformité B, et le producteur. */
     static final String XMP = "<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"

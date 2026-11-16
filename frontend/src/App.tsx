@@ -81,7 +81,7 @@ const PAGE_DROIT_SERVEUR: Partial<Record<Page, "peutApprouver">> = {
 };
 
 /** Le nom du produit : VINA Gestion des Personnels de la Santé. L'organisme client se nomme à côté. */
-export const MARQUE = "VINA GEPS";
+export const MARQUE = "VINA GePS";
 
 const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // Les pages d'Urgences-santé sont déclarées par `urgencessante/menu.ts` : ajouter un écran

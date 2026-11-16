@@ -54,7 +54,7 @@ describe("nginx — fichiers de l'application à la racine du site", () => {
   it("la racine sert la vitrine, qui mène à l'application ; ces locations précèdent le repli `location /`", () => {
     const racine = conf.indexOf("location / {");
     for (const l of ["= /sw.js", "= /manifest.webmanifest", "/icones/", "/vitrine/"]) expect(conf.indexOf(`location ${l} {`)).toBeLessThan(racine);
-    // La vitrine de VINA GEPS (14 novembre 2026) : une page statique, et non une redirection vers /admin.
+    // La vitrine de VINA GePS (14 novembre 2026) : une page statique, et non une redirection vers /admin.
     expect(bloc("= /")).toContain("try_files /vitrine/index.html =404;");
     expect(bloc("= /")).not.toContain("return 302");
     expect(bloc("/vitrine/")).toContain("try_files $uri =404;");

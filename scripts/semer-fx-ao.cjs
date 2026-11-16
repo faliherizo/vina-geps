@@ -28,7 +28,7 @@ async function creerOrganisme() {
   const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ");
   const cree = await appeler("/api/superadmin/tenants", {
     methode: "POST", jeton: jetonSa,
-    corps: { name: `${donnees.organisme.nom} (${horodatage})`, type: "public_institution", country: "CA", region: "QC",
+    corps: { name: `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`, type: "public_institution", country: "CA", region: "QC",
       planCode: donnees.organisme.planCode, adminUsername: "admin", adminPassword: MDP },
   });
   if (cree.admin?.userId) {

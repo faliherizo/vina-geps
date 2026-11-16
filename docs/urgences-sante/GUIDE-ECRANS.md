@@ -1,4 +1,4 @@
-# VINA GEPS : guide écran par écran
+# VINA GePS : guide écran par écran
 
 > Écrit pour les utilisateurs et les formateurs d'Urgences-santé. Pour chaque écran : à quoi il
 > sert, qui l'ouvre, comment s'y prendre et un exemple de remplissage avec les libellés réels.

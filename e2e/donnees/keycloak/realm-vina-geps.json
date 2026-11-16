@@ -1,6 +1,6 @@
 {
   "realm": "vina-geps",
-  "displayName": "VINA GEPS — essais OIDC",
+  "displayName": "VINA GePS — essais OIDC",
   "enabled": true,
   "sslRequired": "none",
   "registrationAllowed": false,
@@ -121,7 +121,7 @@
   "clients": [
     {
       "clientId": "vina-geps",
-      "name": "VINA GEPS",
+      "name": "VINA GePS",
       "enabled": true,
       "protocol": "openid-connect",
       "publicClient": false,

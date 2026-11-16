@@ -12,6 +12,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -83,6 +84,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
   await ouvrirNav(julie, "nav-monagph");
+  await raconter(julie, "AGPH, le choix annuel des postes. Julie Roy ouvre Confection AGPH : elle a le plus d'ancienneté, son rang est le premier, et c'est son tour. Elle choisit le poste B à temps partiel régulier.");
   await expect(julie.getByTestId(`agm-tour-${ids.campagne}`)).toBeVisible();
   await expect(julie.getByTestId(`agm-rang-${ids.campagne}`)).toContainText("Votre rang : 1 (À son tour)");
   await expectNoA11yViolations(julie);
@@ -96,6 +98,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-usagph");
+  await raconter(chef, "Le planificateur ouvre la campagne : c'est au tour de Marc Dubé, qui n'a pas accès à l'écran. Le planificateur saisit pour lui le poste A à temps complet. Tous sont servis, et il clôt la campagne : chaque attribution dit qui l'a faite.");
   await expect(chef.getByTestId("pla-agph-rang-2")).toContainText("À son tour");
   await chef.getByTestId("pla-agph-saisir-2").click();
   await chef.getByTestId("pla-agph-saisie-A-TC").click();
@@ -119,6 +122,7 @@ test("choisir son poste à son tour, saisir le choix du rang suivant, clore la c
   await julie2.goto("/");
   await uiLogin(julie2, identifiant, MDP, tenantId);
   await ouvrirNav(julie2, "nav-monagph");
+  await raconter(julie2, "Un remplacement long terme s'ouvre sur le poste C. Julie manifeste son intérêt, depuis son espace.");
   await julie2.getByTestId(`agm-rlt-${rlt.id}-manifester`).click();
   await expect(julie2.getByTestId("agm-info")).toContainText("Intérêt enregistré pour le remplacement du poste C-TPR");
   await expectNoA11yViolations(julie2);
@@ -155,6 +159,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await julie.goto("/");
   await uiLogin(julie, identifiant, MDP, tenantId);
   await ouvrirNav(julie, "nav-monagph");
+  await raconter(julie, "Deuxième cas : avant le tour de rôle, chacun dépose sa semaine type. Julie n'offre qu'un quart : la règle en exige deux par semaine, le dépôt est refusé. Elle en ajoute un, et sa semaine devient conforme : 24 heures offertes.");
   const D = `agm-dispo-${ids.campagne}`;
   await expect(julie.getByTestId(D)).toBeVisible();
   await julie.getByTestId(`${D}-enregistrer`).click();
@@ -175,12 +180,14 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await ouvrirNav(chef, "nav-usagph");
   await expect(chef.getByTestId("pla-agph-etat")).toContainText("dépôt des disponibilités");
   // Le budget modifie la campagne : un dialogue depuis le 8 novembre 2026.
+  await raconter(chef, "Le planificateur fixe le budget de l'unité à 20 heures : l'offre de Julie le dépasse, à 120 pour cent, et c'est signalé.");
   await chef.getByTestId("pla-agph-budget-edition-ouvrir").click();
   await chef.getByTestId("pla-agph-budget").fill("20");
   await chef.getByTestId("pla-agph-budget-fixer").click();
   await expect(chef.getByTestId("pla-agph-dispo-info")).toContainText("Budget fixé à 20 h");
   await expect(chef.getByTestId("pla-agph-dispo-resume")).toContainText("24 h offertes par semaine · budget 20 h (120 %)");
   await expect(chef.getByTestId("pla-agph-dispo-resume")).toContainText("Au-delà du budget");
+  await raconter(chef, "Il saisit la semaine type de Marc : elle est acceptée, avec un avertissement de dépassement du budget. Puis il démarre le tour de rôle.");
   await chef.getByTestId("pla-agph-dispo-saisir-2").click();
   await chef.getByTestId("pla-agph-dispo-saisie-ajouter").click();
   await chef.getByTestId("pla-agph-dispo-saisie-enregistrer").click();
@@ -198,6 +205,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await adm.dispose();
 
   // ── Révision motivée, puis clôture : les postes restés libres passent à la gestion régulière ──
+  await raconter(chef, "Tous ont choisi. Le planificateur passe en révision et révise l'attribution de Marc, avec son motif : le poste A est réservé à une réorganisation.");
   await chef.reload();
   await expect(chef.getByTestId("pla-agph-etat")).toContainText("Tous servis — à réviser ou clore");
   await chef.getByTestId("pla-agph-reviser").click();
@@ -209,6 +217,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await chef.getByTestId("pla-agph-revision-envoyer").click();
   await expect(chef.getByTestId("pla-agph-info")).toContainText("Attribution de Marc Dubé révisée");
   await expect(chef.getByTestId("pla-agph-rang-2")).toContainText("Passé");
+  await raconter(chef, "À la clôture, les postes restés vacants sont transférés à la gestion régulière.");
   await chef.getByTestId("pla-agph-clore").click();
   await expect(chef.getByTestId("pla-agph-transferes")).toContainText("A-TC — vacant");
   await expect(chef.getByTestId("pla-agph-transferes")).toContainText("C-TPR — vacant");
@@ -228,6 +237,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   const rlt = await poser(adm, tenantId, "/api/effectifs/agph/remplacements", { posteId: ids.posteC, origine: "POSTE_VACANT", debut: "2031-01-06", fin: "2031-01-12", finManifestation: demain });
   await adm.dispose();
 
+  await raconter(chef, "Un remplacement long terme est laissé non comblé, motif : budget de l'unité atteint. Ses trois quarts passent à la gestion régulière.");
   await chef.reload();
   await chef.getByTestId(`pla-rlt-${rlt.id}-non-comble`).click();
   await chef.getByTestId("pla-rlt-non-comble-motif").fill("Budget de l'unité atteint");
@@ -238,6 +248,7 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   await expect(chef.getByTestId(`pla-rlt-${rlt.id}-etat`)).toContainText("Motif : Budget de l'unité atteint");
 
   // Les quarts des postes vacants sont dans le comblement : sous leur minimum, deux places libres sur trois.
+  await raconter(chef, "Ils apparaissent aussitôt au comblement, sous le minimum, et dans les disponibilités, où Marc Dubé est candidat admissible.");
   await ouvrirNav(chef, "nav-uscomblement");
   await expect(chef.getByTestId("pla-tuile-sous-minimum")).toContainText("3 quart(s)");
   await expect(chef.getByTestId("pla-sous-minimum")).toContainText("1 / 3");
