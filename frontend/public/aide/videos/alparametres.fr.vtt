@@ -1,0 +1,40 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.208
+Paramètres des alertes.
+
+00:00:01.657 --> 00:00:04.978
+Tenir les réponses prédéfinies et les modèles d'alerte de l'organisme.
+
+00:00:05.428 --> 00:00:09.584
+Qui s'en sert : Administration (capacité alertes.configure ).
+
+00:00:10.034 --> 00:00:10.894
+Comment faire :
+
+00:00:11.344 --> 00:00:16.661
+Nouvelle réponse : un libellé et ce qu'il veut dire (prise en charge, refus, information).
+
+00:00:17.111 --> 00:00:26.492
+Nouveau modèle : titre, texte, priorité, réponses proposées, et son Périmètre (les groupes dont les expéditeurs le voient ; aucun coché : tout l'organisme).
+
+00:00:26.942 --> 00:00:31.795
+Modifier un modèle en fait une nouvelle version ; Versions montre chaque version, qui l'a faite et quand.
+
+00:00:32.245 --> 00:00:35.914
+Désactiver retire une réponse ou un modèle des choix ; rien ne s'efface.
+
+00:00:36.364 --> 00:00:42.239
+Réglages : cocher Envoyer aussi une copie par courriel pour que chacun reçoive l'alerte par courriel en plus de ses canaux.
+
+00:00:42.689 --> 00:01:05.189
+Politiques de relance : Nouvelle politique , un nom, quand s'arrêter (une prise en charge, ou tous ont lu), puis chaque étape — combien de minutes après la précédente, qui viser (relancer ceux qui n'ont pas réagi, tout un groupe, une personne, ou le prochain disponible d'un groupe), par quels canaux — Appel automatique fait sonner la personne, qui confirme en appuyant sur 1. Modifier fait une version nouvelle.
+
+00:01:05.639 --> 00:01:17.109
+Utilisateurs actifs : choisir le Mois ; chaque personne qu'une alerte, une relance ou un appel a visée compte une fois, avec sa première tentative et l'alerte en cause. Exporter produit le justificatif du bordereau.
+
+00:01:17.559 --> 00:01:28.380
+Groupes transverses : Nouveau groupe (nom, nature : garde, spécialité, comité), puis Gérer pour inscrire une personne par son nom, pour une période, comme membre ou modératrice.
+
+00:01:28.830 --> 00:01:37.932
+Résultat : La réponse, le modèle ou le groupe est proposé dès la prochaine alerte ; les alertes passées gardent ce qu'elles ont proposé, et la version du modèle dont elles sont parties.

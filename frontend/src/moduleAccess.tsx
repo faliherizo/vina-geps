@@ -9,15 +9,28 @@
  * Ce contexte expose la **même** source à tout l'arbre, sans requête supplémentaire :
  * `App.tsx` fournit l'ensemble qu'il a déjà chargé, les pages le consomment.
  */
-import { createContext, useCallback, useContext, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
 
 /** `null` = aucun filtrage — utilisateur global (superadmin) ou modules pas encore chargés. */
 export type EnabledModules = Set<string> | null;
 
 const Ctx = createContext<EnabledModules>(null);
 
-export function ModuleAccessProvider({ value, children }: { value: EnabledModules; children: ReactNode }) {
-  return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
+/** Les pages dont **toutes** les vues de menu sont masquées pour l'établissement (Superadmin › Modules et accès). */
+const CtxMasquees = createContext<ReadonlySet<string>>(new Set());
+
+export function ModuleAccessProvider({ value, pagesMasquees, children }: { value: EnabledModules; pagesMasquees?: ReadonlySet<string>; children: ReactNode }) {
+  const masquees = useMemo(() => pagesMasquees ?? new Set<string>(), [pagesMasquees]);
+  return <Ctx.Provider value={value}><CtxMasquees.Provider value={masquees}>{children}</CtxMasquees.Provider></Ctx.Provider>;
+}
+
+/**
+ * **La page est-elle ouverte à l'établissement ?** Son module est activé, et le superadmin n'a pas masqué toutes ses
+ * vues du menu. C'est la règle du menu, lue telle quelle : l'aide s'en sert pour ne décrire que ce que l'organisme a.
+ */
+export function usePageMasquee(): (page: string) => boolean {
+  const masquees = useContext(CtxMasquees);
+  return useCallback((page: string) => masquees.has(page), [masquees]);
 }
 
 /**

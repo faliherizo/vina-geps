@@ -91,17 +91,29 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
  *   « tous » : les six écrans de l'approvisionnement partagent une section, et en fermer un
  *   n'efface pas l'aide des cinq autres.
  *
+ * `masquee` dit qu'un écran a été retiré du menu de l'établissement (toutes ses vues masquées par le superadmin) :
+ * il ne compte pas plus qu'un écran de module coupé.
+ *
  * `ouvert` est le prédicat de `useModuleAllowed` : sans filtrage (compte global, modules pas
  * encore lus) il rend `true`, et le guide reste entier — on ne cache jamais plus que ce que le
  * superadmin a décidé.
  */
-export function sectionsVisibles(ouvert: (code?: string) => boolean): typeof SECTIONS_AIDE[number][] {
+export function sectionsVisibles(ouvert: (code?: string) => boolean, masquee: (page: string) => boolean = () => false): typeof SECTIONS_AIDE[number][] {
   const ouvertes = new Set<string>();
   for (const [page, section] of Object.entries(AIDE_PAR_PAGE)) {
-    if (ouvert(PAGE_MODULE[page as Page])) ouvertes.add(section);
+    if (pageOuverte(page as Page, ouvert, masquee)) ouvertes.add(section);
   }
   const visees = new Set<string>(Object.values(AIDE_PAR_PAGE));
   return SECTIONS_AIDE.filter((s) => !visees.has(s.id) || ouvertes.has(s.id));
+}
+
+/**
+ * **L'aide d'un écran suit l'accès de l'établissement à cet écran** : son module activé, et au moins une de ses vues
+ * laissée au menu par le superadmin. Une fiche sur un écran que l'organisme n'a pas ne lui sert à rien — et lui fait
+ * chercher au menu une entrée qui n'existe pas chez lui.
+ */
+export function pageOuverte(page: Page, ouvert: (code?: string) => boolean, masquee: (page: string) => boolean): boolean {
+  return ouvert(PAGE_MODULE[page]) && !masquee(page);
 }
 
 /**

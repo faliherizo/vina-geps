@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.650
+Périmètres.
+
+00:00:01.100 --> 00:00:06.836
+Dire qui gère quelle unité, à quel niveau et depuis quand : sans périmètre, une console s'ouvre sur des listes vides.
+
+00:00:07.286 --> 00:00:09.492
+Qui s'en sert : Administration.
+
+00:00:09.942 --> 00:00:10.801
+Comment faire :
+
+00:00:11.251 --> 00:00:12.249
+Choisir le Compte .
+
+00:00:12.699 --> 00:00:21.128
+Ajouter un accès : unité, étendue (l'unité seule ou son sous-arbre), niveau (lecture, planification, gestion), À partir du .
+
+00:00:21.578 --> 00:00:25.711
+Résultat : Les consoles de ce compte montrent désormais les personnes et les quarts de l'unité.
+
+00:00:26.161 --> 00:00:30.318
+Attention : Le refus est la règle : un accès oublié n'ouvre rien, et c'est voulu.

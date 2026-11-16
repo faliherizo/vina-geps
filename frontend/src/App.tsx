@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHauteurBarre } from "./hauteurBarre";
 import { objet } from "./formeRecue";
 import { Icone } from "./composants";
@@ -369,6 +369,15 @@ function AppShell() {
     if (vueMasquee({ page, onglet: demande.onglet })) setDemande((d) => ({ onglet: null, jeton: d.jeton + 1 }));
   }, [page, demande.onglet, user, vuesMasquees]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  /**
+   * Les pages que le superadmin a retirées du menu de l'établissement (toutes leurs vues masquées) : la même règle que
+   * la garde ci-dessus, partagée avec l'aide, qui ne décrit pas un écran que l'organisme n'a pas.
+   */
+  const pagesMasquees = useMemo(() => new Set<string>(PAGES.map((p) => p.key).filter((cle) => {
+    const sesVues = toutesLesVuesDuMenu.filter((v) => v.page === cle);
+    return sesVues.length > 0 && sesVues.every((v) => vuesMasquees.has(cleDeVue(v)));
+  })), [vuesMasquees]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Déplace le focus sur <main> à chaque changement de page (sauf au tout premier rendu).
   useEffect(() => {
     if (firstRender.current) { firstRender.current = false; return; }
@@ -659,7 +668,7 @@ function AppShell() {
 
       <OngletContext.Provider value={{ page, onglet: demande.onglet, jeton: demande.jeton, notion: emplacement ? cleDeNotion(emplacement.groupe, emplacement.concept) : null }}>
       <main className="main" id="main-content" tabIndex={-1} ref={mainRef} aria-label={t("common.mainContent")}>
-        <ModuleAccessProvider value={enabledModules}>
+        <ModuleAccessProvider value={enabledModules} pagesMasquees={pagesMasquees}>
         <EmpruntBandeau />
         {/*
           **Un appel se voit où qu'on soit.** La bannière est au-dessus du contenu, dans le flux,
@@ -691,7 +700,8 @@ function AppShell() {
         {page === "superadmin" && <Superadmin />}
         {page === "account" && <Account />}
         {CLES_US.includes(page) && <PageUrgencesSante cle={page} />}
-        {page === "help" && <Help section={sectionAide} />}
+        {/* L'aide attend les modules et le menu de l'établissement : avant eux, « aucun filtrage » montrerait tout le guide. */}
+        {page === "help" && modulesCharges && <Help section={sectionAide} />}
         {page === "soutien" && <Soutien />}
         {page === "approvals" && <Approvals />}
         {page === "admin" && <Admin />}

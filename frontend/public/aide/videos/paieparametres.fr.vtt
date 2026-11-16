@@ -1,0 +1,31 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.045
+Paramètres de la paie.
+
+00:00:01.495 --> 00:00:04.165
+Régler les taux propres à l'organisme et lire le barème de l'année.
+
+00:00:04.615 --> 00:00:09.027
+Qui s'en sert : Administration et RH (capacité paie.configurer ).
+
+00:00:09.477 --> 00:00:10.336
+Comment faire :
+
+00:00:10.786 --> 00:00:17.822
+Saisir le taux du Fonds des services de santé (selon la masse salariale et le secteur ; 4,26 % au secteur public).
+
+00:00:18.272 --> 00:00:22.428
+Saisir le taux de la CNESST indiqué sur l'avis de cotisation de l'organisme.
+
+00:00:22.878 --> 00:00:30.309
+Saisir la majoration des heures supplémentaires : au moins 50 % (Loi sur les normes du travail), davantage si la convention le prévoit.
+
+00:00:30.759 --> 00:00:35.357
+Cocher Exiger la validation des temps par la paie pour que seules les feuilles validées entrent dans un cycle.
+
+00:00:35.807 --> 00:00:37.153
+Enregistrer les réglages .
+
+00:00:37.603 --> 00:00:41.760
+Résultat : Les prochains calculs appliquent ces taux ; les paies déjà traitées ne changent pas.

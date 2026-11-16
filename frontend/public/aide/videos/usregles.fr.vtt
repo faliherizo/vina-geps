@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.231
+Règles des effectifs.
+
+00:00:01.681 --> 00:00:10.411
+Écrire les règles de l'organisme par contexte (disponibilités, absences, comblement, échanges, feuille de temps), les simuler, puis les publier.
+
+00:00:10.861 --> 00:00:13.067
+Qui s'en sert : Administration.
+
+00:00:13.517 --> 00:00:14.377
+Comment faire :
+
+00:00:14.827 --> 00:00:20.144
+Choisir le Contexte , puis composer la condition : fait, comparaison, valeur visée.
+
+00:00:20.594 --> 00:00:27.398
+Choisir l' Action (accepter, avertir, exiger une approbation, refuser) et le Message affiché à la personne .
+
+00:00:27.848 --> 00:00:32.538
+Aperçu d'impact puis Simulateur pour juger un cas ; Publier avec la date d'entrée en vigueur.
+
+00:00:32.988 --> 00:00:39.350
+Résultat : La règle s'applique aux gestes faits à partir de sa date ; l'onglet Décisions montre chaque décision et ses motifs.

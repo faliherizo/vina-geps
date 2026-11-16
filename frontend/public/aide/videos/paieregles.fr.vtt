@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.277
+Règles de paie variable.
+
+00:00:01.727 --> 00:00:05.791
+Tenir l'échelle salariale et les primes de l'organisme, sans livraison du produit.
+
+00:00:06.241 --> 00:00:13.509
+Qui s'en sert : Administration et RH (capacité paie.configurer ) ; la comptabilité paie selon ces règles sans les modifier.
+
+00:00:13.959 --> 00:00:14.818
+Comment faire :
+
+00:00:15.268 --> 00:00:22.141
+Nouvelle règle : choisir le type — taux de base (échelle), prime en pourcentage du taux, prime horaire, ou forfait par paie.
+
+00:00:22.591 --> 00:00:26.515
+Donner le code du gain (il paraît sur la fiche de paie), le libellé et la valeur.
+
+00:00:26.965 --> 00:00:32.840
+Dire qui est visé : titre d'emploi, convention, échelon ; vides, la règle vise tout le personnel.
+
+00:00:33.290 --> 00:00:41.045
+Pour une prime, dire quelles heures : la plage (heure de Montréal ; une fin avant le début passe minuit), les jours, les fériés, les codes de paie.
+
+00:00:41.495 --> 00:00:48.345
+Donner la période de validité. Une augmentation se saisit comme une nouvelle règle qui commence à sa date ; l'ancienne se termine la veille.
+
+00:00:48.795 --> 00:00:52.255
+Désactiver retire une règle des prochains calculs, sans l'effacer.
+
+00:00:52.705 --> 00:00:57.930
+Résultat : Le prochain cycle préparé ou recalculé paie la prime ; une paie déjà traitée garde ses gains.
+
+00:00:58.380 --> 00:01:05.369
+Attention : Une heure se paie au taux de base du jour où elle est travaillée : un cycle à cheval sur une augmentation montre deux lignes d'heures, une par taux.

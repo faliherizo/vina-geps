@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.090
+Pointage et présence (console).
+
+00:00:02.540 --> 00:00:09.715
+Contrôler les pointages de son périmètre, approuver ou rejeter les écarts, importer des horodatages externes et tenir les profils de pointage.
+
+00:00:10.165 --> 00:00:12.719
+Qui s'en sert : Planificateurs et chefs.
+
+00:00:13.169 --> 00:00:14.028
+Comment faire :
+
+00:00:14.478 --> 00:00:18.356
+Filtrer par site, statut, ou cocher N'afficher que les écarts de lieu .
+
+00:00:18.806 --> 00:00:24.565
+Ouvrir un pointage, lire le verdict et la preuve, puis approuver, ou rejeter avec un motif obligatoire.
+
+00:00:25.015 --> 00:00:31.516
+Importer des horodatages externes : une ligne clé;matricule;sens;horodatage ISO par pointage de borne.
+
+00:00:31.966 --> 00:00:36.657
+Résultat : Le pointage approuvé alimente la feuille de temps ; un rejet est motivé et journalisé.

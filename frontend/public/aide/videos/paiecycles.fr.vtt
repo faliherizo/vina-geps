@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.790
+Cycles de paie.
+
+00:00:01.240 --> 00:00:05.280
+Préparer une paie à partir des feuilles de temps approuvées, la relire, puis la traiter.
+
+00:00:05.730 --> 00:00:10.792
+Qui s'en sert : Administration, RH et comptabilité (capacité paie.gerer ).
+
+00:00:11.242 --> 00:00:12.101
+Comment faire :
+
+00:00:12.551 --> 00:00:19.889
+Préparer un cycle : le début et la fin de la période de travail, puis la date de paie. Seules les feuilles approuvées dont la semaine commence dans la période entrent.
+
+00:00:20.339 --> 00:00:30.393
+Relire les bulletins : heures régulières et supplémentaires, brut, retenues, net, coût pour l'employeur ; Détail montre chaque gain (heures, primes, forfaits) et chaque retenue.
+
+00:00:30.843 --> 00:00:38.436
+Registre de paie (PDF) : une ligne par personne et les totaux, à relire avant de traiter ; Fiche PDF produit la fiche de paie d'une personne.
+
+00:00:38.886 --> 00:00:48.963
+Les avertissements nomment qui n'est pas payé : sans dossier, sans taux (ni au dossier, ni à l'échelle), ou feuilles que la paie n'a pas validées quand l'organisme l'exige. Corrigez, puis Recalculer .
+
+00:00:49.413 --> 00:00:54.336
+Traiter la paie : le cycle est recalculé une dernière fois, puis figé ; ses feuilles passent payées .
+
+00:00:54.786 --> 00:00:58.246
+Annuler le cycle abandonne un cycle préparé ; ses feuilles restent approuvées.
+
+00:00:58.696 --> 00:01:04.013
+Résultat : Les bulletins sont lisibles par chacun dans Mes bulletins de paie , et les montants entrent dans les remises du mois.
+
+00:01:04.463 --> 00:01:16.050
+Attention : Si une feuille a été rappelée ou rouverte entre la préparation et le traitement, le traitement est refusé en entier : recalculez, puis traitez de nouveau. Une feuille payée ne se corrige plus ; une erreur se règle à la paie suivante.

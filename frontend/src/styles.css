@@ -1541,3 +1541,8 @@ fieldset > button, fieldset > p > button { margin-top: 4px; }
 .mal-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .mal-liste details > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .mal-reponses .primary, .mal-reponses .secondary { min-height: 44px; }
+
+/* Aide : la démonstration commentée de chaque écran — jamais plus large que sa colonne, ni que 720 px. */
+.fiche-video { margin: 8px 0 16px; max-width: 720px; }
+.fiche-video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
+.fiche-video figcaption { margin-top: 8px; }

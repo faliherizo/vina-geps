@@ -1,0 +1,31 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.045
+Codes d'absence.
+
+00:00:01.495 --> 00:00:08.763
+Tenir la liste des motifs qu'une personne choisit en déclarant une absence : maladie, vacances, formation, congé parental…
+
+00:00:09.213 --> 00:00:13.509
+Qui s'en sert : Administration (capacité effectifs.configure ).
+
+00:00:13.959 --> 00:00:14.818
+Comment faire :
+
+00:00:15.268 --> 00:00:25.670
+Ajouter une valeur : le code, le libellé en français (et en anglais au besoin), le comportement dans le logiciel (payée ou non), la durée et la planification, puis la date d'entrée en vigueur.
+
+00:00:26.120 --> 00:00:33.597
+Remplacer pour modifier un code à partir d'une date : le libellé, la durée ou le comportement changent pour l'avenir, le passé reste tel qu'il était.
+
+00:00:34.047 --> 00:00:39.876
+Fermer pour retirer un code à une date : il ne s'offre plus dans Mes absences , mais les absences déjà déclarées le gardent.
+
+00:00:40.326 --> 00:00:42.392
+Historique montre toutes les versions d'un code.
+
+00:00:42.842 --> 00:00:48.856
+Résultat : Le code apparaît (ou disparaît) dans la liste Code d'absence de Mes absences et de Absences à la date choisie.
+
+00:00:49.306 --> 00:00:56.040
+Attention : On ne supprime pas un code : on le ferme. Une absence passée doit toujours pouvoir dire sous quel code elle a été déclarée.

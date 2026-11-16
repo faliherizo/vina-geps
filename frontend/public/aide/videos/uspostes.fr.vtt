@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.581
+Postes.
+
+00:00:01.031 --> 00:00:09.297
+Définir les postes (lignes de quarts) : code, libellé, milieu, corps d'emploi, statut offert et cycle ; les publier, les modifier en lot.
+
+00:00:09.747 --> 00:00:12.789
+Qui s'en sert : Planificateurs et administration.
+
+00:00:13.239 --> 00:00:14.098
+Comment faire :
+
+00:00:14.548 --> 00:00:19.146
+Créer un poste avec son code, son libellé, son milieu et son Premier jour du cycle .
+
+00:00:19.596 --> 00:00:24.147
+Décrire le cycle (les quarts de chaque jour) ; publier pour qu'il entre dans la planification.
+
+00:00:24.597 --> 00:00:30.680
+Modifier plusieurs postes d'un geste ( Remplacer le cycle par une semaine commune ) : les conflits sont listés avant d'écrire.
+
+00:00:31.130 --> 00:00:38.027
+Résultat : Les quarts futurs déjà générés suivent la modification ; le bilan dit combien ont été déplacés, requalifiés ou retirés.

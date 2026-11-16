@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.975
+Référentiels.
+
+00:00:01.425 --> 00:00:10.737
+Tenir les listes de valeurs datées dont tout dépend : unités, corps d'emploi, statuts d'emploi, natures de quart, types d'heures, codes d'absence, types de milieu.
+
+00:00:11.187 --> 00:00:13.392
+Qui s'en sert : Administration.
+
+00:00:13.842 --> 00:00:14.702
+Comment faire :
+
+00:00:15.152 --> 00:00:23.557
+Choisir le Référentiel , puis ajouter une valeur : code, libellé (français, anglais facultatif), comportement et date d'entrée en vigueur.
+
+00:00:24.007 --> 00:00:27.862
+Fermer la valeur à une date plutôt que la supprimer : l'historique reste juste.
+
+00:00:28.312 --> 00:00:33.769
+Promouvoir la configuration d'un environnement à l'autre par un paquet JSON (exporter, puis appliquer).
+
+00:00:34.219 --> 00:00:40.836
+Résultat : La valeur devient choisissable à partir de sa date ; une valeur fermée ne s'offre plus, mais les données passées la gardent.

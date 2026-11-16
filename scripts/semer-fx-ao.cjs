@@ -36,11 +36,17 @@ async function creerOrganisme() {
   }
   const tenant = cree.tenant;
   await appeler(`/api/saas/tenants/${tenant.id}/modules`, { methode: "PUT", jeton: jetonSa, corps: { modules: donnees.modules } });
+  await cloisonner(jetonSa, tenant.id);
+  return tenant;
+}
+
+/** Le menu réduit à l'avis : toute vue du catalogue qui n'est pas nommée dans `vuesGardees` est masquée. */
+async function cloisonner(jetonSa, tenantId) {
   const { sections, cles } = donnees.vuesGardees;
   const catalogue = await appeler("/api/saas/vues", { jeton: jetonSa });
   const masquees = catalogue.vues.filter((v) => !sections.includes(v.section) && !cles.includes(v.cle)).map((v) => v.cle);
-  await appeler(`/api/saas/tenants/${tenant.id}/vues`, { methode: "PUT", jeton: jetonSa, corps: { masquees } });
-  return tenant;
+  await appeler(`/api/saas/tenants/${tenantId}/vues`, { methode: "PUT", jeton: jetonSa, corps: { masquees } });
+  return { gardees: catalogue.vues.length - masquees.length, masquees: masquees.length };
 }
 
 /** Les sites (unités), les corps d'emploi, puis une personne = un compte + une ressource rattachée à son site. */
@@ -130,7 +136,17 @@ async function semer() {
   return { tenant, comptes };
 }
 
-semer().then(({ tenant, comptes }) => {
+/**
+ * `--cloisonner <organisme>` : n'appliquer que le menu réduit à l'avis, sur un organisme FX-AO déjà semé — sans rien
+ * semer d'autre. Le menu se règle par vues masquées : l'appliquer de nouveau ne double rien.
+ */
+const ORGANISME_A_CLOISONNER = argument("cloisonner", "");
+if (ORGANISME_A_CLOISONNER) {
+  connecter(SUPERADMIN).then((jeton) => cloisonner(jeton, ORGANISME_A_CLOISONNER)).then(({ gardees, masquees }) => {
+    console.log(`✅ Menu de ${ORGANISME_A_CLOISONNER} réduit à l'avis FX-AO-20260810 : ${gardees} vues gardées, ${masquees} masquées.`);
+    process.exit(0);
+  }).catch((e) => { console.error(`\n❌ ${e.message}\n`); process.exit(1); });
+} else semer().then(({ tenant, comptes }) => {
   console.log(`TENANT=${tenant.id}`);
   console.log(`\n✅ Organisme « ${tenant.name} » semé — ${tenant.id}`);
   console.log(`   Sites : ${donnees.sites.map((s) => s.libelleFr).join(", ")}`);

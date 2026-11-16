@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.556
+Intégrations des effectifs.
+
+00:00:02.006 --> 00:00:08.322
+Régler les connecteurs (paie, bus d'entreprise, entrepôt de données, horodateurs) et suivre leur boîte d'envoi.
+
+00:00:08.772 --> 00:00:10.978
+Qui s'en sert : Administration.
+
+00:00:11.428 --> 00:00:12.287
+Comment faire :
+
+00:00:12.737 --> 00:00:14.803
+Activer un connecteur et choisir son mode.
+
+00:00:15.253 --> 00:00:19.456
+Suivre la Boîte d'envoi : état de chaque message, reprise d'un envoi en échec.
+
+00:00:19.906 --> 00:00:25.827
+Résultat : Les lots de paie et les équipages partent selon le connecteur ; un échec reste en boîte jusqu'à sa reprise.

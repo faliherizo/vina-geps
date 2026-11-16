@@ -1,0 +1,28 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.208
+Mes disponibilités.
+
+00:00:01.657 --> 00:00:05.187
+Déposer ses disponibilités pour une période dont la collecte est ouverte.
+
+00:00:05.637 --> 00:00:08.447
+Qui s'en sert : Toute personne planifiable.
+
+00:00:08.897 --> 00:00:09.756
+Comment faire :
+
+00:00:10.206 --> 00:00:13.108
+Choisir la Période (seules celles en collecte apparaissent).
+
+00:00:13.558 --> 00:00:18.411
+Ajouter une plage pour chaque jour : jour, début, fin, et le type Disponibilité .
+
+00:00:18.861 --> 00:00:23.157
+Enregistrer : les règles jugent le dépôt aussitôt ; un refus nomme ce qu'il faut corriger.
+
+00:00:23.607 --> 00:00:29.644
+Résultat : Le dépôt rejoint le bassin de candidats de la période ; À surveiller dans votre dépôt liste les avertissements.
+
+00:00:30.094 --> 00:00:34.994
+Attention : Une fin avant le début (22:00 → 06:00) veut dire que la plage passe minuit.

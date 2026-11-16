@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.882
+Milieux physiques.
+
+00:00:01.332 --> 00:00:07.880
+Déclarer les lieux de travail (casernes, centres) avec leur position et leur rayon, et les preuves de présence admises.
+
+00:00:08.330 --> 00:00:10.536
+Qui s'en sert : Administration.
+
+00:00:10.986 --> 00:00:11.846
+Comment faire :
+
+00:00:12.296 --> 00:00:18.542
+Créer un milieu : code, libellé, type, unité, adresse, latitude, longitude et rayon.
+
+00:00:18.992 --> 00:00:25.911
+Cocher les Preuves de présence acceptées (code sur place, code QR, position, réseau) et celles qui sont exigées.
+
+00:00:26.361 --> 00:00:29.821
+Résultat : Le pointage juge la distance et la preuve selon ce milieu.

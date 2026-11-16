@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.556
+Feuilles de temps (console).
+
+00:00:02.006 --> 00:00:07.184
+Préparer les feuilles d'une période, les approuver palier par palier, lire les relevés et produire le lot de paie.
+
+00:00:07.634 --> 00:00:11.117
+Qui s'en sert : Planificateurs, chefs, paie.
+
+00:00:11.567 --> 00:00:12.426
+Comment faire :
+
+00:00:12.876 --> 00:00:15.036
+Préparer les feuilles pour une unité et une période.
+
+00:00:15.486 --> 00:00:24.147
+Ouvrir une feuille soumise : approuver, ou retourner avec un motif obligatoire. Une feuille approuvée mais pas encore payée se Rouvre pour correction , avec un motif.
+
+00:00:24.597 --> 00:00:31.911
+Afficher le relevé (regroupé par personne, unité ou type d'heure) et l'exporter ; Produire le lot puis Télécharger le lot (CSV) .
+
+00:00:32.361 --> 00:00:40.465
+Régler le Flux d'approbation des heures : paliers, conditions et approbateur — niveau de l'unité, rôle, personne désignée ou Supérieur hiérarchique .
+
+00:00:40.915 --> 00:00:48.949
+Supérieurs hiérarchiques : choisir une Personne puis Son supérieur hiérarchique , et Enregistrer . C'est ce que lit l'approbateur Supérieur hiérarchique .
+
+00:00:49.399 --> 00:01:01.822
+Champs de la feuille (administration) : ajouter ce que chaque segment doit dire selon vos emplois — libellé, code, type (texte, nombre, oui ou non, liste), obligatoire ; Désactiver un champ qui ne sert plus.
+
+00:01:02.272 --> 00:01:09.122
+Résultat : Les feuilles approuvées entrent au lot de paie ; une feuille routée au supérieur lui apparaît même hors de son périmètre, avec En attente de .
+
+00:01:09.572 --> 00:01:20.090
+Attention : Sans supérieur désigné, une feuille routée au Supérieur hiérarchique revient au niveau GESTION de l'unité. Un champ se désactive, jamais ne s'efface : les valeurs déjà saisies restent lisibles.

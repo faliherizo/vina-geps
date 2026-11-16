@@ -5,11 +5,10 @@
  */
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { EnTeteEcran } from "./composants";
-import { sectionsVisibles } from "./aideParEcran";
+import { pageOuverte, sectionsVisibles } from "./aideParEcran";
 import { FICHES, idFiche } from "./aide/fichesEcrans";
-import { PAGE_MODULE } from "./modulesParPage";
 import type { Page } from "./App";
-import { useModuleAllowed } from "./moduleAccess";
+import { useModuleAllowed, usePageMasquee } from "./moduleAccess";
 
 export default function Help({ section }: { section?: string | null }) {
   const racine = useRef<HTMLDivElement>(null);
@@ -26,7 +25,9 @@ export default function Help({ section }: { section?: string | null }) {
    * protège rien. C'est la garde de module, au serveur, qui protège.
    */
   const ouvert = useModuleAllowed();
-  const sections = useMemo(() => sectionsVisibles(ouvert), [ouvert]);
+  // Et le menu de l'établissement : un écran que le superadmin en a retiré n'a pas d'aide non plus.
+  const masquee = usePageMasquee();
+  const sections = useMemo(() => sectionsVisibles(ouvert, masquee), [ouvert, masquee]);
   const visible = useCallback((id: string) => sections.some((x) => x.id === id), [sections]);
 
   /**
@@ -333,7 +334,7 @@ export default function Help({ section }: { section?: string | null }) {
           </ul>
         </section>
       )}
-      <FichesDesEcrans ouvert={ouvert} cible={section ?? null} />
+      <FichesDesEcrans ouvert={ouvert} masquee={masquee} cible={section ?? null} />
     </div>
   );
 }
@@ -346,8 +347,8 @@ export default function Help({ section }: { section?: string | null }) {
  * la même raison que les sections. Chacune est un `<details>` : le guide reste parcourable d'un
  * coup d'œil, et la fiche visée par « Aide sur cet écran » s'ouvre d'elle-même.
  */
-function FichesDesEcrans({ ouvert, cible }: { ouvert: (code?: string) => boolean; cible: string | null }) {
-  const pages = (Object.keys(FICHES) as Page[]).filter((p) => ouvert(PAGE_MODULE[p]));
+function FichesDesEcrans({ ouvert, masquee, cible }: { ouvert: (code?: string) => boolean; masquee: (page: string) => boolean; cible: string | null }) {
+  const pages = (Object.keys(FICHES) as Page[]).filter((p) => pageOuverte(p, ouvert, masquee));
   return (
     <section id="fiches" className="card" aria-labelledby="fiches-h">
       <h2 id="fiches-h">Écran par écran : aide et exemple de remplissage</h2>
@@ -362,6 +363,7 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
   return (
     <details id={idFiche(page)} className="fiche-ecran" open={ouverte || undefined} data-testid={`help-fiche-${page}`}>
       <summary><h3 className="fiche-ecran-titre">{f.titre}</h3></summary>
+      <VideoFiche page={page} titre={f.titre} />
       <p>{f.objet}</p>
       <p><strong>Qui :</strong> {f.qui}</p>
       <h4>Comment faire</h4>
@@ -377,3 +379,29 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
     </details>
   );
 }
+
+/** Le chemin des vidéos d'aide : un fichier par écran, tourné par `scripts/tourner-aides.mjs` dans `public/aide/videos`. */
+export const videoDeFiche = (page: string) => ({ video: `/aide/videos/${page}.webm`, sousTitres: `/aide/videos/${page}.fr.vtt` });
+
+/**
+ * **La démonstration commentée d'un écran** : le chemin dans le menu et le sous-menu, l'écran, et l'exemple de
+ * remplissage, dits à voix haute. Les sous-titres français reprennent exactement la voix (WCAG 1.2.2) et le texte de la
+ * fiche qui suit en est la transcription (1.2.1). `preload="none"` : rien ne se télécharge avant qu'on la lance.
+ */
+function VideoFiche({ page, titre }: { page: Page; titre: string }) {
+  const { video, sousTitres } = videoDeFiche(page);
+  const description = `${idFiche(page)}-video`;
+  return (
+    <figure className="fiche-video">
+      <video controls preload="none" src={video} data-testid={`help-video-${page}`} aria-describedby={description}>
+        <track kind="captions" srcLang="fr" label="Français" src={sousTitres} default />
+        <a href={video}>Télécharger la démonstration de l'écran {titre}</a>
+      </video>
+      <figcaption id={description} className="muted">
+        Démonstration commentée de l'écran « {titre} » : où le trouver dans le menu, à quoi il ressemble, et l'exemple ci-dessous saisi.
+        Sous-titres en français ; le texte de la fiche en est la transcription.
+      </figcaption>
+    </figure>
+  );
+}
+

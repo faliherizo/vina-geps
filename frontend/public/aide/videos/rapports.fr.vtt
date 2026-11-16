@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.463
+Constructeur de rapports.
+
+00:00:01.913 --> 00:00:10.203
+Composer un rapport sur les données d'effectifs : source, colonnes, filtres, tri, agrégat ; l'exécuter, l'enregistrer et l'exporter.
+
+00:00:10.652 --> 00:00:13.834
+Qui s'en sert : Administration et planificateurs.
+
+00:00:14.284 --> 00:00:15.143
+Comment faire :
+
+00:00:15.593 --> 00:00:18.217
+Choisir la Source de données , puis cocher les colonnes.
+
+00:00:18.667 --> 00:00:23.450
+Ajouter un filtre : champ, opérateur, valeur (et seconde borne pour entre ).
+
+00:00:23.900 --> 00:00:29.845
+Trier, agréger au besoin, puis exécuter ; nommer le rapport pour l'enregistrer et choisir le Format d'export.
+
+00:00:30.295 --> 00:00:35.403
+Résultat : Le rapport enregistré se relance tel quel ; l'export porte les mêmes colonnes et filtres.
