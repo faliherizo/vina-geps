@@ -26,18 +26,41 @@ if [ "${REJEU:-1}" = "1" ]; then
     "$RACINE/backend-java/scripts/campagne-e2e.sh" "${FICHIERS[@]}"
 fi
 
-# Les vidéos de chaque chapitre, dans l'ordre où elles ont été filmées.
+# **Un carton-titre avant chaque chapitre** (numéro, titre, essai joué) : on sait ce qu'on regarde avant que l'essai
+# commence, même sans le son. La voix annonce le chapitre pendant le carton.
+CARTON="${CARTON:-6}"
+CARTONS="$TRAVAIL/cartons"; rm -rf "$CARTONS"
+node "$RACINE/scripts/cartons-vitrine.mjs" "$CARTONS" "$LARGEUR" 720
+
+# Les vidéos de chaque chapitre, dans l'ordre où elles ont été filmées, chacune précédée de son carton.
 LISTE="$TRAVAIL/liste.txt"; : > "$LISTE"
 VTT="$SORTIE/demo-vina-geps.fr.vtt"
 debut=0
 DEBUTS=()
+n=0
+BASES=()
+for c in "${CHAPITRES[@]}"; do f="${c%%|*}"; f="$(basename "$f" .spec.ts)"; BASES+=("${f[1,26]}"); done
 for c in "${CHAPITRES[@]}"; do
   fichier="${c%%|*}"; titre="${c#*|}"; base="$(basename "$fichier" .spec.ts)"
+  n=$(( n + 1 ))
+  ffmpeg -y -loglevel error -loop 1 -framerate 25 -i "$CARTONS/carton-$n.png" -t "$CARTON" \
+    -c:v libvpx-vp9 -b:v 0 -crf 30 -pix_fmt yuv420p "$CARTONS/carton-$n.webm"
+  print "file '$CARTONS/carton-$n.webm'" >> "$LISTE"
   # Playwright tronque le nom du fichier à 26 caractères dans le dossier de sortie (« urgences-sante-demonstrati-… »).
   base="${base[1,26]}"
-  videos=("${(@f)$(ls -tr "$RACINE"/e2e/test-results/${base}-*/*.webm 2>/dev/null || true)}")
+  # « paie-* » attrape aussi « paie-production-* » : un dossier qui commence par le nom d'un autre chapitre, plus long,
+  # appartient à cet autre chapitre — sans cette exclusion, la production de la paie passait deux fois dans le film.
+  videos=()
+  for v in "${(@f)$(ls -tr "$RACINE"/e2e/test-results/${base}-*/*.webm 2>/dev/null || true)}"; do
+    [ -z "$v" ] && continue
+    dossier="${v:h:t}"; autre=0
+    for b in "${BASES[@]}"; do
+      [[ "$b" != "$base" && "$b" == "${base}"* && "$dossier" == "${b}-"* ]] && autre=1
+    done
+    (( autre )) || videos+=("$v")
+  done
   [ -z "${videos[1]:-}" ] && { echo "✗ aucun film pour $fichier — le chapitre a-t-il été joué ?"; exit 1; }
-  duree_chapitre=0
+  duree_chapitre=$CARTON
   for v in "${videos[@]}"; do
     print "file '$v'" >> "$LISTE"
     d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$v")
@@ -48,7 +71,7 @@ for c in "${CHAPITRES[@]}"; do
 done
 
 IMAGE="$TRAVAIL/image.webm"
-ffmpeg -y -loglevel error -f concat -safe 0 -i "$LISTE" -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 -an "$IMAGE"
+ffmpeg -y -loglevel error -f concat -safe 0 -i "$LISTE" -c:v libvpx-vp9 -b:v 0 -crf 36 -row-mt 1 -deadline good -cpu-used 4 -an "$IMAGE"
 duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$IMAGE")
 
 # **La voix** : chaque chapitre annoncé puis commenté, au début du chapitre ; les sous-titres sont la voix, mot pour mot.

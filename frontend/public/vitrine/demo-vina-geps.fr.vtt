@@ -1,68 +1,187 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:06.000
-Urgences-santé — l'organisme de démonstration : tableau de bord, quarts du jour, sites
+00:00:00.500 --> 00:00:06.793
+Chapitre 1 : Urgences-santé — l'organisme de démonstration : tableau de bord, quarts du jour, sites.
 
-00:00:54.440 --> 00:01:00.440
-Socle des effectifs : référentiels datés, unités, ressources, périmètres
+00:00:07.243 --> 00:00:13.024
+Voici VINA GEPS, la gestion des personnels de la santé, sur l'organisme de démonstration d'Urgences-santé.
 
-00:01:53.080 --> 00:01:59.080
-Planification : périodes, postes, quarts ad hoc, attribution et règles
+00:00:13.474 --> 00:00:19.489
+Le menu suit les planches de l'appel d'offres : chaque entrée est une page, et chaque écran passe le contrôle d'accessibilité.
 
-00:03:06.000 --> 00:03:12.000
-Disponibilités : collecte, dépôt, conformité, candidats d'une place
+00:01:10.460 --> 00:01:16.335
+Chapitre 2 : Socle des effectifs : référentiels datés, unités, ressources, périmètres.
 
-00:03:44.560 --> 00:03:50.560
-Absences : demande, refus motivé, dérogation, places rendues vacantes
+00:01:16.785 --> 00:01:22.567
+Le socle des effectifs : des référentiels datés, des unités, des ressources et des périmètres d'encadrement.
 
-00:04:44.640 --> 00:04:50.640
-Mes absences : le personnel déclare, suit et annule
+00:01:23.017 --> 00:01:28.636
+Une valeur ne se modifie jamais en place : elle se remplace à partir d'une date, et le passé reste lisible.
 
-00:05:10.080 --> 00:05:16.080
-Échanger un quart : proposer, accepter, valider ou refuser
+00:02:17.660 --> 00:02:23.326
+Chapitre 3 : Planification : périodes, postes, quarts ad hoc, attribution et règles.
 
-00:06:21.680 --> 00:06:27.680
-AGPH : processus annuel, choix par ancienneté, remplacements long terme
+00:02:23.776 --> 00:02:28.211
+La planification : périodes, postes publiés, quarts ad hoc et attribution.
 
-00:07:53.000 --> 00:07:59.000
-Présence et pointage : pointer, anomalies, approbation
+00:02:28.661 --> 00:02:32.260
+Les règles de l'organisme jugent chaque attribution, et nomment leur motif.
 
-00:08:39.760 --> 00:08:45.760
-Feuilles de temps : segments, heures supplémentaires, approbation à paliers
+00:04:08.340 --> 00:04:14.493
+Chapitre 4 : Disponibilités : collecte, dépôt, conformité, candidats d'une place.
 
-00:09:26.640 --> 00:09:32.640
-Moteur de règles : conditions, actions, motifs nommés
+00:04:14.943 --> 00:04:21.375
+Les disponibilités : la période s'ouvre en collecte, chacun dépose les siennes, et la conformité se lit tout de suite.
 
-00:09:54.640 --> 00:10:00.640
-Relevés et rapports : regroupés, exportés
+00:04:51.180 --> 00:04:56.962
+Chapitre 5 : Absences : demande, refus motivé, dérogation, places rendues vacantes.
 
-00:10:47.400 --> 00:10:53.400
-Intégrations : lot de paie codé et signé, horodatages externes
+00:04:57.412 --> 00:05:03.170
+Les absences : une demande est jugée par les règles, refusée avec son motif, ou accordée par dérogation.
 
-00:11:24.840 --> 00:11:30.840
-Mon équipe et suppléance
+00:05:03.620 --> 00:05:06.616
+Les places qu'elle libère sont rendues vacantes, prêtes à combler.
 
-00:12:18.440 --> 00:12:24.440
-Écrire dans les écrans : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux, quotas
+00:05:41.740 --> 00:05:46.105
+Chapitre 6 : Mes absences : le personnel déclare, suit et annule.
 
-00:15:15.800 --> 00:15:21.800
-Messagerie et appels entre deux personnes, et en groupe
+00:05:46.555 --> 00:05:51.292
+Dans Mes absences, la personne déclare elle-même, suit la décision, et annule au besoin.
 
-00:17:41.720 --> 00:17:47.720
-Avis d'événements : préférences par événement, canaux obligatoires
+00:06:19.820 --> 00:06:25.648
+Chapitre 7 : Codes d'absence : l'administration les ajoute, les remplace, les ferme.
 
-00:18:08.520 --> 00:18:14.520
-Paie québécoise : dossier, cycle préparé et traité, remises, bulletin lu par l'employée
+00:06:26.098 --> 00:06:33.064
+Les codes d'absence appartiennent à l'organisme : l'administration en ajoute, en remplace un à partir d'une date, et en ferme un autre.
 
-00:19:08.800 --> 00:19:14.800
-Les 90 exigences fonctionnelles du 26-015-DO, écran par écran, axe-core à chacun
+00:06:33.514 --> 00:06:37.044
+Julie ne voit que les codes en vigueur aujourd'hui, avec leur libellé du jour.
 
-00:23:48.760 --> 00:23:54.760
-FX-AO — paramétrer, envoyer, prendre en charge, suivre ; cascade et reprise
+00:07:30.500 --> 00:07:35.353
+Chapitre 8 : Échanger un quart : proposer, accepter, valider ou refuser.
 
-00:25:32.000 --> 00:25:38.000
-FX-AO — copie par courriel, annuaire LDAPS, utilisateurs actifs, relances, note, export
+00:07:35.803 --> 00:07:41.306
+Échanger un quart : une personne propose, une collègue accepte, et l'encadrement valide ou refuse.
 
-00:26:23.040 --> 00:26:29.040
-FX-AO — les 32 critères fonctionnels de la grille, écran par écran
+00:08:45.100 --> 00:08:50.928
+Chapitre 9 : AGPH : processus annuel, choix par ancienneté, remplacements long terme.
 
+00:08:51.378 --> 00:08:56.231
+L'AGPH, le choix annuel des postes : chacun choisit à son tour, par ancienneté.
+
+00:08:56.681 --> 00:09:01.232
+Les remplacements long terme s'ouvrent aux manifestations d'intérêt, et s'attribuent à l'ancienneté.
+
+00:10:18.100 --> 00:10:22.883
+Chapitre 10 : Présence et pointage : pointer, anomalies, approbation.
+
+00:10:23.333 --> 00:10:27.954
+La présence : on pointe, les anomalies se relèvent, et l'encadrement approuve.
+
+00:11:06.860 --> 00:11:11.690
+Chapitre 11 : Feuilles de temps : segments, heures supplémentaires, approbation à paliers.
+
+00:11:12.140 --> 00:11:17.504
+Les feuilles de temps : des segments versionnés, les heures supplémentaires calculées, et une approbation à paliers.
+
+00:12:00.700 --> 00:12:05.228
+Chapitre 12 : Moteur de règles : conditions, actions, motifs nommés.
+
+00:12:05.678 --> 00:12:10.136
+Le moteur de règles : des conditions, une action, et un motif que la personne lit.
+
+00:12:36.020 --> 00:12:39.782
+Chapitre 13 : Relevés et rapports : regroupés, exportés.
+
+00:12:40.232 --> 00:12:42.832
+Les relevés et les rapports, regroupés et exportés.
+
+00:13:33.300 --> 00:13:38.292
+Chapitre 14 : Intégrations : lot de paie codé et signé, horodatages externes.
+
+00:13:38.742 --> 00:13:43.688
+Les intégrations : un lot de paie codé et signé, et des horodatages venus d'un système externe.
+
+00:14:24.540 --> 00:14:27.025
+Chapitre 15 : Mon équipe et suppléance.
+
+00:14:27.475 --> 00:14:32.560
+Mon équipe : le gestionnaire voit sa ligne hiérarchique, et confie ses approbations à un suppléant.
+
+00:15:25.060 --> 00:15:33.350
+Chapitre 16 : Écrire dans les écrans : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux, quotas.
+
+00:15:33.800 --> 00:15:42.670
+Chaque écran se remplit au clavier, et chaque saisie se prouve : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux et quotas.
+
+00:18:48.980 --> 00:18:52.997
+Chapitre 17 : Messagerie et appels entre deux personnes, et en groupe.
+
+00:18:53.447 --> 00:18:57.534
+La messagerie : des fils à deux ou en groupe, des réactions, et des appels.
+
+00:21:39.900 --> 00:21:44.823
+Chapitre 18 : Avis d'événements : préférences par événement, canaux obligatoires.
+
+00:21:45.273 --> 00:21:50.079
+Les avis d'événements : chacun choisit ses canaux, sauf ceux que l'organisme rend obligatoires.
+
+00:22:12.820 --> 00:22:19.461
+Chapitre 19 : Paie québécoise : dossier, cycle préparé et traité, remises, bulletin lu par l'employée.
+
+00:22:19.911 --> 00:22:22.581
+La paie québécoise : elle ne paie que les feuilles approuvées.
+
+00:22:23.031 --> 00:22:29.812
+Impôts fédéral et du Québec, RRQ, assurance-emploi et RQAP, cotisations de l'employeur, remises et relevés.
+
+00:23:19.500 --> 00:23:26.187
+Chapitre 20 : Paie : la RH configure les règles variables, le comptable valide les temps et produit la paie, fiches PDF.
+
+00:23:26.637 --> 00:23:32.977
+Produire la paie d'un personnel de la santé : la RH tient l'échelle salariale et les primes de soir, de nuit et de fin de semaine.
+
+00:23:33.427 --> 00:23:41.182
+Le comptable valide les temps, retourne une feuille fautive avec son motif, prépare le cycle, télécharge le registre et les fiches de paie, puis traite.
+
+00:23:41.632 --> 00:23:43.675
+La personne télécharge sa fiche de paie.
+
+00:25:40.220 --> 00:25:46.977
+Chapitre 21 : Les 90 exigences fonctionnelles du 26-015-DO, écran par écran, axe-core à chacun.
+
+00:25:47.427 --> 00:25:54.416
+Les quatre-vingt-dix exigences fonctionnelles de l'avis 26-015-DO, écran par écran, avec le contrôle d'accessibilité à chacun.
+
+00:34:18.300 --> 00:34:23.408
+Chapitre 22 : FX-AO — l'organisme ne voit que son avis : un menu réduit à la grille.
+
+00:34:23.858 --> 00:34:30.174
+Santé Québec Laurentides, avis FX-AO-2026-08-10 : l'organisme ne voit que son avis.
+
+00:34:30.624 --> 00:34:33.504
+Chaque profil trouve les écrans de la grille, et rien d'autre.
+
+00:34:46.140 --> 00:34:52.944
+Chapitre 23 : FX-AO — paramétrer, envoyer, prendre en charge, suivre ; cascade et reprise.
+
+00:34:53.394 --> 00:35:00.127
+Les communications cliniques : paramétrer les réponses et les modèles, envoyer une alerte, la prendre en charge, la suivre.
+
+00:35:00.577 --> 00:35:03.387
+La cascade relance d'elle-même, et la reprise est tracée.
+
+00:36:47.100 --> 00:36:55.575
+Chapitre 24 : FX-AO — copie par courriel, annuaire LDAPS, utilisateurs actifs, relances, note, export.
+
+00:36:56.025 --> 00:37:04.826
+La copie par courriel, l'annuaire joint en LDAPS, les utilisateurs actifs du mois, les relances, la note sur le destinataire, et l'export du suivi.
+
+00:37:48.820 --> 00:37:54.207
+Chapitre 25 : FX-AO — les 32 critères fonctionnels de la grille, écran par écran.
+
+00:37:54.657 --> 00:37:59.023
+Enfin, les trente-deux critères fonctionnels de la grille FX-AO, écran par écran.
+
+00:37:59.472 --> 00:38:04.860
+Chaque chapitre de ce film est un essai automatisé : il ne peut montrer une fonctionnalité qui ne fonctionne pas.
