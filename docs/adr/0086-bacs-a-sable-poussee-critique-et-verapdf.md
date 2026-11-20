@@ -66,3 +66,7 @@ teste comme l'application réelle.
   - `bac-a-sable/poussee` : 23 essais unitaires et HTTP, couverture ≥ 96 % exigée par `npm test`.
   - `fx-ao-bac-a-sable.spec.ts` : BAC-01 à BAC-09.
   - Travail CI `bacs-a-sable`.
+- **Exécution du 20 novembre 2026.** La campagne `bac-a-sable/campagne.sh` contre le Java donne 9/9 (BAC-01 à 09).
+  `verifier-pdfa.sh` juge l'échantillon conforme (144 règles passées, 0 en échec). Un PDF ordinaire servant de témoin
+  est refusé (5 règles en échec), ce qui prouve que la validation juge vraiment. Le critère 39 passe à ✅. Le critère 18
+  reste 🟡, pour la seule raison du droit d'Apple.

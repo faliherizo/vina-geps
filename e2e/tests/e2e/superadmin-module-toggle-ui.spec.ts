@@ -71,11 +71,15 @@ test("Superadmin IHM : décocher le socle des effectifs désactive tout le modul
   await page.getByTestId("modmgr-tenant").selectOption(tenantId);
   await expect(page.getByTestId("modmgr-toggle-effectifs_planification")).not.toBeChecked();
 
-  // Côté organisme, la section entière a disparu, en-tête compris.
+  // Côté organisme, chaque vue du module a disparu. La rubrique « Menu principal » (`nav-group-urgencessante`)
+  // demeure depuis le chrome VINA GePS (ADR 0073) : elle porte aussi le tableau de bord, qui n'est pas du module.
   await page.getByTestId("logout").click();
   await expect(page.getByTestId("login-form")).toBeVisible({ timeout: 10000 });
   await selectTenant(page, tenantId);
-  await expect(page.getByTestId("nav-group-urgencessante")).toHaveCount(0);
+  await expect(page.getByTestId("nav-dashboard")).toHaveCount(1);
+  for (const vue of ["nav-uscomblement", "nav-usmessages"]) {
+    await expect(page.getByTestId(vue)).toHaveCount(0);
+  }
 });
 
 test("Superadmin IHM : cocher un sous-module ramène ses prérequis, et l'écran le dit", async ({ page }) => {
