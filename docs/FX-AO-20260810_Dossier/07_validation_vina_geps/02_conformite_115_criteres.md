@@ -50,9 +50,9 @@ Le dépôt se fait sur la grille de l'**addenda 3**.
 |---|---|---|
 | 2 | L'addenda 1 (Q1) exclut tout renseignement de santé : la « note au dossier » ne peut pas viser un dossier patient. La note sur le destinataire livrée y répond. Elle refuse aussi un numéro d'assurance maladie (ST-H04). | 🟡 → ✅ |
 | 7 | Les alertes sont envoyées par des utilisateurs ; aucune intégration d'appareils biomédicaux. | ✅ |
-| 18 | Précisé : passer outre le mode silencieux, « Ne pas déranger » et Critical Alerts d'iOS. Notre lecture était la bonne. | 🟡 (application mobile, Q-ALC) |
+| 18 | Précisé : passer outre le mode silencieux, « Ne pas déranger » et Critical Alerts d'iOS. Notre lecture était la bonne. | 🟡 (Q-ALC) — chaîne serveur → Expo → APNs/FCM → téléphone prouvée au bac à sable (BAC-01 à 07, ADR 0086) |
 | 38 | Extraction des rapports en XLS pour Office 2016 : le XLSX que nous produisons s'y ouvre. | ✅ |
-| 39 | PDF/A pour les rapports d'activité et d'analyse. | 🟡 (veraPDF) |
+| 39 | PDF/A pour les rapports d'activité et d'analyse. | 🟡 (veraPDF branché au bac à sable et en CI, BAC-08/09 ; exécution à obtenir) |
 | 40 | Il suffit que les courriels soient **reçus** dans Outlook 365. | ✅ |
 | 44 | Multicast permis avec la DRI ; nous n'en émettons pas. | ✅ |
 | 51, 56-61, 64, 69, 70 | **Sans objet** en SaaS exclusif (addenda 3, Q5) : à commenter ainsi dans la grille. | Sans objet |
@@ -82,7 +82,7 @@ Le dépôt se fait sur la grille de l'**addenda 3**.
 | 15 | Relances automatisées configurables | ✅ | **Politiques de relance** (ST-G04, ADR 0077) : étapes (cible, canaux, délai) versionnées ; échéances durables dans l'ordonnanceur partagé | — |
 | 16 | Cascades entre utilisateurs d'un groupe ou de groupes distincts | ✅ | Étapes « tout un groupe », « une personne », « prochain disponible d'un groupe » ; les personnes escaladées rejoignent l'alerte | — |
 | 17 | Délais, séquences, règles d'arrêt et de reprise des cascades | ✅ | Délai par étape ; arrêt à la prise en charge ou quand tous ont lu ; **reprise manuelle** à l'étape choisie, journalisée (`/api/alertes/envoyees/{id}/cascade/reprendre`) | — |
-| 18 | Alertes critiques, lorsque disponible et permis | 🟡 | Poussée native et navigateur ; **une alerte critique se pousse en critique** (ST-G07, ADR 0080) : priorité haute sur le canal Android `critique`, niveau d'interruption et son critiques iOS, interaction exigée et vibration prolongée dans le navigateur | Application mobile (hors de ce dépôt) : déclarer le canal Android `critique` à importance maximale ; iOS : droit *Critical Alerts* d'Apple (Q-ALC). En attendant, repli : texto puis appel par la cascade (ST-G04, ST-G06) |
+| 18 | Alertes critiques, lorsque disponible et permis | 🟡 | Poussée native et navigateur ; **une alerte critique se pousse en critique** (ST-G07, ADR 0080) : priorité haute sur le canal Android `critique`, niveau d'interruption et son critiques iOS, interaction exigée et vibration prolongée dans le navigateur | Application mobile (hors de ce dépôt) : déclarer le canal Android `critique` à importance maximale ; iOS : droit *Critical Alerts* d'Apple (Q-ALC). En attendant, repli : texto puis appel par la cascade (ST-G04, ST-G06). **Bac à sable** (ADR 0086) : la chaîne est jouée de bout en bout contre le Java — iPhone avec et sans le droit d'Apple, Android avec et sans le canal, désinstallation (`e2e/donnees/fx-ao/bac-a-sable.json`, BAC-01 à 07, verts le 20 nov.) |
 | 19 | Traces des relances, appels, réponses, escalades | ✅ | Journal des actions (ADR 0041) ; **trace de cascade** en ajout seul : armement, chaque étape et les personnes visées, arrêt, épuisement, reprise (par qui) | Appels : ST-G06 |
 | 20 | Accès mobile par navigateur, sans équipement dédié | ✅ | Interface responsive (390 px auditée), application installable (PWA) | — |
 | 21 | Application mobile iOS et Android, si proposée | ✅ | PWA ; application native du dépôt `mobile` (poussée native) | — |
@@ -106,7 +106,7 @@ Le dépôt se fait sur la grille de l'**addenda 3**.
 | 35, 37 | ✅ | L'impression passe par le navigateur et le service Windows ; aucun pilote propre. |
 | 36 | 📄 | Engagement de nomenclature : noms d'hôtes et groupes AD fournis par l'établissement. |
 | 38 | ✅ | Exports CSV, XLSX et PDF lisibles par Office 2016. |
-| 39 | 🟡 | **Tous les PDF du produit sont produits en PDF/A-2b** (ST-G10, ADR 0081) : polices Liberation Sans incorporées, profil sRGB, XMP de conformité, identifiant — vérifiés par `PdfAConformiteTest`. Reste : la validation **veraPDF**, branchée en CI (`scripts/verifier-pdfa.sh`), pas encore exécutée. |
+| 39 | 🟡 | **Tous les PDF du produit sont produits en PDF/A-2b** (ST-G10, ADR 0081) : polices Liberation Sans incorporées, profil sRGB, XMP de conformité, identifiant — vérifiés par `PdfAConformiteTest`. Reste : la validation **veraPDF**, branchée en CI (`scripts/verifier-pdfa.sh`, et le travail `bacs-a-sable` qui soumet les exports réels du Java à veraPDF REST, BAC-08/09 — ADR 0086), pas encore exécutée. |
 | 40 | ✅ | Courriel SMTP authentifié (Outlook 365 admis comme relais) **ou Microsoft Graph** (`Mail.Send`, application Entra ID, jeton gardé) — choisi par la configuration (ST-G11, ADR 0082). |
 | 41, 42, 44, 47, 49 | ✅ | HTTPS standard sur le WAN, aucun broadcast, résolution DNS, compatible avec le mandataire (en-têtes `X-Forwarded-*`). |
 | 43 | 🏢 | Adressage privé 10.x pour un déploiement local (profil B). |

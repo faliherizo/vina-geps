@@ -12,10 +12,22 @@ import { adminDeLOrganisme, MDP_PROFIL } from "./urgences-sante";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 
-export interface Attendu { statut: number; corps?: unknown; texte?: string }
+/** `verifie` nomme un vérificateur des options (p. ex. veraPDF) qui juge les octets de la réponse. */
+export interface Attendu { statut: number; corps?: unknown; texte?: string; verifie?: string }
+/**
+ * `service` vise un service externe des options (un bac à sable) plutôt que le serveur ; `reessayer` (secondes) rejoue
+ * l'étape jusqu'à ce qu'elle passe — pour ce qui arrive de façon asynchrone, comme une poussée.
+ */
 export interface Etape {
-  pourquoi?: string; acteur?: string; methode: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  chemin: string; corps?: unknown; attendu: Attendu; capturer?: Record<string, string>;
+  pourquoi?: string; acteur?: string; service?: string; methode: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  chemin: string; corps?: unknown; attendu: Attendu; capturer?: Record<string, string>; reessayer?: number;
+}
+export interface ServiceExterne { url: string; entetes?: Record<string, string> }
+/** Rend les écarts constatés sur les octets d'une réponse ; vide si conforme. */
+export type Verificateur = (octets: Buffer) => Promise<string[]>;
+export interface OptionsComportements {
+  prefixe: string; modules: string[];
+  services?: Record<string, ServiceExterne>; verificateurs?: Record<string, Verificateur>;
 }
 export interface Scenario { id: string; titre: string; exigences: string[]; etapes: Etape[] }
 export interface JeuComportements { acteurs: Record<string, { role: string }>; amorce: Etape[]; scenarios: Scenario[] }
@@ -83,19 +95,34 @@ async function connecter(username: string, tenantId: string): Promise<APIRequest
  * Déclare un `describe` qui crée un organisme neuf (`prefixe`, `modules`), ses comptes, joue l'amorce, puis un
  * essai par scénario — dans l'ordre, chacun pouvant lire les captures des précédents.
  */
-export function declarerComportements(titre: string, jeu: JeuComportements, options: { prefixe: string; modules: string[] }): void {
+export function declarerComportements(titre: string, jeu: JeuComportements, options: OptionsComportements): void {
   test.describe(titre, () => {
     const vars: Record<string, unknown> = {};
     const acteurs: Record<string, APIRequestContext> = {};
+    let externe: APIRequestContext | undefined;
 
-    /** Joue une étape et rend les écarts constatés — vides si tout est conforme. */
+    /** Joue une étape, en la rejouant au besoin jusqu'à son délai, et rend les écarts du dernier essai. */
     async function jouer(e: Etape): Promise<string[]> {
-      const qui = acteurs[e.acteur ?? "admin"];
+      const fin = Date.now() + (e.reessayer ?? 0) * 1000;
+      let ecarts = await jouerUneFois(e);
+      while (ecarts.length && Date.now() < fin) {
+        await new Promise((ok) => setTimeout(ok, 500));
+        ecarts = await jouerUneFois(e);
+      }
+      return ecarts;
+    }
+
+    /** Joue une étape une fois et rend les écarts constatés — vides si tout est conforme. */
+    async function jouerUneFois(e: Etape): Promise<string[]> {
+      const service = e.service === undefined ? undefined : options.services?.[e.service];
+      if (e.service !== undefined && !service) return [`service « ${e.service} » non configuré`];
+      const qui = service ? externe : acteurs[e.acteur ?? "admin"];
       if (!qui) return [`acteur « ${e.acteur} » inconnu du fichier`];
       const chemin = String(rendre(e.chemin, vars));
       const corps = e.corps === undefined ? undefined : rendre(e.corps, vars);
-      const r = await qui.fetch(`${API}${chemin}`, { method: e.methode, data: corps });
-      const texte = await r.text();
+      const r = await qui.fetch(`${service ? service.url : API}${chemin}`, { method: e.methode, data: corps, headers: service?.entetes });
+      const octets = await r.body();
+      const texte = octets.toString("utf8");
       let json: unknown = null;
       try { json = JSON.parse(texte); } catch { /* une réponse CSV n'est pas du JSON : l'attendu « texte » la lit telle quelle */ }
       const ou = `${e.methode} ${chemin}`;
@@ -106,6 +133,10 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
       }
       if (e.attendu.texte !== undefined && !new RegExp(String(rendre(e.attendu.texte, vars)), "m").test(texte)) {
         ecarts.push(`${ou} : le texte ne contient pas /${e.attendu.texte}/ — ${texte.slice(0, 300)}`);
+      }
+      if (e.attendu.verifie !== undefined) {
+        const verifier = options.verificateurs?.[e.attendu.verifie];
+        ecarts.push(...(verifier ? await verifier(octets) : [`vérificateur « ${e.attendu.verifie} » non configuré`]).map((x) => `${ou} : ${x}`));
       }
       for (const [nom, c] of Object.entries(e.capturer ?? {})) {
         try { vars[nom] = aChemin(json, c); } catch (err) { ecarts.push(`${ou} : ${(err as Error).message}`); }
@@ -125,6 +156,7 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
       vars.mois = new Date().toISOString().slice(0, 7);
       vars.mdp = MDP_PROFIL;
       acteurs.admin = await adminDeLOrganisme(tenantId);
+      externe = await pwRequest.newContext({ storageState: { cookies: [], origins: [] } });
 
       // Les comptes : créés par l'administration, rendus utilisables sans franchir le mur de première
       // connexion (mot de passe, second facteur) — ce mur a ses propres essais.
@@ -147,7 +179,7 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
     });
 
     test.afterAll(async () => {
-      await Promise.all(Object.values(acteurs).map((a) => a.dispose()));
+      await Promise.all([...Object.values(acteurs), ...(externe ? [externe] : [])].map((a) => a.dispose()));
     });
 
     // Ordonnés et solidaires : un scénario s'appuie sur les captures des précédents.

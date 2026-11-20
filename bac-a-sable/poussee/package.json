@@ -1,0 +1,11 @@
+{
+  "name": "bac-a-sable-poussee",
+  "private": true,
+  "type": "module",
+  "description": "Bac à sable du service de poussée Expo (APNs, FCM) et téléphones simulés — FX-AO-20260810, critère 18",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node src/serveur.mjs",
+    "test": "node --test --experimental-test-coverage --test-coverage-lines=96 --test-coverage-branches=92 --test-coverage-include=src/**/*.mjs test/*.test.mjs"
+  }
+}

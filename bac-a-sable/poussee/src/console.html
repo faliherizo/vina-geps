@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bac à sable de poussée — téléphones simulés</title>
+<style>
+  :root { --fond: #ffffff; --texte: #1b1f24; --discret: #4a5360; --bord: #8a94a3; --accent: #0b5cad; }
+  @media (prefers-color-scheme: dark) { :root { --fond: #14171c; --texte: #eef1f5; --discret: #b8c0cc; --bord: #6f7a89; --accent: #8cc2ff; } }
+  body { margin: 0; background: var(--fond); color: var(--texte); font: 1rem/1.5 system-ui, sans-serif; }
+  .evitement { position: absolute; left: -9999px; } .evitement:focus { left: 1rem; top: 1rem; }
+  main { padding: 1rem; max-width: 72rem; margin: 0 auto; }
+  form { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: end; margin-bottom: 1rem; }
+  label { display: flex; flex-direction: column; color: var(--discret); }
+  input, button { font: inherit; min-height: 44px; padding: 0 0.75rem; border: 1px solid var(--bord); border-radius: 4px; background: var(--fond); color: var(--texte); }
+  button { border-color: var(--accent); color: var(--accent); cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .defile { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid var(--bord); padding: 0.4rem; text-align: left; vertical-align: top; }
+</style>
+</head>
+<body>
+<a class="evitement" href="#principal">Aller au contenu</a>
+<main id="principal">
+  <h1>Téléphones simulés</h1>
+  <p>Ce que chaque appareil inscrit a reçu du serveur, et comment il l'a présenté.</p>
+  <form id="filtre">
+    <label for="jeton-controle">Jeton de contrôle (si le bac à sable en exige un)
+      <input id="jeton-controle" type="password" autocomplete="off"></label>
+    <label for="titre">Titre contient
+      <input id="titre" type="text"></label>
+    <button type="submit">Actualiser</button>
+  </form>
+  <p id="etat" role="status"></p>
+  <div class="defile">
+    <table>
+      <caption>Notifications reçues, les plus récentes d'abord</caption>
+      <thead><tr><th scope="col">Reçue le</th><th scope="col">Appareil</th><th scope="col">Titre</th><th scope="col">Présentation</th><th scope="col">Motif</th></tr></thead>
+      <tbody id="lignes"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+  const etat = document.getElementById("etat");
+  function cellule(texte) { const td = document.createElement("td"); td.textContent = texte; return td; }
+  function presentation(p) {
+    if (!p.affichee) return "non affichée";
+    return [p.sonore ? "sonne" : "silencieuse", p.contourneSilencieux ? "malgré le mode silencieux" : "", p.contourneNePasDeranger ? "malgré Ne pas déranger" : ""].filter(Boolean).join(", ");
+  }
+  async function charger(e) {
+    if (e) e.preventDefault();
+    const jeton = document.getElementById("jeton-controle").value;
+    const titre = document.getElementById("titre").value;
+    const r = await fetch("/bac-a-sable/notifications?titre=" + encodeURIComponent(titre), { headers: jeton ? { Authorization: "Bearer " + jeton } : {} });
+    if (!r.ok) { etat.textContent = "Lecture refusée (" + r.status + ") : vérifiez le jeton de contrôle."; return; }
+    const liste = await r.json();
+    const corps = document.getElementById("lignes");
+    corps.replaceChildren(...liste.map((n) => {
+      const tr = document.createElement("tr");
+      tr.append(cellule(n.recueLe), cellule(n.plateforme + " · " + n.jeton), cellule(n.message.title ?? ""), cellule(presentation(n.presentation)), cellule(n.presentation.motif));
+      return tr;
+    }));
+    etat.textContent = liste.length + " notification(s).";
+  }
+  document.getElementById("filtre").addEventListener("submit", charger);
+  charger();
+</script>
+</body>
+</html>

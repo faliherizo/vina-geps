@@ -1,0 +1,37 @@
+# Bacs à sable de FX-AO-20260810 — déployables sur un serveur comme en poste local.
+#   docker compose -f bac-a-sable/docker-compose.yml up -d --build
+# Guide : bac-a-sable/README.md. Le serveur Java s'y branche par ses variables ordinaires, sans code d'essai :
+#   EXPO_PUSH_URL=http://<hôte>:18499/--/api/v2/push/send     (critère 18 — alertes critiques)
+# et les PDF/A qu'il produit se valident contre veraPDF :      (critère 39 — rapports PDF/A-2b)
+#   POST http://<hôte>:18492/api/validate/2b
+#
+# Les ports sont liés à 127.0.0.1 par défaut : sur un serveur, les exposer derrière le mandataire TLS
+# (BAC_ADRESSE=0.0.0.0 seulement sur un réseau privé) et régler BAC_JETON_CONTROLE.
+name: urgences-sante-bac-a-sable
+
+services:
+  # veraPDF officiel (Open Preservation Foundation) : le validateur de référence PDF/A, pas une imitation.
+  verapdf:
+    image: verapdf/rest:${VERAPDF_VERSION:-latest}
+    container_name: us-bac-verapdf
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:18492:8080"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+
+  # Service de poussée au contrat d'Expo, traduction APNs/FCM et téléphones simulés (iOS, Android).
+  poussee:
+    build: ./poussee
+    image: urgences-sante/bac-poussee:1
+    container_name: us-bac-poussee
+    environment:
+      PORT: "8080"
+      # Sécurité renforcée d'Expo : si réglé, le serveur doit envoyer EXPO_ACCESS_TOKEN identique.
+      EXPO_JETON_ACCES: ${EXPO_JETON_ACCES:-}
+      # Protège la lecture de ce que les téléphones ont reçu (routes /bac-a-sable et console).
+      BAC_JETON_CONTROLE: ${BAC_JETON_CONTROLE:-}
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:18499:8080"]
+    restart: unless-stopped
+    read_only: true
+    security_opt: ["no-new-privileges:true"]

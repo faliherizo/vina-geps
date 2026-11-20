@@ -41,6 +41,7 @@
 | C8 | Attestation de destruction conforme à l'annexe 10.18.04 C | 🔄 | Le mécanisme existe (`saas/domaine/Destruction` : attestation scellée SHA-256) ; confronter son texte au gabarit de l'annexe C, absent des addenda, et au délai de 60 jours (10.18.04 b) |
 | C9 | RACI et ordre de déploiement des six sites | 🏢 plan d'implantation | Addenda 2, Q8 et Q33 |
 | C10 | veraPDF (critère 39), Q-ALC (critère 18) : toujours ouverts | ⛔ permission, Apple | Mémoire du 15 nov. |
+| C11 | Bacs à sable déployables : poussée au contrat d'Expo + téléphones simulés, veraPDF officiel (ADR 0086) | ✅ poussée · ⛔ veraPDF | `bac-a-sable/` ; `npm test` 23/23 (100 % des lignes) ; `bac-a-sable/campagne.sh` contre le Java : BAC-01 à 07 verts le 20 nov. ; BAC-08/09 attendent le conteneur veraPDF (lancement refusé par le classificateur de permissions) ; travail CI `bacs-a-sable` |
 
 ## D. Décisions à prendre
 
