@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_CONFIGURATION;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_ENVOI;
+import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_SUIVI;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.repondre;
 import static ca.vina.nexu.alertes.infrastructure.web.SaisiesAlertes.corps;
 
@@ -69,7 +70,7 @@ public class ControleurCascades {
 
     @GetMapping("/envoyees/{id}/cascade")
     public ResponseEntity<Object> cascade(HttpServletRequest r, @PathVariable String id) {
-        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK, a -> VuesCascades.suivi(cas.lecture().suivi(a.tenantId(), id)));
+        return repondre(r, garde.capacite(r, CAPACITE_SUIVI), OK, a -> VuesCascades.suivi(cas.lecture().suivi(a.tenantId(), id)));
     }
 
     /** La reprise manuelle (critère 17) : {@code etape} compte à partir de 1. */

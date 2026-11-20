@@ -4,6 +4,7 @@
 **Sources analysées :**
 - `00_sources/01_devis_descriptif_converti.md`
 - `00_sources/02_bordereau_grille_converti.md`
+- `00_sources/03` à `07` : addenda 1, 2, 3, contrat de l'addenda 1, bordereau et grille de l'addenda 3 (version à déposer)
 
 ## Contenu du dossier
 | Dossier | Contenu |
@@ -16,6 +17,7 @@
 | `05_maquettes` | Maquettes d'écrans en SVG éditable et PNG |
 | `06_gouvernance` | Hypothèses, risques, validation et critères d'acceptation |
 | `07_validation_vina_geps` | **Validation du dossier** contre les sources et contre VINA GePS : conformité des 115 critères, écarts, ADR 0074 (module ou projet), feuille de route, stories et maquettes |
+| `08_addenda_1_a_3` | **19 nov. 2026** : addenda 1 à 3 et contrat, convertis (`00_sources/03` à `07`), traités question par question ; stories ST-H01 à ST-H05, conception, ADR 0085, planificateur de suivi |
 
 ## Démontrer et vérifier
 

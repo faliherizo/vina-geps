@@ -64,7 +64,12 @@ type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant
  * L'intérêt n'est pas cosmétique : depuis que les établissements définissent leurs propres
  * rôles, une liste de rôles écrite ici ne peut plus être exhaustive.
  */
-const PAGE_CAPABILITIES: Partial<Record<Page, string[]>> = {};
+const PAGE_CAPABILITIES: Partial<Record<Page, string[]>> = {
+  // Communications cliniques (ADR 0085) : suivre la preuve de livraison ne suppose pas d'envoyer — un rôle propre à
+  // l'organisme (« expéditeur ») ou un gestionnaire privé d'envoi voit la page qui correspond à son droit.
+  alnouvelle: ["alertes.envoyer"],
+  alsuivi: ["alertes.suivre"],
+};
 
 /**
  * **Pages dont le serveur calcule le droit en entier.**
@@ -88,7 +93,7 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // là-bas ne demande pas de modifier l'ossature de l'application.
   ...ENTREES_US.map((e) => ({ key: e.cle as Page, i18nKey: `nav.${e.cle}`, icon: e.icone, roles: e.roles as Role[] })),
   { key: "dashboard", i18nKey: "nav.dashboard", icon: "📊", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
-  // Communications cliniques (ADR 0074) : envoyer et suivre exigent la capacité au serveur ; recevoir est à tous.
+  // Communications cliniques (ADR 0074, 0085) : envoyer et suivre exigent chacun leur capacité ; recevoir est à tous.
   { key: "alnouvelle", i18nKey: "nav.alnouvelle", icon: "🚨", roles: ["admin", "manager", "director"] },
   { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
   { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },

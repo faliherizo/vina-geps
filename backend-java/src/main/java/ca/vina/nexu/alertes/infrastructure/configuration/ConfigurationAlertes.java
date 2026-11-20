@@ -108,10 +108,15 @@ public class ConfigurationAlertes {
         return new GestionnaireTextosEntrants(depot, new DepotTextosEntrants(jdbc), cas.reception(), horloge);
     }
 
-    /** Le bordereau des utilisateurs actifs (ST-G08), lu dans les remises, les étapes de cascade et les appels. */
+    /**
+     * Le bordereau des utilisateurs actifs (ST-G08), lu dans les remises, les étapes de cascade et les appels ; le minimum
+     * facturable du contrat (ST-H01) se règle par {@code alertes.facturation.minimum-utilisateurs}.
+     */
     @Bean
-    public ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs lectureUtilisateursActifs(JdbcClient jdbc) {
-        return new ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs(new ca.vina.nexu.alertes.infrastructure.persistance.DepotTentatives(jdbc));
+    public ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs lectureUtilisateursActifs(JdbcClient jdbc,
+            @org.springframework.beans.factory.annotation.Value("${alertes.facturation.minimum-utilisateurs}") int minimumFacturable) {
+        return new ca.vina.nexu.alertes.application.requetes.LectureUtilisateursActifs(new ca.vina.nexu.alertes.infrastructure.persistance.DepotTentatives(jdbc),
+                new ca.vina.nexu.alertes.domaine.UtilisateursActifs.MinimumFacturable(minimumFacturable));
     }
 
     /** Les notes sur les destinataires (ST-G12). */

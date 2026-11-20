@@ -263,6 +263,15 @@
     "libelle": "Envoyer une alerte et suivre les alertes de l'organisme",
     "portee": "Le suivi est partagé entre expéditeurs autorisés (FX-AO-20260810, critère 12)."
   },
+  "alertes.suivre": {
+    "roles": [
+      "admin",
+      "director",
+      "manager"
+    ],
+    "libelle": "Suivre les alertes de l'organisme : preuve de livraison, fiche, cascade et export",
+    "portee": "Distincte de l'envoi (ADR 0085) : la preuve de livraison est due aux expéditeurs, aux gestionnaires et aux pilotes (FX-AO-20260810, addenda 2, Q31)."
+  },
   "alertes.configure": {
     "roles": [
       "admin"

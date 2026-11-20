@@ -31,6 +31,7 @@ import java.util.Map;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_CONFIGURATION;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_CRITIQUE;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_ENVOI;
+import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.CAPACITE_SUIVI;
 import static ca.vina.nexu.alertes.infrastructure.web.GardeAlertes.repondre;
 import static ca.vina.nexu.alertes.infrastructure.web.SaisiesAlertes.corps;
 
@@ -143,7 +144,7 @@ public class ControleurAlertes {
     /** Ce que l'écran doit offrir à cette personne : la priorité critique, la configuration. */
     @GetMapping("/droits")
     public ResponseEntity<Object> droits(HttpServletRequest r) {
-        return repondre(r, garde.socle(r), OK, a -> Map.of("envoyer", garde.peut(r, CAPACITE_ENVOI), "critique", garde.peut(r, CAPACITE_CRITIQUE),
+        return repondre(r, garde.socle(r), OK, a -> Map.of("envoyer", garde.peut(r, CAPACITE_ENVOI), "suivre", garde.peut(r, CAPACITE_SUIVI), "critique", garde.peut(r, CAPACITE_CRITIQUE),
                 "configurer", garde.peut(r, CAPACITE_CONFIGURATION)));
     }
 
@@ -162,14 +163,14 @@ public class ControleurAlertes {
     /** Le suivi, filtrable : période ({@code du}, {@code au}), priorité, état, expéditeur (ST-G03). */
     @GetMapping("/envoyees")
     public ResponseEntity<Object> envoyees(HttpServletRequest r, @RequestParam Map<String, String> q) {
-        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK,
+        return repondre(r, garde.capacite(r, CAPACITE_SUIVI), OK,
                 a -> cas.lecture().envoyees(a.tenantId(), SaisiesAlertes.filtre(q)).stream().map(VuesAlertes::suivi).toList());
     }
 
     /** Le même suivi, au même filtre, en fichier : CSV, XLSX, PDF ou JSON (ST-G03). */
     @GetMapping("/envoyees/export")
     public ResponseEntity<Object> exporter(HttpServletRequest r, @RequestParam Map<String, String> q) {
-        GardeAcces.Verdict v = garde.capacite(r, CAPACITE_ENVOI);
+        GardeAcces.Verdict v = garde.capacite(r, CAPACITE_SUIVI);
         if (v.refuse()) {
             return v.refus();
         }
@@ -189,7 +190,7 @@ public class ControleurAlertes {
 
     @GetMapping("/envoyees/{id}")
     public ResponseEntity<Object> fiche(HttpServletRequest r, @PathVariable String id) {
-        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK, a -> VuesAlertes.suivi(cas.lecture().fiche(a.tenantId(), id)));
+        return repondre(r, garde.capacite(r, CAPACITE_SUIVI), OK, a -> VuesAlertes.suivi(cas.lecture().fiche(a.tenantId(), id)));
     }
 
     // ── Réception (destinataires) ───────────────────────────────────────────

@@ -87,7 +87,12 @@ export default function NouvelleAlerte() {
         <p><label htmlFor="aln-titre-champ">Titre</label>
           <input id="aln-titre-champ" data-testid="aln-titre-champ" required maxLength={120} value={titre} onChange={(e) => setTitre(e.target.value)} /></p>
         <p><label htmlFor="aln-corps">Message</label>
-          <textarea id="aln-corps" data-testid="aln-corps" required maxLength={2000} rows={4} value={corps} onChange={(e) => setCorps(e.target.value)} /></p>
+          <textarea id="aln-corps" data-testid="aln-corps" required maxLength={2000} rows={4} value={corps} onChange={(e) => setCorps(e.target.value)}
+                    aria-describedby="aln-corps-aide" />
+          {/* ST-H04 (ADR 0085) : l'alerte signale une personne, elle ne transporte pas de dossier ; le serveur refuse un NAM. */}
+          <span id="aln-corps-aide" className="muted" data-testid="aln-corps-aide">
+            N'inscrivez aucun renseignement de santé : ni nom de patient, ni numéro d'assurance maladie, ni diagnostic. Indiquez le lieu et l'action attendue.
+          </span></p>
         <fieldset>
           <legend>Priorité</legend>
           {PRIORITES.map((p) => {

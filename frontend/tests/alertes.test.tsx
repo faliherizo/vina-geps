@@ -196,6 +196,9 @@ describe("Nouvelle alerte", () => {
     await saisir("aln-corps", "Texte");
     await act(async () => { ($("aln-envoyer") as HTMLButtonElement).form!.requestSubmit(); }); await attendre();
     expect($("aln-erreur")!.textContent).toContain("refusé");
+    // ST-H04 : le message rappelle, et le lecteur d'écran l'annonce avec le champ, qu'aucun renseignement de santé n'y entre.
+    expect($("aln-corps")!.getAttribute("aria-describedby")).toBe("aln-corps-aide");
+    expect($("aln-corps-aide")!.textContent).toContain("N'inscrivez aucun renseignement de santé");
   });
 });
 

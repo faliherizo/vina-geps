@@ -29,9 +29,9 @@ class DecisionAccesTest {
     private static final Map<String, Boolean> SANS_SURCHARGE = Map.of();
 
     @Test
-    @DisplayName("les 38 capacités sont chargées, libellé et portée compris")
+    @DisplayName("les 39 capacités sont chargées, libellé et portée compris")
     void tableComplete() {
-        assertThat(politique.capacites()).hasSize(38);
+        assertThat(politique.capacites()).hasSize(39);
         PolitiqueAcces.Regle r = politique.regle("employee.create");
         assertThat(r.roles()).containsExactly("admin", "rh", "manager");
         assertThat(r.libelle()).isEqualTo("Créer un employé");
@@ -43,11 +43,11 @@ class DecisionAccesTest {
     @Test
     @DisplayName("chaque rôle intégré retrouve exactement son décompte de capacités")
     void decomptesParRole() {
-        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(38);
-        assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(27);
+        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(39);
+        assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(28);
         // La RH produit et configure la paie (ADR 0084) : paie.gerer et paie.configurer.
         assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(14);
-        assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(8);
+        assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(9);
         // Aucun droit par défaut : l'employé n'agit que sur ses propres données, par des routes en
         // libre-service qui ne passent pas par cette table.
         assertThat(decision.capacitesDe("employee", SANS_SURCHARGE)).isEmpty();
@@ -63,7 +63,7 @@ class DecisionAccesTest {
         // La gestion des effectifs (AO 26-015-DO) : le directeur d'opérations planifie, dans son périmètre d'unités.
         assertThat(decision.capacitesDe("director", SANS_SURCHARGE))
                 .containsExactly("approval.decide", "budget.line.manage", "budget.transfer", "accounting.govern", "effectifs.manage",
-                        "horaire.rapporter", "alertes.envoyer", "alertes.critique");
+                        "horaire.rapporter", "alertes.envoyer", "alertes.suivre", "alertes.critique");
         // Le virement de budget est réservé : l'accorder au gestionnaire viderait le contrôle.
         assertThat(decision.peut("manager", "budget.transfer", SANS_SURCHARGE)).isFalse();
         assertThat(decision.peut("director", "budget.transfer", SANS_SURCHARGE)).isTrue();
@@ -113,7 +113,7 @@ class DecisionAccesTest {
         for (String c : politique.capacites()) {
             toutRetire.put(c, false);
         }
-        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(38);
+        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(39);
         assertThat(decision.peut("admin", "org.manage", toutRetire)).isTrue();
 
         // Le gestionnaire, lui, perd bien tout : la garde ne vaut que pour l'administrateur.

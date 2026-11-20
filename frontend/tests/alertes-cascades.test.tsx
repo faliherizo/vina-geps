@@ -179,15 +179,18 @@ describe("Utilisateurs actifs", () => {
     expect(moisCourant(new Date("2026-12-01T03:00:00Z"))).toBe("2026-11");
     expect(moisCourant(new Date("2026-12-01T06:00:00Z"))).toBe("2026-12");
     api.etat.routes = {
-      "GET /api/alertes/utilisateurs-actifs?mois=2026-10": { mois: "2026-10", total: 1, actifs: [{ personId: "julie", nom: "Julie Roy", premiereTentative: "2026-10-31T12:00:00Z", alerteId: "a1", titre: "Code bleu" }] },
-      "GET /api/alertes/utilisateurs-actifs": { mois: "2026-11", total: 0, actifs: [] },
+      "GET /api/alertes/utilisateurs-actifs?mois=2026-10": { mois: "2026-10", total: 1, minimumFacturable: 0, facturables: 1, actifs: [{ personId: "julie", nom: "Julie Roy", premiereTentative: "2026-10-31T12:00:00Z", alerteId: "a1", titre: "Code bleu" }] },
+      "GET /api/alertes/utilisateurs-actifs": { mois: "2026-11", total: 0, minimumFacturable: 100, facturables: 100, actifs: [] },
     };
     await rendre(<UtilisateursActifs />);
     expect($("alp-actifs-vide")).not.toBeNull();
     expect($("alp-actifs-total")!.textContent).toContain("0 utilisateur actif");
+    // ST-H01 : sous le minimum du contrat, on facture le minimum, et l'écran dit pourquoi.
+    expect($("alp-actifs-facturables")!.textContent).toContain("100 utilisateurs facturables : le contrat fixe un minimum de 100 par mois.");
     await saisir("alp-actifs-mois", "2026-10");
     expect($("alp-actif-julie")!.textContent).toContain("Code bleu");
     expect($("alp-actifs-total")!.textContent).toContain("1 utilisateur actif en 2026-10");
+    expect($("alp-actifs-facturables")!.textContent).toBe("1 utilisateur facturable.");
     await saisir("alp-actifs-mois", "");
     expect(api.etat.appels.at(-1)!.url).toBe("/api/alertes/utilisateurs-actifs?mois=2026-10");
   });

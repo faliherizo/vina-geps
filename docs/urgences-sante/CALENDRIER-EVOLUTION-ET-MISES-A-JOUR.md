@@ -34,9 +34,18 @@ organisme l'active quand il est prêt, par module (Administration › Modules, E
    Rien ne part en production à ce moment.
 3. **Validation** : la version est déployée dans l'environnement de tests et de formation de
    l'organisme (`urgences-sante-essai.tfvars`), où l'organisme peut la vérifier.
-4. **Annonce** : la fenêtre d'entretien est annoncée 72 heures à l'avance par la bannière et les
-   avis (module Soutien, `SoutienTest`) ; les notes de version disent ce qui change, ce qui arrive
-   désactivé, et ce que l'organisme doit faire.
+4. **Annonce** : la fenêtre est annoncée par la bannière et les avis, avec sa **nature**. Le
+   préavis dépend de cette nature (ADR 0085, `PreavisDeChangementTest`) :
+
+   | Nature | Préavis exigé par le serveur | Source |
+   |---|---|---|
+   | Entretien planifié | 72 heures | Règle de la plateforme |
+   | Correctif de sécurité ou correction mineure, sans changement fonctionnel | 3 jours ouvrables, nature communiquée | FX-AO-20260810, grille 99.1 (addenda 1) |
+   | Rehaussement qui change les fonctionnalités | 21 jours ouvrables ; l'organisme peut le refuser ou le repousser | FX-AO-20260810, grille 99 (addenda 1) |
+
+   Les jours ouvrables se comptent du lundi au vendredi à Montréal, hors jours fériés du Québec.
+   Les notes de version disent ce qui change, ce qui arrive désactivé, et ce que l'organisme doit
+   faire.
 5. **Production** : le déploiement part seul dans la plage d'entretien du dimanche
    (`deploy` ou `deploy-aws` selon la cible), après la porte `scripts/plage-entretien.sh`.
 6. **Urgence** : un correctif qui ne peut pas attendre se déploie à la main avec l'option

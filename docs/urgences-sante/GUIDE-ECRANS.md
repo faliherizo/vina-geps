@@ -569,7 +569,7 @@ Envoyer une alerte priorisée à des groupes ou à des personnes, avec les répo
 
 ### Suivi des alertes
 
-*Adresse : `/admin/alsuivi` — Administration, direction et planificateurs : le suivi est partagé entre expéditeurs.*
+*Adresse : `/admin/alsuivi` — Qui détient la capacité « alertes.suivre » : expéditeurs, gestionnaires et pilotes par défaut. Le suivi est la preuve de livraison, partagée ; il n'exige pas le droit d'envoyer.*
 
 Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pris en charge.
 

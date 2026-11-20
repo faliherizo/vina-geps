@@ -79,8 +79,25 @@
     {
       "code": "INH",
       "libelleFr": "Inhalothérapie"
+    },
+    {
+      "code": "ADM",
+      "libelleFr": "Personnel administratif"
     }
   ],
+  "rolesPropres": {
+    "pourquoi": "Les quatre profils minimaux de l'addenda 2 (Q20) : pilote = admin, gestionnaire = manager, destinataire = employee ; l'expéditeur est un rôle propre qui envoie et suit, sans rien administrer (ADR 0085, ST-H03).",
+    "roles": [
+      {
+        "code": "expediteur",
+        "label": "Expéditeur",
+        "capabilities": [
+          "alertes.envoyer",
+          "alertes.suivre"
+        ]
+      }
+    ]
+  },
   "personnes": [
     {
       "username": "coord.urgence",
@@ -162,6 +179,15 @@
       "site": "SAG",
       "corps": "INH",
       "matricule": "L-4001"
+    },
+    {
+      "username": "exp.garde.hsj",
+      "nom": "Chantal Ouellet",
+      "role": "expediteur",
+      "profil": "Agente de la centrale des gardes, Saint-Jérôme — expéditrice sans administration (addenda 2, Q20-Q21)",
+      "site": "HSJ",
+      "corps": "ADM",
+      "matricule": "L-5001"
     }
   ],
   "groupesTransverses": [

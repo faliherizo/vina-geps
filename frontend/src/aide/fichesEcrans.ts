@@ -363,7 +363,7 @@ export const FICHES: Record<Page, Fiche> = {
   alsuivi: {
     titre: "Suivi des alertes",
     objet: "Voir, pour chaque alerte de l'organisme, qui l'a lue, qui a répondu et qui a pris en charge.",
-    qui: "Administration, direction et planificateurs : le suivi est partagé entre expéditeurs.",
+    qui: "Qui détient la capacité « alertes.suivre » : expéditeurs, gestionnaires et pilotes par défaut. Le suivi est la preuve de livraison, partagée ; il n'exige pas le droit d'envoyer.",
     etapes: ["Filtrer au besoin : « Du », « Au », « Priorité », « État » (prise en charge, sans prise en charge, pas encore lue de tous), « Expéditeur », puis « Filtrer ».",
       "Lire la table : lues sur destinataires, nombre de réponses, première prise en charge.", "« Détail » ouvre les destinataires : lue le, état, répondu le.",
       "« Exporter » le même suivi, au même filtre : CSV, Excel, PDF ou JSON. « Actualiser » relit les réponses arrivées depuis.",

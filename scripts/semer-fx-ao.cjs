@@ -54,6 +54,8 @@ async function semerPersonnes(ctx) {
   const poser = (chemin, corps) => appeler(chemin, { ...ctx, methode: "POST", corps });
   for (const s of donnees.sites) await poser("/api/effectifs/referentiels/unites", { effectifDepuis: "2026-01-01", ...s });
   for (const c of donnees.corpsEmploi) await poser("/api/effectifs/referentiels/corps_emploi", { effectifDepuis: "2026-01-01", ...c });
+  // Les rôles propres d'abord (ADR 0085) : un compte ne peut porter qu'un rôle qui existe déjà.
+  for (const r of donnees.rolesPropres.roles) await poser("/api/auth/roles", r);
   const comptes = {};
   for (const p of donnees.personnes) {
     const compte = await poser("/api/auth/users", { username: p.username, password: MDP, role: p.role, mustChangePassword: false });

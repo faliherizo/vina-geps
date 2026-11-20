@@ -51,7 +51,7 @@ class EngagementsDeServiceTest {
             assertThat(Politique.SERVICE_ESSENTIEL.libelle()).contains("5 h à 23 h");
             assertThatThrownBy(() -> Politique.de("or"))
                     .isInstanceOf(IllegalArgumentException.class)
-                    .hasMessage("politique de soutien inconnue : « or » (attendu : standard, service-essentiel)");
+                    .hasMessage("politique de soutien inconnue : « or » (attendu : standard, service-essentiel, communications-cliniques)");
             assertThat(EtatDelai.MANQUE.code()).isEqualTo("manque");
             assertThat(Manquement.MANQUEMENT_MAJEUR.code()).isEqualTo("manquement_majeur");
         }
@@ -162,6 +162,40 @@ class EngagementsDeServiceTest {
             // La politique standard n'a pas de seuil majeur : tout écart reste un manquement simple.
             assertThat(EngagementsDeService.manquementDe(STANDARD, 50.0)).isEqualTo(Manquement.MANQUEMENT);
             assertThat(EngagementsDeService.manquementDe(STANDARD, 99.5)).isEqualTo(Manquement.AUCUN);
+        }
+    }
+
+    @Nested
+    @DisplayName("communications cliniques — FX-AO-20260810, grille 98 et contrat 10.19.07 (ST-H05)")
+    class CommunicationsCliniques {
+
+        private final Engagement cliniques = EngagementsDeService.de(Politique.COMMUNICATIONS_CLINIQUES);
+
+        @Test
+        @DisplayName("une réponse en 4 h à tous les niveaux, en tout temps ; la résolution de la politique standard")
+        void reponseEnQuatreHeures() {
+            assertThat(Politique.de("communications-cliniques")).isEqualTo(Politique.COMMUNICATIONS_CLINIQUES);
+            assertThat(Politique.COMMUNICATIONS_CLINIQUES.libelle()).contains("4 h", "95 %");
+            assertThat(cliniques.heures()).isEmpty();
+            for (Priorite p : Priorite.values()) {
+                assertThat(cliniques.clause(p).reponse()).contains(new EngagementsDeService.Reponse(Duration.ofHours(4), Duration.ofHours(4)));
+                assertThat(cliniques.clause(p).resolution()).isEqualTo(STANDARD.clause(p).resolution());
+                assertThat(cliniques.clause(p).description()).isEqualTo(STANDARD.clause(p).description());
+            }
+            // Un billet N4 ouvert un dimanche à 3 h : la réponse est due à 7 h, quelle que soit l'heure.
+            Instant dimancheNuit = Instant.parse("2026-11-22T08:00:00Z");
+            Suivi s = EngagementsDeService.suivre(cliniques, Priorite.N4, new Jalons(dimancheNuit, Optional.empty(), Optional.empty()), dimancheNuit);
+            assertThat(s.reponse().orElseThrow().echeance()).isEqualTo(dimancheNuit.plus(Duration.ofHours(4)));
+        }
+
+        @Test
+        @DisplayName("95 % : au-dessus, aucun manquement ; au-dessous, un manquement, jamais « majeur » — le contrat n'en définit pas")
+        void quatreVingtQuinze() {
+            assertThat(cliniques.objectifPourcent()).isEqualTo(95.0);
+            assertThat(cliniques.seuilManquementMajeurPourcent()).isEmpty();
+            assertThat(EngagementsDeService.manquementDe(cliniques, 95.0)).isEqualTo(Manquement.AUCUN);
+            assertThat(EngagementsDeService.manquementDe(cliniques, 94.9)).isEqualTo(Manquement.MANQUEMENT);
+            assertThat(EngagementsDeService.manquementDe(cliniques, 50.0)).isEqualTo(Manquement.MANQUEMENT);
         }
     }
 }

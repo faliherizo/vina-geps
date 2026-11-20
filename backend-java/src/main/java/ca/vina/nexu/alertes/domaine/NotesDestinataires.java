@@ -17,7 +17,7 @@ public final class NotesDestinataires {
     public record Note(String personId, String texte, String ecriteLe, String ecritePar) {
 
         public static Note ecrire(String personId, String texte, String instant, String auteur) {
-            return new Note(Alertes.texte("personId", personId, Alertes.TITRE_MAX), Alertes.texte("texte", texte, LONGUEUR_MAX), instant, auteur);
+            return new Note(Alertes.texte("personId", personId, Alertes.TITRE_MAX), ContenuSansRenseignementDeSante.verifier("texte", Alertes.texte("texte", texte, LONGUEUR_MAX)), instant, auteur);
         }
     }
 }

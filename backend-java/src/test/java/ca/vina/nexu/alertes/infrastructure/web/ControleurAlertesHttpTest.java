@@ -33,6 +33,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -82,6 +83,7 @@ class ControleurAlertesHttpTest {
         }
     };
     private ClientHttpEssai http;
+    private ClientHttpEssai gestionnaireSansEnvoi;
 
     @BeforeEach
     void preparer(@TempDir Path dossier) {
@@ -124,6 +126,9 @@ class ControleurAlertesHttpTest {
                 new GestionnaireReceptionAlertes(depot, depot, horloge), new LectureAlertes(depot, annuaire, new DepotCascades(jdbc)));
         GardeAlertes garde = new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc));
         http = new ClientHttpEssai(new ControleurAlertes(garde, cas, horloge));
+        // ST-H03 : un organisme qui retire l'envoi au rôle « gestionnaire » lui laisse la preuve de livraison (addenda 2, Q31).
+        gestionnaireSansEnvoi = new ClientHttpEssai(new ControleurAlertes(new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces(),
+                (tenant, role) -> "manager".equals(role) ? Map.of(GardeAlertes.CAPACITE_ENVOI, false) : Map.of()), new DepotModulesActives(jdbc)), cas, horloge));
     }
 
     private static String corps(ResultActions r) throws Exception {
@@ -373,10 +378,23 @@ class ControleurAlertesHttpTest {
         http.get(A + "/droits", ADMIN).andExpect(jsonPath("$.critique").value(true)).andExpect(jsonPath("$.configurer").value(true));
         http.get(A + "/droits", DIRECTRICE).andExpect(jsonPath("$.critique").value(true)).andExpect(jsonPath("$.configurer").value(false));
         http.get(A + "/droits", CHEF).andExpect(jsonPath("$.envoyer").value(true)).andExpect(jsonPath("$.critique").value(false));
-        http.get(A + "/droits", JULIE).andExpect(jsonPath("$.envoyer").value(false));
+        http.get(A + "/droits", JULIE).andExpect(jsonPath("$.envoyer").value(false)).andExpect(jsonPath("$.suivre").value(false));
+        http.get(A + "/droits", CHEF).andExpect(jsonPath("$.suivre").value(true));
         assertThat(VuesAlertes.cellule(null, true)).isNull();
         assertThat(VuesAlertes.cellule("", true)).isEmpty();
         assertThat(List.of(VuesAlertes.cellule("+1", true), VuesAlertes.cellule("-1", true), VuesAlertes.cellule("@x", true), VuesAlertes.cellule("\tx", true),
                 VuesAlertes.cellule("ok", true), VuesAlertes.cellule("=x", false))).containsExactly("'+1", "'-1", "'@x", "'\tx", "ok", "=x");
+    }
+
+    @Test
+    @DisplayName("ST-H03 : suivre sans envoyer — le gestionnaire privé d'envoi lit le suivi, sa fiche, son export, mais ne peut pas envoyer")
+    void suivreSansEnvoyer() throws Exception {
+        gestionnaireSansEnvoi.get(A + "/droits", CHEF).andExpect(jsonPath("$.envoyer").value(false)).andExpect(jsonPath("$.suivre").value(true));
+        gestionnaireSansEnvoi.get(A + "/envoyees", CHEF).andExpect(status().isOk());
+        gestionnaireSansEnvoi.get(A + "/envoyees/export?format=csv", CHEF).andExpect(status().isOk());
+        gestionnaireSansEnvoi.get(A + "/envoyees/inconnue", CHEF).andExpect(status().isNotFound());
+        gestionnaireSansEnvoi.post(A, CHEF, "{\"titre\":\"Code bleu\",\"corps\":\"Salle 4\",\"priorite\":\"urgente\",\"personIds\":[\"E-JULIE\"]}")
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.capability").value(GardeAlertes.CAPACITE_ENVOI));
+        gestionnaireSansEnvoi.get(A + "/envoyees", JULIE).andExpect(status().isForbidden()).andExpect(jsonPath("$.capability").value(GardeAlertes.CAPACITE_SUIVI));
     }
 }

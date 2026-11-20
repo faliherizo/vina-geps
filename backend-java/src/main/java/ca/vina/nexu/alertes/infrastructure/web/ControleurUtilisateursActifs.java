@@ -62,7 +62,7 @@ public class ControleurUtilisateursActifs {
             boolean csv = format == SaisiesAlertes.FormatExport.CSV;
             List<Map<String, Object>> lignes = b.actifs().stream().map(x -> ligne(x, csv)).toList();
             SerialiseursLiasse.Liasse liasse = new SerialiseursLiasse.Liasse(TITRE + " — " + b.mois(), Instant.now(horloge).toString(),
-                    Map.of("mois", b.mois(), "total", b.total()), List.of(new SerialiseursLiasse.Section(TITRE, lignes)));
+                    Map.of("mois", b.mois(), "total", b.total(), "minimumFacturable", b.minimumFacturable(), "facturables", b.facturables()), List.of(new SerialiseursLiasse.Section(TITRE, lignes)));
             return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, SerialiseursLiasse.TYPES_MIME.get(format.code()))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"utilisateurs-actifs-" + b.mois() + "." + format.code() + "\"")
                     .body(SerialiseursLiasse.serialiser(liasse, format.code()));

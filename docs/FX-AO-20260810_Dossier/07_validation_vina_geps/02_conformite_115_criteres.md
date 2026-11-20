@@ -17,13 +17,13 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 
 | Bloc | Critères | ✅ | 🟡 | 🔴 | 📄 / 🏢 | ❓ |
 |---|---|---|---|---|---|---|
-| Fonctionnel | 1-32 | 30 | 2 | 0 | 0 | 0 |
+| Fonctionnel | 1-32 | 31 | 1 | 0 | 0 | 0 |
 | Technique (postes, bureautique, réseau) | 33-49 | 14 | 1 | 0 | 2 | 0 |
 | Architecture et hébergement | 50-63 | 7 | 0 | 0 | 7 | 0 |
 | Sauvegarde, surveillance | 64-70 | 6 | 0 | 0 | 1 | 0 |
 | Sécurité, identité, audit | 71-93 | 17 | 0 | 0 | 6 | 0 |
-| Performance, fournisseur, soutien | 94-115 | 3 | 0 | 0 | 19 | 0 |
-| **Total** | **115** | **77** | **3** | **0** | **35** | **0** |
+| Performance, fournisseur, soutien | 94-115, 99.1 | 8 | 0 | 0 | 15 | 0 |
+| **Total** | **116** | **83** | **2** | **0** | **31** | **0** |
 
 **Revue du 15 novembre 2026, contre le code.** Les neuf partiels ont été relus un à un. Trois étaient périmés :
 - 11 : l'état « relancée » manquait encore ; il est ajouté.
@@ -41,12 +41,32 @@ Les 18 critères partiels ou à bâtir forment le module « Communications clini
 réponses prédéfinis, console d'alerte, suivi, relances et cascades, appel automatique, alertes
 critiques.
 
+## Mise à jour du 19 novembre 2026 — addenda 1 à 3 et contrat
+
+Traitement détaillé : [08_addenda_1_a_3/01_traitement_des_addenda.md](../08_addenda_1_a_3/01_traitement_des_addenda.md).
+Le dépôt se fait sur la grille de l'**addenda 3**.
+
+| Critère | Ce qui change | Statut |
+|---|---|---|
+| 2 | L'addenda 1 (Q1) exclut tout renseignement de santé : la « note au dossier » ne peut pas viser un dossier patient. La note sur le destinataire livrée y répond. Elle refuse aussi un numéro d'assurance maladie (ST-H04). | 🟡 → ✅ |
+| 7 | Les alertes sont envoyées par des utilisateurs ; aucune intégration d'appareils biomédicaux. | ✅ |
+| 18 | Précisé : passer outre le mode silencieux, « Ne pas déranger » et Critical Alerts d'iOS. Notre lecture était la bonne. | 🟡 (application mobile, Q-ALC) |
+| 38 | Extraction des rapports en XLS pour Office 2016 : le XLSX que nous produisons s'y ouvre. | ✅ |
+| 39 | PDF/A pour les rapports d'activité et d'analyse. | 🟡 (veraPDF) |
+| 40 | Il suffit que les courriels soient **reçus** dans Outlook 365. | ✅ |
+| 44 | Multicast permis avec la DRI ; nous n'en émettons pas. | ✅ |
+| 51, 56-61, 64, 69, 70 | **Sans objet** en SaaS exclusif (addenda 3, Q5) : à commenter ainsi dans la grille. | Sans objet |
+| 53 | Hébergement et sauvegardes au Canada ; le transit n'est pas de l'hébergement. | ✅ |
+| 81 | Souhaité, non obligatoire : SSO Entra ID. Offert. | ✅ |
+| 98 | Politique « communications cliniques » (ST-H05). | 📄 → ✅ |
+| 99, 99.1 | 21 et 3 jours ouvrables, tenus par le serveur (ST-H02). | 📄 → ✅ |
+
 ## 1. Fonctionnel (1 à 32)
 
 | # | Critère (résumé) | Statut | Preuve dans VINA GePS | Écart, story |
 |---|---|---|---|---|
 | 1 | Console web d'envoi centralisée, alerte par application mobile ou texto selon la préférence du destinataire | ✅ | **Nouvelle alerte** (ADR 0074) : priorité, modèle, groupes et personnes ; canaux selon les préférences, tous imposés si critique | — |
-| 2 | Note au dossier des destinataires | 🟡 | **Note courte et datée sur la fiche du destinataire** (ST-G12, 15 novembre 2026) : tenue et lue par les expéditeurs autorisés dans le suivi, jamais au journal en clair (`/api/alertes/notes`, changeset `0017`) | Livré dans la lecture « note interne » ; si Q-DOS répond « dossier patient », c'est une intégration distincte |
+| 2 | Note au dossier des destinataires | ✅ | **Note courte et datée sur la fiche du destinataire** (ST-G12, 15 novembre 2026) : tenue et lue par les expéditeurs autorisés dans le suivi, jamais au journal en clair (`/api/alertes/notes`, changeset `0017`) | Livré dans la lecture « note interne » ; si Q-DOS répond « dossier patient », c'est une intégration distincte |
 | 3 | Recherche de destinataire par nom et prénom | ✅ | Champ personne avec autocomplétion à 3 caractères ; membres nommés | — |
 | 4 | Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés | ✅ | Messagerie du personnel : fils à deux et de groupe, réponse privée (ADR 0072) ; **réponse par texto** à une alerte (ST-G05, ADR 0078 : webhook Twilio signé, « 1 »/« 2 », rejeu ignoré) | — |
 | 5 | Envoi à une personne, à plusieurs ou à un groupe configurable | ✅ | Fil à deux, fil de groupe, listes de diffusion (personnes et groupes recalculés) | — |
@@ -99,7 +119,7 @@ critiques.
 | 50 | ✅ | SaaS, ou installation dédiée par organisme : même image, configuration par environnement. |
 | 51, 61 | ✅ | Java 25, un seul `.jar` : service Windows (WinSW) sur Windows Server 2019+, sur une VM vSphere 8 chiffrée ; frontal IIS/ARR. Guide d'installation et de retour arrière : [09_exploitation_chez_l_etablissement.md](09_exploitation_chez_l_etablissement.md) — ST-G13. L'essai sur l'infrastructure de l'établissement se fait à l'implantation (R5). |
 | 52 | ✅ | Application web : accessible dans un navigateur publié par Citrix. |
-| 53 | ✅ | Données au Québec (clause 17.07.04 de 26-015-DO ; Terraform `ca-central-1`, OVH Beauharnois). |
+| 53 | ✅ | Données, bases et sauvegardes **au Canada** (addenda 3, Q7 : le transit des SMS, appels et courriels n'est pas de l'hébergement) ; Terraform `ca-central-1`. |
 | 54, 55 | 📄 | Documents existants : `SECURITE-DES-TRANSMISSIONS.md`, architecture, `navigateurs`. À assembler pour la soumission. |
 | 56, 57, 58 | 🏢 | Profil B : l'établissement acquiert, gère et installe le système d'exploitation. |
 | 59, 60 | 📄 | Dimensionnement : 2 VM (application 4 vCPU / 8 Go ; base 2 vCPU / 8 Go, 200 Go), tiré des mesures JMeter. |
@@ -147,8 +167,8 @@ critiques.
 | 94 | 📄 | Démonstration équivalente : Urgences-santé (26-015-DO) et le module Santé Québec. **Critère à risque.** |
 | 95 | ✅ | Campagne JMeter (`perf/jmeter`), à rejouer à 2 000 utilisateurs. |
 | 96 | ✅ | Multi-organisme, multi-unité, multi-site (sous-domaines, milieux). |
-| 97, 98 | 📄 | SLA : réponse en 4 h ou moins (nos niveaux de soutien par gravité le permettent). |
-| 99, 113 | 📄 | Calendrier d'évolution, préavis de 30 jours ouvrables (`CALENDRIER-EVOLUTION-ET-MISES-A-JOUR.md`). |
+| 97, 98 | ✅ | **Politique de soutien « communications cliniques »** (ST-H05, ADR 0085) : réponse en 4 h ou moins à tous les niveaux, en tout temps ; résolution N1 1 h, N2 2 h, N3 4 h, N4 24 h ; 95 % d'efficacité (contrat 10.19.07). Attribuée par le superadmin (onglet Soutien). |
+| 99, 99.1, 113 | ✅ | **Préavis selon la nature du changement, tenu par le serveur** (ST-H02, ADR 0085) : rehaussement **21 jours ouvrables** (99, addenda 1), correctif **3 jours ouvrables** avec sa nature communiquée (99.1), entretien 72 h ; jours fériés du Québec exclus (`PreavisDeChangementTest`). |
 | 100 | ✅ | Retour à la version précédente : images versionnées et `.jar` N-1 ; **retour arrière de schéma** par un script de retour par changeset depuis `0006` (`db/retour/`), éprouvé par `RetourArriereSchemaTest` (retour complet, puis remigration) — ST-G13. |
 | 101 | 📄 | **Écart contractuel** : astreinte 24/7 en français pour les incidents critiques (aujourd'hui : 5 h à 23 h). |
 | 102-107 | 📄 | Plan d'implantation, chargé de projet, registres, formation en français (`TROUSSE-FORMATION.md`, `GUIDE-ECRANS.md`). |

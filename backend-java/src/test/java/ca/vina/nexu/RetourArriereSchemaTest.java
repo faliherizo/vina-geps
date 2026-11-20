@@ -28,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Retour arrière de schéma — les scripts de retour rendent le schéma d'avant 0006, et la remigration repasse")
 class RetourArriereSchemaTest {
 
-    private static final List<String> RETOURS = List.of("0018", "0017", "0016", "0015", "0014", "0013", "0012", "0011", "0010", "0009", "0008", "0007", "0006");
+    private static final List<String> RETOURS = List.of("0019", "0018", "0017", "0016", "0015", "0014", "0013", "0012", "0011", "0010", "0009", "0008", "0007", "0006");
 
     private static void migrer(SingleConnectionDataSource ds, String changelog) throws Exception {
         SpringLiquibase l = new SpringLiquibase();

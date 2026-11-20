@@ -28,6 +28,22 @@ public final class UtilisateursActifs {
     /** Une tentative de transmission vers une personne, à un instant, pour une alerte. */
     public record Tentative(String personId, String nom, String instant, String alerteId, String titre) { }
 
+    /**
+     * Le minimum facturable par mois (FX-AO-20260810, contrat 3.03 : « sous réserve d'un minimum facturable de cent (100)
+     * utilisateurs par mois »). Au-dessus, seuls les actifs comptent.
+     */
+    public record MinimumFacturable(int valeur) {
+        public MinimumFacturable {
+            if (valeur < 0) {
+                throw new IllegalArgumentException("le minimum facturable ne peut pas être négatif : " + valeur);
+            }
+        }
+
+        public int facturables(int actifs) {
+            return Math.max(valeur, actifs);
+        }
+    }
+
     /** Une personne active du mois : sa première tentative et l'alerte en cause. */
     public record Actif(String personId, String nom, String premiereTentative, String alerteId, String titre) { }
 

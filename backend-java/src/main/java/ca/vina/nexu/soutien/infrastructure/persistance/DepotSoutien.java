@@ -468,8 +468,9 @@ public class DepotSoutien implements Soutien.Depot {
             throw new IllegalArgumentException(String.join("; ", erreurs));
         }
         String id = UUID.randomUUID().toString();
-        jdbc.sql("INSERT INTO soutien_maintenances (id, debut, fin, description, statut, annonceeLe, annonceePar) VALUES (?,?,?,?,'planifiee',?,?)")
-                .params(id, Iso.de(instantDe(m.get("debut"))), Iso.de(instantDe(m.get("fin"))), String.valueOf(m.get("description")).trim(), instant, acteurId).update();
+        String nature = ca.vina.nexu.soutien.domaine.NatureChangement.de(m.get("nature") == null ? null : String.valueOf(m.get("nature"))).code();
+        jdbc.sql("INSERT INTO soutien_maintenances (id, debut, fin, description, statut, annonceeLe, annonceePar, nature) VALUES (?,?,?,?,'planifiee',?,?,?)")
+                .params(id, Iso.de(instantDe(m.get("debut"))), Iso.de(instantDe(m.get("fin"))), String.valueOf(m.get("description")).trim(), instant, acteurId, nature).update();
         return maintenance(id).orElseThrow();
     }
 
@@ -481,7 +482,7 @@ public class DepotSoutien implements Soutien.Depot {
 
     public List<Maintenance> listerMaintenances() {
         return jdbc.sql("SELECT * FROM soutien_maintenances ORDER BY debut DESC")
-                .query((rs, i) -> new Maintenance(rs.getString("id"), rs.getString("debut"), rs.getString("fin"), rs.getString("description"), rs.getString("statut"), rs.getString("annonceeLe"), rs.getString("annonceePar"))).list();
+                .query((rs, i) -> new Maintenance(rs.getString("id"), rs.getString("debut"), rs.getString("fin"), rs.getString("description"), rs.getString("statut"), rs.getString("annonceeLe"), rs.getString("annonceePar"), rs.getString("nature"))).list();
     }
 
     private Optional<Maintenance> maintenance(String id) {

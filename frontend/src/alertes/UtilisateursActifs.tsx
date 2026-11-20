@@ -9,7 +9,8 @@ import { useApiEffectifs as useApi } from "../effectifs/api";
 import { quand } from "./types";
 
 export interface Actif { personId: string; nom: string; premiereTentative: string; alerteId: string; titre: string }
-export interface BilanActifs { mois: string; total: number; actifs: Actif[] }
+/** `facturables` = max(minimum du contrat, actifs) : FX-AO-20260810, contrat 3.03 (ST-H01). */
+export interface BilanActifs { mois: string; total: number; minimumFacturable: number; facturables: number; actifs: Actif[] }
 
 const COL: ReadonlyArray<Colonne<Actif>> = [
   { id: "nom", libelle: "Personne", tri: (a) => a.nom }, { id: "premiere", libelle: "Première tentative", tri: (a) => a.premiereTentative },
@@ -41,6 +42,12 @@ export default function UtilisateursActifs() {
         <ExportResultats chemin="/api/alertes/utilisateurs-actifs/export" parametres={parametres} nomFichier={`utilisateurs-actifs-${mois}`} prefixe="alp-actifs-export" />
       </div>
       {bilan && <p role="status" data-testid="alp-actifs-total"><strong>{bilan.total}</strong> utilisateur{bilan.total > 1 ? "s" : ""} actif{bilan.total > 1 ? "s" : ""} en {bilan.mois}.</p>}
+      {bilan && (
+        <p data-testid="alp-actifs-facturables">
+          <strong>{bilan.facturables}</strong> utilisateur{bilan.facturables > 1 ? "s" : ""} facturable{bilan.facturables > 1 ? "s" : ""}
+          {bilan.facturables > bilan.total ? ` : le contrat fixe un minimum de ${bilan.minimumFacturable} par mois.` : "."}
+        </p>
+      )}
       <Tableau colonnes={COL} lignes={bilan?.actifs ?? []} legende={`Utilisateurs actifs de ${mois}`} testId="alp-actifs-table"
         vide={<EtatVide titre="Personne ce mois-ci" compact testId="alp-actifs-vide">Aucune alerte n'a visé personne pendant ce mois.</EtatVide>}
         rendre={(a) => (

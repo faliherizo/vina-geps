@@ -35,6 +35,8 @@ class ControleurUtilisateursActifsHttpTest {
 
     private static final String T = "T1";
     private static final String A = "/api/alertes/utilisateurs-actifs";
+    /** Le minimum du contrat FX-AO-20260810 (3.03) : quatre actifs se facturent comme cent. */
+    private static final int MINIMUM = 100;
     private static final ContexteRequete ADMIN = new ContexteRequete("u-adm", "adm", "admin", null, T);
     private static final ContexteRequete CHEF = new ContexteRequete("u-chef", "chef", "manager", null, T);
 
@@ -60,7 +62,7 @@ class ControleurUtilisateursActifsHttpTest {
         remise("a-dec", "zoe", "Zoé Lavoie", "2026-12-01T05:00:00Z");
         Clock horloge = Clock.fixed(Instant.parse("2026-11-15T12:00:00Z"), ZoneOffset.UTC);
         ConfigurationAlertes c = new ConfigurationAlertes();
-        LectureUtilisateursActifs lecture = c.lectureUtilisateursActifs(jdbc);
+        LectureUtilisateursActifs lecture = c.lectureUtilisateursActifs(jdbc, MINIMUM);
         http = new ClientHttpEssai(new ControleurUtilisateursActifs(new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc)),
                 lecture, horloge));
     }
@@ -79,6 +81,7 @@ class ControleurUtilisateursActifsHttpTest {
     void novembre() throws Exception {
         http.get(A + "?mois=2026-11", ADMIN).andExpect(status().isOk()).andExpect(jsonPath("$.mois").value("2026-11"))
                 .andExpect(jsonPath("$.total").value(4))
+                .andExpect(jsonPath("$.minimumFacturable").value(MINIMUM)).andExpect(jsonPath("$.facturables").value(MINIMUM))
                 .andExpect(jsonPath("$.actifs[*].nom").value(org.hamcrest.Matchers.contains("Julie Roy", "lea", "Marc Dubé", "remi")))
                 .andExpect(jsonPath("$.actifs[0].premiereTentative").value("2026-11-01T04:00:00.000Z"))
                 .andExpect(jsonPath("$.actifs[0].alerteId").value("a-nov")).andExpect(jsonPath("$.actifs[3].titre").value("Code bleu"));
@@ -110,5 +113,23 @@ class ControleurUtilisateursActifsHttpTest {
         assertThat(juillet.contient("2026-07-01T04:00:00Z")).isTrue();
         assertThat(juillet.contient("2026-08-01T04:00:00Z")).isFalse();
         assertThatThrownBy(() -> UtilisateursActifs.Mois.de(null)).hasMessageContaining("AAAA-MM");
+    }
+
+    @Test
+    @DisplayName("ST-H01 : le nombre facturable est le minimum du contrat tant que les actifs n'y arrivent pas, puis les actifs")
+    void minimumFacturable() {
+        UtilisateursActifs.MinimumFacturable cent = new UtilisateursActifs.MinimumFacturable(MINIMUM);
+        assertThat(cent.facturables(4)).isEqualTo(MINIMUM);
+        assertThat(cent.facturables(MINIMUM)).isEqualTo(MINIMUM);
+        assertThat(cent.facturables(1_437)).isEqualTo(1_437);
+        assertThat(new UtilisateursActifs.MinimumFacturable(0).facturables(0)).isZero();
+        assertThatThrownBy(() -> new UtilisateursActifs.MinimumFacturable(-1)).isInstanceOf(IllegalArgumentException.class).hasMessageContaining("négatif");
+    }
+
+    @Test
+    @DisplayName("ST-H01 : l'export porte le total et le nombre facturable en tête du justificatif")
+    void exportPorteLeFacturable() throws Exception {
+        String json = http.get(A + "/export?mois=2026-11&format=json", ADMIN).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(json).contains("\"facturables\"").contains("\"minimumFacturable\"");
     }
 }

@@ -59,7 +59,8 @@ public final class Alertes {
         }
 
         ContenuModele valide() {
-            return new ContenuModele(texte("titre", titre, TITRE_MAX), texte("corps", corps, CORPS_MAX), exiger(priorite, "priorite"),
+            return new ContenuModele(ContenuSansRenseignementDeSante.verifier("titre", texte("titre", titre, TITRE_MAX)),
+                    ContenuSansRenseignementDeSante.verifier("corps", texte("corps", corps, CORPS_MAX)), exiger(priorite, "priorite"),
                     reponseIds.stream().distinct().toList(), groupeIds.stream().distinct().toList());
         }
     }
@@ -217,8 +218,8 @@ public final class Alertes {
      */
     public static Alerte composer(String id, String tenantId, String expediteurId, String instant, Composition c,
                                   List<Destinataire> resolus, List<ReponsePredefinie> catalogue) {
-        String titre = texte("titre", c.titre(), TITRE_MAX);
-        String corps = texte("corps", c.corps(), CORPS_MAX);
+        String titre = ContenuSansRenseignementDeSante.verifier("titre", texte("titre", c.titre(), TITRE_MAX));
+        String corps = ContenuSansRenseignementDeSante.verifier("corps", texte("corps", c.corps(), CORPS_MAX));
         Priorite priorite = exiger(c.priorite(), "priorite");
         List<Remise> remises = remises(resolus, expediteurId, instant);
         if (remises.isEmpty()) {

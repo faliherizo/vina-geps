@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **La nature d'une maintenance annoncée** (ADR 0085, ST-H02, 19 novembre 2026) : entretien, correctif ou rehaussement.
+    Le préavis en dépend (FX-AO-20260810, grille 99 et 99.1) et la nature se communique à l'organisme. Une fenêtre
+    annoncée avant ce changeset reste un entretien.
+  -->
+  <changeSet id="0019-soutien-nature-maintenance" author="soutien">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'soutien_maintenances'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('soutien_maintenances') WHERE name = 'nature'</sqlCheck>
+    </preConditions>
+    <comment>Nature de la maintenance annoncée : entretien (défaut), correctif, rehaussement.</comment>
+    <sql>ALTER TABLE soutien_maintenances ADD COLUMN nature TEXT NOT NULL DEFAULT 'entretien'</sql>
+  </changeSet>
+</databaseChangeLog>

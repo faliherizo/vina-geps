@@ -23,6 +23,8 @@ public class GardeAlertes {
     public static final String MODULE = "alertes";
     public static final String CAPACITE_ENVOI = "alertes.envoyer";
     public static final String CAPACITE_CONFIGURATION = "alertes.configure";
+    /** Lire le suivi, la preuve de livraison : distinct d'envoyer (ADR 0085 ; FX-AO-20260810, addenda 2, Q31). */
+    public static final String CAPACITE_SUIVI = "alertes.suivre";
     /** La priorité critique force tous les canaux de chacun : elle se réserve (ST-G01). */
     public static final String CAPACITE_CRITIQUE = "alertes.critique";
     private static final int INTERDIT = 403;

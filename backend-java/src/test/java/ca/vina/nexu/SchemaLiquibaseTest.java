@@ -50,7 +50,7 @@ class SchemaLiquibaseTest {
                 // facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(23);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(24);
     }
 
     @Test
@@ -60,7 +60,8 @@ class SchemaLiquibaseTest {
         JdbcClient jdbc = JdbcClient.create(ds);
         jdbc.sql("CREATE TABLE users (id TEXT PRIMARY KEY)").update();
         liquibase(ds).afterPropertiesSet();
-        // Les évolutions qui créent une table s'appliquent ; celle qui modifie `msg_messages`, absente d'une reprise, est constatée.
+        // Les évolutions qui créent une table s'appliquent ; celles qui modifient une table absente d'une reprise
+        // (`msg_messages`, `soutien_maintenances` pour 0019) sont constatées.
         assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe",
                 "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions",
                 "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs",
@@ -68,7 +69,7 @@ class SchemaLiquibaseTest {
                 "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
                 "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN");
     }
 
     @Test

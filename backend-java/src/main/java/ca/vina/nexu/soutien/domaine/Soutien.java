@@ -66,7 +66,8 @@ public final class Soutien {
                          String politique, SuiviReponse reponse) { }
     /** Le délai de réponse d'un billet, quand la politique en promet un ; {@code atteintLe} = le retour d'appel. */
     public record SuiviReponse(String echeanceLe, String atteintLe, String etat, long ecartMinutes) { }
-    public record Maintenance(String id, String debut, String fin, String description, String statut, String annonceeLe, String annonceePar) { }
+    /** Une fenêtre annoncée ; {@code nature} est le code de {@link NatureChangement} (critère 99.1 : la nature se communique). */
+    public record Maintenance(String id, String debut, String fin, String description, String statut, String annonceeLe, String annonceePar, String nature) { }
     /** Le résumé du soutien : un billet ouvert est « nouveau » tant que le soutien n'y a rien écrit. */
     public record Resume(int ouverts, int nouveaux, int enRetard, String dernierOuvertLe) { }
     public record EtatNotification(List<String> destinataires, String courrielDuCompte, String boitePartagee, ca.vina.nexu.partage.courrier.Courrier.Transport transport) { }
@@ -312,11 +313,32 @@ public final class Soutien {
         if (fin.toEpochMilli() - debut.toEpochMilli() > 12 * 3_600_000L) {
             erreurs.add("une fenêtre de maintenance ne dépasse pas 12 h");
         }
-        double preavisHeures = (debut.toEpochMilli() - Instant.parse(maintenant).toEpochMilli()) / 3_600_000.0;
-        if (preavisHeures < PREAVIS_MAINTENANCE_HEURES) {
-            erreurs.add("préavis insuffisant : " + PREAVIS_MAINTENANCE_HEURES + " h au moins avant le début (il en reste " + Math.max(0, (long) Math.floor(preavisHeures)) + ")");
-        }
+        preavis(m.get("nature"), debut, Instant.parse(maintenant)).ifPresent(erreurs::add);
         return erreurs;
+    }
+
+    /**
+     * Le préavis suit la nature du changement (ST-H02) : 72 h pour un entretien, 3 jours ouvrables pour un correctif,
+     * 21 pour un rehaussement. Le refus dit la première date qui l'aurait respecté.
+     */
+    static java.util.Optional<String> preavis(Object natureBrute, Instant debut, Instant maintenant) {
+        NatureChangement nature;
+        try {
+            nature = NatureChangement.de(natureBrute == null ? null : String.valueOf(natureBrute));
+        } catch (NatureChangement.NatureInconnueException e) {
+            return java.util.Optional.of(e.getMessage());
+        }
+        Instant admis = nature.premierDebutAdmis(maintenant);
+        if (!debut.isBefore(admis)) {
+            return java.util.Optional.empty();
+        }
+        if (nature == NatureChangement.ENTRETIEN) {
+            double preavisHeures = (debut.toEpochMilli() - maintenant.toEpochMilli()) / 3_600_000.0;
+            return java.util.Optional.of("préavis insuffisant : " + PREAVIS_MAINTENANCE_HEURES + " h au moins avant le début (il en reste "
+                    + Math.max(0, (long) Math.floor(preavisHeures)) + ")");
+        }
+        return java.util.Optional.of("préavis insuffisant pour un " + nature.code() + " : " + nature.joursOuvrables()
+                + " jours ouvrables au moins ; premier début admis : " + admis.atZone(JoursOuvrablesDuQuebec.FUSEAU).toLocalDate() + " (heure de Montréal)");
     }
 
     /** La minute d'un instant, clé de comptage : « 2026-09-12T14:03 ». */
