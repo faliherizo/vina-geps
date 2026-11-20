@@ -40,9 +40,12 @@ public enum ContexteRegle {
                     f("absencePlanifiee", BOOLEEN, "Déclarée d'avance, avant son premier jour"));
             case ATTRIBUTION -> List.of(f("admissible", BOOLEEN, "Admissible au poste"), f("reposHeures", NOMBRE, "Heures de repos depuis le quart précédent"),
                     f("heuresSemaine", NOMBRE, "Heures déjà planifiées dans la semaine"), f("formationRequiseAcquise", BOOLEEN, "Formation requise acquise"),
-                    f("rang", NOMBRE, "Rang dans le classement"));
+                    f("rang", NOMBRE, "Rang dans le classement"),
+                    f("heures24h", NOMBRE, "Heures planifiées sur 24 h, ce quart compris"));
             case ECHANGE -> List.of(f("reposHeures", NOMBRE, "Heures de repos entre deux quarts"), f("heuresSemaine", NOMBRE, "Heures de la semaine après l'échange"),
-                    f("contigu", BOOLEEN, "Quart contigu à un autre quart"), f("memePeriode", BOOLEEN, "Échange dans la même période"));
+                    f("contigu", BOOLEEN, "Quart contigu à un autre quart"), f("memePeriode", BOOLEEN, "Échange dans la même période"),
+                    // Addenda 7, Q8 : la contiguïté vise aussi le nombre d'heures maximal par jour de travail (24 h).
+                    f("heures24h", NOMBRE, "Heures planifiées sur 24 h après l'échange"));
             case POINTAGE -> List.of(f("ecartDebutMinutes", NOMBRE, "Écart au début prévu (minutes)"),
                     f("distanceMetres", NOMBRE, "Distance au milieu (mètres ; -1 sans position)"), f("mecanisme", TEXTE, "Mécanisme de preuve"),
                     f("preuveExigeePresente", BOOLEEN, "Preuve exigée présente"));

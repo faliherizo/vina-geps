@@ -10,3 +10,15 @@
 - Acteurs de l'amorce : `admin`, `chef`, `julie` (`{{P1}}`), `marc` (`{{P2}}`), milieu `{{c12}}` (README de la suite).
 - Dates de 2030 et après : rien ne dépend de l'instant du passage.
 - Un attendu nomme une **valeur** (statut, motif, compte), jamais une simple présence.
+
+## Par story
+
+| Story | Exigences | Scénarios |
+|---|---|---|
+| AD-01 Heures sur 24 h | E-GR-7 | [05_scenarios/AD-01.md](05_scenarios/AD-01.md) |
+| AD-02 Seuil par code d'absence | E-CH-6, E-CH-7, P-CH-8, E-GR-4 | [05_scenarios/AD-02.md](05_scenarios/AD-02.md) |
+| AD-03 Heures supplémentaires par période de paie et par convention | E-RF-5 | [05_scenarios/AD-03.md](05_scenarios/AD-03.md) |
+| AD-04 Optimisation du budget AGPH | E-CH-1 | [05_scenarios/AD-04.md](05_scenarios/AD-04.md) |
+| AD-05 Renoncer ; délai échu paramétrable | P-CH-2, P-CH-4, P-CH-7 | [05_scenarios/AD-05.md](05_scenarios/AD-05.md) |
+
+Un lien sans fichier signale une story pas encore livrée (voir le [planificateur](03_planificateur.md)).

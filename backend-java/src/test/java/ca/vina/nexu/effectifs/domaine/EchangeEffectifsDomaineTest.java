@@ -82,13 +82,13 @@ class EchangeEffectifsDomaineTest {
         @DisplayName("repos, semaine, contiguïté et période")
         void faits() {
             assertThat(EchangeEffectifs.faitsDUnSens(horaire, new Planification.Creneau("2030-03-05", 360, 1080), true))
-                    .isEqualTo(new EchangeEffectifs.Faits(12, 24, false, true));
+                    .isEqualTo(new EchangeEffectifs.Faits(12, 24, false, true, 12));
             assertThat(EchangeEffectifs.faitsDUnSens(horaire, new Planification.Creneau("2030-03-04", 1080, 1320), false))
-                    .isEqualTo(new EchangeEffectifs.Faits(0, 16, true, false));
+                    .isEqualTo(new EchangeEffectifs.Faits(0, 16, true, false, 16));
             EchangeEffectifs.Faits seul = EchangeEffectifs.faitsDUnSens(List.of(), new Planification.Creneau("2030-03-04", 360, 1080), true);
-            assertThat(seul).isEqualTo(new EchangeEffectifs.Faits(999, 12, false, true));
+            assertThat(seul).isEqualTo(new EchangeEffectifs.Faits(999, 12, false, true, 12));
             assertThat(seul.enCarte()).containsExactly(Map.entry("reposHeures", 999.0), Map.entry("heuresSemaine", 12.0), Map.entry("contigu", false),
-                    Map.entry("memePeriode", true));
+                    Map.entry("memePeriode", true), Map.entry("heures24h", 12.0));
         }
 
         @Test

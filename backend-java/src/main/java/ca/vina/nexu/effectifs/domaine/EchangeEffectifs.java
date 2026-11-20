@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * {@code backend/src/effectifs/echanges/domaine.ts}.
  *
  * <p>Deux personnes s'échangent leurs places. L'échange se juge <strong>dans les deux sens</strong> : ce que
- * la destinataire reçoit (son repos, sa semaine, la contiguïté) et ce que la demandeuse reçoit en retour — un
+ * la destinataire reçoit (son repos, sa semaine, la contiguïté, ses heures sur 24 h) et ce que la demandeuse reçoit en retour — un
  * seul sens, c'était l'écart relevé. La politique entre périodes (autorisé, restreint, interdit) n'est pas un
  * réglage à part : c'est une règle ECHANGE sur le fait {@code memePeriode}, datée et portée par l'organisme,
  * l'unité ou la convention (décision D-9). Aucune E/S, aucune horloge.
@@ -103,13 +103,14 @@ public final class EchangeEffectifs {
     // ── Jugement dans les deux sens ─────────────────────────────────────────
 
     /** Les faits d'un sens de l'échange, dans l'ordre du catalogue du contexte ECHANGE. */
-    public record Faits(double reposHeures, double heuresSemaine, boolean contigu, boolean memePeriode) {
+    public record Faits(double reposHeures, double heuresSemaine, boolean contigu, boolean memePeriode, double heures24h) {
         public Map<String, Object> enCarte() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("reposHeures", reposHeures);
             m.put("heuresSemaine", heuresSemaine);
             m.put("contigu", contigu);
             m.put("memePeriode", memePeriode);
+            m.put("heures24h", heures24h);
             return m;
         }
     }
@@ -123,7 +124,8 @@ public final class EchangeEffectifs {
             throw new EffectifsInvalideException("le quart du " + recu.date() + " chevaucherait un autre quart de la même personne");
         }
         Optional<Double> repos = Planification.reposHeures(horaire, recu);
-        return new Faits(repos.orElse(REPOS_SANS_VOISIN), Planification.heuresSemaine(horaire, recu), repos.filter(r -> r == 0).isPresent(), memePeriode);
+        return new Faits(repos.orElse(REPOS_SANS_VOISIN), Planification.heuresSemaine(horaire, recu), repos.filter(r -> r == 0).isPresent(), memePeriode,
+                Planification.heuresSur24h(horaire, recu));
     }
 
     /** Un sens jugé : la personne qui reçoit, et le verdict des règles pour elle. */
