@@ -13,6 +13,7 @@ import { useApiEffectifs } from "../api";
 import { FormulaireModal } from "../../Modal";
 import { BadgeConformite } from "../disponibilites/Motifs";
 import SemaineType from "./SemaineType";
+import OptimisationBudget from "./OptimisationBudget";
 import { depotOuvert, type DepotCampagne, type DepotsCampagne, type PlageType, type VueCampagne } from "./types";
 
 type Ligne = DepotsCampagne["lignes"][number];
@@ -104,6 +105,8 @@ export default function DepotsCampagnePanneau({ campagne, onParametree }: { camp
                 </td>
               </tr>
             )} />
+          {/* AD-04 : avec un budget fixé, la solution propose les postes qui le couvrent au mieux. */}
+          {donnees.budgetHeuresSemaine ? <OptimisationBudget campagneId={campagne.id} /> : null}
         </>
       )}
       <Tiroir ouvert={!!saisie} onFermer={() => setSaisie(null)} titre={saisie ? `Semaine type de ${saisie.nom}` : "Semaine type"} testId="pla-agph-dispo-saisie">

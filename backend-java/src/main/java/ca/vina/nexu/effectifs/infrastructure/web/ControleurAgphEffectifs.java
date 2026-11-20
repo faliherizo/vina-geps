@@ -123,6 +123,12 @@ public class ControleurAgphEffectifs {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.disponibilites().depotsDeLaCampagne(ctx, id));
     }
 
+    /** AD-04 (addenda 7, Q11) : la proposition d'optimisation du budget d'heures, en lecture seule. */
+    @GetMapping("/campagnes/{id}/optimisation")
+    public ResponseEntity<Object> optimisation(HttpServletRequest r, @PathVariable String id) {
+        return garde.repondre(r, gerer(r), 200, ctx -> agir.disponibilites().optimisation(ctx, id));
+    }
+
     /** Sans dépôt, le corps est {@code null}, comme le {@code res.json(null)} du Node. */
     @GetMapping("/campagnes/{id}/disponibilites/moi")
     public ResponseEntity<Object> monDepot(HttpServletRequest r, @PathVariable String id) {
