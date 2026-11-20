@@ -16,7 +16,9 @@ import ca.vina.nexu.effectifs.domaine.Disponibilites;
 import ca.vina.nexu.effectifs.domaine.EffectifsInvalideException;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifs;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
+import ca.vina.nexu.effectifs.domaine.OptimisationBudgetAgph;
 import ca.vina.nexu.effectifs.domaine.Perimetres;
+import ca.vina.nexu.effectifs.domaine.Planification;
 import ca.vina.nexu.effectifs.domaine.RefusParRegleException;
 import ca.vina.nexu.effectifs.domaine.Regles;
 import ca.vina.nexu.effectifs.domaine.Ressource;
@@ -151,5 +153,52 @@ public class DisponibilitesCampagneAgph {
         Double budget = c.budgetHeuresSemaine();
         Double taux = budget == null ? null : Math.round(heures / budget * MILLIEMES) / DIXIEMES;
         return new DepotsDeLaCampagne(campagneId, c.etat(), budget, heures, taux, (int) lignes.stream().filter(l -> l.depot() != null).count(), lignes);
+    }
+
+    /**
+     * La proposition d'optimisation du budget (E-CH-1 ; addenda 7, Q11 ; AD-04) : parmi les postes offerts à la campagne et que
+     * couvre au moins une semaine type déposée, ceux qui couvrent le plus d'heures sans dépasser le budget. Rien n'est écrit.
+     */
+    public Map<String, Object> optimisation(Contexte ctx, String campagneId) {
+        AgphCampagne c = lecture.visible(ctx, campagneId);
+        appuis.perimetres().exiger(ctx, c.uniteCode(), Perimetres.Niveau.LECTURE);
+        if (c.budgetHeuresSemaine() == null) {
+            throw new ConflitException("fixez d'abord le budget d'heures de la campagne : sans budget, il n'y a rien à optimiser");
+        }
+        List<OptimisationBudgetAgph.PosteAEvaluer> postes = lecture.postesLibres(ctx, campagneId).stream()
+                .map(p -> new OptimisationBudgetAgph.PosteAEvaluer(p.id(), p.code(), p.libelle(), p.cycle().size(),
+                        OptimisationBudgetAgph.quartsDuCycle(p.cycle(), code -> plage(ctx, code)))).toList();
+        List<List<AgphSemaineType.PlageType>> depots = lecture.rangs(ctx, campagneId).stream()
+                .flatMap(g -> depot.lire(ctx.tenantId(), campagneId, g.ressourceId()).stream()).map(AgphSemaineDeposee::plages).toList();
+        return vue(OptimisationBudgetAgph.proposer(postes, depots, c.budgetHeuresSemaine()));
+    }
+
+    /** Le créneau d'une plage horaire en vigueur aujourd'hui. */
+    private Planification.Plage plage(Contexte ctx, String code) {
+        Map<String, Object> a = appuis.referentiels().exigerValeur(ctx.tenantId(), TypeReferentiel.PLAGES_HORAIRES, code, ctx.aujourdhui()).attributs();
+        return new Planification.Plage(((Number) a.get("debut")).intValue(), ((Number) a.get("fin")).intValue());
+    }
+
+    /** La forme rendue : les motifs d'écart se disent en mots, à côté de leur code. */
+    static Map<String, Object> vue(OptimisationBudgetAgph.Proposition p) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("budgetHeures", p.budgetHeures());
+        m.put("totalHeures", p.totalHeures());
+        m.put("resteHeures", p.resteHeures());
+        m.put("retenus", p.retenus().stream().map(DisponibilitesCampagneAgph::vue).toList());
+        m.put("ecartes", p.ecartes().stream().map(DisponibilitesCampagneAgph::vue).toList());
+        return m;
+    }
+
+    private static Map<String, Object> vue(OptimisationBudgetAgph.PosteJuge j) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("id", j.id());
+        m.put("code", j.code());
+        m.put("libelle", j.libelle());
+        m.put("heuresSemaine", j.heuresSemaine());
+        m.put("candidats", j.candidats());
+        m.put("motif", j.motif() == null ? null : j.motif().name());
+        m.put("motifLibelle", j.motif() == null ? null : j.motif().libelle());
+        return m;
     }
 }
