@@ -75,6 +75,7 @@ public class GestionnairePlaces {
         faits.put("heuresSemaine", Planification.heuresSemaine(autres, e.creneau()));
         faits.put("formationRequiseAcquise", true);
         faits.put("rang", 0);
+        faits.put("heures24h", Planification.heuresSur24h(autres, e.creneau()));
         Map<String, String> portees = new HashMap<>();
         portees.put("convention", r.conventionCode());
         portees.put("statutEmploi", r.statutEmploiCode());
