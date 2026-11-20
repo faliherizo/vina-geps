@@ -1,6 +1,6 @@
 # 7. Addenda n° 06 — réponses traitées, ajustements, et questions métier
 
-> Addenda n° 06 du **10 novembre 2026** (fichier `reponses/addenda-01.md`, qui porte en fait
+> Addenda n° 06 du **10 novembre 2026** (fichier `reponses/addenda-06.md`, anciennement `addenda-01.md`, qui portait en fait
 > l'addenda **n° 06**). Il répond à nos neuf questions (fichier 06) et à six questions d'autres
 > soumissionnaires, joint une **grille des critères v2** et **reporte le dépôt au 26 novembre 2026,
 > 14 h 00**.
