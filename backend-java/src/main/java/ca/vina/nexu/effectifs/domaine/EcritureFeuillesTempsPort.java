@@ -32,6 +32,9 @@ public interface EcritureFeuillesTempsPort {
 
     void enregistrerParametres(Contexte ctx, TempsEffectifs.Parametres p);
 
+    /** Pose les seuils d'une convention ; des seuils vides retirent la surcharge. */
+    void enregistrerSeuilsConvention(Contexte ctx, SeuilsConvention s);
+
     void insererFeuille(Contexte ctx, NouvelleFeuille f);
 
     void insererSegment(Contexte ctx, String feuilleId, NouveauSegment s, Filiation f);

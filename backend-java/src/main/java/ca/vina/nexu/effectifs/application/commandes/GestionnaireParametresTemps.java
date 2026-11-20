@@ -9,6 +9,7 @@ import ca.vina.nexu.effectifs.domaine.IntrouvableException;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifs;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
+import ca.vina.nexu.effectifs.domaine.SeuilsConvention;
 import ca.vina.nexu.effectifs.domaine.TempsEffectifs;
 
 import java.util.List;
@@ -33,6 +34,20 @@ public class GestionnaireParametresTemps {
         depot.enregistrerParametres(ctx, p);
         journal.ecrire(ctx, JournalEffectifs.Consignation.de("temps.parametres", "parametres", ctx.tenantId(), null, avant, p));
         return p;
+    }
+
+    /**
+     * Les seuils d'heures supplémentaires d'une convention (addenda 7, Q15) ; des seuils vides retirent la surcharge. Rend
+     * la liste à jour des conventions qui ont leurs propres seuils.
+     */
+    public List<SeuilsConvention> modifierSeuilsConvention(Contexte ctx, String conventionCode, Map<String, Object> entree) {
+        lecture.exigerConvention(ctx, conventionCode);
+        SeuilsConvention avant = lecture.seuilsConventions(ctx.tenantId()).stream().filter(s -> s.conventionCode().equals(conventionCode)).findFirst()
+                .orElse(null);
+        SeuilsConvention s = SeuilsConvention.de(conventionCode, entree);
+        depot.enregistrerSeuilsConvention(ctx, s);
+        journal.ecrire(ctx, JournalEffectifs.Consignation.de("temps.seuils.convention", "convention", conventionCode, null, avant, s.estVide() ? null : s));
+        return lecture.seuilsConventions(ctx.tenantId());
     }
 
     /** Les champs de la feuille propres à l'organisme, dans leur ordre (ETUDE-FEUILLE-DE-TEMPS-DYNAMIQUE.md). */

@@ -16,6 +16,7 @@ import { useReferentiels } from "../planification/useReferentiels";
 import DetailFeuille from "./DetailFeuille";
 import FluxApprobation from "./FluxApprobation";
 import SuperieursHierarchiques from "./SuperieursHierarchiques";
+import SeuilsConventions from "./SeuilsConventions";
 import { champsAffiches, ParametresChamps, useChampsFeuille } from "./ChampsFeuille";
 import { decisionEnMots, duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
 
@@ -213,6 +214,8 @@ export default function TempsPlanification() {
           {(fermer) => (parametres ? (
                 <form onSubmit={(e) => void enregistrerParametres(e, fermer)}>
                   {([["seuilJourHeures", "Heures par jour avant les heures supplémentaires", 1, 24], ["seuilSemaineHeures", "Heures par semaine avant les heures supplémentaires", 1, 168],
+                    // Addenda 7, Q15 : un troisième seuil, sur la période de paie (une feuille = une période) ; 0 = aucun.
+                    ["seuilPeriodePaieHeures", "Heures par période de paie avant les heures supplémentaires (0 : aucun seuil)", 0, 744],
                     ["paliersApprobation", "Paliers d'approbation par défaut (1 à 3)", 1, 3], ["toleranceEcartMinutes", "Tolérance d'écart au planifié (minutes)", 0, 240],
                     ["toleranceCorroborationMinutes", "Tolérance de corroboration par une source tierce (minutes)", 0, 60]] as const).map(([cle, libelle, min, max]) => (
                     <p key={cle}>
@@ -237,6 +240,9 @@ export default function TempsPlanification() {
                   <p><button type="submit" data-testid="pla-tps-p-enregistrer">Enregistrer les paramètres</button></p>
                 </form>
           ) : <p role="status">Chargement des paramètres…</p>)}
+        </FormulaireModal>
+        <FormulaireModal libelle="Seuils par convention" titre="Seuils d'heures supplémentaires par convention" testId="feuilles-seuils-conventions" icone="⚙" className="secondary">
+          <SeuilsConventions />
         </FormulaireModal>
         <FormulaireModal libelle="Flux d'approbation" titre="Flux d'approbation des heures" testId="feuilles-approbations" icone="⚙" className="secondary">
           <FluxApprobation />

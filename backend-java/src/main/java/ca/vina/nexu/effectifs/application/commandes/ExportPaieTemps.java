@@ -59,7 +59,8 @@ public class ExportPaieTemps {
                 LectureFeuillesTemps.typeDuComportement(types, Comportements.TypeHeure.TRAVAILLEE).codePaie(),
                 LectureFeuillesTemps.typeDuComportement(types, Comportements.TypeHeure.SUPPLEMENTAIRE).codePaie());
         List<TempsEffectifs.SegmentLu> segments = lecture.segmentsActifs(ctx, f.id(), types);
-        Map<String, Long> supplementaires = TempsEffectifs.heuresSupplementaires(segments, lecture.parametres(ctx.tenantId())).parJour();
+        Map<String, Long> supplementaires = TempsEffectifs.heuresSupplementaires(segments,
+                lecture.parametresPour(ctx.tenantId(), lecture.ressources().exiger(ctx, f.ressourceId()).conventionCode())).parJour();
         Set<String> codesSupplementaires = types.stream().filter(t -> t.comportement() == Comportements.TypeHeure.SUPPLEMENTAIRE)
                 .map(LectureFeuillesTemps.TypeHeureTemps::codePaie).collect(Collectors.toSet());
         return new LignesFeuille(TempsEffectifs.lignesDePaie(f.matricule(), segments, codes, supplementaires), codesSupplementaires,

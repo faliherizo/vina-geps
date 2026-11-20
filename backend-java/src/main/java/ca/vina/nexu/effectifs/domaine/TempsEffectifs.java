@@ -41,7 +41,7 @@ public final class TempsEffectifs {
     public static final int AUCUN_PALIER = 0;
     public static final int TEXTE_MAX = 500;
     public static final int MOTIF_MIN = 5;
-    public static final Parametres PARAMETRES_DEFAUT = new Parametres(8, 40, 1, 15, 5, ActionCorroboration.SIGNALER, ActionCorroboration.BLOQUER);
+    public static final Parametres PARAMETRES_DEFAUT = new Parametres(8, 40, 1, 15, 5, ActionCorroboration.SIGNALER, ActionCorroboration.BLOQUER, 0);
 
     private static final long MINUTE_MS = 60_000L;
     private static final long JOURNEE_MS = 24 * 3_600_000L;
@@ -110,7 +110,9 @@ public final class TempsEffectifs {
     /** Les paramètres numériques réglables de l'organisme, avec leurs bornes, dans l'ordre des composantes de {@link Parametres}. */
     public enum Parametre {
         SEUIL_JOUR("seuilJourHeures", 1, 24), SEUIL_SEMAINE("seuilSemaineHeures", 1, 168), PALIERS("paliersApprobation", 1, 3),
-        TOLERANCE("toleranceEcartMinutes", 0, 240), TOLERANCE_CORROBORATION("toleranceCorroborationMinutes", 0, 60);
+        TOLERANCE("toleranceEcartMinutes", 0, 240), TOLERANCE_CORROBORATION("toleranceCorroborationMinutes", 0, 60),
+        // Addenda 7, Q15 : le troisième seuil, sur la période de paie que couvre une feuille ; 0 = aucun.
+        SEUIL_PERIODE_PAIE("seuilPeriodePaieHeures", 0, 744);
 
         private final String code;
         private final int min;
@@ -150,21 +152,34 @@ public final class TempsEffectifs {
      * entre deux sources.
      */
     public record Parametres(int seuilJourHeures, int seuilSemaineHeures, int paliersApprobation, int toleranceEcartMinutes,
-                             int toleranceCorroborationMinutes, ActionCorroboration actionNonCorrobore, ActionCorroboration actionSourcesDivergentes) {
+                             int toleranceCorroborationMinutes, ActionCorroboration actionNonCorrobore, ActionCorroboration actionSourcesDivergentes,
+                             int seuilPeriodePaieHeures) {
 
         Parametres avec(Parametre p, int v) {
-            int[] n = {seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes, toleranceCorroborationMinutes};
+            int[] n = {seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes, toleranceCorroborationMinutes, seuilPeriodePaieHeures};
             n[p.ordinal()] = v;
-            return new Parametres(n[0], n[1], n[2], n[3], n[4], actionNonCorrobore, actionSourcesDivergentes);
+            return new Parametres(n[0], n[1], n[2], n[3], n[4], actionNonCorrobore, actionSourcesDivergentes, n[5]);
         }
 
         Parametres avec(ChoixCorroboration c, ActionCorroboration a) {
             return switch (c) {
                 case NON_CORROBORE -> new Parametres(seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes,
-                        toleranceCorroborationMinutes, a, actionSourcesDivergentes);
+                        toleranceCorroborationMinutes, a, actionSourcesDivergentes, seuilPeriodePaieHeures);
                 case SOURCES_DIVERGENTES -> new Parametres(seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes,
-                        toleranceCorroborationMinutes, actionNonCorrobore, a);
+                        toleranceCorroborationMinutes, actionNonCorrobore, a, seuilPeriodePaieHeures);
             };
+        }
+
+        /**
+         * Les paramètres d'une feuille dont la personne relève de cette convention : chaque seuil que la convention porte
+         * remplace celui de l'organisme (addenda 7, Q15 : « paramétrables selon le groupe d'employés et les règles
+         * conventionnées »).
+         */
+        public Parametres selon(SeuilsConvention s) {
+            return new Parametres(s.seuilJourHeures() != null ? s.seuilJourHeures() : seuilJourHeures,
+                    s.seuilSemaineHeures() != null ? s.seuilSemaineHeures() : seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes,
+                    toleranceCorroborationMinutes, actionNonCorrobore, actionSourcesDivergentes,
+                    s.seuilPeriodePaieHeures() != null ? s.seuilPeriodePaieHeures() : seuilPeriodePaieHeures);
         }
 
         /** La tolérance de corroboration, en millisecondes. */
@@ -451,9 +466,9 @@ public final class TempsEffectifs {
     }
 
     /**
-     * Les heures supplémentaires : l'excédent du jour, puis l'excédent de la semaine sur ce qui reste — une minute n'est
-     * jamais comptée deux fois. Chaque jour reçoit sa part de l'excédent de la semaine, du dernier jour vers le premier
-     * (les dernières heures sont celles qui dépassent).
+     * Les heures supplémentaires : l'excédent du jour, puis l'excédent de la semaine sur ce qui reste, puis celui de la
+     * période de paie (la feuille entière) sur ce qui reste encore — une minute n'est jamais comptée deux fois. Chaque jour
+     * reçoit sa part d'un excédent, du dernier jour vers le premier (les dernières heures sont celles qui dépassent).
      */
     public static HeuresSupplementaires heuresSupplementaires(List<? extends SegmentDeTemps> segments, Parametres p) {
         Map<String, Long> parJour = new LinkedHashMap<>();
@@ -466,6 +481,11 @@ public final class TempsEffectifs {
             semaines.computeIfAbsent(Planification.lundiDe(j.getKey()), k -> new ArrayList<>()).add(Map.entry(j.getKey(), j.getValue() - excedent));
         });
         semaines.values().forEach(jours -> repartirLaSemaine(jours, p.seuilSemaineHeures() * (long) MINUTES_HEURE, parJour));
+        if (p.seuilPeriodePaieHeures() > 0) {
+            List<Map.Entry<String, Long>> reste = minutesTravailleesParJour(segments).entrySet().stream().sorted(Map.Entry.comparingByKey())
+                    .map(j -> Map.entry(j.getKey(), j.getValue() - parJour.getOrDefault(j.getKey(), 0L))).toList();
+            repartirLaSemaine(reste, p.seuilPeriodePaieHeures() * (long) MINUTES_HEURE, parJour);
+        }
         // Une heure déclarée supplémentaire l'est même sous le seuil ; au-dessus, l'excédent la contient déjà.
         supplementairesDeclarees(segments).forEach((jour, minutes) -> parJour.merge(jour, minutes, Math::max));
         return new HeuresSupplementaires(parJour, parJour.values().stream().mapToLong(Long::longValue).sum());
@@ -544,6 +564,8 @@ public final class TempsEffectifs {
         double heuresSemaine = parJour.entrySet().stream().filter(e -> Planification.lundiDe(e.getKey()).equals(lundi)).mapToLong(Map.Entry::getValue).sum()
                 / (double) MINUTES_HEURE;
         double heuresJour = parJour.getOrDefault(j.date(), 0L) / (double) MINUTES_HEURE;
+        double heuresPeriodePaie = parJour.entrySet().stream().filter(e -> e.getKey().compareTo(j.date()) <= 0).mapToLong(Map.Entry::getValue).sum()
+                / (double) MINUTES_HEURE;
         Map<String, Object> feuille = new LinkedHashMap<>();
         feuille.put("heuresJour", heuresJour);
         feuille.put("heuresSemaine", heuresSemaine);
@@ -553,6 +575,7 @@ public final class TempsEffectifs {
         supplementaires.put("heuresJour", heuresJour);
         supplementaires.put("heuresSemaine", heuresSemaine);
         supplementaires.put("jourFerie", j.jourFerie());
+        supplementaires.put("heuresPeriodePaie", heuresPeriodePaie);
         Map<ContexteRegle, Map<String, Object>> faits = new LinkedHashMap<>();
         faits.put(ContexteRegle.FEUILLE_DE_TEMPS, feuille);
         faits.put(ContexteRegle.HEURES_SUPPLEMENTAIRES, supplementaires);

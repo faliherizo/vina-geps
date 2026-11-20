@@ -29,5 +29,6 @@
   <include file="db/changelog/0017-alertes-notes.xml"/>
   <include file="db/changelog/0018-paie-regles-et-validation.xml"/>
   <include file="db/changelog/0019-soutien-nature-maintenance.xml"/>
+  <include file="db/changelog/0020-temps-seuils-periode-paie-et-conventions.xml"/>
 
 </databaseChangeLog>

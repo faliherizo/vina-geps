@@ -7,6 +7,7 @@ import ca.vina.nexu.effectifs.domaine.FeuilleTemps;
 import ca.vina.nexu.effectifs.domaine.IntrouvableException;
 import ca.vina.nexu.effectifs.domaine.LectureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.Perimetres;
+import ca.vina.nexu.effectifs.domaine.SeuilsConvention;
 import ca.vina.nexu.effectifs.domaine.TempsEffectifs;
 import ca.vina.nexu.effectifs.domaine.TypeReferentiel;
 
@@ -51,6 +52,21 @@ public class LectureFeuillesTemps {
 
     public TempsEffectifs.Parametres parametres(String tenantId) {
         return depot.parametres(tenantId).orElse(TempsEffectifs.PARAMETRES_DEFAUT);
+    }
+
+    /** Les paramètres qui valent pour une personne de cette convention : ceux de l'organisme, précisés par la convention. */
+    public TempsEffectifs.Parametres parametresPour(String tenantId, String conventionCode) {
+        TempsEffectifs.Parametres p = parametres(tenantId);
+        return depot.seuilsConventions(tenantId).stream().filter(s -> s.conventionCode().equals(conventionCode)).findFirst().map(p::selon).orElse(p);
+    }
+
+    public List<SeuilsConvention> seuilsConventions(String tenantId) {
+        return depot.seuilsConventions(tenantId);
+    }
+
+    /** La convention doit exister en vigueur aujourd'hui : une surcharge sur un code inconnu ne s'appliquerait jamais. */
+    public void exigerConvention(Contexte ctx, String code) {
+        referentiels.exigerValeur(ctx.tenantId(), TypeReferentiel.CONVENTIONS, code, ctx.aujourdhui());
     }
 
     // ── Types d'heures ───────────────────────────────────────────────────────
