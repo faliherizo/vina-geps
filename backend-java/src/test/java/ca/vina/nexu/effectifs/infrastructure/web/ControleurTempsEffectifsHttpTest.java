@@ -490,7 +490,7 @@ class ControleurTempsEffectifsHttpTest {
         http.put(TP + "/parametres", CHEF, "{\"paliersApprobation\":2}").andExpect(status().isForbidden());
         assertThat(corps(http.put(TP + "/parametres", ADMIN, "{\"paliersApprobation\":2,\"toleranceEcartMinutes\":30}").andExpect(status().isOk())))
                 .isEqualTo("{\"seuilJourHeures\":8,\"seuilSemaineHeures\":40,\"paliersApprobation\":2,\"toleranceEcartMinutes\":30,"
-                        + "\"toleranceCorroborationMinutes\":5,\"actionNonCorrobore\":\"SIGNALER\",\"actionSourcesDivergentes\":\"BLOQUER\"}");
+                        + "\"toleranceCorroborationMinutes\":5,\"actionNonCorrobore\":\"SIGNALER\",\"actionSourcesDivergentes\":\"BLOQUER\",\"seuilPeriodePaieHeures\":0}");
         http.get(TP + "/parametres", JULIE).andExpect(jsonPath("$.paliersApprobation").value(2));
         http.put(TP + "/parametres", ADMIN, "{\"paliersApprobation\":9}").andExpect(status().is(422));
         http.post(f1 + "/soumettre", JULIE, null).andExpect(status().isOk()).andExpect(jsonPath("$.statut").value("SOUMISE"))
@@ -586,6 +586,41 @@ class ControleurTempsEffectifsHttpTest {
         assertThat(TempsEffectifs.StatutFeuille.valueOf(JsonPath.read(feuille("P9"), "$.statut"))).isEqualTo(TempsEffectifs.StatutFeuille.RETOURNEE);
     }
 
+
+    @Test
+    @DisplayName("AD-03 — seuils par convention : réservés à la configuration, sur une convention connue, appliqués à la feuille de la personne")
+    void seuilsParConvention() throws Exception {
+        preparation();
+        String feuille = TP + "/feuilles/" + ids.get("f_P1");
+        int avant = JsonPath.read(corps(http.get(feuille, ADMIN).andExpect(status().isOk())), "$.heuresSupplementaires.total");
+        assertThat(avant).isPositive();
+        String sc = TP + "/seuils-conventions/SPCSN";
+        http.put(sc, CHEF, "{\"seuilJourHeures\":24}").andExpect(status().isForbidden());
+        http.put(sc, ADMIN, "{\"seuilJourHeures\":24}").andExpect(status().is(422))
+                .andExpect(jsonPath("$.errors[0]").value(Matchers.startsWith("Conventions collectives : « SPCSN » n'est pas en vigueur")));
+        ref("conventions", "{\"code\":\"SPCSN\",\"libelleFr\":\"SP-CSN paramédics\"}");
+        http.put(sc, ADMIN, "{\"seuilJourHeures\":25}").andExpect(status().is(422));
+        http.put(sc, ADMIN, "{\"seuilJourHeures\":24,\"seuilSemaineHeures\":168}").andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].conventionCode").value("SPCSN")).andExpect(jsonPath("$[0].seuilJourHeures").value(24))
+                .andExpect(jsonPath("$[0].seuilPeriodePaieHeures").value(Matchers.nullValue()));
+        // La surcharge ne vaut que pour les personnes de la convention : Julie n'en est pas encore.
+        assertThat((int) JsonPath.read(corps(http.get(feuille, ADMIN)), "$.heuresSupplementaires.total")).isEqualTo(avant);
+        http.put(PL + "/ressources/" + ids.get("P1"), ADMIN, "{\"nom\":\"Julie\",\"uniteCode\":\"EST\",\"corpsEmploiCode\":\"PARA\",\"utilisateurId\":\"usr-julie\","
+                + "\"conventionCode\":\"SPCSN\"}").andExpect(status().isOk());
+        assertThat((int) JsonPath.read(corps(http.get(feuille, ADMIN)), "$.heuresSupplementaires.total")).isZero();
+        // Le seuil de période de paie de la convention reprend la main sur ce qui reste.
+        http.put(sc, ADMIN, "{\"seuilJourHeures\":24,\"seuilSemaineHeures\":168,\"seuilPeriodePaieHeures\":1}").andExpect(status().isOk());
+        assertThat((int) JsonPath.read(corps(http.get(feuille, ADMIN)), "$.heuresSupplementaires.total")).isPositive();
+        http.get(TP + "/seuils-conventions", JULIE).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(1)));
+        // Tout vider retire la surcharge : la feuille revient aux seuils de l'organisme.
+        http.put(sc, ADMIN, "{}").andExpect(status().isOk()).andExpect(content("[]"));
+        assertThat((int) JsonPath.read(corps(http.get(feuille, ADMIN)), "$.heuresSupplementaires.total")).isEqualTo(avant);
+        http.get(E + "/journal?action=temps.seuils.convention", ADMIN).andExpect(jsonPath("$", Matchers.hasSize(3)));
+        // Le seuil de période de paie de l'organisme : borné, enregistré, relu.
+        http.put(TP + "/parametres", ADMIN, "{\"seuilPeriodePaieHeures\":745}").andExpect(status().is(422));
+        http.put(TP + "/parametres", ADMIN, "{\"seuilPeriodePaieHeures\":80}").andExpect(status().isOk());
+        http.get(TP + "/parametres", JULIE).andExpect(jsonPath("$.seuilPeriodePaieHeures").value(80));
+    }
 
     @Test
     @DisplayName("les champs de l'organisme : l'administration les définit ; la saisie les vérifie ; la correction garde la description")

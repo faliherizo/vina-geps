@@ -52,7 +52,8 @@ public enum ContexteRegle {
             case FEUILLE_DE_TEMPS -> List.of(f("heuresJour", NOMBRE, "Heures déclarées du jour"), f("heuresSemaine", NOMBRE, "Heures déclarées de la semaine"),
                     f("ecartPlanifieMinutes", NOMBRE, "Écart planifié / déclaré (minutes)"), f("sansPointage", BOOLEEN, "Journée sans pointage"));
             case HEURES_SUPPLEMENTAIRES -> List.of(f("heuresJour", NOMBRE, "Heures travaillées du jour"), f("heuresSemaine", NOMBRE, "Heures travaillées de la semaine"),
-                    f("jourFerie", BOOLEEN, "Jour férié"));
+                    f("jourFerie", BOOLEEN, "Jour férié"),
+                    f("heuresPeriodePaie", NOMBRE, "Heures travaillées de la période de paie, jusqu'à ce jour"));
             case CHOIX_AGPH -> List.of(f("statutOffert", TEXTE, "Statut d'emploi offert par le poste"), f("corpsRequis", TEXTE, "Corps d'emploi requis"),
                     f("corpsEmploi", TEXTE, "Corps d'emploi de la personne"), f("rang", NOMBRE, "Rang d'ancienneté"));
             case INTERET_REMPLACEMENT -> List.of(f("corpsRequis", TEXTE, "Corps d'emploi requis"), f("corpsEmploi", TEXTE, "Corps d'emploi de la personne"),

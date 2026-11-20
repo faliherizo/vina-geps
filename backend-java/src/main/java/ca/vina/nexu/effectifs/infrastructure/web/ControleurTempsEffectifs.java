@@ -108,6 +108,17 @@ public class ControleurTempsEffectifs {
         return garde.repondre(r, configurer(r), 200, ctx -> agir.parametres().modifier(ctx, corps(c)));
     }
 
+    /** AD-03 (addenda 7, Q15) : les seuils d'heures supplémentaires propres à une convention collective. */
+    @GetMapping("/seuils-conventions")
+    public ResponseEntity<Object> seuilsConventions(HttpServletRequest r) {
+        return garde.repondre(r, module(r), 200, ctx -> lire.feuilles().seuilsConventions(ctx.tenantId()));
+    }
+
+    @PutMapping("/seuils-conventions/{code}")
+    public ResponseEntity<Object> modifierSeuilsConvention(HttpServletRequest r, @PathVariable String code, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, configurer(r), 200, ctx -> agir.parametres().modifierSeuilsConvention(ctx, code, corps(c)));
+    }
+
     private GardeAcces.Verdict configurer(HttpServletRequest r) {
         return garde.capacite(r, MODULE, GardeEffectifs.Capacite.CONFIGURER);
     }

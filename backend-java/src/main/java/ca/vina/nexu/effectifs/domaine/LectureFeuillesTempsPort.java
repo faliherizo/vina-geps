@@ -19,6 +19,9 @@ public interface LectureFeuillesTempsPort {
 
     Optional<TempsEffectifs.Parametres> parametres(String tenantId);
 
+    /** Les surcharges de seuils par convention de l'organisme, par code de convention. */
+    List<SeuilsConvention> seuilsConventions(String tenantId);
+
     Optional<FeuilleStockee> feuille(String tenantId, String id);
 
     /** L'identifiant de la feuille d'une personne qui commence à cette date, s'il y en a une. */
