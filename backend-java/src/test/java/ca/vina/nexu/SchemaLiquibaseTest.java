@@ -50,7 +50,7 @@ class SchemaLiquibaseTest {
                 // facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(25);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(26);
     }
 
     @Test
@@ -69,7 +69,7 @@ class SchemaLiquibaseTest {
                 "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
                 "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "MARK_RAN");
     }
 
     @Test

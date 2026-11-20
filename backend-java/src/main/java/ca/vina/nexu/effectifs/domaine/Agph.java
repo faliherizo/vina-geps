@@ -67,7 +67,26 @@ public final class Agph {
         }
     }
 
-    public enum EtatRang { EN_ATTENTE, A_SON_TOUR, A_CHOISI, PASSE }
+    /** {@code RENONCE} : la personne a déclaré, à son tour, ne prendre aucun poste (addenda 7, Q12 ; convention 14.10 b). */
+    public enum EtatRang { EN_ATTENTE, A_SON_TOUR, A_CHOISI, PASSE, RENONCE }
+
+    /**
+     * Ce qui arrive au rang dont le délai expire sans choix (P-CH-2, P-CH-4 ; addenda 7, Q12 : « le traitement doit être
+     * configurable ») : le premier poste admissible lui est attribué, ou il passe sans poste.
+     */
+    public enum TraitementDelaiEchu {
+        ATTRIBUER, PASSER;
+
+        /** Absent : l'attribution, comme avant ce réglage. */
+        public static TraitementDelaiEchu de(Object v) {
+            if (v == null) {
+                return ATTRIBUER;
+            }
+            return Arrays.stream(values()).filter(t -> t.name().equals(v)).findFirst()
+                    .orElseThrow(() -> new EffectifsInvalideException("« traitementDelaiEchu » : " + Arrays.stream(values()).map(Enum::name)
+                            .collect(Collectors.joining(", "))));
+        }
+    }
 
     public enum ModeChoix { EMPLOYE, PLANIFICATEUR, AUTOMATIQUE }
 

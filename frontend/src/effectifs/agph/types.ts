@@ -3,14 +3,19 @@ import type { Motif } from "../planification/types";
 import type { Conformite, Plage, TypeDisponibilite } from "../disponibilites/types";
 
 export type EtatCampagne = "PREPARATION" | "DEPOT" | "CHOIX" | "ATTRIBUTION" | "REVISION" | "CLOSE";
-export type EtatRang = "EN_ATTENTE" | "A_SON_TOUR" | "A_CHOISI" | "PASSE";
+export type EtatRang = "EN_ATTENTE" | "A_SON_TOUR" | "A_CHOISI" | "PASSE" | "RENONCE";
+/** Ce que devient le rang dont le délai expire (addenda 7, Q12) : le premier poste admissible, ou rien. */
+export type TraitementDelaiEchu = "ATTRIBUER" | "PASSER";
+export const LIBELLE_DELAI_ECHU: Record<TraitementDelaiEchu, string> = {
+  ATTRIBUER: "Attribuer le premier poste admissible", PASSER: "Passer au rang suivant, sans poste",
+};
 export type EtatRemplacement = "OUVERT" | "ATTRIBUE" | "NON_COMBLE";
 
 export const LIBELLE_CAMPAGNE: Record<EtatCampagne, string> = {
   PREPARATION: "En préparation", DEPOT: "Rangs figés — dépôt des disponibilités", CHOIX: "Tour de rôle en cours", ATTRIBUTION: "Tous servis — à réviser ou clore",
   REVISION: "En révision", CLOSE: "Close",
 };
-export const LIBELLE_RANG: Record<EtatRang, string> = { EN_ATTENTE: "En attente", A_SON_TOUR: "À son tour", A_CHOISI: "A choisi", PASSE: "Passé" };
+export const LIBELLE_RANG: Record<EtatRang, string> = { EN_ATTENTE: "En attente", A_SON_TOUR: "À son tour", A_CHOISI: "A choisi", PASSE: "Passé", RENONCE: "A renoncé à tout poste" };
 export const LIBELLE_REMPLACEMENT: Record<EtatRemplacement, string> = {
   OUVERT: "Ouvert aux manifestations", ATTRIBUE: "Attribué", NON_COMBLE: "Non comblé",
 };
@@ -18,7 +23,7 @@ export const LIBELLE_MODE: Record<string, string> = { EMPLOYE: "par la personne"
 
 export interface Campagne {
   id: string; uniteCode: string; annee: number; nom: string; corpsEmploiCode: string; etat: EtatCampagne; delaiChoixMinutes: number;
-  budgetHeuresSemaine?: number | null; reviseeLe?: string | null;
+  budgetHeuresSemaine?: number | null; reviseeLe?: string | null; traitementDelaiEchu?: TraitementDelaiEchu;
 }
 export interface Rang { ressourceId: string; nom: string; matricule: string; rang: number; anciennete: number; etat: EtatRang; tourDebut: string | null; tourFin: string | null }
 export interface Choix { ressourceId: string; posteId: string; posteCode: string; mode: string; choisiLe: string }

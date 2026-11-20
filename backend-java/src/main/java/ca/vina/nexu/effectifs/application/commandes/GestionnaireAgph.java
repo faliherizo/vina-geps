@@ -36,6 +36,8 @@ public class GestionnaireAgph {
     private static final int ANNEE_MIN = 2000;
     private static final int ANNEE_MAX = 2100;
     /** Le délai de choix quand la campagne n'en précise pas : une demi-heure par rang. */
+    private static final String BUDGET = "budgetHeuresSemaine";
+    private static final String TRAITEMENT = "traitementDelaiEchu";
     private static final int DELAI_PAR_DEFAUT = 30;
 
     /** Le socle qu'emprunte la campagne : référentiels, périmètres, ressources, journal, identifiants. */
@@ -86,13 +88,14 @@ public class GestionnaireAgph {
         Object delai = entree.get("delaiChoixMinutes");
         int delaiChoix = Agph.delaiDe(delai == null ? DELAI_PAR_DEFAUT : delai);
         Double budget = Agph.budgetDe(entree.get("budgetHeuresSemaine"));
+        Agph.TraitementDelaiEchu traitement = Agph.TraitementDelaiEchu.de(entree.get(TRAITEMENT));
         Object nom = entree.get("nom");
         String libelle = texte(nom == null ? "AGPH " + annee : nom, "nom");
         if (depot.existe(ctx.tenantId(), uniteCode, corps, annee)) {
             throw new ConflitException("une campagne " + annee + " existe déjà pour " + uniteCode + " (" + corps + ")");
         }
         AgphCampagne c = new AgphCampagne(socle.sequence().suivant("eagp"), uniteCode, annee, libelle, corps, Agph.EtatCampagne.PREPARATION, delaiChoix,
-                ctx.maintenant(), null, null, budget, null);
+                ctx.maintenant(), null, null, budget, null, traitement);
         depot.inserer(ctx.tenantId(), c);
         journaliser(ctx, c, "agph.campagne.creee", creation(c));
         return lecture.exiger(ctx, c.id());
@@ -105,13 +108,14 @@ public class GestionnaireAgph {
         apres.put("corpsEmploiCode", c.corpsEmploiCode());
         apres.put("delai", c.delaiChoixMinutes());
         apres.put("budget", c.budgetHeuresSemaine());
+        apres.put(TRAITEMENT, c.traitementDelaiEchu());
         return apres;
     }
 
     /**
-     * Paramétrer la campagne (E-CH-1) : le service de planification fixe ou corrige le budget d'heures hebdomadaires tant
-     * que la campagne n'est pas close. Les dépôts déjà faits gardent leur verdict ; les suivants se jugent sur le nouveau
-     * budget.
+     * Paramétrer la campagne (E-CH-1, P-CH-2) : le service de planification fixe ou corrige le budget d'heures hebdomadaires
+     * et le traitement du délai échu tant que la campagne n'est pas close. Une clé absente garde sa valeur. Les dépôts déjà
+     * faits gardent leur verdict ; les suivants se jugent sur le nouveau budget.
      */
     public AgphCampagne parametrer(Contexte ctx, String id, Map<String, Object> entree) {
         AgphCampagne c = lecture.exiger(ctx, id);
@@ -119,11 +123,39 @@ public class GestionnaireAgph {
         if (c.etat() == Agph.EtatCampagne.CLOSE) {
             throw new ConflitException("la campagne est close : ses paramètres ne changent plus");
         }
-        Double budget = Agph.budgetDe(entree.get("budgetHeuresSemaine"));
-        depot.parametrer(ctx.tenantId(), id, budget);
-        socle.journal().ecrire(ctx, JournalEffectifs.Consignation.de("agph.campagne.parametree", TourDeRoleAgph.OBJET, id, c.uniteCode(),
-                Collections.singletonMap("budget", c.budgetHeuresSemaine()), Collections.singletonMap("budget", budget)));
+        if (entree.containsKey(BUDGET)) {
+            Double budget = Agph.budgetDe(entree.get(BUDGET));
+            depot.parametrer(ctx.tenantId(), id, budget);
+            journaliserParametre(ctx, c, "budget", c.budgetHeuresSemaine(), budget);
+        }
+        if (entree.containsKey(TRAITEMENT)) {
+            Agph.TraitementDelaiEchu t = Agph.TraitementDelaiEchu.de(entree.get(TRAITEMENT));
+            depot.parametrerDelaiEchu(ctx.tenantId(), id, t);
+            journaliserParametre(ctx, c, TRAITEMENT, c.traitementDelaiEchu(), t);
+        }
         return lecture.exiger(ctx, id);
+    }
+
+    private void journaliserParametre(Contexte ctx, AgphCampagne c, String cle, Object avant, Object apres) {
+        socle.journal().ecrire(ctx, JournalEffectifs.Consignation.de("agph.campagne.parametree", TourDeRoleAgph.OBJET, c.id(), c.uniteCode(),
+                Collections.singletonMap(cle, avant), Collections.singletonMap(cle, apres)));
+    }
+
+    /**
+     * Renoncer à tout poste (addenda 7, Q12 ; convention 14.10 b) : à son tour seulement, la personne déclare ne prendre
+     * aucun poste ; son rang passe à {@code RENONCE}, le tour va au suivant, et la clôture lui donnera le temps partiel
+     * occasionnel (P-CH-7).
+     */
+    public LectureAgph.VueCampagne renoncer(Contexte ctx, String id) {
+        AgphCampagne c = tour.rattraper(ctx, lecture.visible(ctx, id));
+        if (c.etat() != Agph.EtatCampagne.CHOIX) {
+            throw new ConflitException("la campagne est en " + c.etat().name().toLowerCase() + " : le tour de rôle n'est pas en cours");
+        }
+        Ressource moi = choisisseur(ctx, c, null).ressource();
+        exigerSonTour(ctx, id, moi);
+        tour.renoncer(ctx, c, moi);
+        tour.tourSuivant(ctx, c, ctx.maintenant());
+        return lire(ctx, id);
     }
 
     private static int anneeDe(Object v) {
@@ -238,7 +270,11 @@ public class GestionnaireAgph {
             String enCours = lecture.tourEnCours(ctx, id).map(g -> " ; tour en cours : rang " + g.rang()).orElse("");
             throw new ConflitException("ce n'est pas encore le tour de " + r.nom() + " (rang " + monRang.rang() + enCours + ")");
         }
-        String comment = monRang.etat() == Agph.EtatRang.A_CHOISI ? "poste choisi" : "tour passé";
+        String comment = switch (monRang.etat()) {
+            case A_CHOISI -> "poste choisi";
+            case RENONCE -> "a renoncé à tout poste";
+            case PASSE, EN_ATTENTE, A_SON_TOUR -> "tour passé";
+        };
         throw new ConflitException(r.nom() + " a déjà été servi (" + comment + ") : un seul choix par rang");
     }
 }

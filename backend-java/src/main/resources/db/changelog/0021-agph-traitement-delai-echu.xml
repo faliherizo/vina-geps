@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **AGPH : traitement du délai échu** (ADR 0087, AD-05, 20 novembre 2026). L'addenda 7 (Q12) d'Urgences-santé exige que
+    le traitement du rang dont le délai expire soit configurable. Une campagne existante garde l'attribution d'office.
+  -->
+  <changeSet id="0021-agph-traitement-delai-echu" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_agph_campagnes'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('eff_agph_campagnes') WHERE name = 'traitementDelaiEchu'</sqlCheck>
+    </preConditions>
+    <comment>Traitement du délai échu d'une campagne AGPH : ATTRIBUER (défaut) ou PASSER.</comment>
+    <sql>ALTER TABLE eff_agph_campagnes ADD COLUMN traitementDelaiEchu TEXT NOT NULL DEFAULT 'ATTRIBUER'</sql>
+  </changeSet>
+</databaseChangeLog>
