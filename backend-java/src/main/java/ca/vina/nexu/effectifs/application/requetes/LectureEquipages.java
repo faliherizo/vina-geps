@@ -52,6 +52,11 @@ public class LectureEquipages {
         return new PlaceEtEquipage(e.places().stream().filter(p -> p.id().equals(placeId)).findFirst().orElseThrow(), e);
     }
 
+    /** La période de l'équipage est-elle en cours aujourd'hui ? Lue sans contrôle de périmètre : c'est le mécanisme qui demande. */
+    public boolean periodeEnCours(Contexte ctx, Equipage e) {
+        return periodes.lire(ctx, e.periodeId()).estEnCours(ctx.aujourdhui());
+    }
+
     public List<Planification.Creneau> creneauxDe(Contexte ctx, String ressourceId, String saufPlaceId) {
         return depot.creneauxDe(ctx.tenantId(), ressourceId, saufPlaceId);
     }

@@ -65,6 +65,8 @@ final class Organisme {
         java.time.LocalDate jour = java.time.LocalDate.now(java.time.ZoneId.of(FUSEAU_DES_QUARTS));
         o.vars.put("aujourdhui", ClientApi.JSON.getNodeFactory().stringNode(jour.toString()));
         o.vars.put("hier", ClientApi.JSON.getNodeFactory().stringNode(jour.minusDays(1).toString()));
+        // Une absence assez longue pour franchir un seuil de remplacement long terme, à partir daujourdhui (AD-02).
+        o.vars.put("dans30jours", ClientApi.JSON.getNodeFactory().stringNode(jour.plusDays(30).toString()));
         ROLES.forEach(o::creerActeur);
         return o;
     }

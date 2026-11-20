@@ -487,3 +487,116 @@ Fonctionnalité: Absences, dérogation et comblement
       { "posteId": "{{poste}}", "finManifestation": "2030-01-20T17:00:00.000Z" }
       """
     Alors la réponse a le statut 409
+
+  # AD-02 (addenda 7, Q7) : un seuil par code d'absence choisit le processus ; une période en cours se comble en gestion régulière.
+  @E-CH-6 @E-CH-7 @P-CH-8 @E-GR-4
+  Scénario: Le seuil du code décide du remplacement long terme, sauf pendant une période horaire en cours
+    Soit un organisme d'Urgences-santé amorcé
+    Quand admin envoie POST /api/effectifs/referentiels/codes_absence avec :
+      """json
+      { "effectifDepuis": "2026-01-01", "code": "MALS", "libelleFr": "Maladie (seuil de 14 jours)", "comportement": "PAYE",
+        "attributs": { "duree": "PONCTUELLE", "planifiable": true, "seuilJoursLongTerme": 14 } }
+      """
+    Alors la réponse a le statut 201
+    # Un seuil hors bornes est refusé : il se règle de 1 à 365 jours.
+    Quand admin envoie POST /api/effectifs/referentiels/codes_absence avec :
+      """json
+      { "effectifDepuis": "2026-01-01", "code": "MALX", "libelleFr": "Seuil impossible", "comportement": "PAYE",
+        "attributs": { "duree": "PONCTUELLE", "seuilJoursLongTerme": 0 } }
+      """
+    Alors la réponse a le statut 422
+    Quand admin envoie POST /api/effectifs/planification/periodes avec :
+      """json
+      { "nom": "AVENIR", "uniteCode": "EST", "debut": "2030-03-04", "fin": "2030-03-31" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "avenir"
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{avenir}}/etat avec :
+      """json
+      { "etat": "CONFECTION" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{avenir}}", "date": "2030-03-06", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}",
+        "modeAttribution": "MANUEL", "composition": [ { "corpsEmploiCode": "PARA", "nombre": 2 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "placeMarc"
+    Et je retiens "places.1.id" sous le nom "placeJulie"
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeMarc}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeJulie}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    # Vingt jours d'absence, au-delà du seuil de 14 : la place est réservée au remplacement long terme.
+    Quand admin envoie POST /api/effectifs/absences avec :
+      """json
+      { "personneId": "{{P2}}", "motif": "MALS", "du": "2030-03-06", "au": "2030-03-25" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "ids.0" sous le nom "longue"
+    Quand admin envoie GET /api/effectifs/absences/{{longue}}/comblement
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "places": [ { "resultat": "REMPLACEMENT_LONG_TERME" } ], "remplacementPossible": true }
+      """
+    # Trois jours, sous le seuil, même code : la place se comble quart par quart.
+    Quand admin envoie POST /api/effectifs/absences avec :
+      """json
+      { "personneId": "{{P1}}", "motif": "MALS", "du": "2030-03-06", "au": "2030-03-08" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "ids.0" sous le nom "courte"
+    Quand admin envoie GET /api/effectifs/absences/{{courte}}/comblement
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "remplacementPossible": false }
+      """
+    Et la réponse ne correspond pas à "REMPLACEMENT_LONG_TERME"
+    # Une période publiée et commencée aujourd'hui est « en cours » : la même absence longue s'y comble en gestion régulière.
+    Quand admin envoie POST /api/effectifs/planification/periodes avec :
+      """json
+      { "nom": "EN COURS", "uniteCode": "EST", "debut": "{{aujourdhui}}", "fin": "{{demain}}" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "encours"
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{encours}}/etat avec :
+      """json
+      { "etat": "CONFECTION" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{encours}}", "date": "{{demain}}", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}",
+        "modeAttribution": "MANUEL", "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "placeEnCours"
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeEnCours}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{encours}}/etat avec :
+      """json
+      { "etat": "PUBLIEE" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/absences avec :
+      """json
+      { "personneId": "{{P2}}", "motif": "MALS", "du": "{{demain}}", "au": "{{dans30jours}}" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "ids.0" sous le nom "pendant"
+    Quand admin envoie GET /api/effectifs/absences/{{pendant}}/comblement
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "\"placeId\":\"{{placeEnCours}}\""
+    Et la réponse ne correspond pas à "REMPLACEMENT_LONG_TERME"

@@ -73,9 +73,10 @@ public class GestionnaireComblementAbsences {
         return new Contexte(ctx.tenantId(), ctx.acteurId(), Role.ADMIN.code(), ctx.maintenant());
     }
 
-    /** La catégorie de durée du code, à la date de l'absence, est-elle longue ? */
-    public boolean dureeLongue(Contexte ctx, String code, String date) {
-        return AbsencesEffectifs.estDureeLongue(lire.referentiels().exigerValeur(ctx.tenantId(), TypeReferentiel.CODES_ABSENCE, code, date).attributs().get("duree"));
+    /** L'absence est-elle longue : sa durée contre le seuil du code, ou à défaut la catégorie du code, à la date de l'absence ? */
+    public boolean dureeLongue(Contexte ctx, AbsenceEffectifs a) {
+        return AbsencesEffectifs.estLongTerme(lire.referentiels().exigerValeur(ctx.tenantId(), TypeReferentiel.CODES_ABSENCE, a.codeAbsence(), a.du()).attributs(),
+                AbsencesEffectifs.joursDemandes(a.du(), a.au()));
     }
 
     /** Comble les places qu'une absence accordée vient de libérer, aussitôt la vacance écrite. */
@@ -84,7 +85,7 @@ public class GestionnaireComblementAbsences {
             return AbsencesEffectifs.BilanComblement.de(List.of());
         }
         Contexte sys = duMecanisme(ctx);
-        boolean longue = dureeLongue(ctx, a.codeAbsence(), a.du());
+        boolean longue = dureeLongue(ctx, a);
         List<ResultatComblement> resultats = places.stream().map(p -> comblerUne(sys, a.id(), new Quart(p.id(), lire.equipages().lirePlace(sys, p.id()).equipage()), longue))
                 .toList();
         AbsencesEffectifs.BilanComblement bilan = AbsencesEffectifs.BilanComblement.de(resultats);
@@ -94,7 +95,8 @@ public class GestionnaireComblementAbsences {
 
     private ResultatComblement comblerUne(Contexte sys, String absenceId, Quart q, boolean longue) {
         Planification.ModeAttribution mode = q.equipage().modeAttribution();
-        return switch (AbsencesEffectifs.voieDeComblement(longue, mode)) {
+        boolean enCours = longue && lire.equipages().periodeEnCours(sys, q.equipage());
+        return switch (AbsencesEffectifs.voieDeComblement(longue, enCours, mode)) {
             case RESERVER -> enregistrer(sys, absenceId, q, ResultatComblement.REMPLACEMENT_LONG_TERME, null).resultat();
             case ATTRIBUER -> attribuerDOffice(sys, absenceId, q);
             case OFFRIR -> offrir(sys, absenceId, q);

@@ -69,7 +69,9 @@ public enum TypeReferentiel {
                     DescripteurAttribut.borne("fin", "Fin (minutes depuis minuit)", true, 0, 1440));
             case CODES_ABSENCE -> List.of(DescripteurAttribut.choix("duree", "Catégorie de durée", Comportements.noms(Comportements.DureeAbsence.values()), true),
                     DescripteurAttribut.simple("planifiable", "Peut être planifiée d'avance", TypeAttribut.BOOLEEN),
-                    DescripteurAttribut.reference("titres", "Titres d'emploi admissibles (vide = tous)", TypeAttribut.REFERENCES, TITRES_EMPLOI, false));
+                    DescripteurAttribut.reference("titres", "Titres d'emploi admissibles (vide = tous)", TypeAttribut.REFERENCES, TITRES_EMPLOI, false),
+                    // Addenda 7, Q7 : au moins ce nombre de jours → remplacement long terme ; sinon, gestion régulière.
+                    DescripteurAttribut.borne(AbsencesEffectifs.SEUIL_LONG_TERME, "Seuil du remplacement long terme (jours)", false, 1, 365));
             case TYPES_HEURE -> List.of(DescripteurAttribut.simple("codePaie", "Code de paie (PFT)", TypeAttribut.TEXTE),
                     DescripteurAttribut.borne("majorationPourcent", "Majoration (%)", false, 0, 300));
             case PARAMETRES_POSTE -> List.of(DescripteurAttribut.choix("typeValeur", "Type de valeur", Comportements.noms(Comportements.TypeValeurParametre.values()), true));
