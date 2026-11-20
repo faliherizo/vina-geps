@@ -1,7 +1,8 @@
 /**
  * **Destruction des données d'un établissement résilié** (contrat 9.25.06, EFVP 7) — le geste le
  * plus irréversible de l'application, donc le plus explicite : le nom retapé, le motif écrit, et
- * l'**attestation** délivrée aussitôt, relisible ensuite en JSON ou en clair.
+ * l'**attestation** délivrée aussitôt, relisible ensuite en JSON ou en clair, et au gabarit de
+ * l'annexe 10.18.04 C du contrat FX-AO-20260810 (à signer et transmettre dans les 60 jours).
  */
 import { useCallback, useEffect, useState } from "react";
 import { FormulaireModal, useFermerFormulaire } from "./Modal";
@@ -12,6 +13,41 @@ interface Props {
   tenant: { id: string; name: string; status: string };
   apiFetch: (chemin: string, init?: RequestInit) => Promise<Response>;
   signaler: (message: string, erreur?: boolean) => void;
+}
+
+function telecharger(nom: string, texte: string) {
+  const url = URL.createObjectURL(new Blob([texte], { type: "text/plain;charset=utf-8" }));
+  const a = document.createElement("a"); a.href = url; a.download = nom; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+}
+
+/** L'annexe 10.18.04 C : la date de fin du contrat fixe l'échéance de transmission (60 jours). */
+function AnnexeC({ tenantId, apiFetch }: { tenantId: string; apiFetch: Props["apiFetch"] }) {
+  const [fin, setFin] = useState("");
+  const [erreur, setErreur] = useState("");
+  return (
+    <form className="toolbar" data-testid={`sa-annexe-c-formulaire-${tenantId}`} onSubmit={async (e) => {
+      e.preventDefault(); setErreur("");
+      const r = await apiFetch(`/api/saas/tenants/${tenantId}/attestation-destruction/annexe-c?finContrat=${encodeURIComponent(fin)}`);
+      const texte = await r.text();
+      if (!r.ok) {
+        let errors: string[] = [];
+        try { errors = (JSON.parse(texte) as { errors?: string[] }).errors ?? []; } catch { /* corps non JSON : message générique */ }
+        setErreur(errors.length ? errors.join(" ; ") : `refus du serveur (${r.status})`);
+        return;
+      }
+      telecharger(`annexe-10-18-04-C-${tenantId}.txt`, texte);
+    }}>
+      <label className="field"><span>Date de fin du contrat <span className="req-star" aria-hidden="true">*</span></span>
+        <input type="date" required data-testid={`sa-annexe-fin-${tenantId}`} value={fin} onChange={(e) => setFin(e.target.value)}
+               aria-describedby={`sa-annexe-aide-${tenantId}`} /></label>
+      <p className="aide" id={`sa-annexe-aide-${tenantId}`}>
+        L'annexe 10.18.04 C se signe par la personne autorisée et se transmet dans les 60 jours suivant cette date.
+      </p>
+      <button type="submit" className="secondary" data-testid={`sa-annexe-c-${tenantId}`}>Télécharger l'annexe 10.18.04 C</button>
+      {erreur && <p role="alert" className="field-error" data-testid={`sa-annexe-erreur-${tenantId}`}>{erreur}</p>}
+    </form>
+  );
 }
 
 function Formulaire({ tenant, apiFetch, signaler, apres }: Props & { apres: (a: Attestation) => void }) {
@@ -67,13 +103,12 @@ export default function DestructionDonnees({ tenant, apiFetch, signaler }: Props
             <div><dt>Lignes détruites</dt><dd>{attestation.totalLignes} dans {attestation.tables.length} table(s)</dd></div>
             <div><dt>Empreinte</dt><dd><code>{attestation.empreinte.slice(0, 16)}…</code></dd></div>
           </dl>
+          <AnnexeC tenantId={tenant.id} apiFetch={apiFetch} />
           <div className="modal-actions">
             <button type="button" className="secondary" data-testid={`sa-attestation-texte-${tenant.id}`}
                     onClick={async () => {
                       const r = await apiFetch(`/api/saas/tenants/${tenant.id}/attestation-destruction?format=texte`);
-                      const url = URL.createObjectURL(new Blob([await r.text()], { type: "text/plain;charset=utf-8" }));
-                      const a = document.createElement("a"); a.href = url; a.download = `attestation-destruction-${tenant.id}.txt`; document.body.appendChild(a); a.click(); a.remove();
-                      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+                      telecharger(`attestation-destruction-${tenant.id}.txt`, await r.text());
                     }}>Télécharger en clair</button>
             <button type="button" className="primary" onClick={() => setOuverte(false)}>Fermer</button>
           </div>

@@ -112,9 +112,21 @@ test.describe.serial("Soutien — billets, délais, maintenances, disponibilité
     await page.getByTestId("sa-maint-annoncer").click();
     await page.getByTestId("sa-maint-modal").waitFor({ state: "hidden", timeout: 4000 }).catch(() => {});
     await expect(page.getByTestId("sa-soutien-erreur")).toContainText("préavis insuffisant : 72 h");
-    // À 96 h : acceptée, listée.
+    // ST-H02 (ADR 0085, FX-AO grille 99) : à 96 h, un rehaussement est refusé — il exige 21 jours ouvrables, et
+    // l'erreur dit le premier début admis.
     const dans4j = new Date(Date.now() + 96 * 3_600_000);
     if (!(await page.getByTestId("sa-maint-modal").isVisible().catch(() => false))) await page.getByTestId("sa-maint-ouvrir").click();
+    await page.getByTestId("sa-maint-nature").selectOption("rehaussement");
+    await page.getByTestId("sa-maint-debut").fill(local(dans4j));
+    await page.getByTestId("sa-maint-fin").fill(local(new Date(dans4j.getTime() + 2 * 3_600_000)));
+    await page.getByTestId("sa-maint-description").fill("Version 5 : nouveau tableau de bord");
+    await page.getByTestId("sa-maint-annoncer").click();
+    await page.getByTestId("sa-maint-modal").waitFor({ state: "hidden", timeout: 4000 }).catch(() => {});
+    await expect(page.getByTestId("sa-soutien-erreur")).toContainText("préavis insuffisant pour un rehaussement : 21 jours ouvrables");
+    await expect(page.getByTestId("sa-soutien-erreur")).toContainText("premier début admis");
+    // À 96 h, un entretien : accepté, listé avec sa nature.
+    if (!(await page.getByTestId("sa-maint-modal").isVisible().catch(() => false))) await page.getByTestId("sa-maint-ouvrir").click();
+    await page.getByTestId("sa-maint-nature").selectOption("entretien");
     await page.getByTestId("sa-maint-debut").fill(local(dans4j));
     await page.getByTestId("sa-maint-fin").fill(local(new Date(dans4j.getTime() + 2 * 3_600_000)));
     await page.getByTestId("sa-maint-description").fill("Migration de la base de données");
@@ -122,6 +134,7 @@ test.describe.serial("Soutien — billets, délais, maintenances, disponibilité
     await page.getByTestId("sa-maint-modal").waitFor({ state: "hidden", timeout: 4000 }).catch(() => {});
     await expect(page.getByTestId("sa-soutien-message")).toContainText("Maintenance annoncée");
     await expect(page.getByTestId("sa-maint-liste")).toContainText("Planifiée");
+    await expect(page.getByTestId("sa-maint-liste")).toContainText("Entretien planifié");
     // La disponibilité du mois : des chiffres, pas un feu vert.
     await expect(page.getByTestId("sa-dispo-resume")).toContainText(/minutes observées|Aucune minute observée/);
   });

@@ -38,10 +38,10 @@
 | C5 | Responsable de la sécurité nommé dans les 10 jours de l'adjudication | 🏢 entreprise | 10.18.02 d |
 | C6 | Politique de télétravail et d'appareils mobiles | 🏢 entreprise | 10.18.02 c |
 | C7 | Ligne sans frais de 7 h à 18 h en semaine ; assistance 24/7 pour les incidents critiques | 🏢 dotation | 10.19.02, critère 101 |
-| C8 | Attestation de destruction conforme à l'annexe 10.18.04 C | 🔄 | Le mécanisme existe (`saas/domaine/Destruction` : attestation scellée SHA-256) ; confronter son texte au gabarit de l'annexe C, absent des addenda, et au délai de 60 jours (10.18.04 b) |
+| C8 | Attestation de destruction conforme à l'annexe 10.18.04 C | ✅ | `saas/domaine/AnnexeDestruction` : gabarit de l'annexe C rempli (signataire autorisé, fournisseur, adresse, fin du contrat, méthode logicielle cochée, ligne de signature), échéance fin + 60 jours et mention « DÉLAI DÉPASSÉ » ; `GET …/attestation-destruction/annexe-c?finContrat=` ; écran Superadmin › attestation ; essais `AnnexeDestructionTest`, `ControleurAnnexeDestructionHttpTest`, `destruction-annexe-c.test.tsx`. Reste hors code : désigner le signataire (`SAAS_ATTESTATION_*`) et faire signer l'engagement de confidentialité (10.18.04 b iv) |
 | C9 | RACI et ordre de déploiement des six sites | 🏢 plan d'implantation | Addenda 2, Q8 et Q33 |
-| C10 | veraPDF (critère 39), Q-ALC (critère 18) : toujours ouverts | ⛔ permission, Apple | Mémoire du 15 nov. |
-| C11 | Bacs à sable déployables : poussée au contrat d'Expo + téléphones simulés, veraPDF officiel (ADR 0086) | ✅ poussée · ⛔ veraPDF | `bac-a-sable/` ; `npm test` 23/23 (100 % des lignes) ; `bac-a-sable/campagne.sh` contre le Java : BAC-01 à 07 verts le 20 nov. ; BAC-08/09 attendent le conteneur veraPDF (lancement refusé par le classificateur de permissions) ; travail CI `bacs-a-sable` |
+| C10 | veraPDF (critère 39) ✅ le 20 nov. ; Q-ALC (critère 18) toujours ouvert | ⛔ Apple | Critère 39 : voir C11 ; critère 18 : droit *Critical Alerts* à obtenir d'Apple |
+| C11 | Bacs à sable déployables : poussée au contrat d'Expo + téléphones simulés, veraPDF officiel (ADR 0086) | ✅ | `bac-a-sable/` ; `npm test` 23/23 (100 % des lignes) ; `docker compose -f bac-a-sable/docker-compose.yml up -d verapdf` ; `bac-a-sable/campagne.sh` contre le Java : **BAC-01 à 09, 9/9 le 20 nov.** ; `verifier-pdfa.sh` : échantillon conforme (144/0), témoin non PDF/A refusé ; travail CI `bacs-a-sable` |
 
 ## D. Décisions à prendre
 

@@ -1,6 +1,7 @@
 package ca.vina.nexu.saas.infrastructure.persistance;
 
 import ca.vina.nexu.partage.temps.Iso;
+import ca.vina.nexu.saas.domaine.AttestationsDestruction;
 import ca.vina.nexu.saas.domaine.Destruction;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -21,7 +22,7 @@ import java.util.UUID;
  * est gardée. Une destruction ne se rejoue pas.
  */
 @Repository
-public class DepotDestruction {
+public class DepotDestruction implements AttestationsDestruction {
 
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<List<Destruction.Table>> TABLES = new TypeReference<>() { };
@@ -53,6 +54,7 @@ public class DepotDestruction {
         return sortie;
     }
 
+    @Override
     public Optional<Destruction.Attestation> lireAttestation(String tenantId) {
         return jdbc.sql("SELECT * FROM saas_attestations_destruction WHERE tenantId = ?").param(tenantId).query((rs, i) ->
                 new Destruction.Attestation(rs.getString("id"), rs.getString("tenantId"), rs.getString("tenantNom"), rs.getString("detruitLe"), rs.getString("detruitPar"),
