@@ -135,12 +135,41 @@ class AbsencesEffectifsDomaineTest {
     }
 
     @Test
+    @DisplayName("AD-02 — le seuil du code (jours) décide de la voie ; sans seuil, la catégorie, comme avant")
+    void seuilLongTerme() {
+        Map<String, Object> maladieAvecSeuil = Map.of("duree", "PONCTUELLE", AbsencesEffectifs.SEUIL_LONG_TERME, 14);
+        assertThat(List.of(AbsencesEffectifs.estLongTerme(maladieAvecSeuil, 13), AbsencesEffectifs.estLongTerme(maladieAvecSeuil, 14),
+                AbsencesEffectifs.estLongTerme(maladieAvecSeuil, 90))).containsExactly(false, true, true);
+        // Le seuil l'emporte sur la catégorie dans les deux sens.
+        assertThat(AbsencesEffectifs.estLongTerme(Map.of("duree", "LONG_TERME", AbsencesEffectifs.SEUIL_LONG_TERME, 90.0), 30)).isFalse();
+        assertThat(List.of(AbsencesEffectifs.estLongTerme(Map.of("duree", "LONG_TERME"), 1), AbsencesEffectifs.estLongTerme(Map.of("duree", "PONCTUELLE"), 300),
+                AbsencesEffectifs.estLongTerme(Map.of(), 300))).containsExactly(true, false, false);
+    }
+
+    @Test
+    @DisplayName("AD-02 — une période est en cours quand elle est publiée et commencée")
+    void periodeEnCours() {
+        Periode publiee = new Periode("p", "EST", "S10", "2030-03-04", "2030-03-10", Planification.EtatPeriode.PUBLIEE, null, "c", "p", null);
+        assertThat(List.of(publiee.estEnCours("2030-03-03"), publiee.estEnCours("2030-03-04"), publiee.estEnCours("2030-03-10"),
+                publiee.estEnCours("2030-03-11"))).containsExactly(false, true, true, false);
+        Periode confection = new Periode("p", "EST", "S10", "2030-03-04", "2030-03-10", Planification.EtatPeriode.CONFECTION, null, "c", null, null);
+        assertThat(confection.estEnCours("2030-03-05")).isFalse();
+    }
+
+    @Test
     @DisplayName("U5 — une absence longue réserve la place ; sinon le mode du quart choisit ; le bilan compte chaque résultat")
     void comblement() {
-        assertThat(List.of(AbsencesEffectifs.voieDeComblement(true, Planification.ModeAttribution.AUTOMATISE), AbsencesEffectifs.voieDeComblement(true, Planification.ModeAttribution.MANUEL),
-                AbsencesEffectifs.voieDeComblement(false, Planification.ModeAttribution.AUTOMATISE), AbsencesEffectifs.voieDeComblement(false, Planification.ModeAttribution.MANUEL)))
+        assertThat(List.of(AbsencesEffectifs.voieDeComblement(true, false, Planification.ModeAttribution.AUTOMATISE),
+                AbsencesEffectifs.voieDeComblement(true, false, Planification.ModeAttribution.MANUEL),
+                AbsencesEffectifs.voieDeComblement(false, false, Planification.ModeAttribution.AUTOMATISE),
+                AbsencesEffectifs.voieDeComblement(false, false, Planification.ModeAttribution.MANUEL)))
                 .containsExactly(AbsencesEffectifs.VoieComblement.RESERVER, AbsencesEffectifs.VoieComblement.RESERVER, AbsencesEffectifs.VoieComblement.ATTRIBUER,
                         AbsencesEffectifs.VoieComblement.OFFRIR);
+        // Addenda 7, Q7 : pendant une période horaire en cours, même une absence longue se comble quart par quart.
+        assertThat(List.of(AbsencesEffectifs.voieDeComblement(true, true, Planification.ModeAttribution.AUTOMATISE),
+                AbsencesEffectifs.voieDeComblement(true, true, Planification.ModeAttribution.MANUEL),
+                AbsencesEffectifs.voieDeComblement(false, true, Planification.ModeAttribution.MANUEL)))
+                .containsExactly(AbsencesEffectifs.VoieComblement.ATTRIBUER, AbsencesEffectifs.VoieComblement.OFFRIR, AbsencesEffectifs.VoieComblement.OFFRIR);
         List<AbsencesEffectifs.ResultatComblement> tous = new ArrayList<>(Arrays.asList(AbsencesEffectifs.ResultatComblement.values()));
         tous.add(AbsencesEffectifs.ResultatComblement.ATTRIBUEE);
         AbsencesEffectifs.BilanComblement b = AbsencesEffectifs.BilanComblement.de(tous);

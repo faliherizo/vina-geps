@@ -468,3 +468,96 @@ Fonctionnalité: AGPH — attribution annuelle des postes et remplacements long 
       """json
       { "budgetHeuresSemaine": 60, "heuresCampagne": 72, "tauxBudget": 120 }
       """
+
+  # AD-04 (addenda 7, Q11) : l'« optimisation des budgets » est un calcul proposé par la solution, en heures.
+  @E-CH-1
+  Scénario: La solution propose les postes qui couvrent le plus d'heures sans dépasser le budget, parmi ceux que les dépôts couvrent
+    Quand admin envoie POST /api/effectifs/agph/campagnes avec :
+      """json
+      { "uniteCode": "EST", "corpsEmploiCode": "PARA", "annee": 2031 }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "camp"
+    Quand admin envoie POST /api/effectifs/agph/campagnes/{{camp}}/ouvrir
+    Alors la réponse a le statut 200
+    # Sans budget, il n'y a rien à optimiser : la réponse le dit.
+    Quand admin envoie GET /api/effectifs/agph/campagnes/{{camp}}/optimisation
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "fixez d'abord le budget"
+    Quand admin envoie PUT /api/effectifs/agph/campagnes/{{camp}}/parametres avec :
+      """json
+      { "budgetHeuresSemaine": 80 }
+      """
+    Alors la réponse a le statut 200
+    # Avant tout dépôt, aucun poste n'est couvert : tous sont écartés, avec leur motif.
+    Quand admin envoie GET /api/effectifs/agph/campagnes/{{camp}}/optimisation
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "budgetHeures": 80, "totalHeures": 0, "retenus": [],
+        "ecartes": [ { "code": "A-TC", "motif": "AUCUNE_DISPONIBILITE", "motifLibelle": "aucune semaine type déposée ne couvre tous ses quarts" } ] }
+      """
+    # Julie couvre les quatre postes (lundi à mercredi, 6 h-18 h) ; Marc, le jeudi et le vendredi, aucun.
+    Quand julie envoie PUT /api/effectifs/agph/campagnes/{{camp}}/disponibilites/moi avec :
+      """json
+      { "plages": [ { "jour": 1, "debut": 360, "fin": 1080, "type": "DISPONIBLE" }, { "jour": 2, "debut": 360, "fin": 1080, "type": "DISPONIBLE" },
+                    { "jour": 3, "debut": 0, "fin": 1440, "type": "DISPONIBLE" } ] }
+      """
+    Alors la réponse a le statut 200
+    Quand marc envoie PUT /api/effectifs/agph/campagnes/{{camp}}/disponibilites/moi avec :
+      """json
+      { "plages": [ { "jour": 4, "debut": 360, "fin": 1080, "type": "DISPONIBLE" }, { "jour": 5, "debut": 360, "fin": 1080, "type": "DISPONIBLE" } ] }
+      """
+    Alors la réponse a le statut 200
+    # Quatre postes de 36 h pour 80 h de budget : deux tiennent (72 h), il reste 8 h ; les deux autres feraient dépasser.
+    Quand admin envoie GET /api/effectifs/agph/campagnes/{{camp}}/optimisation
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "budgetHeures": 80, "totalHeures": 72, "resteHeures": 8,
+        "retenus": [ { "code": "A-TC", "heuresSemaine": 36, "candidats": 1 }, { "code": "B-TPR", "heuresSemaine": 36, "candidats": 1 } ],
+        "ecartes": [ { "code": "C-TC", "motif": "HORS_BUDGET" }, { "code": "D-TPR", "motif": "HORS_BUDGET" } ] }
+      """
+
+  # AD-05 (addenda 7, Q12 et Q13 ; convention 14.10 b) : à son tour, un employé peut ne prendre aucun poste.
+  @P-CH-2 @P-CH-4 @P-CH-7
+  Scénario: À son tour, un employé renonce à tout poste ; le tour passe, et le traitement du délai échu se règle par campagne
+    Quand admin envoie POST /api/effectifs/agph/campagnes avec :
+      """json
+      { "uniteCode": "EST", "corpsEmploiCode": "PARA", "annee": 2031 }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "traitementDelaiEchu": "ATTRIBUER" }
+      """
+    Et je retiens "id" sous le nom "camp"
+    Quand admin envoie PUT /api/effectifs/agph/campagnes/{{camp}}/parametres avec :
+      """json
+      { "traitementDelaiEchu": "PASSER" }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "traitementDelaiEchu": "PASSER" }
+      """
+    Quand admin envoie POST /api/effectifs/agph/campagnes/{{camp}}/ouvrir
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/agph/campagnes/{{camp}}/demarrer
+    Alors la réponse a le statut 200
+    # Marc est le plus ancien : c'est son tour ; Julie attend le sien.
+    Quand julie envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "ce n'est pas encore le tour de Julie"
+    Quand marc envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "rangs": [ { "nom": "Marc", "etat": "RENONCE" }, { "nom": "Julie", "etat": "A_SON_TOUR" } ], "choix": [] }
+      """
+    Quand marc envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "a renoncé à tout poste"
+    Quand admin envoie GET /api/effectifs/journal?action=agph.tour.renonce
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément

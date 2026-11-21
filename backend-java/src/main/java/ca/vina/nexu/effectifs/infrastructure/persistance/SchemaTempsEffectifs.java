@@ -30,7 +30,11 @@ public class SchemaTempsEffectifs {
             "CREATE INDEX IF NOT EXISTS idx_eff_feuille_decisions ON eff_feuille_decisions (tenantId, feuilleId)",
             // Les champs propres à l'organisme (changeset 0007) : la feuille s'adapte à l'emploi sans code par emploi.
             "CREATE TABLE IF NOT EXISTS eff_temps_champs (tenantId TEXT NOT NULL, code TEXT NOT NULL, libelle TEXT NOT NULL, type TEXT NOT NULL, "
-                    + "valeurs TEXT, requis INTEGER NOT NULL DEFAULT 0, actif INTEGER NOT NULL DEFAULT 1, ordre INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (tenantId, code))");
+                    + "valeurs TEXT, requis INTEGER NOT NULL DEFAULT 0, actif INTEGER NOT NULL DEFAULT 1, ordre INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (tenantId, code))",
+            // Les seuils d'heures supplémentaires propres à une convention (changeset 0020, AD-03) ; un seuil nul reprend celui de l'organisme.
+            "CREATE TABLE IF NOT EXISTS eff_temps_seuils_conventions (tenantId TEXT NOT NULL, conventionCode TEXT NOT NULL, seuilJourHeures INTEGER, "
+                    + "seuilSemaineHeures INTEGER, seuilPeriodePaieHeures INTEGER, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL, "
+                    + "PRIMARY KEY (tenantId, conventionCode))");
 
     /**
      * Les colonnes ajoutées après coup (E-RF-13) — {@code CREATE TABLE IF NOT EXISTS} ne les ajoute pas à une table existante :
@@ -49,7 +53,9 @@ public class SchemaTempsEffectifs {
             new Colonne("eff_segments_temps", "confirmePar", "TEXT"),
             // La feuille prise dans une paie traitée (changeset 0011) : elle ne se modifie plus.
             new Colonne("eff_feuilles", "payeeLe", "TEXT"),
-            new Colonne("eff_feuilles", "paieId", "TEXT"));
+            new Colonne("eff_feuilles", "paieId", "TEXT"),
+            // Le seuil d'heures supplémentaires de la période de paie (changeset 0020, AD-03) : 0 = aucun.
+            new Colonne("eff_temps_parametres", "seuilPeriodePaieHeures", "INTEGER NOT NULL DEFAULT 0"));
 
     /** Une colonne à ajouter, si elle manque. */
     record Colonne(String table, String nom, String definition) { }

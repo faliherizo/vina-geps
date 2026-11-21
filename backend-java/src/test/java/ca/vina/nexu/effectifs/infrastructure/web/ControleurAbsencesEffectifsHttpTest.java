@@ -474,7 +474,7 @@ class ControleurAbsencesEffectifsHttpTest {
                 .andExpect(jsonPath("$.places[1].occupeeParId").value(Matchers.nullValue()))
                 .andExpect(jsonPath("$.places[1].avis[*].nom", Matchers.contains("Léa", "Marc")))
                 .andExpect(jsonPath("$.remplacementPossible").value(false))
-                .andExpect(jsonPath("$.raisonRemplacement").value("le code « MAL » est ponctuel : ses quarts se comblent un à un"));
+                .andExpect(jsonPath("$.raisonRemplacement").value("le code « MAL » est ponctuel, ou l'absence reste sous son seuil : ses quarts se comblent un à un"));
         assertThat(avisPublies.stream().map(a -> a.evenement() + ":" + a.destinataires().get(0)).toList())
                 .containsExactly("quart.attribue:emp-marc", "quart.offert:usr-lea", "quart.offert:emp-marc");
         assertThat(avisPublies.get(0).sujet()).isEqualTo("Quart attribué le 2030-03-04");
@@ -570,7 +570,7 @@ class ControleurAbsencesEffectifsHttpTest {
         // Les empêchements : une absence ponctuelle, une absence non acceptée, un poste d'une autre unité, le module fermé.
         String ponctuelle = absences.declarer(ctx(ADMIN), new Declaration(ids.get("P2"), "MAL", "2030-09-02", null, null)).absence().id();
         http.post(API + "/" + ponctuelle + "/remplacement", CHEF, fenetre).andExpect(status().is(422))
-                .andExpect(jsonPath("$.errors[0]").value("le code « MAL » est ponctuel : ses quarts se comblent un à un"));
+                .andExpect(jsonPath("$.errors[0]").value("le code « MAL » est ponctuel, ou l'absence reste sous son seuil : ses quarts se comblent un à un"));
         String attente = absences.declarer(ctx(ADMIN), new Declaration(ids.get("P2"), "MAL", "2030-10-01", "2030-10-08", null)).absence().id();
         http.post(API + "/" + attente + "/remplacement", CHEF, fenetre).andExpect(jsonPath("$.errors[0]").value("seule une absence acceptée se remplace"));
         String longue = absences.declarer(ctx(ADMIN), new Declaration(ids.get("P2"), "CLD", "2030-11-02", null, null)).absence().id();

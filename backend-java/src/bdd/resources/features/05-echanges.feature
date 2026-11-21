@@ -297,3 +297,47 @@ Fonctionnalité: Échanges de quarts entre employés
       { "verdict": { "action": "BLOQUER" },
         "errors": ["Pour Julie : les échanges entre deux périodes sont interdits ; Pour Marc : les échanges entre deux périodes sont interdits"] }
       """
+
+  # AD-01 (addenda 7, Q8) : la contiguïté vise aussi le nombre d'heures maximal sur 24 h — ici 16 h (convention, art. 16.02).
+  @E-GR-7
+  Scénario: Un échange qui ferait travailler plus de 16 heures sur 24 heures est bloqué, pour la seule personne concernée
+    Quand admin envoie POST /api/effectifs/regles avec :
+      """json
+      { "contexte": "ECHANGE", "cle": "seize-heures", "condition": { "fait": "heures24h", "op": ">", "valeur": 16 },
+        "action": "BLOQUER", "message": "{heures24h} h sur 24 h, au plus 16 (art. 16.02)", "effectifDepuis": "{{demain}}" }
+      """
+    Alors la réponse a le statut 201
+    # Julie travaille déjà le mercredi soir, de 18 h 30 à minuit.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{s10}}", "date": "2030-03-06", "debut": 1110, "fin": 1440, "natureCode": "REG", "milieuId": "{{c12}}",
+        "modeAttribution": "MANUEL", "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "julieMerSoir"
+    Quand admin envoie POST /api/effectifs/planification/places/{{julieMerSoir}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{s10}}/etat avec :
+      """json
+      { "etat": "PUBLIEE" }
+      """
+    Alors la réponse a le statut 200
+    # Recevoir le mercredi de jour de Marc (6 h-18 h) lui ferait 17,5 h sur 24 h ; Marc, lui, n'en aurait que 12.
+    Quand julie envoie POST /api/effectifs/echanges avec :
+      """json
+      { "placeCedeeId": "{{julieLun}}", "placeVoulueId": "{{marcMer}}" }
+      """
+    Alors la réponse a le statut 409
+    Et la réponse contient :
+      """json
+      { "verdict": { "action": "BLOQUER" } }
+      """
+    Et la réponse correspond à "Pour Julie : 17[.,]5 h sur 24 h, au plus 16 [(]art[.] 16[.]02[)]"
+    Et la réponse ne correspond pas à "Pour Marc"
+    # Le catalogue des faits le propose à l'éditeur de règles, sans autre développement.
+    Quand admin envoie GET /api/effectifs/regles/faits
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "heures24h"

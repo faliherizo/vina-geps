@@ -30,7 +30,7 @@ public class DepotAgph implements DepotCampagnesAgphPort {
     private static AgphCampagne campagne(ResultSet rs, int i) throws SQLException {
         return new AgphCampagne(rs.getString("id"), rs.getString("uniteCode"), rs.getInt("annee"), rs.getString("nom"), rs.getString("corpsEmploiCode"),
                 Agph.EtatCampagne.valueOf(rs.getString("etat")), rs.getInt("delaiChoixMinutes"), rs.getString("creeLe"), rs.getString("ouverteLe"),
-                rs.getString("closeLe"), budget(rs), rs.getString("reviseeLe"));
+                rs.getString("closeLe"), budget(rs), rs.getString("reviseeLe"), Agph.TraitementDelaiEchu.valueOf(rs.getString("traitementDelaiEchu")));
     }
 
     /** Le budget est nul tant qu'il n'est pas fixé : {@code getDouble} le lirait 0. */
@@ -57,10 +57,10 @@ public class DepotAgph implements DepotCampagnesAgphPort {
 
     @Override
     public void inserer(String tenantId, AgphCampagne c) {
-        jdbc.sql("INSERT INTO eff_agph_campagnes (id, tenantId, uniteCode, annee, nom, corpsEmploiCode, etat, delaiChoixMinutes, creeLe, budgetHeuresSemaine) "
-                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        jdbc.sql("INSERT INTO eff_agph_campagnes (id, tenantId, uniteCode, annee, nom, corpsEmploiCode, etat, delaiChoixMinutes, creeLe, budgetHeuresSemaine, "
+                        + "traitementDelaiEchu) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
                 .params(c.id(), tenantId, c.uniteCode(), c.annee(), c.nom(), c.corpsEmploiCode(), c.etat().name(), c.delaiChoixMinutes(), c.creeLe(),
-                        c.budgetHeuresSemaine()).update();
+                        c.budgetHeuresSemaine(), c.traitementDelaiEchu().name()).update();
     }
 
     @Override
@@ -154,6 +154,11 @@ public class DepotAgph implements DepotCampagnesAgphPort {
     @Override
     public void parametrer(String tenantId, String id, Double budget) {
         jdbc.sql("UPDATE eff_agph_campagnes SET budgetHeuresSemaine = ? WHERE tenantId = ? AND id = ?").params(budget, tenantId, id).update();
+    }
+
+    @Override
+    public void parametrerDelaiEchu(String tenantId, String id, Agph.TraitementDelaiEchu traitement) {
+        jdbc.sql("UPDATE eff_agph_campagnes SET traitementDelaiEchu = ? WHERE tenantId = ? AND id = ?").params(traitement.name(), tenantId, id).update();
     }
 
     @Override

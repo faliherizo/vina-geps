@@ -192,7 +192,7 @@ class AgphDomaineTest {
             assertThat(x.interesses()).isEqualTo(2);
             assertThat(Agph.EtatRemplacement.values()).containsExactly(Agph.EtatRemplacement.OUVERT, Agph.EtatRemplacement.ATTRIBUE,
                     Agph.EtatRemplacement.NON_COMBLE);
-            assertThat(Map.of("etats", Agph.EtatRang.values().length, "modes", Agph.ModeChoix.values().length)).containsEntry("etats", 4).containsEntry("modes", 3);
+            assertThat(Map.of("etats", Agph.EtatRang.values().length, "modes", Agph.ModeChoix.values().length)).containsEntry("etats", 5).containsEntry("modes", 3);
         }
     }
     @Nested

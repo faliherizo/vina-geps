@@ -66,8 +66,8 @@ public class SuiviComblementAbsence {
         if (a.statut() != AbsencesEffectifs.Statut.ACCEPTEE) {
             return Optional.of("seule une absence acceptée se remplace");
         }
-        if (!comblement.dureeLongue(ctx, a.codeAbsence(), a.du())) {
-            return Optional.of("le code « " + a.codeAbsence() + " » est ponctuel : ses quarts se comblent un à un");
+        if (!comblement.dureeLongue(ctx, a)) {
+            return Optional.of("le code « " + a.codeAbsence() + " » est ponctuel, ou l'absence reste sous son seuil : ses quarts se comblent un à un");
         }
         if (!moduleOuvert(ctx)) {
             return Optional.of("le module « " + MODULE_REMPLACEMENTS + " » (remplacements long terme) est fermé pour cet organisme");

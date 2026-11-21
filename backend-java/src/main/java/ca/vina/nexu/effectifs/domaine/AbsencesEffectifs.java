@@ -231,6 +231,21 @@ public final class AbsencesEffectifs {
         return Comportements.DureeAbsence.MOYEN_TERME.name().equals(duree) || Comportements.DureeAbsence.LONG_TERME.name().equals(duree);
     }
 
+    /** L'attribut du code d'absence qui fixe, en jours, la durée à partir de laquelle l'absence ouvre un remplacement long terme. */
+    public static final String SEUIL_LONG_TERME = "seuilJoursLongTerme";
+
+    /**
+     * L'absence relève-t-elle du remplacement long terme ? Avec un seuil sur le code (addenda 7, Q7 : « configurer, par code
+     * d'absence, le seuil qui détermine le processus applicable »), sa durée en décide ; sans seuil, la catégorie du code,
+     * comme avant — un code déjà paramétré ne change pas de comportement.
+     */
+    public static boolean estLongTerme(Map<String, Object> attributsDuCode, int joursAbsence) {
+        if (attributsDuCode.get(SEUIL_LONG_TERME) instanceof Number seuil) {
+            return joursAbsence >= seuil.intValue();
+        }
+        return estDureeLongue(attributsDuCode.get("duree"));
+    }
+
     // ── Comblement des places libérées (E-GN-6, P-GN-1, P-GH-3) ──────────────
 
     /** Ce que le mécanisme a fait d'une place libérée. */
@@ -240,11 +255,12 @@ public final class AbsencesEffectifs {
     public enum VoieComblement { RESERVER, ATTRIBUER, OFFRIR }
 
     /**
-     * Une absence longue réserve la place au remplacement long terme ; sinon le <strong>mode d'attribution du quart</strong>
-     * décide — le paramétrage de l'équipage, pas l'acteur, choisit entre attribuer d'office et offrir.
+     * Une absence longue réserve la place au remplacement long terme, sauf si la période de la place est déjà en cours
+     * (addenda 7, Q7) ; sinon le <strong>mode d'attribution du quart</strong> décide — le paramétrage de l'équipage, pas
+     * l'acteur, choisit entre attribuer d'office et offrir.
      */
-    public static VoieComblement voieDeComblement(boolean dureeLongue, Planification.ModeAttribution mode) {
-        if (dureeLongue) {
+    public static VoieComblement voieDeComblement(boolean dureeLongue, boolean periodeEnCours, Planification.ModeAttribution mode) {
+        if (dureeLongue && !periodeEnCours) {
             return VoieComblement.RESERVER;
         }
         return mode == Planification.ModeAttribution.AUTOMATISE ? VoieComblement.ATTRIBUER : VoieComblement.OFFRIR;

@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * <strong>Planification des effectifs</strong> — AO 26-015-DO, lot R3 ; le pur de
@@ -202,6 +203,27 @@ public final class Planification {
             long[] i = intervalle(c.date(), c.debut(), c.fin());
             return chevauchent(i, n) ? 0L : Math.min(Math.abs(n[0] - i[1]), Math.abs(i[0] - n[1]));
         }).min(Comparator.naturalOrder()).map(m -> arrondi(m / 60.0));
+    }
+
+    /**
+     * Le plus grand nombre d'heures planifiées sur une période de 24 heures qui touche le nouveau créneau, celui-ci
+     * compris (addenda 7, Q8 : « nombre d'heures maximum par jour de travail »). Les créneaux sont les quarts : la
+     * présence préalable n'y entre pas. La somme des recouvrements d'une fenêtre glissante est affine par morceaux :
+     * son maximum tombe quand la fenêtre commence au début d'un créneau ou finit à la fin d'un créneau — il suffit
+     * d'essayer ces positions-là, parmi celles qui touchent le nouveau créneau.
+     */
+    public static double heuresSur24h(Collection<Creneau> existants, Creneau nouveau) {
+        long[] n = intervalle(nouveau.date(), nouveau.debut(), nouveau.fin());
+        List<long[]> tous = new ArrayList<>(existants.stream().map(c -> intervalle(c.date(), c.debut(), c.fin())).toList());
+        tous.add(n);
+        long maximum = tous.stream().flatMap(i -> Stream.of(i[0], i[1] - MINUTES_JOUR))
+                .filter(debut -> debut > n[0] - MINUTES_JOUR && debut < n[1])
+                .mapToLong(debut -> recouvrement(tous, debut, debut + MINUTES_JOUR)).max().orElse(0);
+        return arrondi(maximum / 60.0);
+    }
+
+    private static long recouvrement(List<long[]> intervalles, long debut, long fin) {
+        return intervalles.stream().mapToLong(i -> Math.max(0, Math.min(i[1], fin) - Math.max(i[0], debut))).sum();
     }
 
     /** Le lundi de la semaine ISO d'une date. */

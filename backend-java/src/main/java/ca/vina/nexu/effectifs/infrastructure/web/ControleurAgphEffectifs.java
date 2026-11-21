@@ -113,6 +113,12 @@ public class ControleurAgphEffectifs {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.revision().reviser(ctx, id));
     }
 
+    /** AD-05 (addenda 7, Q12) : à son tour, la personne renonce à tout poste. */
+    @PostMapping("/campagnes/{id}/renoncer")
+    public ResponseEntity<Object> renoncer(HttpServletRequest r, @PathVariable String id) {
+        return garde.repondre(r, membre(r), 200, ctx -> agir.campagnes().renoncer(ctx, id));
+    }
+
     @PostMapping("/campagnes/{id}/revision/choix")
     public ResponseEntity<Object> reviserChoix(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.revision().reviserChoix(ctx, id, corps(c)));
@@ -121,6 +127,12 @@ public class ControleurAgphEffectifs {
     @GetMapping("/campagnes/{id}/disponibilites")
     public ResponseEntity<Object> depotsDeLaCampagne(HttpServletRequest r, @PathVariable String id) {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.disponibilites().depotsDeLaCampagne(ctx, id));
+    }
+
+    /** AD-04 (addenda 7, Q11) : la proposition d'optimisation du budget d'heures, en lecture seule. */
+    @GetMapping("/campagnes/{id}/optimisation")
+    public ResponseEntity<Object> optimisation(HttpServletRequest r, @PathVariable String id) {
+        return garde.repondre(r, gerer(r), 200, ctx -> agir.disponibilites().optimisation(ctx, id));
     }
 
     /** Sans dépôt, le corps est {@code null}, comme le {@code res.json(null)} du Node. */

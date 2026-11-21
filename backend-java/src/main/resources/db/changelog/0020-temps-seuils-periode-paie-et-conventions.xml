@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Heures supplémentaires : seuil de période de paie et seuils par convention** (ADR 0087, AD-03, 20 novembre 2026).
+    L'addenda 7 (Q15) d'Urgences-santé exige des seuils quotidiens, hebdomadaires et par période de paie, paramétrables
+    selon le groupe d'employés et les règles conventionnées. Une feuille existante garde son calcul : 0 = aucun seuil de
+    période, et aucune convention n'a de surcharge.
+  -->
+  <changeSet id="0020-temps-seuils-periode-paie-et-conventions" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_temps_parametres'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('eff_temps_parametres') WHERE name = 'seuilPeriodePaieHeures'</sqlCheck>
+    </preConditions>
+    <comment>Seuil d'heures supplémentaires de la période de paie ; seuils propres à une convention collective.</comment>
+    <sql>
+      ALTER TABLE eff_temps_parametres ADD COLUMN seuilPeriodePaieHeures INTEGER NOT NULL DEFAULT 0;
+      CREATE TABLE IF NOT EXISTS eff_temps_seuils_conventions (
+        tenantId TEXT NOT NULL,
+        conventionCode TEXT NOT NULL,
+        seuilJourHeures INTEGER,
+        seuilSemaineHeures INTEGER,
+        seuilPeriodePaieHeures INTEGER,
+        modifieLe TEXT NOT NULL,
+        modifiePar TEXT NOT NULL,
+        PRIMARY KEY (tenantId, conventionCode)
+      );
+    </sql>
+  </changeSet>
+</databaseChangeLog>
