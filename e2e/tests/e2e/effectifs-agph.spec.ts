@@ -145,7 +145,9 @@ test("semaine type, budget, révision, clôture : les quarts non couverts passen
   const tenantId = await createTenant(sa, uniq("EffAgphRev"));
   await sa.dispose();
   const ids = await amorcer(tenantId, identifiant, { demarrer: false, modules: ["effectifs_agph", "effectifs_disponibilites"] });
-  const aujourdhui = new Date().toISOString().slice(0, 10);
+  // Le jour de Montréal, que le serveur prend pour la date d'effet : la date UTC est déjà le lendemain après 19 h
+  // (20 h l'été), et une règle « effective depuis demain » n'est pas encore en vigueur.
+  const aujourdhui = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(new Date());
   let adm = await adminDeLOrganisme(tenantId);
   await poser(adm, tenantId, "/api/effectifs/regles", { contexte: "DEPOT_AGPH", cle: "minimum-quarts", condition: { fait: "quartsParSemaine", op: "<", valeur: 2 },
     action: "BLOQUER", message: "Au moins 2 quarts par semaine ({quartsParSemaine} offert)", effectifDepuis: aujourdhui });

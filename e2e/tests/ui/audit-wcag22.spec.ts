@@ -1272,7 +1272,9 @@ test.describe("Audit WCAG 2.2 — géométrie et mise en page", () => {
       page.setDefaultTimeout(10_000);
       await mock(MODULES_AUDIT);
       await page.setViewportSize({ width: ecran.width, height: ecran.height });
-      await page.goto("/");
+      // Le premier chargement a son propre budget : l'essai qui part le premier trouve un Vite froid, qui compile ses
+      // dépendances à cette requête (plus de 10 s sur une machine chargée). Le budget court vaut pour les gestes.
+      await page.goto("/", { timeout: 60_000 });
       // La navigation n'existe qu'une fois la session et les modules chargés. Sans cette attente,
       // le tout premier écran est déclaré injoignable pour la seule raison qu'on l'a demandé trop
       // tôt — et l'audit accuse l'application d'un défaut qui est le sien.
