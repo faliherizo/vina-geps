@@ -18,11 +18,14 @@ import donnees from "../../../donnees/urgences-sante/ecarts.json";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 
-/** Un jour en avant ou en arrière d'aujourd'hui, au format `AAAA-MM-JJ`. */
+/**
+ * Un jour en avant ou en arrière d'aujourd'hui **à Montréal**, au format `AAAA-MM-JJ` — le jour du serveur. Lu en UTC,
+ * il passait au lendemain dès 19 h (20 h l'été), et une donnée « d'aujourd'hui » tombait dans le futur.
+ */
 export function jour(decalage: number): string {
   const d = new Date();
   d.setDate(d.getDate() + decalage);
-  return d.toISOString().slice(0, 10);
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "America/Montreal" }).format(d);
 }
 
 export async function adminDeLOrganisme(tenantId: string): Promise<APIRequestContext> {
