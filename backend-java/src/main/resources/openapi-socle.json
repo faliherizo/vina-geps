@@ -59,6 +59,10 @@
     {
       "name": "RH scolaire",
       "description": "Calendrier scolaire, postes et affectations, contacts d'urgence, règles RH, versions de documents (cadrage RH, écarts E1–E8)."
+    },
+    {
+      "name": "Échanges",
+      "description": "API d'échange de l'organisme (26-015-DO, addenda 5) : l'organisme alimente lui-même ses systèmes internes (RAO, SAAV, PFT, BD Corpo). Jeton client_credentials, organisme porté par le jeton."
     }
   ],
   "components": {
@@ -83,6 +87,19 @@
         "type": "openIdConnect",
         "openIdConnectUrl": "/api/auth/sso/entra/.well-known/openid-configuration",
         "description": "Fédération Microsoft Entra ID (OIDC) — NF-19/20."
+      },
+      "clientCredentials": {
+        "type": "oauth2",
+        "description": "Application de l'organisme (26-015-DO, addenda 5) : jeton obtenu par POST /api/oauth/token (client_id, client_secret). Une session humaine n'est pas acceptée sur /api/echanges/v1.",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "/api/oauth/token",
+            "scopes": {
+              "read": "Lire les quarts, leurs correctifs et les relevés de présence validés",
+              "write": "Transmettre employés, soldes de banques et modifications de quarts réels"
+            }
+          }
+        }
       }
     },
     "parameters": {
@@ -10624,6 +10641,249 @@
         "responses": {
           "200": {
             "description": "Fichier PDF"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/quarts": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Quarts planifiés d'une fenêtre (périodes publiées ou closes), avec leurs places et la personne attribuée",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclus ; 62 jours au plus après « du »"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK — heures en minutes depuis minuit ; une fin inférieure au début finit le lendemain",
+            "content": {
+              "application/json": {
+                "example": {
+                  "quarts": [
+                    {
+                      "id": "eq-1",
+                      "periodeId": "per-dec",
+                      "uniteCode": "U1",
+                      "date": "2026-12-01",
+                      "debutMinutes": 420,
+                      "finMinutes": 1140,
+                      "natureCode": "JOUR",
+                      "milieuId": "m-1",
+                      "places": [
+                        {
+                          "id": "pl-1",
+                          "rang": 1,
+                          "corpsEmploiCode": "PARA",
+                          "ressourceId": "r-1",
+                          "matricule": "M-100"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/quarts/modifications": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Correctifs des quarts depuis un curseur, chacun avec l'état présent du quart ; rappeler avec le curseur rendu",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "depuis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Curseur rendu par la page précédente ; absent : depuis le début"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "example": {
+                  "modifications": [
+                    {
+                      "curseur": "2026-11-20T13:00:00.000Zj-4",
+                      "horodatage": "2026-11-20T13:00:00.000Z",
+                      "action": "place.attribuee",
+                      "objetType": "place",
+                      "objetId": "pl-1",
+                      "quart": {
+                        "id": "eq-1",
+                        "periodeId": "per-dec",
+                        "uniteCode": "U1",
+                        "date": "2026-12-01",
+                        "debutMinutes": 420,
+                        "finMinutes": 1140,
+                        "natureCode": "JOUR",
+                        "milieuId": "m-1",
+                        "places": [
+                          {
+                            "id": "pl-1",
+                            "rang": 1,
+                            "corpsEmploiCode": "PARA",
+                            "ressourceId": "r-1",
+                            "matricule": "M-100"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "curseur": "2026-11-20T13:00:00.000Zj-4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/releves-presence": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Relevés de présence validés (feuilles approuvées ou payées) depuis un curseur, avec leurs segments actifs",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "depuis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Curseur rendu par la page précédente ; absent : depuis le début"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "example": {
+                  "releves": [
+                    {
+                      "curseur": "2026-11-17T09:00:00.000Zf-1",
+                      "feuilleId": "f-1",
+                      "ressourceId": "r-1",
+                      "matricule": "M-100",
+                      "uniteCode": "U1",
+                      "debut": "2026-11-01",
+                      "fin": "2026-11-14",
+                      "statut": "APPROUVEE",
+                      "approuveeLe": "2026-11-17T09:00:00.000Z",
+                      "segments": [
+                        {
+                          "date": "2026-11-03",
+                          "debut": "2026-11-03T12:00:00.000Z",
+                          "fin": "2026-11-03T20:00:00.000Z",
+                          "typeHeureCode": "REG",
+                          "placeId": "pl-1"
+                        }
+                      ]
+                    }
+                  ],
+                  "curseur": "2026-11-20T13:00:00.000Zj-4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
           }
         }
       }

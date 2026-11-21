@@ -28,7 +28,10 @@
 | B3 | AD-03 HS par période de paie et par convention | `features/26-015-DO-AD-03-hs-periode-paie` (bf048ba) | ✅ fusionnée (8b42e56) | `TempsEffectifsDomaineTest.periodeDePaie`, `.seuilsDeConvention`, `ControleurTempsEffectifsHttpTest.seuilsParConvention`, changeset 0020, vitest `seuils-conventions.test.tsx`, BDD `08-feuilles-de-temps.feature` ; [scénarios](05_scenarios/AD-03.md) |
 | B4 | AD-04 Optimisation du budget AGPH | `features/26-015-DO-AD-04-optimisation-budget` (140d86e) | ✅ fusionnée (31111b6) | `OptimisationBudgetAgphTest` (dont le cas où un glouton se trompe), vitest `optimisation-budget-agph.test.tsx`, BDD `06-agph.feature` ; [scénarios](05_scenarios/AD-04.md) |
 | B5 | AD-05 Renoncer ; délai échu paramétrable | `features/26-015-DO-AD-05-agph-renoncer` (79b2fca) | ✅ fusionnée (b90afe3) | `AgphDelaiEchuTest`, `ControleurAgphEffectifsHttpTest.renoncerEtDelaiEchu`, changeset 0021, BDD `06-agph.feature` ; [scénarios](05_scenarios/AD-05.md) |
-| B6 | AD-06 API d'échange | — | ⬜ | Taille L : conception à faire (routes `/api/echanges/v1/**` gardées par jeton `client_credentials`, soldes des banques) |
+| B6 | AD-06 API d'échange | — | 🔄 | Découpée en trois branches (voir `04_conception.md`) |
+| B6a | AD-06a Garde machine et lectures (critères 1, 2 ; 6 en partie) | `features/26-015-DO-AD-06a-api-echanges-lecture` | ✅ | `GardeMachineTest`, `EchangesApiTest`, `ControleurEchangesApiHttpTest` (quarts, correctifs, relevés, isolation, refus), `JetonClientTest.unJetonMachineNestPasUneSession` ; OpenAPI : tag « Échanges », schéma `clientCredentials` |
+| B6b | AD-06b Employés et soldes des banques (critères 3, 4) | — | ⬜ | Changeset à venir ; fait `soldeBanqueHeures` |
+| B6c | AD-06c Absence déclarée aux opérations ; avis des modifications (critères 3, 5) | — | ⬜ | Événement de webhook sur les quarts |
 | B7 | AD-07 Offre en cascade | — | ⬜ | Taille L |
 | B8 | AD-08 Démonstration SP-CSN | — | ⬜ | Débloquée : les faits `heures24h` et `heuresPeriodePaie` existent |
 

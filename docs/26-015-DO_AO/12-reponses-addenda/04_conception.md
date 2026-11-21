@@ -54,3 +54,27 @@ candidats décroissant départage, ce qui rend la proposition déterministe.
 | Application | `TourDeRoleAgph.solder` lit le traitement ; `renoncer` vérifie le tour ; `ClotureAgph` traite `RENONCE` comme `PASSE` |
 | Web | `POST /api/effectifs/agph/campagnes/{id}/renoncer` ; `traitementDelaiEchu` dans `PUT …/parametres` |
 | Interface | « Mon AGPH » : bouton « Je ne prends aucun poste », avec confirmation |
+
+## AD-06 — API d'échange de l'organisme
+
+Découpée en trois branches, chacune livrable seule.
+
+### AD-06a — garde machine et lectures (`/api/echanges/v1`)
+
+| Couche | Changement |
+|---|---|
+| `partage/securite` | Port `JetonsMachine` (application : client, organisme, portées `LECTURE`/`ECRITURE`) ; `JetonDeSession.TYP_MACHINE`. |
+| `partage/web` | `GardeMachine` : jeton `client_credentials` exigé (401), organisme porté par le jeton, portée exigée (403). L'en-tête `X-Tenant-Id` n'a aucun effet. |
+| Sécurité (défaut corrigé) | `JetonDeSession.lire` refusait d'identifier un jeton machine : signé par la même clé, il valait session (établissement, sans rôle). Il est désormais refusé. |
+| `integrations` | `JetonClient` implémente `JetonsMachine` ; l'ancienne lecture devient `lireRevendications`. |
+| `effectifs/domaine` | `EchangesApi` (fenêtre ≤ 62 jours, limite 1 à 500, curseur, formes immuables) et le port `EchangesApiPort`. |
+| `effectifs/application` | `LectureEchangesApi` : le curseur des correctifs avance même sur un quart non exposé. |
+| `effectifs/infrastructure` | `DepotEchangesApi` (états et types passés en paramètres) ; `ControleurEchangesApi`. |
+
+| Route (portée `read`) | Rend |
+|---|---|
+| `GET /quarts?du=&au=` | Quarts des périodes publiées ou closes, places et matricule. |
+| `GET /quarts/modifications?depuis=&limite=` | Correctifs (journal `equipage` / `place`) avec l'état présent du quart, et le curseur suivant. |
+| `GET /releves-presence?depuis=&limite=` | Feuilles approuvées ou payées, segments actifs, et le curseur suivant. |
+
+Limite connue : un client révoqué garde son jeton jusqu'à expiration (une heure), comme avant.

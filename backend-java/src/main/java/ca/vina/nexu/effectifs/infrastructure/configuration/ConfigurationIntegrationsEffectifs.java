@@ -1,6 +1,8 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
 import ca.vina.nexu.effectifs.application.commandes.BoiteEnvoiIntegration;
+import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
+import ca.vina.nexu.effectifs.domaine.EchangesApiPort;
 import ca.vina.nexu.effectifs.application.commandes.ExportPaieTemps;
 import ca.vina.nexu.effectifs.application.commandes.GestesEntrantsIntegration;
 import ca.vina.nexu.effectifs.application.commandes.GestesSortantsIntegration;
@@ -38,6 +40,12 @@ public class ConfigurationIntegrationsEffectifs {
     public RegistreConnecteursIntegration registreConnecteursIntegrationEffectifs(SecretsIntegrationPort secrets) {
         HttpClient client = HttpClient.newBuilder().connectTimeout(ClientHttpIntegration.DELAI).build();
         return new RegistreConnecteursIntegration(secrets, ClientHttpIntegration.reseau(client));
+    }
+
+    /** L'API d'échange de l'organisme (AD-06) : lectures machine des quarts, correctifs et relevés. */
+    @Bean
+    public LectureEchangesApi lectureEchangesApi(EchangesApiPort port) {
+        return new LectureEchangesApi(port);
     }
 
     @Bean

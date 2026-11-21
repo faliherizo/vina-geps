@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 public class SpecificationOpenApi {
 
     static final List<String[]> ETIQUETTES_PAR_PREFIXE = List.of(
-            new String[]{"/api/auth", "Auth"}, new String[]{"/api/oauth", "Auth"}, new String[]{"/api/effectifs", "Effectifs"},
+            new String[]{"/api/auth", "Auth"}, new String[]{"/api/oauth", "Auth"}, new String[]{"/api/echanges", "Échanges"}, new String[]{"/api/effectifs", "Effectifs"},
             new String[]{"/api/communication", "Communication"}, new String[]{"/api/personnel", "Personnel"},
             new String[]{"/api/saas", "SaaS (organismes et modules)"}, new String[]{"/api/approvals", "Approbations"},
             new String[]{"/api/habilitations", "Habilitations"}, new String[]{"/api/integrations", "Intégrations"},
