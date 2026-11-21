@@ -30,6 +30,12 @@ public final class JetonDeSession {
 
     /** Huit heures, comme {@code JWT_EXPIRES} côté Node. */
     public static final long VALIDITE_SECONDES = 8 * 60 * 60L;
+    /**
+     * La revendication {@code typ} d'un jeton <em>machine</em> ({@code client_credentials}). Les deux jetons partagent la
+     * clé : sans ce refus, un jeton d'application de l'organisme valait session, avec l'établissement et sans rôle — assez
+     * pour toute route qui n'exige qu'un établissement (26-015-DO, AD-06).
+     */
+    public static final String TYP_MACHINE = "client";
 
     /**
      * Taille minimale du secret : 256 bits, imposée par la RFC 7518 §3.2 pour HS256.
@@ -90,6 +96,9 @@ public final class JetonDeSession {
     public Revendications lire(String jeton) {
         try {
             Claims c = Jwts.parser().verifyWith(cle).build().parseSignedClaims(jeton).getPayload();
+            if (TYP_MACHINE.equals(c.get("typ", String.class))) {
+                return null;
+            }
             return new Revendications(
                     c.getSubject(),
                     c.get("username", String.class),
