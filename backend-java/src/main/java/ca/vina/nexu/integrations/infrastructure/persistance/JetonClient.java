@@ -1,6 +1,7 @@
 package ca.vina.nexu.integrations.infrastructure.persistance;
 
 import ca.vina.nexu.partage.securite.JetonDeSession;
+import ca.vina.nexu.partage.securite.JetonsMachine;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * Jeton d'accès OAuth2 {@code client_credentials} (AO-5338 #NF-08).
@@ -25,7 +28,7 @@ import java.util.List;
  * en arrière.
  */
 @Component
-public class JetonClient {
+public class JetonClient implements JetonsMachine {
 
     public static final long VALIDITE_SECONDES = 3600L;
 
@@ -48,7 +51,7 @@ public class JetonClient {
                 .subject(clientId)
                 .claim("tenantId", tenantId)
                 .claim("scope", String.join(" ", portees))
-                .claim("typ", "client")
+                .claim("typ", JetonDeSession.TYP_MACHINE)
                 .issuedAt(Date.from(maintenant))
                 .expiration(Date.from(maintenant.plusSeconds(VALIDITE_SECONDES)))
                 .signWith(cle)
@@ -56,10 +59,10 @@ public class JetonClient {
     }
 
     /** @return les revendications, ou {@code null} si le jeton est invalide, expiré, ou non machine. */
-    public Revendications lire(String jeton) {
+    public Revendications lireRevendications(String jeton) {
         try {
             var charge = Jwts.parser().verifyWith(cle).build().parseSignedClaims(jeton).getPayload();
-            if (!"client".equals(charge.get("typ", String.class))) {
+            if (!JetonDeSession.TYP_MACHINE.equals(charge.get("typ", String.class))) {
                 return null;
             }
             // Une revendication `scope` absente et une revendication vide donnent le même
@@ -70,5 +73,12 @@ public class JetonClient {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /** Le port machine de {@code partage} : les mêmes revendications, portées converties une fois, inconnues ignorées. */
+    @Override
+    public Optional<Application> lire(String jeton) {
+        return Optional.ofNullable(lireRevendications(jeton)).map(r -> new Application(r.sub(), r.tenantId(),
+                r.scopes().stream().map(Portee::de).flatMap(Optional::stream).collect(Collectors.toSet())));
     }
 }

@@ -36,7 +36,7 @@ public class ControleurMockOAuth {
         if (auth == null || !auth.startsWith("Bearer ")) {
             return refus(401, "Bearer realm=\"nexu-vina\"", "invalid_request", "jeton porteur absent");
         }
-        JetonClient.Revendications claims = jetons.lire(auth.substring(7));
+        JetonClient.Revendications claims = jetons.lireRevendications(auth.substring(7));
         if (claims == null) {
             return refus(401, "Bearer realm=\"nexu-vina\", error=\"invalid_token\"", "invalid_token", "jeton invalide ou expiré");
         }
