@@ -316,3 +316,6 @@ La porte `endpoints-orphelins.cjs --strict` en relevait 13. **Douze ont reçu le
 - **Conformes** après vérification : Q1 à Q6, Q9, Q10, Q13, Q14, Q16.
 - **Décisions** : [ADR 0087](../adr/0087-reponses-26-015-do-faits-seuils-et-optimisation.md). **État** : tenu dans
   [12-reponses-addenda/03_planificateur.md](12-reponses-addenda/03_planificateur.md).
+- **Livré le 20 novembre** (develop b90afe3) : AD-01 à AD-05, changesets 0020 et 0021 ; `mvn -o verify` vert
+  (1 411 essais, JaCoCo par classe respecté, BDD 72/72). Restent AD-06 (API d'échange de l'addenda 5), AD-07 (offre en
+  cascade) et AD-08 (démonstration de la convention).

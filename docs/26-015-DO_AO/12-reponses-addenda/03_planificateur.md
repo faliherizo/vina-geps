@@ -21,26 +21,31 @@
 
 ## B. Implémentation
 
-| # | Story | Branche | État | Preuve |
+| # | Story | Branche (commit) | État | Preuve |
 |---|---|---|---|---|
-| B1 | AD-01 Heures sur 24 h | `features/26-015-DO-AD-01-heures-sur-24h` | ⬜ | |
-| B2 | AD-02 Seuil par code d'absence | `features/26-015-DO-AD-02-seuil-code-absence` | ⬜ | |
-| B3 | AD-03 Heures supplémentaires par période de paie et par convention | `features/26-015-DO-AD-03-hs-periode-paie` | ⬜ | |
-| B4 | AD-04 Optimisation du budget AGPH | `features/26-015-DO-AD-04-optimisation-budget` | ⬜ | |
-| B5 | AD-05 Renoncer ; délai échu paramétrable | `features/26-015-DO-AD-05-agph-renoncer` | ⬜ | |
-| B6 | AD-06 API d'échange | — | ⬜ | Taille L : après le dépôt |
-| B7 | AD-07 Offre en cascade | — | ⬜ | Taille L : après le dépôt |
-| B8 | AD-08 Démonstration SP-CSN | — | ⬜ | Après AD-01 et AD-03 |
+| B1 | AD-01 Heures sur 24 h | `features/26-015-DO-AD-01-heures-sur-24h` (5ca6677) | ✅ fusionnée (4c5a198) | `PlanificationDomaineTest.heuresSur24hGlissantes`, `EchangeEffectifsDomaineTest`, BDD `05-echanges.feature` ; [scénarios](05_scenarios/AD-01.md) |
+| B2 | AD-02 Seuil par code d'absence | `features/26-015-DO-AD-02-seuil-code-absence` (91e30fb) | ✅ fusionnée (48b3ec8) | `AbsencesEffectifsDomaineTest.seuilLongTerme`, `.periodeEnCours`, `.comblement`, `ControleurAbsencesEffectifsHttpTest`, BDD `04-absences.feature` ; [scénarios](05_scenarios/AD-02.md) |
+| B3 | AD-03 HS par période de paie et par convention | `features/26-015-DO-AD-03-hs-periode-paie` (bf048ba) | ✅ fusionnée (8b42e56) | `TempsEffectifsDomaineTest.periodeDePaie`, `.seuilsDeConvention`, `ControleurTempsEffectifsHttpTest.seuilsParConvention`, changeset 0020, vitest `seuils-conventions.test.tsx`, BDD `08-feuilles-de-temps.feature` ; [scénarios](05_scenarios/AD-03.md) |
+| B4 | AD-04 Optimisation du budget AGPH | `features/26-015-DO-AD-04-optimisation-budget` (140d86e) | ✅ fusionnée (31111b6) | `OptimisationBudgetAgphTest` (dont le cas où un glouton se trompe), vitest `optimisation-budget-agph.test.tsx`, BDD `06-agph.feature` ; [scénarios](05_scenarios/AD-04.md) |
+| B5 | AD-05 Renoncer ; délai échu paramétrable | `features/26-015-DO-AD-05-agph-renoncer` (79b2fca) | ✅ fusionnée (b90afe3) | `AgphDelaiEchuTest`, `ControleurAgphEffectifsHttpTest.renoncerEtDelaiEchu`, changeset 0021, BDD `06-agph.feature` ; [scénarios](05_scenarios/AD-05.md) |
+| B6 | AD-06 API d'échange | — | ⬜ | Taille L : conception à faire (routes `/api/echanges/v1/**` gardées par jeton `client_credentials`, soldes des banques) |
+| B7 | AD-07 Offre en cascade | — | ⬜ | Taille L |
+| B8 | AD-08 Démonstration SP-CSN | — | ⬜ | Débloquée : les faits `heures24h` et `heuresPeriodePaie` existent |
 
-## C. Portes (à la fin de chaque story)
+## C. Portes jouées le 20 novembre 2026
 
-| Porte | Commande |
-|---|---|
-| Serveur | `cd backend-java && mvn -o verify` (architecture, normes, JaCoCo ≥ 96 % par classe, suite BDD) |
-| Interface | `cd frontend && npx tsc --noEmit && npx vitest run` |
-| Accessibilité statique | `node scripts/audit-accessibilite.js` |
-| Écrans | `cd e2e && E2E_NO_BACKEND=1 E2E_WEB_PORT=5341 npx playwright test --project=interface` |
-| Parcours contre le Java | `E2E_API_PORT=4041 E2E_WEB_PORT=5341 E2E_JAVA_DOSSIER=$TMPDIR/nexu-e2e-26015 backend-java/scripts/campagne-e2e.sh <specs>` |
+Machine très chargée pendant toute la mesure (moyenne de charge de 180 à 450, d'autres projets compilant en
+parallèle) : les temps d'attente de 10 s de Playwright ont sauté plusieurs fois sur des écrans **non touchés**.
+
+| Porte | AD-01 à AD-04 (develop 31111b6) | AD-05 (develop b90afe3) |
+|---|---|---|
+| `mvn -o verify` | ✅ BUILD SUCCESS, 1 408 essais, 0 échec, « All coverage checks have been met » ; BDD 71/71 | ✅ BUILD SUCCESS, 1 411 essais, 0 échec, « All coverage checks have been met » ; BDD 72/72 |
+| `tsc --noEmit`, `vitest run` | ✅ 52 fichiers, 360 essais | ✅ 52 fichiers, 360 essais |
+| `audit-accessibilite.js` | ✅ aucun manquement | ✅ aucun manquement |
+| e2e `--project=interface` (suite complète) | 🟡 49/51 ; portable rejoué ✅ ; **mobile (390 px) ⛔** : `page.goto` puis `locator.click` > 10 s dès le premier écran, deux fois | Audit WCAG seul : tablette ✅ (au second essai), portable ✅ ; mobile et suite complète non rejoués |
+| Campagne contre le Java | ✅ `effectifs-agph`, `-absences`, `-echanges`, `-temps`, `-temps-flux` : 8/8 (18 h 25) | 🟡 `effectifs-agph` 1/2 (20 h 42) : l'essai pose sa règle `DEPOT_AGPH` à la date **UTC** du jour, déjà le lendemain à Montréal après 19 h ; la règle n'est pas encore en vigueur. Défaut de l'essai (horloge), indépendant d'AD-05 ; à corriger dans `effectifs-agph.spec.ts` |
+
+Commandes : section « Vérifier — les portes » de [CLAUDE.md](../../../CLAUDE.md) ; e2e sur les ports 4041 / 5341.
 
 ## D. Proposition et hors code
 
