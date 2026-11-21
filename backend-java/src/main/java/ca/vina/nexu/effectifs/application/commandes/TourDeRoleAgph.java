@@ -117,10 +117,20 @@ public class TourDeRoleAgph {
         return avec.lecture().exiger(ctx, c.id());
     }
 
-    /** Un tour expiré : le premier poste restant admissible est choisi pour la personne ; sans poste admissible, elle passe. */
+    /** La personne renonce à tout poste à son tour (addenda 7, Q12) : son rang le dit, le journal aussi. */
+    public void renoncer(Contexte ctx, AgphCampagne c, Ressource r) {
+        depot.poserEtatRang(ctx.tenantId(), c.id(), r.id(), Agph.EtatRang.RENONCE);
+        journal.ecrire(ctx, JournalEffectifs.Consignation.de("agph.tour.renonce", OBJET, c.id(), c.uniteCode(), null, Map.of("ressourceId", r.id())));
+    }
+
+    /**
+     * Un tour expiré, selon le traitement de la campagne (addenda 7, Q12) : {@code ATTRIBUER}, le premier poste restant
+     * admissible est choisi pour la personne ; {@code PASSER}, ou sans poste admissible, elle passe.
+     */
     private void solder(Contexte ctx, AgphCampagne c, AgphRang courant) {
         Ressource r = avec.ressources().exiger(ctx, courant.ressourceId());
-        Optional<Poste> retenu = avec.lecture().postesLibres(ctx, c.id()).stream().filter(p -> juger(ctx, r, p, courant.rang()).admissible()).findFirst();
+        Optional<Poste> retenu = c.traitementDelaiEchu() == Agph.TraitementDelaiEchu.PASSER ? Optional.empty()
+                : avec.lecture().postesLibres(ctx, c.id()).stream().filter(p -> juger(ctx, r, p, courant.rang()).admissible()).findFirst();
         if (retenu.isPresent()) {
             enregistrerChoix(ctx, c, new Choix(r, retenu.get(), Agph.ModeChoix.AUTOMATIQUE, courant.tourFin()));
         } else {

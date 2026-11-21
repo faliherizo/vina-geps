@@ -55,6 +55,8 @@ public interface DepotCampagnesAgphPort {
     /** Fixe (ou efface, {@code budget} nul) le budget d'heures hebdomadaires de la campagne. */
     void parametrer(String tenantId, String id, Double budget);
 
+    void parametrerDelaiEchu(String tenantId, String id, Agph.TraitementDelaiEchu traitement);
+
     /** Passe la campagne en révision, datée. */
     void reviser(String tenantId, String id, String instant);
 

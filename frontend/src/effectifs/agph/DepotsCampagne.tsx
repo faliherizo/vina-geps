@@ -14,7 +14,7 @@ import { FormulaireModal } from "../../Modal";
 import { BadgeConformite } from "../disponibilites/Motifs";
 import SemaineType from "./SemaineType";
 import OptimisationBudget from "./OptimisationBudget";
-import { depotOuvert, type DepotCampagne, type DepotsCampagne, type PlageType, type VueCampagne } from "./types";
+import { depotOuvert, LIBELLE_DELAI_ECHU, type DepotCampagne, type DepotsCampagne, type PlageType, type TraitementDelaiEchu, type VueCampagne } from "./types";
 
 type Ligne = DepotsCampagne["lignes"][number];
 
@@ -29,6 +29,7 @@ export default function DepotsCampagnePanneau({ campagne, onParametree }: { camp
   const [donnees, setDonnees] = useState<DepotsCampagne | null>(null);
   const [budget, setBudget] = useState(campagne.budgetHeuresSemaine ? String(campagne.budgetHeuresSemaine) : "");
   const [info, setInfo] = useState("");
+  const [delaiEchu, setDelaiEchu] = useState<TraitementDelaiEchu>(campagne.traitementDelaiEchu ?? "ATTRIBUER");
   const [saisie, setSaisie] = useState<Ligne | null>(null);
   const [erreurSaisie, setErreurSaisie] = useState("");
 
@@ -42,6 +43,12 @@ export default function DepotsCampagnePanneau({ campagne, onParametree }: { camp
     setInfo("");
     const c = await envoyer(`/api/effectifs/agph/campagnes/${campagne.id}/parametres`, { budgetHeuresSemaine: budget === "" ? null : Number(budget) }, "PUT");
     if (c) { fermer(); setInfo(budget === "" ? "Budget retiré : aucune règle budgétaire ne s'applique." : `Budget fixé à ${budget} h par semaine.`); await charger(); await onParametree(); }
+  };
+  const fixerDelaiEchu = async (e: React.FormEvent<HTMLFormElement>, fermer: () => void) => {
+    e.preventDefault();
+    setInfo("");
+    const c = await envoyer(`/api/effectifs/agph/campagnes/${campagne.id}/parametres`, { traitementDelaiEchu: delaiEchu }, "PUT");
+    if (c) { fermer(); setInfo(`Délai échu : ${LIBELLE_DELAI_ECHU[delaiEchu].toLowerCase()}.`); await onParametree(); }
   };
   const deposerPour = async (plages: PlageType[]): Promise<DepotCampagne | null> => {
     if (!saisie) return null;
@@ -75,6 +82,21 @@ export default function DepotsCampagnePanneau({ campagne, onParametree }: { camp
                 </p>
                 {erreur && <Message variante="erreur" testId="pla-agph-budget-erreur">{erreur}</Message>}
                 <p className="eff-actions"><button type="submit" data-testid="pla-agph-budget-fixer">Fixer le budget</button></p>
+              </form>
+            )}
+          </FormulaireModal>
+          {/* AD-05 (addenda 7, Q12) : ce que devient le rang dont le délai expire sans choix. */}
+          <FormulaireModal libelle="Délai échu" titre={`Délai échu — ${campagne.nom}`} testId="pla-agph-delai-echu-edition" size="sm" icone="✎" className="secondary">
+            {(fermer) => (
+              <form onSubmit={(e) => void fixerDelaiEchu(e, fermer)}>
+                <p>
+                  <label htmlFor="pla-agph-delai-echu">Quand le délai d'un rang expire sans choix</label>
+                  <select id="pla-agph-delai-echu" data-testid="pla-agph-delai-echu" value={delaiEchu} onChange={(e) => setDelaiEchu(e.target.value as TraitementDelaiEchu)}>
+                    {(Object.keys(LIBELLE_DELAI_ECHU) as TraitementDelaiEchu[]).map((t) => <option key={t} value={t}>{LIBELLE_DELAI_ECHU[t]}</option>)}
+                  </select>
+                </p>
+                {erreur && <Message variante="erreur" testId="pla-agph-delai-echu-erreur">{erreur}</Message>}
+                <p className="eff-actions"><button type="submit" data-testid="pla-agph-delai-echu-fixer">Enregistrer</button></p>
               </form>
             )}
           </FormulaireModal>

@@ -518,3 +518,46 @@ Fonctionnalité: AGPH — attribution annuelle des postes et remplacements long 
         "retenus": [ { "code": "A-TC", "heuresSemaine": 36, "candidats": 1 }, { "code": "B-TPR", "heuresSemaine": 36, "candidats": 1 } ],
         "ecartes": [ { "code": "C-TC", "motif": "HORS_BUDGET" }, { "code": "D-TPR", "motif": "HORS_BUDGET" } ] }
       """
+
+  # AD-05 (addenda 7, Q12 et Q13 ; convention 14.10 b) : à son tour, un employé peut ne prendre aucun poste.
+  @P-CH-2 @P-CH-4 @P-CH-7
+  Scénario: À son tour, un employé renonce à tout poste ; le tour passe, et le traitement du délai échu se règle par campagne
+    Quand admin envoie POST /api/effectifs/agph/campagnes avec :
+      """json
+      { "uniteCode": "EST", "corpsEmploiCode": "PARA", "annee": 2031 }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "traitementDelaiEchu": "ATTRIBUER" }
+      """
+    Et je retiens "id" sous le nom "camp"
+    Quand admin envoie PUT /api/effectifs/agph/campagnes/{{camp}}/parametres avec :
+      """json
+      { "traitementDelaiEchu": "PASSER" }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "traitementDelaiEchu": "PASSER" }
+      """
+    Quand admin envoie POST /api/effectifs/agph/campagnes/{{camp}}/ouvrir
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/agph/campagnes/{{camp}}/demarrer
+    Alors la réponse a le statut 200
+    # Marc est le plus ancien : c'est son tour ; Julie attend le sien.
+    Quand julie envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "ce n'est pas encore le tour de Julie"
+    Quand marc envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "rangs": [ { "nom": "Marc", "etat": "RENONCE" }, { "nom": "Julie", "etat": "A_SON_TOUR" } ], "choix": [] }
+      """
+    Quand marc envoie POST /api/effectifs/agph/campagnes/{{camp}}/renoncer
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "a renoncé à tout poste"
+    Quand admin envoie GET /api/effectifs/journal?action=agph.tour.renonce
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
