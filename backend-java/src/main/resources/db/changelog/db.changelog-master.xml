@@ -33,5 +33,6 @@
   <include file="db/changelog/0021-agph-traitement-delai-echu.xml"/>
   <include file="db/changelog/0022-effectifs-soldes-banques.xml"/>
   <include file="db/changelog/0023-effectifs-index-api-echanges.xml"/>
+  <include file="db/changelog/0024-offres-quart-tour-de-role.xml"/>
 
 </databaseChangeLog>

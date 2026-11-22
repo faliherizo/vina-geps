@@ -93,3 +93,29 @@ Règles d'absence : le code d'absence porte `banque` et `heuresParJour` ; faits 
 
 Performance : correctifs en trois requêtes par page (au lieu de deux à trois par entrée) ; bornes de curseur indexables ;
 index `(tenantId, date)` des équipages et `(tenantId, approuveeLe)` des feuilles (changeset 0023).
+
+## AD-07 — offre par ancienneté et à tour de rôle
+
+Décisions et options écartées : [ADR 0089](../../adr/0089-offre-quart-anciennete-tour-de-role.md). Réutilise le
+bassin des admissibles (`LectureDisponibilites.candidats`), l'attribution sous règles (`GestionnairePlaces.attribuer`),
+l'ordonnanceur partagé (`DepotTaches`, comme la fin de collecte) et le rattrapage du tour de rôle AGPH ; rien n'est
+dupliqué.
+
+```
+absence accordée ─▶ GestionnaireComblementAbsences.offrir
+                       ├─ SIMULTANEE : AvisDeComblement à chaque admissible (comme avant)
+                       └─ CASCADE    : CascadeOffresQuart.ouvrir ─▶ ordre figé ─▶ avancer
+avancer : place pourvue ? RETIREE · échus → EXPIRE (CLOS si urgente) · proposition en cours ? rien
+          · sinon aAviser() : suivant (ou tous, une fois, si urgente) → OFFERT + tâche + avis · personne : EPUISEE
+accepter : rattraper ─▶ exigerOffertA ─▶ GestionnairePlaces.attribuer ─▶ ACCEPTE + POURVUE  | refus de règle : ECARTE ─▶ avancer
+refuser  : rattraper ─▶ exigerOffertA ─▶ REFUSE ─▶ avancer
+tâche effectifs_offre_echeance (ordonnanceur) ─▶ avancer
+```
+
+| Couche | Changement |
+|---|---|
+| Domaine | `OffresQuart` (pur) : `Mode {SIMULTANEE, CASCADE}`, `EtatOffre`, `EtatRang` (`estCompte`, `pourquoiPasOffert`), `Evenement` (codes du journal), `Parametres` (défauts de la convention, `modifiesPar` borné et nommé), `ordonner` (heures comptées ↑, ancienneté ↓, identifiant), `estUrgente`, `echeance`, `debutFenetre`, `heureLocale`. `OffreQuart` (agrégat) : `echus`, `aUnRangOffert`, `suivant`, `aAviser`, `exigerOffertA`. Ports `DepotOffresQuartPort`, `ParametresOffresPort`, `EcheancesOffresPort` |
+| Application | `CascadeOffresQuart` (ouvrir, avancer, rattraper, executer, fermer) ; `ReponsesOffresQuart` (accepter, refuser) ; `GestionnaireParametresOffres` ; `LectureOffresQuart` (miennes, d'une absence, périmètre de l'unité) ; `AvisDeComblement` extrait de `GestionnaireComblementAbsences` (partagé) ; `GestionnaireComblementAbsences.Ecritures` reçoit la cascade |
+| Persistance | Changeset **0024** : `eff_offres_parametres`, `eff_offres`, `eff_offre_rangs` (+ index) ; retour `db/retour/0024-retour.sql` ; `SchemaOffresQuart`, `SchemaEssai`. `DepotOffresQuart` lit le quart sur la place et son équipage, le nom sur la ressource ; l'échéance se compare en instant, pas en texte. `AdaptateurOrdonnanceurOffres` : tâche `effectifs_offre_echeance` par offre |
+| Web | `ControleurOffresQuart` : `GET /api/effectifs/offres/miennes`, `POST /{id}/accepter`, `POST /{id}/refuser` (socle `effectifs`) ; `GET /api/effectifs/offres?absenceId=`, `GET/PUT /parametres` (module `effectifs_absences`, gestion) |
+| Interface | « Mon horaire » : section « Quarts qui me sont offerts » (échéance, Accepter / Refuser, résultat annoncé en `role="status"`) ; comblement d'une absence : tableau légendé « Ordre d'offre » par place offerte ; écran des absences : formulaire « Offre des quarts » (mode, délai, seuil d'urgence, fenêtre) |

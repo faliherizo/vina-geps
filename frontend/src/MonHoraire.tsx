@@ -38,6 +38,7 @@ import type { Echange, QuartEchangeable } from "./effectifs/echanges/types";
 import type { Ressource } from "./effectifs/planification/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
+import QuartsOfferts from "./effectifs/offres/QuartsOfferts";
 
 /** Les statuts d'échange qui rendent un quart incertain : il peut encore changer de main. */
 const ECHANGES_OUVERTS = new Set(["PROPOSE", "A_VALIDER"]);
@@ -130,6 +131,8 @@ export default function MonHoraire() {
       )}
       {moi && (
         <>
+          {/* AD-07 : un quart offert à mon tour se lit et se prend ici, là où l'horaire qu'il rejoint se lit. */}
+          <QuartsOfferts apresReponse={() => void charger()} />
           <BasculeVue vue={vue} changer={setVue} />
           {vue === "calendrier" ? (
             <>

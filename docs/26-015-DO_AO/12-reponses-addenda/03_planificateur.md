@@ -32,8 +32,8 @@
 | B6a | AD-06a Garde machine et lectures (critères 1, 2 ; 6 en partie) | `features/26-015-DO-AD-06a-api-echanges-lecture` | ✅ | `GardeMachineTest`, `EchangesApiTest`, `ControleurEchangesApiHttpTest` (quarts, correctifs, relevés, isolation, refus), `JetonClientTest.unJetonMachineNestPasUneSession` ; OpenAPI : tag « Échanges », schéma `clientCredentials` |
 | B6b | AD-06b Employés et soldes des banques (critères 3, 4) ; jeton OAuth standard ; optimisations | `features/26-015-DO-AD-06b-employes-soldes` | 🔄 | `SoldesBanquesTest`, `ControleurEchangesApiHttpTest` (employés, soldes), `ControleurOAuthHttpTest`, `LectureEchangesApiTest` ; changesets 0022 (soldes) et 0023 (index) ; ADR 0088 ; campagne JMeter `perf/jmeter/campagne-api-echanges.sh` |
 | B6c | AD-06c Absence déclarée aux opérations ; avis des modifications (critères 3, 5) | — | ⬜ | Événement de webhook sur les quarts |
-| B7 | AD-07 Offre en cascade | — | ⬜ | Taille L |
-| B8 | AD-08 Démonstration SP-CSN | — | ⬜ | Débloquée : les faits `heures24h` et `heuresPeriodePaie` existent |
+| B7 | AD-07 Offre par ancienneté et à tour de rôle | `features/26-015-DO-AD-07-offre-anciennete-tour-de-role` | ✅ | [ADR 0089](../../adr/0089-offre-quart-anciennete-tour-de-role.md) ; `OffresQuartTest`, `ControleurOffresQuartHttpTest` (ordre par heures comptées puis ancienneté, refus compté, échéance par rattrapage et par l'ordonnanceur, écart par règle, épuisée, retirée, urgence), `ControleurAbsencesEffectifsHttpTest` (simultané inchangé), changeset 0024 (`SchemaLiquibaseTest`, `RetourArriereSchemaTest`), BDD `04-absences.feature` (`@P-GH-3 @P-GN-1`), vitest `offres-quart.test.tsx`, audit `audit-wcag22` (Mon horaire, tiroir « Offre des quarts libérés ») ; [scénarios](05_scenarios/AD-07.md). Portes du 22 nov. : `mvn -o verify` BUILD SUCCESS, 1 439 essais, couverture respectée, BDD 73/73 ; vitest 53 fichiers / 369 essais ; audit statique sans manquement ; `audit-wcag22` 14/14 ; campagne Java `effectifs-absences` 2/2 (son sélecteur `…-ouvrir` attrapait d'abord le nouveau bouton du réglage : identifiant nommé `pla-abs-offres-regler`). Après fusion de develop (AD-08) : `mvn -o verify` BUILD SUCCESS, 1 440 essais, couverture respectée, BDD 74/74 ; vitest 369/369 ; audit statique sans manquement |
+| B8 | AD-08 Démonstration SP-CSN | `features/26-015-DO-AD-08-demo-sp-csn` | ✅ | Aucun code serveur : `convention-sp-csn.json` (9 règles, seuil de période 80 h, seuil 14 jours, 14 écarts avec leur article), `scripts/semer-sp-csn.cjs` ; e2e `urgences-sante-sp-csn.spec.ts` 11/11 contre le Java (chaque règle déclenche et ne déclenche pas) ; BDD `02-quarts-et-attribution.feature` ; [scénarios](05_scenarios/AD-08.md) |
 
 ## C. Portes jouées le 20 novembre 2026
 
@@ -47,6 +47,14 @@ parallèle) : les temps d'attente de 10 s de Playwright ont sauté plusieurs foi
 | `audit-accessibilite.js` | ✅ aucun manquement | ✅ aucun manquement |
 | e2e `--project=interface` (suite complète) | 🟡 49/51 ; portable rejoué ✅ ; **mobile (390 px) ⛔** : `page.goto` puis `locator.click` > 10 s dès le premier écran, deux fois | Audit WCAG seul : tablette ✅ (au second essai), portable ✅ ; mobile et suite complète non rejoués |
 | Campagne contre le Java | ✅ `effectifs-agph`, `-absences`, `-echanges`, `-temps`, `-temps-flux` : 8/8 (18 h 25) | 🟡 `effectifs-agph` 1/2 (20 h 42) : l'essai pose sa règle `DEPOT_AGPH` à la date **UTC** du jour, déjà le lendemain à Montréal après 19 h ; la règle n'est pas encore en vigueur. Défaut de l'essai (horloge), indépendant d'AD-05 ; à corriger dans `effectifs-agph.spec.ts` |
+
+**AD-08 (22 novembre, branche avant fusion)** : `mvn -o verify` ✅ BUILD SUCCESS, 1 426 essais, 0 échec, « All coverage
+checks have been met », BDD 73/73 — au second passage : le premier a échoué sur `DemarrageTest`
+(`SQLITE_IOERR_SHORT_READ` sur `${java.io.tmpdir}/nexu-demarrage-essai.db`, fichier partagé par tous les arbres de travail
+qui vérifient en même temps), rejoué avec `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=<dossier privé>`. `tsc` + `vitest` ✅ 52
+fichiers, 360 essais ; `audit-accessibilite.js` ✅ ; campagne Java (ports 4061 / 5361) : `urgences-sante-sp-csn`,
+`urgences-sante-comportements`, `fx-ao-comportements`, `urgences-sante-technologie`, `fx-ao-bac-a-sable` : 43 réussis,
+1 sauté (bacs à sable non réglés, prévu), 0 échec. Aucun écran touché : la suite `interface` n'a pas été rejouée.
 
 Commandes : section « Vérifier — les portes » de [CLAUDE.md](../../../CLAUDE.md) ; e2e sur les ports 4041 / 5341.
 

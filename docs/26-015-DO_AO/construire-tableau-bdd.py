@@ -48,6 +48,9 @@ REMARQUES = {
     "E-RF-13": "Le scénario couvre l'import des horodatages tiers (doublons, lignes fautives) ; la corrélation dans la "
                "feuille (temps proposé, sources divergentes) est prouvée horloge figée "
                "(`ControleurTempsFluxEffectifsHttpTest#recit`).",
+    "P-GH-3": "AD-07 : en mode par ancienneté et à tour de rôle, un rang avisé à la fois ; l'échéance de dix minutes "
+              "(silence réputé refus), le tic de l'ordonnanceur et l'urgence de deux heures sont prouvés horloge avancée "
+              "(`ControleurOffresQuartHttpTest`).",
     "E-TN-17": "Plancher à vide (moins de 2 s par transaction de base) ; la mesure contractuelle sous charge relève "
                "de la campagne JMeter (`perf/jmeter`).",
 }

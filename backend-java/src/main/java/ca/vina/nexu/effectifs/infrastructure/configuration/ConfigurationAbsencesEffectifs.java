@@ -1,6 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
 import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.application.commandes.CascadeOffresQuart;
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
@@ -40,9 +41,10 @@ public class ConfigurationAbsencesEffectifs {
     public GestionnaireComblementAbsences gestionnaireComblementAbsencesEffectifs(LectureEquipages equipages, LectureDisponibilites disponibilites,
                                                                                   LectureRessources ressources, LectureReferentiels referentiels,
                                                                                   DepotComblementsAbsencesPort depot, GestionnaireAttributionFinDeCollecte attribution,
-                                                                                  PublicationAvis avis, JournalEffectifsPort journal, Sequence sequence) {
+                                                                                  PublicationAvis avis, JournalEffectifsPort journal, Sequence sequence,
+                                                                                  CascadeOffresQuart cascade) {
         return new GestionnaireComblementAbsences(new GestionnaireComblementAbsences.Lectures(equipages, disponibilites, ressources, referentiels),
-                new GestionnaireComblementAbsences.Ecritures(depot, attribution, avis, journal, sequence));
+                new GestionnaireComblementAbsences.Ecritures(depot, attribution, avis, journal, sequence, cascade));
     }
 
     @Bean

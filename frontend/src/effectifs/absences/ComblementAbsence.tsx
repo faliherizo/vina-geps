@@ -11,6 +11,8 @@ import { useCallback, useEffect, useState } from "react";
 import { objet } from "../../formeRecue";
 import { BadgeStatut, Message } from "../../composants";
 import { heure, useApiEffectifs } from "../api";
+import OrdreOffre from "../offres/OrdreOffre";
+import { offresRecues, type OffreQuart } from "../offres/types";
 
 type Resultat = "ATTRIBUEE" | "OFFERTE" | "SANS_CANDIDAT" | "REMPLACEMENT_LONG_TERME";
 interface Avis { ressourceId: string; nom: string; canal: string; statut: string; erreur: string | null }
@@ -51,8 +53,9 @@ function demainDixSeptHeures(): string {
 }
 
 export default function ComblementAbsence({ absenceId }: { absenceId: string }) {
-  const { lire, envoyer, erreur, setErreur } = useApiEffectifs();
+  const { lire, envoyer, erreur, setErreur, apiFetch } = useApiEffectifs();
   const [c, setC] = useState<Comblement | null>(null);
+  const [offres, setOffres] = useState<OffreQuart[]>([]);
   const [choix, setChoix] = useState<Record<string, string>>({});
   const [poste, setPoste] = useState("");
   const [fenetre, setFenetre] = useState(demainDixSeptHeures);
@@ -61,8 +64,12 @@ export default function ComblementAbsence({ absenceId }: { absenceId: string }) 
   const charger = useCallback(async () => {
     const lu = objet<Comblement>(await lire<Comblement>(`/api/effectifs/absences/${absenceId}/comblement`));
     setC(lu);
+    // AD-07 : en mode par ancienneté et à tour de rôle, chaque place offerte a son ordre d'offre.
+    // Lue à part : sans offre (mode simultané) ou sans droit, la section reste muette, sans erreur au comblement.
+    const r = await apiFetch(`/api/effectifs/offres?absenceId=${encodeURIComponent(absenceId)}`);
+    setOffres(r.ok ? offresRecues(await r.json().catch(() => [])) : []);
     if (lu?.postesProposes.length) setPoste((p) => p || lu.postesProposes[0].id);
-  }, [lire, absenceId]);
+  }, [lire, apiFetch, absenceId]);
   useEffect(() => { void charger(); }, [charger]);
 
   const attribuer = async (p: PlaceComblee) => {
@@ -110,6 +117,7 @@ export default function ComblementAbsence({ absenceId }: { absenceId: string }) 
                       <ul data-testid={`pla-abs-avis-${p.date}`}>{avises.map((v) => <li key={v.ressourceId}>{v.nom} — {v.detail}</li>)}</ul>
                     </>
                   )}
+                  {offres.filter((o) => o.quart.placeId === p.placeId).map((o) => <OrdreOffre key={o.id} offre={o} />)}
                   {p.resultat === "OFFERTE" && vacante && (
                     <p className="eff-actions">
                       <label htmlFor={`pla-abs-choix-${p.id}`}>Attribuer le quart du {p.date} à</label>
