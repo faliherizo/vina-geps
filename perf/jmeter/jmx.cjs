@@ -88,7 +88,19 @@ function groupe(nom, enfants, { setUp = false, unites = "${utilisateurs}", monte
 }
 
 /** Une requête HTTP ; `corps` (JSON) part tel quel ; les paramètres de requête vont dans le chemin. */
-function requete(nom, methode, chemin, { corps = null, enfants = [] } = {}) {
+/**
+ * Une requête HTTP. `corps` : un corps brut (JSON) ; `formulaire` : des paramètres encodés en
+ * `application/x-www-form-urlencoded` (RFC 6749), avec leur propre en-tête de type, qui l'emporte sur celui du plan.
+ */
+function requete(nom, methode, chemin, { corps = null, formulaire = null, enfants = [] } = {}) {
+  if (formulaire !== null) {
+    const parametres = Object.entries(formulaire).map(([n, v]) => `<elementProp name="${echapper(n)}" elementType="HTTPArgument">${bool("HTTPArgument.always_encode", true)}${prop("Argument.name", n)}${prop("Argument.value", v)}${bool("HTTPArgument.use_equals", true)}${prop("Argument.metadata", "=")}</elementProp>`).join("");
+    const type = noeud(`<HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="En-tête du formulaire"><collectionProp name="HeaderManager.headers"><elementProp name="" elementType="Header">${prop("Header.name", "Content-Type")}${prop("Header.value", "application/x-www-form-urlencoded")}</elementProp></collectionProp></HeaderManager>`);
+    return noeud(`<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="${echapper(nom)}">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments">${parametres}</collectionProp></elementProp>
+      ${prop("HTTPSampler.path", chemin)}${prop("HTTPSampler.method", methode)}${bool("HTTPSampler.follow_redirects", false)}${bool("HTTPSampler.auto_redirects", false)}${bool("HTTPSampler.use_keepalive", true)}${bool("HTTPSampler.DO_MULTIPART_POST", false)}
+    </HTTPSamplerProxy>`, [type, ...enfants]);
+  }
   const args = corps === null
     ? `<elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>`
     : `${bool("HTTPSampler.postBodyRaw", true)}<elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument">${bool("HTTPArgument.always_encode", false)}${prop("Argument.value", corps)}${prop("Argument.metadata", "=")}</elementProp></collectionProp></elementProp>`;
@@ -167,4 +179,20 @@ function connexion() {
   ], { setUp: true });
 }
 
-module.exports = { document, noeud, variablesEnvironnement, defautsHttp, enTetes, temoins, jeuCsv, groupe, requete, extracteurJson, publierPropriete, assertionPasDErreurServeur, assertionCode, assertionDuree, si, reflexion, debitConstant, chapitre, fragment, connexion, P };
+/**
+ * La connexion d'une **application** (API d'échange, AD-06) : POST /api/oauth/token avec le client semé par preparer.cjs ;
+ * le jeton machine est publié à tous les groupes, comme celui d'une session. Le corps est en JSON, forme que toutes les
+ * versions du serveur acceptent : une campagne doit pouvoir comparer une version à la précédente sur le même plan. La
+ * forme standard (formulaire, RFC 6749) est éprouvée par `ControleurOAuthHttpTest` et par `preparer.cjs`.
+ */
+function connexionMachine(colonnes) {
+  return groupe("Jeton d'application (setUp : client_credentials)", [
+    jeuCsv("Identifiants (CSV)", "${identifiants}", colonnes),
+    requete("POST /api/oauth/token", "POST", "/api/oauth/token", {
+      corps: '{"grant_type":"client_credentials","client_id":"${clientId}","client_secret":"${clientSecret}"}',
+      enfants: [assertionCode(200), extracteurJson("jeton", "$.access_token"), publierPropriete("jeton", "jeton")],
+    }),
+  ], { setUp: true });
+}
+
+module.exports = { connexionMachine, document, noeud, variablesEnvironnement, defautsHttp, enTetes, temoins, jeuCsv, groupe, requete, extracteurJson, publierPropriete, assertionPasDErreurServeur, assertionCode, assertionDuree, si, reflexion, debitConstant, chapitre, fragment, connexion, P };

@@ -165,6 +165,69 @@
    "notes": "E-GN-13, E-GN-15, E-GN-16, E-GR-11. La conformité est évaluée à la lecture par le moteur de règles : la mesure couvre donc aussi ce moteur."
   },
   {
+   "nom": "LireQuartsParApi",
+   "libelle": "API d'échange : les quarts planifiés d'un mois, places et matricules (application de l'organisme)",
+   "methode": "GET",
+   "chemin": "/api/echanges/v1/quarts?du=${debutPeriode}&au=${dateFuture}",
+   "machine": true,
+   "code": 200,
+   "slo": {
+    "moyen_typique": 60,
+    "p95_typique": 120,
+    "moyen_volumineux": 250,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 1500,
+    "erreurs": 0.1
+   },
+   "notes": "26-015-DO addenda 5 (a), AD-06a. Lu par RAO/SAAV pour aligner leurs horaires ; index (tenantId, date) des équipages (changeset 0023)."
+  },
+  {
+   "nom": "LireCorrectifsParApi",
+   "libelle": "API d'échange : les correctifs des quarts depuis le début, page de 500",
+   "methode": "GET",
+   "chemin": "/api/echanges/v1/quarts/modifications?limite=500",
+   "machine": true,
+   "code": 200,
+   "slo": {
+    "moyen_typique": 80,
+    "p95_typique": 150,
+    "moyen_volumineux": 300,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 500,
+    "p95_typique": 1000,
+    "moyen_volumineux": 2000,
+    "erreurs": 0.1
+   },
+   "notes": "Addenda 5 (a, b), AD-06a. La page la plus lourde : 500 entrées du journal et l'état présent de chaque quart, en trois requêtes (lecture groupée)."
+  },
+  {
+   "nom": "LireRelevesParApi",
+   "libelle": "API d'échange : les relevés de présence validés, page de 500",
+   "methode": "GET",
+   "chemin": "/api/echanges/v1/releves-presence?limite=500",
+   "machine": true,
+   "code": 200,
+   "slo": {
+    "moyen_typique": 60,
+    "p95_typique": 120,
+    "moyen_volumineux": 250,
+    "erreurs": 0.1
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 1500,
+    "erreurs": 0.1
+   },
+   "notes": "Addenda 5 (e), AD-06a. Index (tenantId, approuveeLe) des feuilles (changeset 0023)."
+  },
+  {
    "nom": "PointerUneEntree",
    "libelle": "Pointer son entrée sur un quart, avec la preuve de présence",
    "methode": "POST",
@@ -203,6 +266,28 @@
     "erreurs": 0.5
    },
    "notes": "E-RF-1. Opération **de lot**, non transactionnelle : elle bâtit une feuille par ressource de l'unité depuis l'horaire et les pointages. E-TN-17 ne s'y applique pas (il vise les « fonctionnalités transactionnelles de base ») ; son SLA est donc énoncé à part, et son exécution se place hors période de pointe."
+  },
+  {
+   "nom": "TransmettreSoldesParApi",
+   "libelle": "API d'échange : transmettre les soldes de deux banques d'un employé",
+   "methode": "PUT",
+   "chemin": "/api/echanges/v1/employes/${matricule}/soldes",
+   "machine": true,
+   "code": 200,
+   "corps": "{\"soldes\":[{\"banque\":\"VAC\",\"heures\":70.5,\"au\":\"${date}\"},{\"banque\":\"MAL\",\"heures\":21,\"au\":\"${date}\"}]}",
+   "slo": {
+    "moyen_typique": 60,
+    "p95_typique": 120,
+    "moyen_volumineux": 120,
+    "erreurs": 0.5
+   },
+   "sla": {
+    "moyen_typique": 400,
+    "p95_typique": 800,
+    "moyen_volumineux": 800,
+    "erreurs": 0.5
+   },
+   "notes": "Addenda 5 (c), AD-06b. Idempotente (remplace le solde de chaque banque) : rejouée 12 000 fois, elle ne grossit pas la table, seulement le journal."
   }
  ]
 }
