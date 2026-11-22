@@ -45,13 +45,13 @@ class SchemaLiquibaseTest {
                         "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs",
                         "alr_modele_versions", "alr_modele_version_reponses", "alr_modele_groupes", "alr_reglages",
                         "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
-                        "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps", "eff_temps_seuils_conventions",
+                        "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps", "eff_temps_seuils_conventions", "eff_soldes_banques",
                         "eff_offres_parametres", "eff_offres", "eff_offre_rangs")
                 // La paie est le contexte `paie` (ADR 0076), et non la table de règles de Nexu VINA ; la tarification et la
                 // facturation SaaS ne sont pas de ce produit (D3).
                 .doesNotContain("varpay_pay_rules", "pricing_plans", "billing_invoices", "operator_company");
         liquibase(ds).afterPropertiesSet();
-        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(27);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM DATABASECHANGELOG").query(Integer.class).single()).isEqualTo(29);
     }
 
     @Test
@@ -62,15 +62,15 @@ class SchemaLiquibaseTest {
         jdbc.sql("CREATE TABLE users (id TEXT PRIMARY KEY)").update();
         liquibase(ds).afterPropertiesSet();
         // Les évolutions qui créent une table s'appliquent ; celles qui modifient une table absente d'une reprise
-        // (`msg_messages`, `soutien_maintenances` pour 0019) sont constatées.
+        // (`msg_messages`, `soutien_maintenances` pour 0019, les index de 0023) sont constatées ; 0022 crée sa table.
         assertThat(tables(jdbc)).containsExactlyInAnyOrder("users", "msg_acheminement_unites", "msg_reactions", "msg_appels_groupe",
                 "msg_appels_groupe_participants", "msg_distributions", "msg_message_versions",
                 "alr_reponses", "alr_modeles", "alr_modele_reponses", "alr_alertes", "alr_alerte_reponses", "alr_remises", "eff_temps_champs",
                 "alr_modele_versions", "alr_modele_version_reponses", "alr_modele_groupes", "alr_reglages",
                 "msg_groupes_transverses", "msg_groupe_membres", "paie_dossiers", "paie_reglages", "paie_cycles", "paie_bulletins",
-                "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps");
+                "alr_politiques", "alr_politique_versions", "alr_cascades", "alr_cascade_traces", "alr_textos_entrants", "alr_appels", "users_mots_de_passe", "alr_notes", "paie_regles", "paie_validations_temps", "eff_soldes_banques");
         assertThat(jdbc.sql("SELECT EXECTYPE FROM DATABASECHANGELOG ORDER BY ORDEREXECUTED").query(String.class).list())
-                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "MARK_RAN", "MARK_RAN");
+                .containsExactly("MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "EXECUTED", "EXECUTED", "MARK_RAN", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "EXECUTED", "MARK_RAN", "MARK_RAN", "MARK_RAN", "EXECUTED", "MARK_RAN", "MARK_RAN");
     }
 
     @Test

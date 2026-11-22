@@ -38,6 +38,7 @@ import ca.vina.nexu.effectifs.domaine.DepotDisponibilitesPort;
 import ca.vina.nexu.effectifs.domaine.Disponibilites;
 import ca.vina.nexu.effectifs.domaine.OffresQuart;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurComptesPourEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotSoldesBanques;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurModulesPourEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurOrdonnanceurOffres;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotAbsencesEffectifs;
@@ -245,7 +246,8 @@ class ControleurOffresQuartHttpTest {
                 new GestionnaireComblementAbsences.Ecritures(depotCbl, new GestionnaireAttributionFinDeCollecte(lectPlanif, dispo, places, journal), avis, journal, seq,
                         cascade));
         absences = new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depotAbs, planning, depotEqp, comblement),
-                new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres), evaluateur, journal, seq);
+                new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres,
+                        new DepotSoldesBanques(jdbc, new SchemaEffectifs(jdbc))), evaluateur, journal, seq);
         ControleurOffresQuart offres = new ControleurOffresQuart(garde, new ControleurOffresQuart.Gestes(cascade,
                 new ReponsesOffresQuart(new ReponsesOffresQuart.Collaborateurs(cascade, depotOfr, places, journal), lectRes),
                 new GestionnaireParametresOffres(depotPar, journal), new LectureOffresQuart(depotOfr, lectRes, lecture, perimetres)));

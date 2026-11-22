@@ -42,8 +42,15 @@ public class GardeMachine {
         return new GardeAcces.Verdict(a.tenantId(), null);
     }
 
+    /** L'application du jeton, pour signer ce qu'elle écrit au journal ; à n'appeler qu'après un verdict favorable. */
+    public Optional<JetonsMachine.Application> application(HttpServletRequest requete) {
+        return jeton(requete).flatMap(jetons::lire);
+    }
+
     private static Optional<String> jeton(HttpServletRequest requete) {
+        // RFC 6750 et 7235 : le schéma d'authentification ne tient pas compte de la casse (« bearer » vaut « Bearer »).
         String entete = requete.getHeader(HttpHeaders.AUTHORIZATION);
-        return entete != null && entete.startsWith(PREFIXE) ? Optional.of(entete.substring(PREFIXE.length()).strip()) : Optional.empty();
+        return entete != null && entete.regionMatches(true, 0, PREFIXE, 0, PREFIXE.length())
+                ? Optional.of(entete.substring(PREFIXE.length()).strip()) : Optional.empty();
     }
 }

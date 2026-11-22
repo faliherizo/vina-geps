@@ -12,7 +12,8 @@ D="${PERF_JAVA_DOSSIER:-${TMPDIR:-/tmp}/nexu-perf-java}"
 mkdir -p "$D/sauvegardes" "$D/data"
 echo "▶ base vierge → $D/perf.db (Liquibase la bâtit au démarrage)"
 rm -f "$D/perf.db" "$D/perf.db-wal" "$D/perf.db-shm"
-JAR=$(ls "$RACINE"/backend-java/target/nexu-vina-backend-*.jar 2>/dev/null | grep -v original | head -1)
+# PERF_JAR : mesurer un autre JAR (une version antérieure, pour comparer avant et après une optimisation).
+JAR="${PERF_JAR:-$(ls "$RACINE"/backend-java/target/nexu-vina-backend-*.jar 2>/dev/null | grep -v original | head -1)}"
 if [ -z "$JAR" ]; then
   (cd "$RACINE/backend-java" && mvn -B -q -DskipTests -Djacoco.skip=true package)
   JAR=$(ls "$RACINE"/backend-java/target/nexu-vina-backend-*.jar | grep -v original | head -1)

@@ -1,5 +1,7 @@
 package ca.vina.nexu.effectifs.application.commandes;
 
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.domaine.SoldesBanques;
 import ca.vina.nexu.effectifs.application.requetes.LectureAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
 import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
@@ -60,7 +62,9 @@ public class GestionnaireAbsencesEffectifs {
     }
 
     /** Les lectures dont les gestes ont besoin. */
-    public record Lectures(LectureAbsencesEffectifs absences, LectureRessources ressources, LectureReferentiels referentiels, LecturePerimetres perimetres) { }
+    /** {@code soldes} : les soldes des banques reçus de l'organisme (AD-06b), lus pour les faits de la demande. */
+    public record Lectures(LectureAbsencesEffectifs absences, LectureRessources ressources, LectureReferentiels referentiels, LecturePerimetres perimetres,
+                           SoldesBanquesPort soldes) { }
 
     /** Les ports d'écriture : les absences, les places qu'une absence libère, et le mécanisme qui les comble (lot U5). */
     public record Ports(DepotAbsencesEffectifsPort absences, PlanningAbsencesEffectifsPort planning, DepotEquipagesPort equipages,
@@ -122,6 +126,18 @@ public class GestionnaireAbsencesEffectifs {
                 });
     }
 
+    /** Les faits du solde de la banque que nomme le code (AD-06b) : toujours présents, faux et zéro sans solde reçu. */
+    private Map<String, Object> faitsDuSolde(Contexte ctx, Ressource r, ValeurReferentiel code, int joursDemandes) {
+        Optional<SoldesBanques.Solde> solde = SoldesBanques.FaitsSolde.banqueDe(code.attributs()).flatMap(b -> lire.soldes().solde(ctx.tenantId(), r.id(), b));
+        SoldesBanques.FaitsSolde f = SoldesBanques.FaitsSolde.de(solde, joursDemandes, SoldesBanques.FaitsSolde.heuresParJourDe(code.attributs()));
+        Map<String, Object> faits = new LinkedHashMap<>();
+        faits.put("soldeBanqueConnu", f.connu());
+        faits.put("soldeBanqueHeures", f.soldeHeures());
+        faits.put("heuresDemandees", f.heuresDemandees());
+        faits.put("soldeBanqueApresHeures", f.soldeApresHeures());
+        return faits;
+    }
+
     /** La demande résumée en faits, pour les règles {@code ABSENCE} : ce que le moteur juge, sans lire aucune table. */
     private Regles.Dossier dossier(Contexte ctx, Ressource r, ValeurReferentiel code, String id, String du, String au) {
         Map<String, Object> faits = new LinkedHashMap<>();
@@ -136,6 +152,7 @@ public class GestionnaireAbsencesEffectifs {
         faits.put("premierJour", du);
         faits.put("planifiable", AbsencesEffectifs.codePlanifiable(code.attributs().get("planifiable")));
         faits.put("absencePlanifiee", AbsencesEffectifs.estPlanifiee(preavis));
+        faitsDuSolde(ctx, r, code, AbsencesEffectifs.joursDemandes(du, au)).forEach(faits::put);
         Map<String, String> portees = new HashMap<>();
         portees.put(PorteesDuDossier.CONVENTION, r.conventionCode());
         portees.put(PorteesDuDossier.STATUT_EMPLOI, r.statutEmploiCode());

@@ -25,6 +25,7 @@ import ca.vina.nexu.effectifs.application.requetes.LectureDisponibilites;
 import ca.vina.nexu.effectifs.domaine.DepotDisponibilitesPort;
 import ca.vina.nexu.effectifs.domaine.Disponibilites;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotComblementsAbsences;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotSoldesBanques;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotDisponibilites;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotRemplacementsAgph;
 import ca.vina.nexu.effectifs.infrastructure.persistance.SchemaAgph;
@@ -119,6 +120,7 @@ class ControleurAbsencesEffectifsHttpTest {
     private static final String MARDI = "2030-03-05";
     private static final String MAINTENANT = "2027-01-15T10:00:00Z";
     private static final String MODULES = "[\"personnel\",\"effectifs\",\"effectifs_absences\",\"effectifs_planification\",\"effectifs_agph\"]";
+    private DepotSoldesBanques soldes;
     private static final ContexteRequete ADMIN = ClientHttpEssai.session("admin", T);
     private static final ContexteRequete JULIE = new ContexteRequete("usr-julie", "julie", "employee", null, T);
     private static final ContexteRequete MARC = new ContexteRequete("usr-marc", "marc", "employee", null, T);
@@ -236,8 +238,9 @@ class ControleurAbsencesEffectifsHttpTest {
                 new GestionnaireRemplacementsAgph.Socle(lectPos, lectRes, perimetres, journal, seq));
         SuiviComblementAbsence suivi = new SuiviComblementAbsence(new SuiviComblementAbsence.Lectures(depotCbl, perimetres, lectRes, lectPos),
                 new SuiviComblementAbsence.Remplacements(depotRlt, remplacements, new AdaptateurModulesPourEffectifs(jdbc), journal), comblement);
+        soldes = new DepotSoldesBanques(jdbc, new SchemaEffectifs(jdbc));
         absences = new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depotAbs, planning, depotEqp, comblement),
-                new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres), evaluateur, journal, seq);
+                new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres, soldes), evaluateur, journal, seq);
         http = new ClientHttpEssai(socle, planification, new ControleurAbsencesEffectifs(garde, lecture, absences, suivi));
         semaine();
     }

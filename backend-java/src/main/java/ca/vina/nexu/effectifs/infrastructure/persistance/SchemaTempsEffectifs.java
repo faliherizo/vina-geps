@@ -21,6 +21,8 @@ public class SchemaTempsEffectifs {
                     + "instantane TEXT, soumiseLe TEXT, soumisePar TEXT, approuveeLe TEXT, creeLe TEXT NOT NULL, creePar TEXT NOT NULL, "
                     + "UNIQUE (tenantId, ressourceId, debut))",
             "CREATE INDEX IF NOT EXISTS idx_eff_feuilles_periode ON eff_feuilles (tenantId, debut, statut)",
+            // API d'échange (changeset 0023) : le curseur des relevés validés.
+            "CREATE INDEX IF NOT EXISTS idx_eff_feuilles_approuvee ON eff_feuilles (tenantId, approuveeLe)",
             "CREATE TABLE IF NOT EXISTS eff_segments_temps (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, feuilleId TEXT NOT NULL, placeId TEXT, "
                     + "date TEXT NOT NULL, debut TEXT NOT NULL, fin TEXT NOT NULL, typeHeureCode TEXT NOT NULL, source TEXT NOT NULL, version INTEGER NOT NULL, "
                     + "remplaceId TEXT, actif INTEGER NOT NULL, motif TEXT, creeLe TEXT NOT NULL, creePar TEXT NOT NULL)",

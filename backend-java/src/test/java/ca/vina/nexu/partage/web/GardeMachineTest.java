@@ -35,7 +35,7 @@ class GardeMachineTest {
     @Test
     @DisplayName("jeton lu et portée détenue : l'organisme du verdict est celui du jeton")
     void admis() {
-        GardeAcces.Verdict v = garde.exiger(requete("Bearer lecteur "), Portee.LECTURE);
+        GardeAcces.Verdict v = garde.exiger(requete("bearer lecteur "), Portee.LECTURE);
         assertThat(v.refuse()).isFalse();
         assertThat(v.tenantId()).isEqualTo("t-1");
     }
