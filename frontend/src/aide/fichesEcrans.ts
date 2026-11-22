@@ -19,6 +19,11 @@ import type { Page } from "../App";
 export interface Prealable {
   texte: string;
   ecran?: Page;
+  /**
+   * Le préalable en quelques mots, tel que l'introduction des vidéos le dit et l'affiche (« Avant de commencer » :
+   * une liste qu'on lit d'un coup d'œil). À défaut, le titre de l'écran où il se fait, puis la première proposition.
+   */
+  court?: string;
 }
 
 export interface Fiche {
@@ -47,7 +52,7 @@ export interface Fiche {
 /** L'identifiant d'ancre d'une fiche dans le guide. */
 export const idFiche = (page: string): string => `fiche-${page}`;
 
-const p = (texte: string, ecran?: Page): Prealable => (ecran ? { texte, ecran } : { texte });
+const p = (texte: string, ecran?: Page, court?: string): Prealable => ({ texte, ...(ecran ? { ecran } : {}), ...(court ? { court } : {}) });
 
 /**
  * Les modules d'un écran : ceux que la garde du serveur exige, plus le socle « effectifs » pour les
@@ -59,12 +64,15 @@ const modules = (...codes: string[]): Prealable => {
   return p(
     `L'exploitant de la plateforme (superadmin) accorde à l'organisme ${codes.length > 1 ? "les modules" : "le module"} ${noms} `
     + "(Administration › Superadmin, modules de l'organisme) et laisse cette vue au menu : sans cela, l'entrée n'apparaît pas au menu et le serveur refuse l'accès.",
+    undefined,
+    `${codes.length > 1 ? "Modules accordés à l'organisme" : "Module accordé à l'organisme"} : ${codes.join(", ")}`,
   );
 };
 
 const compte = (roles: string): Prealable => p(
   `L'administration de l'organisme crée le compte de chaque personne dans Administration › Administration, onglet « Comptes et rôles ». Rôle attendu : ${roles}.`,
   "admin",
+  "Le compte de la personne, avec son rôle",
 );
 
 const REFERENTIELS_SOCLE = p(
@@ -79,6 +87,7 @@ const RESSOURCE_LIEE = p(
   + "— matricule, nom, unité, corps d'emploi — et choisit son « Compte utilisateur ». C'est ce lien qui manque quand l'écran répond "
   + "« votre compte n'est relié à aucune ressource planifiable : demandez-le à votre planificateur ».",
   "usressources",
+  "La ressource de la personne, reliée à son compte",
 );
 
 const perimetre = (niveau: string, effet: string): Prealable => p(
@@ -262,7 +271,7 @@ export const FICHES: Record<Page, Fiche> = {
       compte("gestionnaire, direction, RH ou administration"),
       p("Le compte du gestionnaire est rattaché à une fiche du personnel : créer sa ressource reliée à son compte (Gestion des quarts › Ressources) crée et rattache cette fiche ; l'administration peut aussi lier le compte à l'employé (Comptes et rôles). Sans fiche, l'équipe reste vide et réorganiser répond « votre compte n'est relié à aucune fiche du personnel ».", "usressources"),
       p("Chaque membre a sa fiche (même geste) et son supérieur direct : « Supérieurs hiérarchiques » dans Feuilles de temps (console), ou « Rattacher une personne » ici.", "ustemps"),
-      p("Pour désigner un suppléant : il a un rôle qui approuve des feuilles (gestion, direction ou administration)."),
+      p("Pour désigner un suppléant : il a un rôle qui approuve des feuilles (gestion, direction ou administration).", undefined, "Un suppléant dont le rôle approuve des feuilles"),
     ],
     etapes: [
       "Lire « Les membres de mon équipe » : chaque personne, son poste, son supérieur direct et son lien (direct ou indirect).",
@@ -742,7 +751,7 @@ export const FICHES: Record<Page, Fiche> = {
     prealables: [
       modules("paie"),
       compte("administration ou RH (capacité « paie.configurer »)"),
-      p("Les taux à reporter : celui du FSS selon la masse salariale de l'organisme, et celui de l'avis de cotisation de la CNESST."),
+      p("Les taux à reporter : celui du FSS selon la masse salariale de l'organisme, et celui de l'avis de cotisation de la CNESST.", undefined, "Les taux du FSS et de la CNESST"),
     ],
     etapes: ["Saisir le taux du Fonds des services de santé (selon la masse salariale et le secteur ; 4,26 % au secteur public).",
       "Saisir le taux de la CNESST indiqué sur l'avis de cotisation de l'organisme.",
@@ -817,7 +826,7 @@ export const FICHES: Record<Page, Fiche> = {
     prealables: [
       modules("approvals"),
       compte("administration, gestionnaire ou direction pour décider ; administration ou gestionnaire pour les règles"),
-      p("Les types de document, tenus par l'administration, puis les règles d'approbation (onglet « Règles ») : sans règle, aucune demande n'est adressée."),
+      p("Les types de document, tenus par l'administration, puis les règles d'approbation (onglet « Règles ») : sans règle, aucune demande n'est adressée.", undefined, "Les types de document et les règles d'approbation"),
       p("Pour déléguer : le délégataire a un compte qui peut approuver (Comptes et rôles).", "admin"),
     ],
     etapes: [
@@ -838,7 +847,7 @@ export const FICHES: Record<Page, Fiche> = {
     prealables: [
       modules("effectifs"),
       compte(CONFIGURATION_EFFECTIFS + " ; les autres rôles lisent"),
-      p("Dans l'ordre : les unités (une unité peut avoir une parente), puis les corps d'emploi avant les titres d'emploi qui s'y rattachent ; chaque valeur en vigueur à la date où l'on s'en servira."),
+      p("Dans l'ordre : les unités (une unité peut avoir une parente), puis les corps d'emploi avant les titres d'emploi qui s'y rattachent ; chaque valeur en vigueur à la date où l'on s'en servira.", undefined, "Les unités, puis les corps et titres d'emploi"),
     ],
     etapes: [
       "Choisir le « Référentiel », puis ajouter une valeur : code, libellé (français, anglais facultatif), comportement et date d'entrée en vigueur.",
@@ -942,7 +951,7 @@ export const FICHES: Record<Page, Fiche> = {
     prealables: [
       modules("effectifs"),
       compte(CONFIGURATION_EFFECTIFS),
-      p("La politique de conservation de l'organisme, fixée par la personne responsable de la protection des renseignements personnels."),
+      p("La politique de conservation de l'organisme, fixée par la personne responsable de la protection des renseignements personnels.", undefined, "La politique de conservation de l'organisme"),
     ],
     etapes: ["« Modifier la politique » d'une classe : durée et motif.", "Appliquer la purge : seules les données échues sont touchées."],
     exemple: [["Classe", "Pointages et localisations"], ["Durée", "24 mois"]],
@@ -1016,7 +1025,7 @@ export const FICHES: Record<Page, Fiche> = {
     prealables: [
       modules("integrations"),
       compte("administration"),
-      p("Pour Entra ID : l'application inscrite dans l'annuaire de l'organisme (ID du locataire, ID d'application), et son secret posé par l'exploitation dans une variable d'environnement du serveur."),
+      p("Pour Entra ID : l'application inscrite dans l'annuaire de l'organisme (ID du locataire, ID d'application), et son secret posé par l'exploitation dans une variable d'environnement du serveur.", undefined, "L'application inscrite dans Entra ID, et son secret"),
     ],
     etapes: ["Déclarer un annuaire Entra ID : ID du locataire, ID d'application, variable du secret, domaines admis, table groupes → rôles.", "Ajouter un webhook : URL, événements."],
     exemple: [["Annuaire", "Urgences-santé — Entra ID"], ["Domaines admis", "urgences-sante.qc.ca"], ["Groupe → rôle", "GEPS-Planification → manager"]],
@@ -1054,7 +1063,7 @@ export const FICHES: Record<Page, Fiche> = {
     qui: "Tous les comptes.",
     prealables: [
       compte("n'importe lequel"),
-      p("À la première connexion : changer le mot de passe provisoire et configurer le second facteur."),
+      p("À la première connexion : changer le mot de passe provisoire et configurer le second facteur.", undefined, "Mot de passe provisoire changé, second facteur configuré"),
     ],
     etapes: ["Changer son mot de passe (le collage est accepté).", "Ajouter une clé d'accès (passkey) ou régler l'application d'authentification.", "Choisir ses canaux d'avis : au moins un canal écrit reste ouvert."],
     exemple: [["Canaux", "Courriel et poussée"]],
@@ -1084,3 +1093,17 @@ export const FICHES: Record<Page, Fiche> = {
     resultat: "Le billet reçoit un numéro ; le délai de réponse dépend de sa gravité.",
   },
 };
+
+/** La longueur au-delà de laquelle une proposition ne se lit plus d'un coup d'œil sur un carton. */
+const LONGUEUR_COURTE = 90;
+
+/**
+ * **Un préalable en quelques mots** — ce que l'introduction de chaque vidéo d'aide affiche et dit avant de montrer
+ * l'écran. Le texte complet reste dans la fiche ; ici, on nomme seulement la chose à mettre en place.
+ */
+export function resumePrealable(pr: Prealable): string {
+  if (pr.court) return pr.court;
+  if (pr.ecran) return FICHES[pr.ecran].titre;
+  const proposition = pr.texte.split(/ : | \(|\. /)[0].replace(/\.$/, "");
+  return proposition.length <= LONGUEUR_COURTE ? proposition : `${proposition.slice(0, proposition.lastIndexOf(" ", LONGUEUR_COURTE))}…`;
+}

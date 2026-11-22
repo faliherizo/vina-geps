@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.458
+Ma feuille de temps. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:05.658 --> 00:00:14.691
+Feuilles de temps. Julie Roy ouvre Ma feuille de temps et prépare celle de la semaine du 13 janvier. La feuille se remplit depuis son horaire et ses pointages ; un quart non pointé est signalé comme anomalie.
+
+00:00:17.811 --> 00:00:26.403
+Elle corrige un segment : fin à 17 heures, avec le motif, départ plus tôt accordé par le chef. Le segment n'est pas écrasé : il passe à sa deuxième version.
+
+00:00:29.785 --> 00:00:37.123
+Elle soumet sa feuille, qui attend la décision. Puis elle la rappelle, pour la reprendre : la feuille revient au brouillon. Elle la soumet de nouveau.
+
+00:00:40.586 --> 00:00:49.665
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée ajoute un temps à sa feuille, et le total le dit. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:00:53.747 --> 00:01:00.016
+Une anomalie est nommée sur la feuille au moment de la saisie, avec ce qu'il faut corriger ; une anomalie bloquante empêche la soumission.
+
+00:01:17.803 --> 00:01:22.006
+Sur la feuille : le tableau « Planifié et déclaré, quart par quart » et son écart.
+
+00:01:23.593 --> 00:01:28.376
+« Ajouter » un temps : l'employé saisit ce que le pointage n'a pas rempli ; le reste vient des quarts.
+
+00:01:30.358 --> 00:01:35.048
+À l'enregistrement d'un segment, les anomalies et les totaux sont recalculés et réaffichés aussitôt.
+
+00:01:36.715 --> 00:01:42.125
+Les anomalies sont affichées en tête de feuille, nommées, et dites bloquantes en mots — jamais par la seule couleur.
+
+00:01:59.040 --> 00:02:04.195
+Modifier une entrée déjà saisie : le motif est exigé et l'historique des versions du segment reste lisible.
+
+00:02:05.956 --> 00:02:10.646
+Sur la feuille : les totaux cumulent les saisies du même quart, et isolent les heures supplémentaires.

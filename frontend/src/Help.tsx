@@ -8,6 +8,7 @@ import { EnTeteEcran } from "./composants";
 import { pageOuverte, sectionsVisibles } from "./aideParEcran";
 import { FICHES, idFiche, type Prealable } from "./aide/fichesEcrans";
 import { cheminEcran } from "./aide/liensAide";
+import PremiersPas from "./aide/PremiersPas";
 import type { Page } from "./App";
 import { useModuleAllowed, usePageMasquee } from "./moduleAccess";
 
@@ -81,15 +82,8 @@ export default function Help({ section }: { section?: string | null }) {
 
 {visible("demarrage") && (
         <section id="demarrage" className="card" aria-labelledby="demarrage-h">
-          <h2 id="demarrage-h">Premiers pas : l'ordre logique</h2>
-          <p>Pour une première mise en place, suivez cet ordre — chaque étape prépare la suivante :</p>
-          <ol>
-            <li><strong>Référentiels</strong> : unités, corps d'emploi, statuts, natures de quart, types d'heures et codes d'absence.</li>
-            <li><strong>Périmètres</strong> : qui gère quelle unité. Sans périmètre, une console s'ouvre sur des listes vides.</li>
-            <li><strong>Ressources</strong> : les personnes planifiables, liées à leur compte.</li>
-            <li><strong>Postes et périodes</strong> : publier les postes, ouvrir la collecte des disponibilités, confectionner puis publier.</li>
-            <li><strong>Au quotidien</strong> : comblement, absences, échanges, pointage et feuilles de temps.</li>
-          </ol>
+          <h2 id="demarrage-h">Premiers pas : la mise en route, avant d'utiliser l'application</h2>
+          <PremiersPas ecranOuvert={(p) => pageOuverte(p, ouvert, masquee)} />
         </section>
       )}
 
@@ -372,6 +366,10 @@ function FicheEcran({ page, ouverte, ecranOuvert }: { page: Page; ouverte: boole
       <ol className="fiche-prealables" data-testid={`aide-prealables-${page}`}>
         {f.prealables.map((pr, i) => <PrealableFiche key={pr.texte} prealable={pr} testId={`aide-prealable-${page}-${i + 1}`} ecranOuvert={ecranOuvert} />)}
       </ol>
+      <p>
+        Toute la configuration, dans l'ordre et en vidéo : <a href="#demarrage" data-testid={`aide-prealables-${page}-mise-en-route`}>Premiers
+        pas : la mise en route</a>.
+      </p>
       <h4>Comment faire</h4>
       <ol>{f.etapes.map((e) => <li key={e}>{e}</li>)}</ol>
       <h4>Exemple de remplissage</h4>

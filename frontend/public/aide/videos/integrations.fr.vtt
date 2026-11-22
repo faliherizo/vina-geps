@@ -1,22 +1,40 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:00.836
+00:00:00.000 --> 00:00:01.974
+Intégrations. Avant de commencer.
+
+00:00:02.424 --> 00:00:05.442
+3 préalables doivent être en place, dans cet ordre :
+
+00:00:05.892 --> 00:00:08.423
+Module accordé à l'organisme : integrations.
+
+00:00:08.873 --> 00:00:11.149
+Le compte de la personne, avec son rôle.
+
+00:00:11.599 --> 00:00:14.571
+L'application inscrite dans Entra ID, et son secret.
+
+00:00:15.021 --> 00:00:18.086
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:19.160 --> 00:00:19.996
 Intégrations.
 
-00:00:01.286 --> 00:00:08.484
+00:00:20.446 --> 00:00:27.644
 Brancher l'organisme à ses systèmes : annuaires (Entra ID, SAML), webhooks, fournisseur de textos, antivirus.
 
-00:00:08.934 --> 00:00:11.140
+00:00:28.094 --> 00:00:30.300
 Qui s'en sert : Administration.
 
-00:00:11.590 --> 00:00:12.449
+00:00:30.750 --> 00:00:31.609
 Comment faire :
 
-00:00:12.899 --> 00:00:20.469
+00:00:32.059 --> 00:00:39.629
 Déclarer un annuaire Entra ID : ID du locataire, ID d'application, variable du secret, domaines admis, table groupes → rôles.
 
-00:00:20.919 --> 00:00:23.195
+00:00:40.079 --> 00:00:42.355
 Ajouter un webhook : URL, événements.
 
-00:00:23.645 --> 00:00:28.312
+00:00:42.805 --> 00:00:47.472
 Résultat : Le bouton de connexion de l'annuaire paraît sur la page de connexion de l'organisme.

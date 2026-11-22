@@ -1,0 +1,40 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:05.039
+Mes absences d'effectifs. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:06.239 --> 00:00:11.742
+Mes absences. Julie Roy, paramédic, déclare elle-même une absence. Elle n'en a encore aucune.
+
+00:00:13.288 --> 00:00:21.926
+Elle choisit le code Décès d'un proche, pour une date à venir. Ce code ne se planifie pas d'avance : la déclaration est refusée, et le message dit quoi faire à la place.
+
+00:00:24.737 --> 00:00:30.588
+Elle choisit plutôt Formation, un code planifiable, et déclare les 12 et 13 mai. L'absence est acceptée.
+
+00:00:34.037 --> 00:00:37.195
+Enfin, elle annule cette absence : la ligne passe à Annulée.
+
+00:00:38.886 --> 00:00:49.544
+Julie Roy ouvre Mes absences. Elle ne voit pas la page d'administration des codes, et la liste qu'on lui offre ne porte que les codes en vigueur aujourd'hui, avec leur libellé du jour : jamais le congé sans solde fermé.
+
+00:00:52.378 --> 00:00:58.857
+Julie déclare une absence, code FORM, du 12 mai 2031 au 12 mai 2031. Elle doit être acceptée.
+
+00:01:00.471 --> 00:01:07.042
+Julie déclare une absence, code VAC, du 7 juillet 2031 au 11 juillet 2031. Elle doit être acceptée.
+
+00:01:08.959 --> 00:01:17.922
+Julie déclare une absence, code MAL, du 2 juin 2031 au 2 juin 2031. Ce code ne se planifie pas d'avance : la déclaration doit être refusée.
+
+00:01:19.607 --> 00:01:22.092
+Julie annule son absence du 12 mai 2031.
+
+00:01:23.894 --> 00:01:29.165
+Déclarer une absence qui respecte toutes les règles : elle est accordée sans décision humaine, et l'écran le dit.
+
+00:01:32.024 --> 00:01:37.481
+Un code « jour même seulement » n'est pas proposé à l'avance ; déclaré d'avance, le refus dit quel code choisir.
+
+00:01:39.255 --> 00:01:45.687
+La déclaration est jugée à la saisie : préavis, absences simultanées et taux de comblement sont évalués sans geste d'encadrement.

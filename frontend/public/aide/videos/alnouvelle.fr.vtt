@@ -1,31 +1,55 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.528
+00:00:00.000 --> 00:00:02.020
+Nouvelle alerte. Avant de commencer.
+
+00:00:02.470 --> 00:00:05.442
+5 préalables doivent être en place, dans cet ordre :
+
+00:00:05.892 --> 00:00:08.145
+Module accordé à l'organisme : alertes.
+
+00:00:08.595 --> 00:00:10.870
+Le compte de la personne, avec son rôle.
+
+00:00:11.320 --> 00:00:12.063
+Ressources.
+
+00:00:12.513 --> 00:00:13.721
+Paramètres des alertes.
+
+00:00:14.171 --> 00:00:15.007
+Intégrations.
+
+00:00:15.457 --> 00:00:18.522
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:19.560 --> 00:00:24.088
 Nouvelle alerte. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.728 --> 00:00:14.784
+00:00:25.288 --> 00:00:34.344
 La planificatrice ouvre Nouvelle alerte et choisit le modèle Code bleu. La priorité critique ne lui est pas permise : l'écran le dit. Elle vise tout le groupe Garde de nuit et envoie l'alerte.
 
-00:00:21.292 --> 00:00:30.139
+00:00:40.852 --> 00:00:49.699
 Au suivi des alertes, filtré sur les prises en charge, la planificatrice voit le Code bleu pris en charge, une personne sur une, par Julie, avec sa réponse.
 
-00:00:32.703 --> 00:00:38.137
+00:00:52.263 --> 00:00:57.697
 La planificatrice envoie une alerte de garde avec cette politique : la cascade de relances est armée dès l'envoi.
 
-00:00:41.530 --> 00:00:49.518
+00:01:01.090 --> 00:01:09.078
 Console web d'envoi centralisée ; alerte par application mobile ou texto selon la préférence du destinataire. Ses commandes doivent être présentes à l'écran.
 
-00:00:52.613 --> 00:00:57.118
+00:01:12.173 --> 00:01:16.678
 Recherche de destinataire par nom, prénom. Ses commandes doivent être présentes à l'écran.
 
-00:00:59.000 --> 00:01:04.945
+00:01:18.560 --> 00:01:24.505
 Envoi à un utilisateur, plusieurs, ou un groupe configurable. Ses commandes doivent être présentes à l'écran.
 
-00:01:06.981 --> 00:01:10.673
+00:01:26.541 --> 00:01:30.233
 Diffusion d'alertes en temps réel. Ses commandes doivent être présentes à l'écran.
 
-00:01:12.441 --> 00:01:17.480
+00:01:32.001 --> 00:01:37.040
 Alertes critiques, lorsque disponibles et permises. Ses commandes doivent être présentes à l'écran.
 
-00:01:34.261 --> 00:01:39.393
+00:01:53.821 --> 00:01:58.953
 Interface intuitive, rapide en contexte clinique. Ses commandes doivent être présentes à l'écran.

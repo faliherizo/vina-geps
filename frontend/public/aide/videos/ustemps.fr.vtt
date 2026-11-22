@@ -1,43 +1,70 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:05.225
+00:00:00.000 --> 00:00:02.717
+Feuilles de temps (console). Avant de commencer.
+
+00:00:03.167 --> 00:00:06.139
+6 préalables doivent être en place, dans cet ordre :
+
+00:00:06.589 --> 00:00:09.979
+Modules accordés à l'organisme : effectifs, effectifs temps.
+
+00:00:10.429 --> 00:00:12.705
+Le compte de la personne, avec son rôle.
+
+00:00:13.155 --> 00:00:13.805
+Périmètres.
+
+00:00:14.255 --> 00:00:15.230
+Référentiels.
+
+00:00:15.680 --> 00:00:16.261
+Périodes.
+
+00:00:16.711 --> 00:00:18.267
+Intégrations des effectifs.
+
+00:00:18.717 --> 00:00:21.782
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:22.840 --> 00:00:28.065
 Feuilles de temps (console). Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:06.425 --> 00:00:11.347
+00:00:29.265 --> 00:00:34.187
 Le chef ouvre les feuilles de temps de la semaine, lit les totaux par code de paie, et approuve la feuille de Julie.
 
-00:00:14.801 --> 00:00:19.839
+00:00:37.641 --> 00:00:42.679
 Il produit le lot de paie : une feuille, avec son empreinte qui garantit que le lot n'a pas été modifié.
 
-00:00:22.898 --> 00:00:29.910
+00:00:45.738 --> 00:00:52.750
 Enfin, il rouvre la feuille approuvée, avec son motif : la formation du 17 est en heures régulières. La feuille retourne à Julie.
 
-00:00:33.215 --> 00:00:44.128
+00:00:56.055 --> 00:01:06.968
 L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration règle les seuils d'heures supplémentaires, puis lit le relevé. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:46.607 --> 00:00:52.783
+00:01:09.447 --> 00:01:15.623
 Une feuille soumise ou approuvée n'est plus modifiable par l'employé : la règle de modification restreint selon le statut et le délai.
 
-00:00:55.983 --> 00:01:01.115
+00:01:18.823 --> 00:01:23.955
 « Paramètres des feuilles » → flux d'approbation : paliers, approbateur et condition de routage se configurent.
 
-00:01:04.078 --> 00:01:08.559
+00:01:26.918 --> 00:01:31.399
 « Préparer les feuilles » : la feuille de la période est bâtie depuis les quarts attribués, sans saisie.
 
-00:01:10.285 --> 00:01:14.116
+00:01:33.125 --> 00:01:36.956
 Ouvrir une feuille soumise et « Approuver le palier » — ou la retourner avec un motif.
 
-00:01:15.708 --> 00:01:22.117
+00:01:38.548 --> 00:01:44.957
 Les seuils d'heures supplémentaires (jour, semaine) se règlent dans « Paramètres des feuilles » ; le total est reclassé d'office.
 
-00:01:25.249 --> 00:01:29.243
+00:01:48.089 --> 00:01:52.083
 « Relevés » : choisir le regroupement et afficher le relevé opérationnel de la période.
 
-00:01:31.150 --> 00:01:36.514
+00:01:53.990 --> 00:01:59.354
 Les anomalies de temps et de présence sont détectées par règle au contexte « Feuille de temps » ; la fiche de la feuille les liste.
 
-00:01:38.388 --> 00:01:44.379
+00:02:01.228 --> 00:02:07.219
 « Lot de paie » : produire le lot des feuilles approuvées, codé par type d'heure, avec son empreinte SHA-256.
 
-00:01:46.208 --> 00:01:51.943
+00:02:09.048 --> 00:02:14.783
 Paramètres : ce que la feuille fait d'un pointage qu'aucune source tierce ne confirme, et de deux sources en désaccord.

@@ -1,31 +1,49 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.760
+00:00:00.000 --> 00:00:02.229
+Suivi des alertes. Avant de commencer.
+
+00:00:02.679 --> 00:00:05.698
+3 préalables doivent être en place, dans cet ordre :
+
+00:00:06.148 --> 00:00:08.400
+Module accordé à l'organisme : alertes.
+
+00:00:08.850 --> 00:00:11.126
+Le compte de la personne, avec son rôle.
+
+00:00:11.576 --> 00:00:12.435
+Nouvelle alerte.
+
+00:00:12.885 --> 00:00:15.950
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:17.000 --> 00:00:21.760
 Suivi des alertes. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.960 --> 00:00:12.299
+00:00:22.960 --> 00:00:29.299
 Elle reprend la cascade à la main, et la reprise est tracée. L'ordonnanceur exécute l'étape, et toutes les étapes sont parties.
 
-00:00:17.240 --> 00:00:23.184
+00:00:34.240 --> 00:00:40.184
 La planificatrice ouvre le suivi des alertes et filtre sur les alertes relancées : le Code bleu a été relancé une fois.
 
-00:00:26.183 --> 00:00:35.494
+00:00:43.183 --> 00:00:52.494
 Dans le détail, la trace de la cascade nomme Julie. La planificatrice pose une note sur la destinataire, joindre sur le cellulaire de garde, visible des autres expéditeurs.
 
-00:00:39.663 --> 00:00:42.867
+00:00:56.663 --> 00:00:59.867
 Enfin, elle exporte le suivi des alertes en fichier CSV.
 
-00:00:45.542 --> 00:00:49.931
+00:01:02.542 --> 00:01:06.931
 Insertion d'une note au dossier des destinataires. Ses commandes doivent être présentes à l'écran.
 
-00:00:53.434 --> 00:01:00.749
+00:01:10.434 --> 00:01:17.749
 Statut d'envoi, réception, lecture, réponse et relance, vu par l'expéditeur. Ses commandes doivent être présentes à l'écran.
 
-00:01:02.674 --> 00:01:07.806
+00:01:19.674 --> 00:01:24.806
 Historique des échanges et statuts partagés entre expéditeurs. Ses commandes doivent être présentes à l'écran.
 
-00:01:09.481 --> 00:01:15.054
+00:01:26.481 --> 00:01:32.054
 Traces des relances, appels, réponses, escalades. Ses commandes doivent être présentes à l'écran.
 
-00:01:17.274 --> 00:01:21.918
+00:01:34.274 --> 00:01:38.918
 Écran de visionnement des messages envoyés et des statuts. Ses commandes doivent être présentes à l'écran.

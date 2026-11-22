@@ -1,28 +1,49 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.551
+00:00:00.000 --> 00:00:02.020
+Milieux physiques. Avant de commencer.
+
+00:00:02.470 --> 00:00:05.559
+4 préalables doivent être en place, dans cet ordre :
+
+00:00:06.009 --> 00:00:08.470
+Module accordé à l'organisme : effectifs.
+
+00:00:08.920 --> 00:00:11.195
+Le compte de la personne, avec son rôle.
+
+00:00:11.645 --> 00:00:12.296
+Périmètres.
+
+00:00:12.746 --> 00:00:13.721
+Référentiels.
+
+00:00:14.171 --> 00:00:17.236
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:18.280 --> 00:00:22.831
 Milieux physiques. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.751 --> 00:00:13.692
+00:00:24.031 --> 00:00:31.972
 Puis les ressources planifiables : chaque personne qui travaille sur le terrain a sa fiche. Les ressources humaines, qui ne font pas de quarts, n'y figurent pas.
 
-00:00:15.723 --> 00:00:22.295
+00:00:34.003 --> 00:00:40.575
 Il choisit les preuves de présence acceptées à la caserne : le géorepérage, rendu obligatoire, et le code QR du lieu.
 
-00:00:25.548 --> 00:00:31.539
+00:00:43.828 --> 00:00:49.819
 Enfin, le journal des actions : filtré sur la création de milieu, il trace l'opération qui vient d'être faite.
 
-00:00:33.549 --> 00:00:44.950
+00:00:51.829 --> 00:01:03.230
 L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration ajoute un milieu avec ses coordonnées et règle ses preuves de présence. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:48.895 --> 00:00:54.143
+00:01:07.175 --> 00:01:12.423
 « Ajouter un milieu » : type, unité, adresse et coordonnées ; le quart planifié s'y rattache.
 
-00:00:57.527 --> 00:01:01.475
+00:01:15.807 --> 00:01:19.755
 Coordonnées et rayon du milieu : un pointage hors du rayon est un écart d'emplacement.
 
-00:01:03.674 --> 00:01:10.570
+00:01:21.954 --> 00:01:28.850
 « Preuves » d'un milieu : code sur place, code QR, position ou plage réseau — un ou plusieurs mécanismes, par plage horaire.
 
-00:01:14.552 --> 00:01:19.289
+00:01:32.832 --> 00:01:37.569
 Les exigences de validation se règlent milieu par milieu et s'enregistrent — aucun code à toucher.

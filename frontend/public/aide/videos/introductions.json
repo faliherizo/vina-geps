@@ -1,0 +1,341 @@
+{
+  "access": [
+    "Le compte de la personne, avec son rôle",
+    "Les comptes visés par un octroi existent"
+  ],
+  "account": [
+    "Le compte de la personne, avec son rôle",
+    "Mot de passe provisoire changé, second facteur configuré"
+  ],
+  "admin": [
+    "L'exploitant crée l'organisme avec son compte d'administration",
+    "Se connecter avec le rôle administration de l'organisme",
+    "Ressources",
+    "Intégrations"
+  ],
+  "alnouvelle": [
+    "Module accordé à l'organisme : alertes",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Paramètres des alertes",
+    "Intégrations"
+  ],
+  "alparametres": [
+    "Module accordé à l'organisme : alertes",
+    "Le compte de la personne, avec son rôle",
+    "Référentiels",
+    "Utilisateurs et rôles"
+  ],
+  "alsuivi": [
+    "Module accordé à l'organisme : alertes",
+    "Le compte de la personne, avec son rôle",
+    "Nouvelle alerte"
+  ],
+  "apidocs": [
+    "Le compte de la personne, avec son rôle",
+    "Les routes essayées répondent selon vos droits et les modules accordés à l'organisme"
+  ],
+  "approvals": [
+    "Module accordé à l'organisme : approvals",
+    "Le compte de la personne, avec son rôle",
+    "Les types de document et les règles d'approbation",
+    "Utilisateurs et rôles"
+  ],
+  "dashboard": [
+    "Le compte de la personne, avec son rôle",
+    "Les tuiles lisent les modules des effectifs accordés à l'organisme",
+    "Périmètres",
+    "La ressource de la personne, reliée à son compte",
+    "Périodes"
+  ],
+  "help": [
+    "Un compte actif de l'organisme"
+  ],
+  "integrations": [
+    "Module accordé à l'organisme : integrations",
+    "Le compte de la personne, avec son rôle",
+    "L'application inscrite dans Entra ID, et son secret"
+  ],
+  "matemps": [
+    "Modules accordés à l'organisme : effectifs, effectifs_temps",
+    "Référentiels",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périodes",
+    "Périmètres",
+    "Feuilles de temps (console)"
+  ],
+  "mesabsences": [
+    "Modules accordés à l'organisme : effectifs, effectifs_absences",
+    "Référentiels",
+    "Codes d'absence",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périmètres",
+    "Règles des effectifs",
+    "Périodes"
+  ],
+  "mesalertes": [
+    "Module accordé à l'organisme : alertes",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Mon compte"
+  ],
+  "mesbulletins": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Cycles de paie"
+  ],
+  "mesdisponibilites": [
+    "Modules accordés à l'organisme : effectifs, effectifs_disponibilites",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périodes",
+    "Règles des effectifs"
+  ],
+  "mesechanges": [
+    "Modules accordés à l'organisme : effectifs, effectifs_echanges",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périodes",
+    "Règles des effectifs"
+  ],
+  "monagph": [
+    "Modules accordés à l'organisme : effectifs, effectifs_agph",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Postes",
+    "Confection annuelle (AGPH)",
+    "Confection annuelle (AGPH)"
+  ],
+  "monequipe": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Feuilles de temps (console)",
+    "Un suppléant dont le rôle approuve des feuilles"
+  ],
+  "monhoraire": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périodes"
+  ],
+  "monpointage": [
+    "Modules accordés à l'organisme : effectifs, effectifs_presence",
+    "Référentiels",
+    "Milieux physiques",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Quarts et équipages",
+    "Pointage et présence (console)"
+  ],
+  "notifications": [
+    "Module accordé à l'organisme : notifications",
+    "Le compte de la personne, avec son rôle",
+    "Intégrations"
+  ],
+  "paiecycles": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Feuilles de temps (console)",
+    "Dossiers de rémunération",
+    "Règles de paie variable",
+    "Paramètres de la paie",
+    "Soutien"
+  ],
+  "paiedeclarations": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Cycles de paie"
+  ],
+  "paiedossiers": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Ressources",
+    "Règles de paie variable"
+  ],
+  "paieparametres": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Les taux du FSS et de la CNESST"
+  ],
+  "paieregles": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Référentiels",
+    "Dossiers de rémunération"
+  ],
+  "paietemps": [
+    "Module accordé à l'organisme : paie",
+    "Le compte de la personne, avec son rôle",
+    "Feuilles de temps (console)",
+    "Dossiers de rémunération",
+    "Paramètres de la paie"
+  ],
+  "rapports": [
+    "Le compte de la personne, avec son rôle",
+    "Les sources proposées sont celles des modules accordés à l'organisme",
+    "Périmètres",
+    "Périodes"
+  ],
+  "soutien": [
+    "Le compte de la personne, avec son rôle",
+    "Rien d'autre à configurer"
+  ],
+  "superadmin": [
+    "Un compte superadmin de la plateforme, remis par l'exploitation",
+    "Le plan d'abonnement de l'organisme"
+  ],
+  "usabsences": [
+    "Modules accordés à l'organisme : effectifs, effectifs_absences",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Codes d'absence",
+    "Ressources",
+    "Périodes"
+  ],
+  "usagph": [
+    "Modules accordés à l'organisme : effectifs, effectifs_agph",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Ressources",
+    "Postes"
+  ],
+  "usappels": [
+    "Modules accordés à l'organisme : effectifs, effectifs_communication",
+    "Le compte de la personne, avec son rôle",
+    "Ressources"
+  ],
+  "uscodesabsence": [
+    "Modules accordés à l'organisme : effectifs, effectifs_absences",
+    "Le compte de la personne, avec son rôle",
+    "Référentiels"
+  ],
+  "uscomblement": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Périodes",
+    "Quotas"
+  ],
+  "usdiffusion": [
+    "Modules accordés à l'organisme : effectifs, effectifs_communication",
+    "Le compte de la personne, avec son rôle",
+    "Ressources"
+  ],
+  "usdisponibilites": [
+    "Modules accordés à l'organisme : effectifs, effectifs_disponibilites",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Périodes",
+    "Quarts et équipages"
+  ],
+  "usechanges": [
+    "Modules accordés à l'organisme : effectifs, effectifs_echanges",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Périodes",
+    "Règles des effectifs"
+  ],
+  "usequipages": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Périodes",
+    "Ressources"
+  ],
+  "usintegrations": [
+    "Modules accordés à l'organisme : effectifs, effectifs_integrations",
+    "Le compte de la personne, avec son rôle",
+    "Les coordonnées du système visé"
+  ],
+  "usjournal": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres"
+  ],
+  "usmessages": [
+    "Modules accordés à l'organisme : effectifs, effectifs_communication",
+    "Le compte de la personne, avec son rôle",
+    "Ressources"
+  ],
+  "usmilieux": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels"
+  ],
+  "usperimetres": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "Utilisateurs et rôles",
+    "Référentiels"
+  ],
+  "usperiodes": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Postes"
+  ],
+  "uspostes": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Milieux physiques"
+  ],
+  "uspresence": [
+    "Modules accordés à l'organisme : effectifs, effectifs_presence",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Milieux physiques",
+    "Ressources"
+  ],
+  "usquotas": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels"
+  ],
+  "usreferentiels": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "Les unités, puis les corps et titres d'emploi"
+  ],
+  "usregles": [
+    "Modules accordés à l'organisme : effectifs, effectifs_regles",
+    "Le compte de la personne, avec son rôle",
+    "Référentiels",
+    "Une date d'entrée en vigueur aujourd'hui ou plus tard"
+  ],
+  "usressources": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Utilisateurs et rôles"
+  ],
+  "usretention": [
+    "Module accordé à l'organisme : effectifs",
+    "Le compte de la personne, avec son rôle",
+    "La politique de conservation de l'organisme"
+  ],
+  "ustemps": [
+    "Modules accordés à l'organisme : effectifs, effectifs_temps",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels",
+    "Périodes",
+    "Intégrations des effectifs"
+  ]
+}

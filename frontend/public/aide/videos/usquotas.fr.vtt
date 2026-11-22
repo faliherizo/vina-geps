@@ -1,16 +1,37 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.249
+00:00:00.000 --> 00:00:01.718
+Quotas. Avant de commencer.
+
+00:00:02.168 --> 00:00:05.257
+4 préalables doivent être en place, dans cet ordre :
+
+00:00:05.707 --> 00:00:09.840
+Modules accordés à l'organisme : effectifs, effectifs planification.
+
+00:00:10.290 --> 00:00:12.565
+Le compte de la personne, avec son rôle.
+
+00:00:13.015 --> 00:00:13.666
+Périmètres.
+
+00:00:14.116 --> 00:00:15.091
+Référentiels.
+
+00:00:15.541 --> 00:00:18.606
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:19.680 --> 00:00:23.929
 Quotas. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.449 --> 00:00:12.276
+00:00:25.129 --> 00:00:31.956
 Puis elle tente une surcharge de quota qui commence hier. Une surcharge ne peut pas être rétroactive : l'écran la refuse et dit pourquoi.
 
-00:00:15.571 --> 00:00:25.555
+00:00:35.251 --> 00:00:45.235
 Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur définit un quota, distinct par unité et nature. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:00:28.851 --> 00:00:34.493
+00:00:48.531 --> 00:00:54.173
 « Définir un quota » : clé (période, plage ou type de quart) et valeur, distincts les uns des autres.
 
-00:00:37.633 --> 00:00:43.345
+00:00:57.313 --> 00:01:03.025
 Surcharger un quota en cours de période : la surcharge est datée de « à partir de », donc sans effet rétroactif.

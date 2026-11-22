@@ -9,7 +9,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { resolve } from "node:path";
 import Help, { videoDeFiche } from "../src/Help";
-import { FICHES } from "../src/aide/fichesEcrans";
+import { FICHES, resumePrealable } from "../src/aide/fichesEcrans";
+import { MISE_EN_ROUTE, VIDEO_MISE_EN_ROUTE } from "../src/aide/miseEnRoute";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -31,6 +32,23 @@ describe("aide — une vidéo commentée et ses sous-titres par écran", () => {
       return !texte.startsWith("WEBVTT") || !texte.includes(`${f.titre.replace(/[«»]/g, "").replace(/\s+/g, " ").trim()}.`);
     }).map(([p]) => p);
     expect({ sousTitresQuiNeDisentPasLaFiche: decales }).toEqual({ sousTitresQuiNeDisentPasLaFiche: [] });
+  });
+
+  it("chaque vidéo annonce les préalables actuels de sa fiche (sinon : node scripts/introduire-aides.mjs)", () => {
+    const annonces = JSON.parse(readFileSync(resolve(PUBLIC, "aide", "videos", "introductions.json"), "utf8")) as Record<string, string[]>;
+    const perimees = Object.entries(FICHES)
+      .filter(([p, f]) => JSON.stringify(annonces[p]) !== JSON.stringify(f.prealables.map(resumePrealable)))
+      .map(([p]) => p);
+    expect({ videosAuxPrealablesPerimes: perimees }).toEqual({ videosAuxPrealablesPerimes: [] });
+  });
+
+  it("la vidéo de mise en route existe, avec ses sous-titres et un début pour chaque étape", () => {
+    expect(statSync(fichier(VIDEO_MISE_EN_ROUTE.video)).size).toBeGreaterThan(500_000);
+    expect(readFileSync(fichier(VIDEO_MISE_EN_ROUTE.sousTitres), "utf8")).toMatch(/^WEBVTT[\s\S]*Mise en route\./);
+    const chapitres = JSON.parse(readFileSync(fichier(VIDEO_MISE_EN_ROUTE.chapitres), "utf8")) as Record<string, number>;
+    expect(Object.keys(chapitres)).toEqual(MISE_EN_ROUTE.map((e) => e.id));
+    const debuts = Object.values(chapitres);
+    expect(debuts).toEqual([...debuts].sort((a, b) => a - b));
   });
 
   describe("la page d'aide", () => {
