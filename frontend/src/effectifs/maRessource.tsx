@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import { EtatVide } from "../composants";
 import { objet } from "../formeRecue";
 import { useApiEffectifs } from "./api";
+import type { Page } from "../App";
+import LienPrealables from "../aide/LienPrealables";
 import type { Ressource } from "./planification/types";
 
 /** `undefined` tant que la réponse n'est pas là ; `null` quand le compte n'a pas de dossier. */
@@ -39,9 +41,10 @@ export function useMaRessource(): Ressource | null | undefined {
  * chacun de leur côté : la phrase est la même parce que la situation est la même, et la relire
  * ailleurs sous d'autres mots ferait douter qu'il s'agisse du même manque.
  */
-export function SansDossierEffectif({ testId }: { testId: string }) {
+export function SansDossierEffectif({ testId, page }: { testId: string; page: Page }) {
   return (
-    <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId={testId}>
+    <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId={testId}
+      action={<LienPrealables page={page} testId={`${testId}-prealables`} />}>
       Demandez à votre planificateur de relier votre compte à votre dossier d'effectif.
     </EtatVide>
   );
