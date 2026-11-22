@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,5 +54,37 @@ class EchangesApiTest {
         assertThat(EchangesApi.ETATS_EXPOSES).containsExactlyInAnyOrder(Planification.EtatPeriode.PUBLIEE, Planification.EtatPeriode.CLOSE);
         assertThat(EchangesApi.OBJETS_QUART).containsExactlyInAnyOrder("equipage", "place");
         assertThat(EchangesApi.STATUTS_VALIDES).containsExactlyInAnyOrder(TempsEffectifs.StatutFeuille.APPROUVEE, TempsEffectifs.StatutFeuille.PAYEE);
+    }
+    @Test
+    @DisplayName("AD-06c : les quarts d'une entrée — l'objet quart, les places d'une absence ou d'un échange ; rien d'autre")
+    void cibles() {
+        assertThat(EchangesApi.cibles("equipage.cree", "equipage", "eq-1", null)).containsExactly(new EchangesApi.Cible("equipage", "eq-1"));
+        assertThat(EchangesApi.cibles("place.liberee", "place", "pl-1", null)).containsExactly(new EchangesApi.Cible("place", "pl-1"));
+        assertThat(EchangesApi.cibles("places.vacantes", "absence", "a-1", Map.of("places", List.of("pl-1", "pl-2"))))
+                .containsExactly(new EchangesApi.Cible("place", "pl-1"), new EchangesApi.Cible("place", "pl-2"));
+        assertThat(EchangesApi.cibles("echange.applique", "echange", "x-1", Map.of("pl-3", "r-2")))
+                .containsExactly(new EchangesApi.Cible("place", "pl-3"));
+        assertThat(EchangesApi.cibles("places.vacantes", "absence", "a-1", Map.of("autre", 1))).isEmpty();
+        assertThat(EchangesApi.cibles("places.vacantes", "absence", "a-1", "texte")).isEmpty();
+        assertThat(EchangesApi.cibles("echange.applique", "echange", "x-1", null)).isEmpty();
+        assertThat(EchangesApi.cibles("absence.declaree", "absence", "a-1", Map.of("places", List.of("pl-1")))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("AD-06c : l'absence des opérations nomme un quart ou des dates, l'un ou l'autre, et un code")
+    void absenceOperations() {
+        assertThat(EchangesApi.AbsenceOperations.de(Map.of("quartId", " eq-1 ", "codeAbsence", "MAL", "motif", "appel")))
+                .isEqualTo(new EchangesApi.AbsenceOperations("MAL", "eq-1", null, null, "appel"));
+        assertThat(EchangesApi.AbsenceOperations.de(Map.of("du", "2026-12-01", "au", "2026-12-02", "codeAbsence", "MAL")))
+                .isEqualTo(new EchangesApi.AbsenceOperations("MAL", null, "2026-12-01", "2026-12-02", null));
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("quartId", "eq-1"))).isInstanceOf(EffectifsInvalideException.class)
+                .hasMessage("« codeAbsence » : exigé");
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("codeAbsence", " ", "quartId", "eq-1"))).hasMessage("« codeAbsence » : exigé");
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("codeAbsence", "MAL"))).hasMessageContaining("l'un ou l'autre");
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("codeAbsence", "MAL", "quartId", "eq-1", "du", "2026-12-01")))
+                .hasMessageContaining("l'un ou l'autre");
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("codeAbsence", "MAL", "quartId", "eq-1", "au", "2026-12-01")))
+                .hasMessage("« au » : sans objet sur un quart, qui tient en une date");
+        assertThatThrownBy(() -> EchangesApi.AbsenceOperations.de(Map.of("codeAbsence", 12, "du", "2026-12-01"))).hasMessage("« codeAbsence » : exigé");
     }
 }

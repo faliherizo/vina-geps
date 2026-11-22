@@ -35,6 +35,15 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireEquipages;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireMilieux;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePerimetres;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePeriodes;
+import ca.vina.nexu.effectifs.application.commandes.GestesEchangesApi;
+import ca.vina.nexu.effectifs.application.commandes.JournalAvecAvisDesQuarts;
+import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
+import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotEchangesApi;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotPresenceEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.SchemaPresenceEffectifs;
+import ca.vina.nexu.integrations.infrastructure.persistance.JetonClient;
+import ca.vina.nexu.partage.web.GardeMachine;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePlaces;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePostes;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireQuotas;
@@ -84,7 +93,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.nio.file.Path;
 import java.time.Clock;
@@ -137,6 +150,12 @@ class ControleurAbsencesEffectifsHttpTest {
     private final List<PublicationAvis.Avis> avisPublies = new ArrayList<>();
     private boolean avisEnPanne;
     private final Map<String, String> ids = new HashMap<>();
+    /** AD-06c : les avis de quart que le journal a émis, et l'API d'échange appelée par l'application de l'organisme. */
+    private record AvisQuart(String evenement, String cle, Map<String, Object> donnees) { }
+
+    private final List<AvisQuart> avisQuarts = new ArrayList<>();
+    private static final JetonClient JETONS = new JetonClient("secret-d-essai-de-l-api-d-echange-assez-long");
+    private ClientHttpEssai machine;
 
     private static Sequence sequence() {
         AtomicInteger n = new AtomicInteger();
@@ -180,7 +199,12 @@ class ControleurAbsencesEffectifsHttpTest {
         DepotReferentiels depotRef = new DepotReferentiels(jdbc, schema);
         DepotPerimetres depotPer = new DepotPerimetres(jdbc, schema);
         DepotMilieux depotMil = new DepotMilieux(jdbc, schema);
-        DepotJournalEffectifs journal = new DepotJournalEffectifs(jdbc, seq, schema);
+        DepotEchangesApi echanges = new DepotEchangesApi(jdbc, schemaPlanif, schema);
+        // AD-06c : le journal de tous les gestes annonce les quarts publiés qu'ils touchent, comme en production.
+        JournalEffectifsPort journal = new JournalAvecAvisDesQuarts(new DepotJournalEffectifs(jdbc, seq, schema), echanges, (t, evenement, donnees, cle, instant) -> {
+            avisQuarts.add(new AvisQuart(evenement, cle, donnees));
+            return 1;
+        });
         DepotRegles depotRegles = new DepotRegles(jdbc, new SchemaReglesEffectifs(jdbc));
         LectureReferentiels referentiels = new LectureReferentiels(depotRef);
         LecturePerimetres perimetres = new LecturePerimetres(depotPer, referentiels);
@@ -242,12 +266,17 @@ class ControleurAbsencesEffectifsHttpTest {
         absences = new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depotAbs, planning, depotEqp, comblement),
                 new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres, soldes), evaluateur, journal, seq);
         http = new ClientHttpEssai(socle, planification, new ControleurAbsencesEffectifs(garde, lecture, absences, suivi));
+        GestesEchangesApi gestes = new GestesEchangesApi(new GestesEchangesApi.Ports(
+                new GestionnaireRessources((t, inscription) -> { }, depotRes, lectRes, referentiels, perimetres, journal, seq), lectRes,
+                new DepotPresenceEffectifs(jdbc, new SchemaPresenceEffectifs(jdbc), schemaPlanif, schema), soldes), new GestesEchangesApi.Absences(absences, echanges), journal);
+        machine = new ClientHttpEssai(new ControleurEchangesApi(new GardeMachine(JETONS), new AdaptateurModulesPourEffectifs(jdbc),
+                new ControleurEchangesApi.Services(new LectureEchangesApi(echanges), gestes, Clock.fixed(Instant.parse(MAINTENANT), ZoneOffset.UTC))));
         semaine();
     }
 
     /** L'offre en cascade, réglée par défaut en offre simultanée : ces essais tiennent le comportement d'avant AD-07. */
     private CascadeOffresQuart cascade(LectureRessources lectRes, DepotComblementsAbsences depotCbl, PublicationAvis avis, LectureEquipages lectEqp,
-                                       DepotJournalEffectifs journal, Sequence seq) {
+                                       JournalEffectifsPort journal, Sequence seq) {
         SchemaOffresQuart schemaOfr = new SchemaOffresQuart(jdbc);
         return new CascadeOffresQuart(new CascadeOffresQuart.Ports(new DepotOffresQuart(jdbc, schemaOfr), new DepotParametresOffres(jdbc, schemaOfr),
                 new AdaptateurOrdonnanceurOffres(new DepotTaches(jdbc, new RegistreExecuteurs()), new RegistreExecuteurs())),
@@ -605,5 +634,59 @@ class ControleurAbsencesEffectifsHttpTest {
         jdbc.sql("UPDATE tenant_quotas SET modules = ? WHERE tenantId = ?").params("[\"personnel\",\"effectifs\",\"effectifs_absences\",\"effectifs_planification\"]", T).update();
         http.get(API + "/" + longue + "/comblement", ADMIN).andExpect(jsonPath("$.remplacement").value(Matchers.nullValue()))
                 .andExpect(jsonPath("$.raisonRemplacement").value("le module « effectifs_agph » (remplacements long terme) est fermé pour cet organisme"));
+    }
+
+    private ResultActions transmettre(String matricule, String json, String... portees) throws Exception {
+        MockHttpServletRequestBuilder r = MockMvcRequestBuilders.post("/api/echanges/v1/employes/" + matricule + "/absences")
+                .header("Authorization", "Bearer " + JETONS.emettre("cli-rao", T, List.of(portees)));
+        return machine.envoyer(json == null ? r : r.contentType(MediaType.APPLICATION_JSON).content(json), null);
+    }
+
+    private String quartDu(String date) {
+        return jdbc.sql("SELECT id FROM eff_equipages WHERE tenantId = ? AND date = ?").params(T, date).query(String.class).single();
+    }
+
+    @Test
+    @DisplayName("AD-06c : absence constatée aux opérations — acceptée malgré un refus des règles, place vacante, renvoi sans effet, refus nommés")
+    void absenceConstateeAuxOperations() throws Exception {
+        http.post(PLANIF + "/periodes/" + ids.get("periode") + "/etat", ADMIN, "{\"etat\":\"PUBLIEE\"}").andExpect(status().isOk());
+        assertThat(avisQuarts).as("une période en confection n'est pas annoncée").isEmpty();
+        String lundi = quartDu(LUNDI);
+        String corps = "{\"quartId\":\"" + lundi + "\",\"codeAbsence\":\"MAL\",\"motif\":\"Appel au répartiteur\"}";
+        transmettre("P1", corps, "read").andExpect(status().isForbidden());
+        String id = JsonPath.read(transmettre("P1", corps, "write").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.statut").value("ACCEPTEE")).andExpect(jsonPath("$.actionRegles").value("REFUSER"))
+                .andExpect(jsonPath("$.du").value(LUNDI)).andExpect(jsonPath("$.au").value(LUNDI))
+                .andExpect(jsonPath("$.declareePar").value("application:cli-rao")).andExpect(jsonPath("$.placesLiberees").value(1))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        transmettre("P1", corps, "write").andExpect(status().isOk()).andExpect(jsonPath("$.id").value(id)).andExpect(jsonPath("$.placesLiberees").value(0));
+        transmettre("P1", "{\"du\":\"" + LUNDI + "\",\"codeAbsence\":\"FORM\"}", "write").andExpect(status().isConflict());
+        transmettre("P2", "{\"quartId\":\"" + quartDu(MARDI) + "\",\"codeAbsence\":\"MAL\"}", "write").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value(Matchers.containsString("ne tient aucune place")));
+        transmettre("P1", "{\"quartId\":\"eq-inconnu\",\"codeAbsence\":\"MAL\"}", "write").andExpect(status().isNotFound());
+        transmettre("P1", "{\"quartId\":\"" + lundi + "\",\"au\":\"" + MARDI + "\",\"codeAbsence\":\"MAL\"}", "write").andExpect(status().isUnprocessableEntity());
+        transmettre("P9", corps, "write").andExpect(status().isNotFound());
+        transmettre("P1", null, "write").andExpect(status().isUnprocessableEntity());
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM eff_absences WHERE tenantId = ?").params(T).query(Integer.class).single()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("AD-06c : la place vacante sort parmi les correctifs, et l'organisme en est avisé une fois par quart, quart publié seulement")
+    void placeVacanteAnnoncee() throws Exception {
+        http.post(PLANIF + "/periodes/" + ids.get("periode") + "/etat", ADMIN, "{\"etat\":\"PUBLIEE\"}").andExpect(status().isOk());
+        transmettre("P1", "{\"du\":\"" + LUNDI + "\",\"au\":\"" + MARDI + "\",\"codeAbsence\":\"MAL\"}", "write").andExpect(status().isCreated())
+                .andExpect(jsonPath("$.placesLiberees").value(2));
+        String place = jdbc.sql("SELECT p.id FROM eff_places p JOIN eff_equipages e ON e.id = p.equipageId WHERE e.date = ?").params(LUNDI).query(String.class).single();
+        machine.envoyer(MockMvcRequestBuilders.get("/api/echanges/v1/quarts/modifications")
+                        .header("Authorization", "Bearer " + JETONS.emettre("cli-rao", T, List.of("read"))), null)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.modifications[?(@.action == 'places.vacantes')].objetId", Matchers.hasItem(place)))
+                .andExpect(jsonPath("$.modifications[?(@.action == 'places.vacantes')].quart.places[0].ressourceId", Matchers.everyItem(Matchers.nullValue())));
+        List<AvisQuart> vacantes = avisQuarts.stream().filter(a -> "places.vacantes".equals(a.donnees().get("action"))).toList();
+        assertThat(vacantes).extracting(a -> a.donnees().get("quartId")).containsExactlyInAnyOrder(quartDu(LUNDI), quartDu(MARDI));
+        assertThat(vacantes).allSatisfy(a -> {
+            assertThat(a.evenement()).isEqualTo(JournalAvecAvisDesQuarts.EVENEMENT);
+            assertThat(a.donnees()).containsEntry("lire", JournalAvecAvisDesQuarts.LECTURE).containsEntry("uniteCode", "EST");
+        });
     }
 }

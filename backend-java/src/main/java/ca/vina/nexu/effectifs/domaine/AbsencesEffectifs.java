@@ -141,6 +141,45 @@ public final class AbsencesEffectifs {
         };
     }
 
+    /**
+     * D'où vient l'absence (AD-06c). Une <strong>demande</strong> se soumet aux règles, préavis compris. Une absence
+     * <strong>constatée aux opérations</strong> (addenda 5 d : la personne ne s'est pas présentée, ou s'est déclarée
+     * malade au répartiteur) est un fait : acceptée d'office, sans exigence de préavis ; le verdict des règles reste
+     * consigné avec elle, pour que l'avertissement — un solde dépassé, par exemple — ne se perde pas.
+     */
+    public enum Origine {
+        DEMANDE("absence.declaree"), OPERATIONS("absence.constatee");
+
+        private final String actionJournal;
+
+        Origine(String actionJournal) {
+            this.actionJournal = actionJournal;
+        }
+
+        public String actionJournal() {
+            return actionJournal;
+        }
+
+        public Statut statut(ActionRegle action) {
+            return switch (this) {
+                case DEMANDE -> statutDepuisAction(action);
+                case OPERATIONS -> Statut.ACCEPTEE;
+            };
+        }
+
+        public boolean exigeUnCodePlanifiable() {
+            return switch (this) {
+                case DEMANDE -> true;
+                case OPERATIONS -> false;
+            };
+        }
+    }
+
+    /** La même absence, renvoyée : même code, mêmes dates, toujours active. Un renvoi après une coupure ne la double pas. */
+    public static boolean estLaMeme(AbsenceEffectifs a, String codeAbsence, String du, String au) {
+        return a.statut().estActive() && a.codeAbsence().equals(codeAbsence) && a.du().equals(du) && a.au().equals(au);
+    }
+
     /** Le code d'absence est-il admissible pour ce titre d'emploi ? Une liste vide admet tous les titres. */
     public static boolean codeAdmissible(List<String> titres, String titreEmploi) {
         return titres.isEmpty() || titreEmploi != null && titres.contains(titreEmploi);

@@ -219,3 +219,78 @@ Fonctionnalité: Exigences technologiques vérifiables par l'API
       """
     Quand julie envoie POST /api/effectifs/integrations/relais/ESB
     Alors la réponse a le statut 403
+
+  @E-TN-7 @P-TN-17
+  Scénario: Les opérations transmettent une absence sur un quart réel par l'API d'échange ; le quart vacant est annoncé au webhook et paraît parmi les correctifs (AD-06c)
+    Soit un organisme d'Urgences-santé amorcé
+    Et l'application "rao" de l'organisme, de portées "read write"
+    # L'organisme s'abonne aux quarts modifiés ; l'adresse locale ne reçoit rien, seul l'envoi planifié est constaté.
+    Quand admin envoie POST /api/integrations/webhooks avec :
+      """json
+      { "url": "http://localhost:9/avis-quarts", "evenements": ["effectifs.quart.modifie"], "description": "RAO" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "webhook"
+    Quand admin envoie POST /api/effectifs/planification/periodes avec :
+      """json
+      { "nom": "OPS", "uniteCode": "EST", "debut": "2030-03-04", "fin": "2030-03-10" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "ops"
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{ops}}/etat avec :
+      """json
+      { "etat": "CONFECTION" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      {
+        "periodeId": "{{ops}}", "date": "2030-03-04", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}",
+        "modeAttribution": "MANUEL", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }]
+      }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "quart"
+    Et je retiens "places.0.id" sous le nom "place"
+    Quand admin envoie POST /api/effectifs/planification/places/{{place}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    # En confection, rien ne sort : l'horaire n'est pas opposable.
+    Quand admin envoie GET /api/integrations/webhooks/{{webhook}}/envois
+    Alors la réponse a le statut 200
+    Et la réponse compte 0 élément
+    Quand admin envoie POST /api/effectifs/planification/periodes/{{ops}}/etat avec :
+      """json
+      { "etat": "PUBLIEE" }
+      """
+    Alors la réponse a le statut 200
+    # Une session humaine n'entre pas dans l'API d'échange ; une application, oui.
+    Quand julie envoie POST /api/echanges/v1/employes/P1/absences avec :
+      """json
+      { "quartId": "{{quart}}", "codeAbsence": "MAL" }
+      """
+    Alors la réponse a le statut 401
+    Quand rao envoie POST /api/echanges/v1/employes/P1/absences avec :
+      """json
+      { "quartId": "{{quart}}", "codeAbsence": "MAL", "motif": "Appel au répartiteur, 5 h 40" }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "statut": "ACCEPTEE", "du": "2030-03-04", "au": "2030-03-04", "placesLiberees": 1, "declareePar": "application:{{client_rao}}" }
+      """
+    # Un renvoi après une coupure ne double rien.
+    Quand rao envoie POST /api/echanges/v1/employes/P1/absences avec :
+      """json
+      { "quartId": "{{quart}}", "codeAbsence": "MAL" }
+      """
+    Alors la réponse a le statut 200
+    Quand rao envoie GET /api/echanges/v1/quarts/modifications?limite=500
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "action.:.places\.vacantes.,.objetType.:.place.,.objetId.:.{{place}}"
+    Quand admin envoie GET /api/integrations/webhooks/{{webhook}}/envois
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
+    Et la réponse correspond à "effectifs.quart.modifie"

@@ -109,7 +109,8 @@ class ControleurEchangesApiHttpTest {
         DepotJournalEffectifs journal = new DepotJournalEffectifs(jdbc, seq, socle);
         GestionnaireRessources ressources = new GestionnaireRessources((t, inscription) -> { }, depotRes, lecture, referentiels, perimetres, journal, seq);
         return new GestesEchangesApi(new GestesEchangesApi.Ports(ressources, lecture,
-                new DepotPresenceEffectifs(jdbc, new SchemaPresenceEffectifs(jdbc), new SchemaPlanification(jdbc), socle), new DepotSoldesBanques(jdbc, socle)), journal);
+                new DepotPresenceEffectifs(jdbc, new SchemaPresenceEffectifs(jdbc), new SchemaPlanification(jdbc), socle), new DepotSoldesBanques(jdbc, socle)),
+                new GestesEchangesApi.Absences(null, new DepotEchangesApi(jdbc, null, null)), journal);
     }
 
     /** Deux quarts publiés et un en confection pour t-1, un publié pour t-2 ; journal et feuilles à l'avenant. */

@@ -54,6 +54,27 @@ public class EtapesExigences {
         organisme = premier;
     }
 
+    /**
+     * AD-06 : une application de l'organisme — un client {@code client_credentials} créé par l'administration, et son jeton,
+     * retenu comme un acteur sous ce nom. Son identifiant client est retenu sous {@code client_<nom>} ; le secret ne quitte pas
+     * la mémoire du scénario.
+     */
+    @Soit("l'application {string} de l'organisme, de portées {string}")
+    public void uneApplication(String nom, String portees) {
+        var demande = ClientApi.JSON.createObjectNode().put("name", nom);
+        var liste = demande.putArray("scopes");
+        List.of(portees.split(" ")).forEach(liste::add);
+        appeler(Organisme.ADMIN, "POST", "/api/integrations/api-clients", demande);
+        assertThat(derniere.statut()).as("client d'API : %s", derniere.texte()).isEqualTo(201);
+        String clientId = derniere.json().get("clientId").asString();
+        var octroi = ClientApi.JSON.createObjectNode().put("grant_type", "client_credentials").put("client_id", clientId)
+                .put("client_secret", derniere.json().get("clientSecret").asString());
+        ClientApi.Reponse jeton = ClientApi.appeler(ClientApi.Session.ANONYME, "POST", "/api/oauth/token", octroi);
+        assertThat(jeton.statut()).as("jeton de l'application : %s", jeton.statut()).isEqualTo(200);
+        organisme.sessions.put(nom, new ClientApi.Session(jeton.json().get("access_token").asString(), ""));
+        organisme.vars.put("client_" + nom, ClientApi.JSON.getNodeFactory().stringNode(clientId));
+    }
+
     private void amorcer() {
         for (JsonNode e : lireAmorce()) {
             appeler(Organisme.ADMIN, e.get("methode").asString(), e.get("chemin").asString(), e.get("corps"));
