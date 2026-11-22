@@ -34,10 +34,10 @@ const US_TOUS = ["monhoraire", "mesdisponibilites", "mesabsences", "monagph", "m
 /** « Mon équipe » : l'encadrement et les RH (`menu.ts` : ENCADREMENT + rh). */
 const US_EQUIPE = ["monequipe"];
 const US_ENCADREMENT = ["usdisponibilites", "usabsences", "usagph", "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas",
-  "uspresence", "ustemps", "usechanges", "usreferentiels", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal"];
+  "uspresence", "ustemps", "usechanges", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal"];
 
-/** Ce que seule l'administration configure : les codes d'absence (`effectifs.configure`). */
-const US_CONFIGURATION = ["uscodesabsence"];
+/** Ce que seule l'administration configure (`effectifs.configure`) : les référentiels et les codes d'absence. */
+const US_CONFIGURATION = ["usreferentiels", "uscodesabsence"];
 
 /** Le menu attendu, par rôle — les groupes ne sont pas listés, seules les pages le sont. Relevé contre `PAGES` d'`App.tsx`. */
 const MENU: Record<Role, string[]> = {
@@ -61,8 +61,8 @@ const INTERDITES: Record<Role, Array<[string, string]>> = {
   superadmin: [["admin", "admin-page"]],
   admin: [["superadmin", "superadmin-page"]],
   rh: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["uscomblement", "uscomblement-titre"]],
-  manager: [["superadmin", "superadmin-page"], ["admin", "admin-page"]],
-  director: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["notifications", "notifications-page"]],
+  manager: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["usreferentiels", "usreferentiels-titre"]],
+  director: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["notifications", "notifications-page"], ["usreferentiels", "usreferentiels-titre"]],
   employee: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["uscomblement", "uscomblement-titre"]],
   accountant: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["monhoraire", "mho-titre"]],
 };
@@ -78,6 +78,10 @@ const API_ATTENDU: Array<{ chemin: string; autorises: Role[]; libelle: string }>
   { chemin: "/api/exploitation/sauvegardes", autorises: [], libelle: "voir les sauvegardes" },
   { chemin: "/api/personnel/employes", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "répertoire du personnel" },
   { chemin: "/api/saas/my-modules", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "mes modules" },
+  // Balayage des accès du 22 novembre 2026 : le registre des référentiels et la carte des droits sont à l'administration.
+  { chemin: "/api/effectifs/referentiels", autorises: ["admin"], libelle: "registre des référentiels (administration)" },
+  { chemin: "/api/habilitations/octrois", autorises: ["admin"], libelle: "octrois de l'établissement (administration)" },
+  { chemin: "/api/effectifs/referentiels/unites", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "valeurs en vigueur d'un référentiel (formulaires)" },
 ];
 
 async function seConnecter(page: Page, tenant: string, user: string, pass: string) {
