@@ -26,7 +26,8 @@ if [ -z "$JAR" ]; then
   (cd "$RACINE/backend-java" && mvn -B -q -DskipTests -Djacoco.skip=true package)
   JAR=$(ls "$RACINE"/backend-java/target/nexu-vina-backend-*.jar | grep -v original | head -1)
 fi
-PORT="$API_PORT" NEXU_ESSAI=1 DB_URL="jdbc:sqlite:$D/e2e.db" ORDONNANCEUR_INTERVALLE_MS=3000 \
+# SSO_SIMULE=1 : l'Entra ID simulé n'existe plus par défaut (ADR 0093) ; la campagne le demande, en essai seulement.
+PORT="$API_PORT" NEXU_ESSAI=1 SSO_SIMULE="${SSO_SIMULE:-1}" DB_URL="jdbc:sqlite:$D/e2e.db" ORDONNANCEUR_INTERVALLE_MS=3000 \
   CORS_ORIGINS="http://localhost:$WEB_PORT,http://localhost:5173,http://localhost:5174,http://localhost:5300" \
   SOUTIEN_COURRIEL=soutien@nexuvina.test SAUVEGARDES_DOSSIER="$D/sauvegardes" NEXU_DONNEES="$D/data" \
   REGION_DONNEES=canadaeast HEBERGEUR="OVH VPS (Beauharnois)" \

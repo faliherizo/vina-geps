@@ -20,11 +20,16 @@ test("l'IdP déclaré : le bouton SAML mène au démarrage de la connexion", asy
   await expect(saml).toHaveAccessibleName(/SAML/);
 });
 
-test("aucun IdP : ni bouton SAML, ni promesse", async ({ page, mock }) => {
-  await mock({ ...DECONNECTE, "GET /api/auth/sso/saml/status": { enabled: false, provider: "SAML 2.0", entityId: "", acsUrl: "" } });
+test("aucun IdP : ni bouton SAML, ni bouton Microsoft, ni promesse", async ({ page, mock }) => {
+  await mock({
+    ...DECONNECTE,
+    "GET /api/auth/sso/saml/status": { enabled: false, provider: "SAML 2.0", entityId: "", acsUrl: "" },
+    // Sans Entra configuré, le serveur ne simule plus rien (balayage des accès du 22 novembre 2026, ADR 0093).
+    "GET /api/auth/sso/entra/status": { enabled: false, mock: false, provider: "Microsoft Entra ID" },
+  });
   await page.goto("/");
   await expect(page.getByTestId("login-form")).toBeVisible();
-  await expect(page.getByTestId("login-sso-entra")).toBeVisible();
+  await expect(page.getByTestId("login-sso-entra")).toHaveCount(0);
   await expect(page.getByTestId("login-sso-saml")).toHaveCount(0);
 });
 

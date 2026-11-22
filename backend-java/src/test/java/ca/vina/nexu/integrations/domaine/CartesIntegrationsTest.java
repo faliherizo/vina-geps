@@ -24,6 +24,16 @@ class CartesIntegrationsTest {
     }
 
     @Test
+    @DisplayName("Entra : configuré par son client ; simulé seulement demandé et en essai ; sinon non configuré (ADR 0093)")
+    void etatEntra() {
+        assertThat(CartesIntegrations.etatEntra(Map.of("AZURE_CLIENT_ID", "c"))).isEqualTo("configure");
+        assertThat(CartesIntegrations.etatEntra(Map.of("SSO_SIMULE", "1", "NEXU_ESSAI", "true"))).isEqualTo("simule");
+        assertThat(CartesIntegrations.etatEntra(Map.of("SSO_SIMULE", "1"))).isEqualTo("non_configure");
+        assertThat(CartesIntegrations.etatEntra(Map.of("NEXU_ESSAI", "1"))).isEqualTo("non_configure");
+        assertThat(CartesIntegrations.etatEntra(Map.of())).isEqualTo("non_configure");
+    }
+
+    @Test
     void plateformeConfiguree() {
         Map<String, String> env = Map.of("GRICS_CLIENT_ID", "id", "GRICS_CLIENT_SECRET", "s", "ATS_WEBHOOK_SECRET", "x", "AZURE_CLIENT_ID", "abcdef123", "AZURE_TENANT_ID", "css",
                 "SAML_IDP_SSO_URL", "https://idp", "SAML_IDP_CERT", "MIIC", "SMS_URL", "https://sms.exemple.qc.ca/api", "SMS_JETON", "j", "CLAMD_HOST", "clam");
@@ -54,7 +64,10 @@ class CartesIntegrationsTest {
         CartesIntegrations.Chiffres vide = new CartesIntegrations.Chiffres(null, 0, 0, List.of(SUSPENDU), Map.of("w2", 0), List.of(), 0);
         Map<String, CartesIntegrations.Carte> c = parCode(CartesIntegrations.cartes(Map.of("GRICS_CLIENT_ID", "seul", "SMS_URL", "https://sms.x"), vide));
         assertThat(List.of(c.get("grics").etat(), c.get("entra").etat(), c.get("sms").etat(), c.get("antivirus").etat(), c.get("saml").etat(), c.get("ats").etat(), c.get("api").etat(), c.get("webhooks").etat()))
-                .containsExactly("simule", "simule", "configure", "simule", "non_configure", "non_configure", "non_configure", "non_configure");
+                .containsExactly("simule", "non_configure", "configure", "simule", "non_configure", "non_configure", "non_configure", "non_configure");
+        assertThat(c.get("entra").detail()).isEqualTo("aucun AZURE_CLIENT_ID : la connexion Entra n'est pas offerte");
+        assertThat(parCode(CartesIntegrations.cartes(Map.of("SSO_SIMULE", "1", "NEXU_ESSAI", "1"), vide)).get("entra").detail())
+                .isEqualTo("mode simulé (SSO_SIMULE, essai) : aucun AZURE_CLIENT_ID");
         assertThat(c.get("grics").detail()).startsWith("simulateur");
         assertThat(c.get("sms").detail()).isEqualTo("fournisseur sms.x");
         assertThat(c.get("webhooks").detail()).isEqualTo("1 webhook(s), 1 suspendu(s), 0 envoi(s) en attente");

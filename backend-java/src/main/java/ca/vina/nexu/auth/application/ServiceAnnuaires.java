@@ -2,11 +2,13 @@ package ca.vina.nexu.auth.application;
 
 import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.domaine.Compte;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
 import ca.vina.nexu.auth.domaine.Oidc;
 import ca.vina.nexu.auth.domaine.RegistreAnnuaires;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,12 +41,23 @@ public class ServiceAnnuaires {
         }
     }
 
-    /** Une connexion admise : le compte de l'organisme, son jeton, et s'il vient d'être créé. */
-    public record Ouverture(Compte compte, String jeton, String courriel, boolean cree) {
+    /** L'issue d'une connexion par annuaire : une session, ou une liaison à prouver (ADR 0093). */
+    public sealed interface Issue permits Ouverture, LiaisonRequise {
     }
 
-    /** Les ports : l'annuaire, les comptes, les sessions, l'échange du code, la découverte OIDC et la liaison LDAPS. */
-    public record Ports(RegistreAnnuaires annuaires, Annuaires.Comptes comptes, Annuaires.Sessions sessions, Annuaires.Echange echange,
+    /** Une connexion admise : le compte de l'organisme, son jeton, et s'il vient d'être créé. */
+    public record Ouverture(Compte compte, String jeton, String courriel, boolean cree) implements Issue {
+    }
+
+    /** L'annuaire a authentifié une identité qu'aucun compte ne porte encore : la personne doit prouver le sien. */
+    public record LiaisonRequise(String jetonLiaison, String courriel) implements Issue {
+    }
+
+    /**
+     * Les ports : l'annuaire, la résolution d'identité (qui trouve, relie ou provisionne le compte), les sessions,
+     * l'échange du code, la découverte OIDC et la liaison LDAPS.
+     */
+    public record Ports(RegistreAnnuaires annuaires, ServiceResolutionIdentite resolution, Annuaires.Sessions sessions, Annuaires.Echange echange,
                         Annuaires.Decouverte decouverte, Annuaires.Liaison liaison) {
     }
 
@@ -121,12 +134,12 @@ public class ServiceAnnuaires {
     }
 
     /** Termine la connexion : revendications vérifiées, admission par l'organisme, compte et session. */
-    public Ouverture completer(String code, String state) {
+    public Issue completer(String code, String state) {
         EnCours e = Optional.ofNullable(enCours.remove(state)).filter(x -> !x.demande().expiree(horloge.millis()))
                 .orElseThrow(() -> new IntrouvableException("demande de connexion inconnue ou expirée"));
         Annuaires.Annuaire a = actif(e.annuaireId());
         Map<String, Object> claims = ports.echange().echanger(code, configuration(a, e.retour()), e.demande());
-        return ouvrir(a, Oidc.courriel(claims), claims);
+        return ouvrir(a, IdentitesExternes.Cle.de(claims.get("iss"), claims.get("sub")), Oidc.courriel(claims), claims);
     }
 
     /**
@@ -135,7 +148,7 @@ public class ServiceAnnuaires {
      *
      * @throws Annuaires.ConnexionRefuseeException si l'annuaire refuse l'identifiant ou le mot de passe, sans dire lequel
      */
-    public Ouverture ouvrirParLiaison(String annuaireId, String identifiant, String motDePasse) {
+    public Issue ouvrirParLiaison(String annuaireId, String identifiant, String motDePasse) {
         Annuaires.Annuaire a = actif(annuaireId);
         if (a.fournisseur() != Annuaires.Fournisseur.LDAPS) {
             throw new IntrouvableException("l'annuaire « " + a.nom() + " » se connecte par redirection");
@@ -147,18 +160,21 @@ public class ServiceAnnuaires {
         } catch (IllegalStateException e) {
             throw new ConfigurationIncompleteException("l'annuaire « " + a.nom() + " » est injoignable : " + e.getMessage());
         }
-        return ouvrir(a, p.courriel(), Map.of(a.revendication().code(), p.groupes()));
+        // L'identifiant de connexion tient lieu de sujet : l'annuaire LDAP l'a authentifié, à son adresse LDAPS.
+        IdentitesExternes.Cle cle = IdentitesExternes.Cle.de(a.emetteur(), identifiant.trim().toLowerCase(Locale.ROOT));
+        return ouvrir(a, cle, p.courriel(), Map.of(a.revendication().code(), p.groupes()));
     }
 
-    /** L'admission par l'organisme, puis le compte : trouvé, reclassé selon ses groupes, ou créé. */
-    private Ouverture ouvrir(Annuaires.Annuaire a, String courriel, Map<String, Object> claims) {
+    /**
+     * L'admission par l'organisme (domaine, courriel vérifié, rôle des groupes), puis la résolution par
+     * {@code (émetteur, sujet)} : compte relié, provisionné si l'annuaire l'autorise, ou liaison à prouver.
+     */
+    private Issue ouvrir(Annuaires.Annuaire a, IdentitesExternes.Cle cle, String courriel, Map<String, Object> claims) {
         String role = Annuaires.admettre(a, courriel, claims);
-        Optional<Compte> existant = ports.comptes().duCourriel(a.tenantId(), courriel);
-        existant.filter(u -> !u.active()).ifPresent(u -> {
-            throw new Annuaires.ConnexionRefuseeException("le compte « " + courriel + " » est désactivé dans l'application");
-        });
-        Compte u = existant.map(c -> role.equals(c.role()) ? c : ports.comptes().reclasser(c, role))
-                .orElseGet(() -> ports.comptes().creer(a.tenantId(), courriel, role));
-        return new Ouverture(u, ports.sessions().emettre(u), courriel, existant.isEmpty());
+        IdentitesExternes.IdentiteVerifiee v = new IdentitesExternes.IdentiteVerifiee(cle, courriel, IdentitesExternes.Provenance.annuaire(a.id(), a.tenantId()));
+        return switch (ports.resolution().resoudre(v, new ServiceResolutionIdentite.Admission(Optional.of(role), true, a.provisionnementJat()))) {
+            case ServiceResolutionIdentite.Reconnue r -> new Ouverture(r.compte(), ports.sessions().emettre(r.compte()), courriel, r.cree());
+            case ServiceResolutionIdentite.LiaisonRequise l -> new LiaisonRequise(l.jeton(), courriel);
+        };
     }
 }

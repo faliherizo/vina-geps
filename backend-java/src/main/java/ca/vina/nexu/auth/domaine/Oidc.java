@@ -11,6 +11,8 @@ import java.security.interfaces.RSAPublicKey;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,8 +25,11 @@ import java.util.random.RandomGenerator;
  * nonce), l'URL d'autorisation, et les contrôles sur l'{@code id_token} une fois sa signature
  * vérifiée. Trois modes :
  * <ul>
- *   <li><strong>simulé</strong> (sans {@code AZURE_CLIENT_ID}) : le code d'autorisation encode des
- *       revendications de démonstration, et l'on revient aussitôt sur le rappel ;</li>
+ *   <li><strong>désactivé</strong> (sans {@code AZURE_CLIENT_ID} ni démonstration) : les routes répondent 404 ;</li>
+ *   <li><strong>simulé</strong>, seulement sur demande explicite ({@code SSO_SIMULE=1}) <em>et</em> en environnement
+ *       d'essai ({@code NEXU_ESSAI}) : le code d'autorisation encode des revendications de démonstration, et l'on
+ *       revient aussitôt sur le rappel. Jamais par défaut : un déploiement sans Entra ouvrait sinon une session à
+ *       quiconque la demandait (balayage des accès du 22 novembre 2026) ;</li>
  *   <li><strong>réel</strong> : redirection vers Entra, échange du code, {@code id_token} vérifié par JWKS ;</li>
  *   <li><strong>démonstration</strong> : le flux réel complet contre l'Entra ID embarqué ; seule l'autorité change.</li>
  * </ul>
@@ -39,8 +44,39 @@ public final class Oidc {
     /** Le chemin normalisé du document de découverte OpenID Connect, sous l'émetteur. */
     public static final String CHEMIN_DECOUVERTE = "/.well-known/openid-configuration";
 
+    /** Les valeurs d'environnement qui valent « vrai » pour {@code SSO_SIMULE} et {@code NEXU_ESSAI}. */
+    private static final Set<String> VRAI = Set.of("1", "true");
+    /** La demande explicite du mode simulé, refusée hors essai. */
+    public static final String VARIABLE_SIMULATION = "SSO_SIMULE";
+    private static final String VARIABLE_ESSAI = "NEXU_ESSAI";
+    /** La tolérance d'horloge sur {@code exp}, {@code nbf} et {@code iat} : un serveur et un fournisseur ne sont jamais à la seconde près. */
+    public static final long TOLERANCE_HORLOGE_S = 60;
+
     public record Configuration(boolean mock, boolean demonstration, String tenantId, String clientId, String clientSecret, String redirectUri,
                                 String authority, String authorizeUrl, String tokenUrl, String discoveryUrl) {
+        /** Simulé, démonstration ou client déclaré : sinon, Entra ID d'instance n'est pas offert. */
+        public boolean actif() {
+            return mock || demonstration || !clientId.isEmpty();
+        }
+    }
+
+    /** Entra ID d'instance n'est pas configuré : ses routes répondent 404, aucune session ne s'ouvre. */
+    public static final class DesactiveException extends RuntimeException {
+        public DesactiveException() {
+            super("SSO Entra ID non configuré");
+        }
+    }
+
+    /** Le fournisseur n'a pas authentifié la connexion (jeton invalide, code simulé hors mode simulé…) : 401. */
+    public static final class AuthentificationRefuseeException extends IllegalStateException {
+        public AuthentificationRefuseeException(String message) {
+            super(message);
+        }
+    }
+
+    /** Le mode simulé ne s'obtient que demandé, et en essai : jamais en production, jamais par oubli. */
+    public static boolean simulationPermise(Map<String, String> env) {
+        return VRAI.contains(env(env, VARIABLE_SIMULATION, "")) && VRAI.contains(env(env, VARIABLE_ESSAI, ""));
     }
 
     /** Ce que le registre des démonstrations fournit quand l'Entra ID embarqué est branché. */
@@ -59,7 +95,8 @@ public final class Oidc {
         String authority = demo.map(d -> d.urlServeur() + "/mock/entra/" + tenantId).orElse(env(env, "AZURE_AUTHORITY", "https://login.microsoftonline.com/" + tenantId)).replaceAll("/$", "");
         // En démonstration, le retour passe par l'origine de l'application (son mandataire `/api`), apprise au branchement.
         String redirectUri = demo.map(d -> d.urlApplication().orElse(d.urlServeur()) + "/api/auth/sso/entra/callback").orElse(env(env, "AZURE_REDIRECT_URI", "http://localhost:4000/api/auth/sso/entra/callback"));
-        return new Configuration(clientId.isEmpty(), demo.isPresent(), tenantId, clientId, clientSecret, redirectUri, authority,
+        boolean simule = clientId.isEmpty() && demo.isEmpty() && simulationPermise(env);
+        return new Configuration(simule, demo.isPresent(), tenantId, clientId, clientSecret, redirectUri, authority,
                 authority + "/oauth2/v2.0/authorize", authority + "/oauth2/v2.0/token", authority + "/v2.0/.well-known/openid-configuration");
     }
 
@@ -186,6 +223,33 @@ public final class Oidc {
         }
         if (!nonce.equals(claims.get("nonce"))) {
             throw new IllegalStateException("Entra : nonce inattendu (rejeu ?)");
+        }
+    }
+
+    /**
+     * OpenID Connect Discovery § 4.3 : l'émetteur publié doit être l'adresse sous laquelle le document a été lu. Ne
+     * vaut que pour un fournisseur générique ({@code discoveryUrl} = autorité + chemin normalisé) ; Entra publie
+     * sous {@code /v2.0} et un gabarit pour {@code common}, ce que {@link #verifierEmetteurEtNonce} traite.
+     */
+    public static void verifierEmetteurPublie(Configuration cfg, String emetteurPublie) {
+        if (cfg.discoveryUrl().equals(cfg.authority() + CHEMIN_DECOUVERTE) && !cfg.authority().equals(emetteurPublie)) {
+            throw new AuthentificationRefuseeException("OIDC : l'émetteur publié (" + emetteurPublie + ") n'est pas celui de l'annuaire (" + cfg.authority() + ")");
+        }
+    }
+
+    /**
+     * Ce que la bibliothèque JWT ne garantit pas seule : {@code exp} et {@code sub} présents (un jeton sans
+     * échéance serait valide à jamais), et {@code azp} = notre client quand l'audience en nomme plusieurs.
+     */
+    public static void verifierRevendicationsExigees(Map<String, Object> claims, String clientId) {
+        if (claims.get("exp") == null) {
+            throw new AuthentificationRefuseeException("OIDC : jeton sans échéance (exp)");
+        }
+        if (!(claims.get("sub") instanceof String sub) || sub.isBlank()) {
+            throw new AuthentificationRefuseeException("OIDC : jeton sans sujet (sub)");
+        }
+        if (claims.get("aud") instanceof Collection<?> aud && aud.size() > 1 && !clientId.equals(claims.get("azp"))) {
+            throw new AuthentificationRefuseeException("OIDC : partie autorisée (azp) inattendue");
         }
     }
 

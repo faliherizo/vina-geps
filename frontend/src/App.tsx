@@ -21,6 +21,7 @@ import { EmpruntBandeau } from "./admin/EmpruntIdentite";
 import Approvals from "./Approvals";
 import Admin from "./Admin";
 import InvitationActivation from "./InvitationActivation";
+import RelierCompte from "./RelierCompte";
 import { useCurrentTenant } from "./organismeCourant";
 import { MenuProfil } from "./ProfilUtilisateur";
 import BarreAvis from "./BarreAvis";
@@ -858,6 +859,15 @@ export default function App() {
     return (
       <I18nProvider>
         <InvitationActivation jeton={invitMatch[1]} />
+      </I18nProvider>
+    );
+  }
+  // Page **publique** « Relier mon compte » (ADR 0093) : l'annuaire a authentifié la personne, mais son
+  // identité n'est reliée à aucun compte ; elle prouve ici la possession du sien. Aucune session encore.
+  if (typeof window !== "undefined" && /\/connexion\/relier\/?$/.test(window.location.pathname)) {
+    return (
+      <I18nProvider>
+        <RelierCompte />
       </I18nProvider>
     );
   }

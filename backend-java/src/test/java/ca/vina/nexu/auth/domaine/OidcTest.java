@@ -18,11 +18,21 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DisplayName("OIDC Entra ID — configuration, demande PKCE, revendications")
 class OidcTest {
 
+    /** Le mode simulé : demandé, et en essai. */
+    private static final Map<String, String> SIMULE = Map.of(Oidc.VARIABLE_SIMULATION, "1", "NEXU_ESSAI", "1");
+
     @Test
     @DisplayName("la configuration suit l'environnement : simulé sans client, autorité et rappel par défaut, surcharges, puis démonstration")
     void configuration() {
-        Oidc.Configuration simule = Oidc.configuration(Map.of(), Optional.empty());
+        // Rien de déclaré : désactivé — jamais simulé par défaut (balayage des accès du 22 novembre 2026).
+        Oidc.Configuration rien = Oidc.configuration(Map.of(), Optional.empty());
+        assertThat(List.of(rien.mock(), rien.actif())).containsExactly(false, false);
+        assertThat(Oidc.configuration(Map.of(Oidc.VARIABLE_SIMULATION, "1"), Optional.empty()).actif()).isFalse();
+        assertThat(Oidc.configuration(Map.of("NEXU_ESSAI", "1"), Optional.empty()).actif()).isFalse();
+        assertThat(Oidc.configuration(Map.of(Oidc.VARIABLE_SIMULATION, "0", "NEXU_ESSAI", "true"), Optional.empty()).actif()).isFalse();
+        Oidc.Configuration simule = Oidc.configuration(SIMULE, Optional.empty());
         assertThat(simule.mock()).isTrue();
+        assertThat(simule.actif()).isTrue();
         assertThat(simule.demonstration()).isFalse();
         assertThat(simule.tenantId()).isEqualTo("common");
         assertThat(simule.authority()).isEqualTo("https://login.microsoftonline.com/common");
@@ -67,7 +77,7 @@ class OidcTest {
         assertThat(debut.authUrl()).isEqualTo("https://login.microsoftonline.com/common/oauth2/v2.0/authorize?client_id=cid&response_type=code&redirect_uri=https%3A%2F%2Fapp%2Fcb%3Fx%3D1"
                 + "&response_mode=query&scope=openid+profile+email&state=" + d.state() + "&nonce=" + d.nonce() + "&code_challenge=" + Oidc.pkceChallenge(d.codeVerifier()) + "&code_challenge_method=S256");
 
-        Oidc.Debut simule = Oidc.debuter(Oidc.configuration(Map.of(), Optional.empty()), d);
+        Oidc.Debut simule = Oidc.debuter(Oidc.configuration(SIMULE, Optional.empty()), d);
         assertThat(simule.authUrl()).startsWith("http://localhost:4000/api/auth/sso/entra/callback?code=mock.").endsWith("&state=" + d.state());
         String code = java.net.URLDecoder.decode(simule.authUrl().substring(simule.authUrl().indexOf("code=") + 5, simule.authUrl().indexOf("&state=")), java.nio.charset.StandardCharsets.UTF_8);
         assertThat(Oidc.estCodeSimule(code)).isTrue();
@@ -99,6 +109,23 @@ class OidcTest {
         assertThatThrownBy(() -> Oidc.verifierEmetteurEtNonce(claims, "https://login.microsoftonline.com/tid/v2.0", "n2")).hasMessage("Entra : nonce inattendu (rejeu ?)");
         claims.remove("tid");
         assertThatThrownBy(() -> Oidc.verifierEmetteurEtNonce(claims, "https://login.microsoftonline.com/{tenantid}/v2.0", "n1")).hasMessage("Entra : émetteur inattendu");
+
+        // Discovery § 4.3 : pour un fournisseur générique, l'émetteur publié est l'adresse de l'annuaire ; Entra (/v2.0) n'y est pas soumis.
+        Oidc.Configuration generique = new Oidc.Configuration(false, false, "", "c", "s", "r", "https://kc/realms/r", "a", "t", "https://kc/realms/r" + Oidc.CHEMIN_DECOUVERTE);
+        Oidc.verifierEmetteurPublie(generique, "https://kc/realms/r");
+        assertThatThrownBy(() -> Oidc.verifierEmetteurPublie(generique, "https://pirate/realms/r")).isInstanceOf(IllegalStateException.class)
+                .hasMessage("OIDC : l'émetteur publié (https://pirate/realms/r) n'est pas celui de l'annuaire (https://kc/realms/r)");
+        Oidc.verifierEmetteurPublie(Oidc.configuration(Map.of("AZURE_CLIENT_ID", "cid", "AZURE_TENANT_ID", "tid"), Optional.empty()), "https://login.microsoftonline.com/tid/v2.0");
+        // exp et sub exigés ; azp contrôlé quand l'audience en nomme plusieurs.
+        Oidc.verifierRevendicationsExigees(Map.of("exp", 1, "sub", "s", "aud", "c"), "c");
+        Oidc.verifierRevendicationsExigees(Map.of("exp", 1, "sub", "s", "aud", List.of("c", "autre"), "azp", "c"), "c");
+        Oidc.verifierRevendicationsExigees(Map.of("exp", 1, "sub", "s", "aud", List.of("c")), "c");
+        assertThatThrownBy(() -> Oidc.verifierRevendicationsExigees(Map.of("sub", "s"), "c")).hasMessage("OIDC : jeton sans échéance (exp)");
+        assertThatThrownBy(() -> Oidc.verifierRevendicationsExigees(Map.of("exp", 1), "c")).hasMessage("OIDC : jeton sans sujet (sub)");
+        assertThatThrownBy(() -> Oidc.verifierRevendicationsExigees(Map.of("exp", 1, "sub", " "), "c")).hasMessage("OIDC : jeton sans sujet (sub)");
+        assertThatThrownBy(() -> Oidc.verifierRevendicationsExigees(Map.of("exp", 1, "sub", "s", "aud", List.of("c", "autre"), "azp", "autre"), "c"))
+                .isInstanceOf(Oidc.AuthentificationRefuseeException.class).hasMessage("OIDC : partie autorisée (azp) inattendue");
+        assertThat(new Oidc.DesactiveException()).hasMessage("SSO Entra ID non configuré");
 
         Map<String, Object> n = Oidc.normaliser(Map.of("preferred_username", "p@x.ca", "roles", "pas-une-liste"));
         assertThat(n).containsEntry("email", "p@x.ca").containsEntry("roles", List.of());

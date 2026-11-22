@@ -118,6 +118,8 @@ test.describe.serial("OIDC — Keycloak, profils et hiérarchies", () => {
     await page.getByTestId("annuaire-nouveau-revendication").selectOption(a.revendication);
     await page.getByTestId("annuaire-nouveau-regles").fill(a.correspondances.map((c) => `${c.groupe} = ${c.role}`).join("\n"));
     await page.getByTestId("annuaire-nouveau-defaut").selectOption("");
+    // Les profils naissent à leur première connexion : l'administration active le juste-à-temps (ADR 0093, désactivé par défaut).
+    await page.getByTestId("annuaire-nouveau-jat").check();
     await expectNoA11yViolations(page);
     await page.getByTestId("annuaire-nouveau-enregistrer").click();
     await expect(page.getByTestId("annuaires-info")).toContainText(`Annuaire « ${a.nom} » déclaré.`);
@@ -184,7 +186,7 @@ test.describe.serial("OIDC — Keycloak, profils et hiérarchies", () => {
       expect((await adm.patch(`${API}/api/auth/users/${compte}`, { data: { active: false } })).ok()).toBe(true);
       page = await parKeycloak(browser, tenantId, annuaireId, julie.identifiant);
       await page.waitForURL(/\/api\/auth\/sso\/annuaires\/callback/);
-      await expect(page.locator("body")).toContainText(`le compte « ${julie.courriel} » est désactivé dans l'application`);
+      await expect(page.locator("body")).toContainText("le compte de l'application est désactivé");
       await page.context().close();
     } finally {
       await kc.delete(`users/${userId}/groups/${chefs.id}`).catch(() => undefined);

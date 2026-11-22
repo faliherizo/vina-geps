@@ -13,6 +13,14 @@ interface TenantOption { id: string; name: string; slug: string | null; }
  */
 const GLOBAL_ACCOUNT = "__global__";
 
+/** Identité authentifiée mais reliée à aucun compte (ADR 0093) : vers la page « Relier mon compte ». */
+export async function versLiaison(r: Response): Promise<boolean> {
+  const j = await r.clone().json().catch(() => ({}));
+  if (j?.liaisonRequise !== true) return false;
+  window.location.assign(String(j.retour ?? "/connexion/relier"));
+  return true;
+}
+
 export default function Login() {
   const { t, lang, setLang } = useT();
   const { login } = useAuth();
@@ -38,7 +46,9 @@ export default function Login() {
   // Entra ID : en mode **simulé** (aucun client déclaré) la session se pose en un appel JSON ;
   // face au vrai Entra, c'est le navigateur qui doit aller chez Microsoft et en revenir par le
   // callback — un POST ne peut pas faire ce voyage. Le serveur dit lequel des deux on est.
-  const [entraSimule, setEntraSimule] = useState(true);
+  // Entra ID d'instance : offert seulement s'il est configuré ; simulé seulement si le serveur le dit (essai explicite).
+  const [entraSimule, setEntraSimule] = useState(false);
+  const [entraActif, setEntraActif] = useState(false);
   // P-TN-2 : les annuaires que l'organisme a déclarés. Ils dépendent de l'organisme : on les relit
   // quand il change, et la liste reste vide tant qu'aucun n'est choisi.
   const [annuaires, setAnnuaires] = useState<Array<{ id: string; nom: string; fournisseur?: string }>>([]);
@@ -61,7 +71,8 @@ export default function Login() {
         else { setTenantId(GLOBAL_ACCOUNT); setHote("global"); }
       })
       .catch(() => { setHote("selecteur"); fetch("/api/auth/tenants").then((r) => (r.ok ? r.json() : [])).then((l) => setTenants(Array.isArray(l) ? l : [])).catch(() => setTenants([])); });
-    fetch("/api/auth/sso/entra/status").then((r) => (r.ok ? r.json() : null)).then((j) => setEntraSimule(j?.mock !== false)).catch(() => setEntraSimule(true));
+    fetch("/api/auth/sso/entra/status").then((r) => (r.ok ? r.json() : null))
+      .then((j) => { setEntraSimule(j?.mock === true); setEntraActif(j?.enabled === true); }).catch(() => setEntraActif(false));
     fetch("/api/auth/sso/saml/status").then((r) => (r.ok ? r.json() : null)).then((j) => setSamlActif(!!j?.enabled)).catch(() => setSamlActif(false));
   }, []);
 
@@ -79,6 +90,7 @@ export default function Login() {
     try {
       const r = await fetch("/api/auth/sso/entra/session", { method: "POST", credentials: "include", headers: { "Content-Type": "application/json" } });
       if (!r.ok) { const j = await r.json().catch(() => ({})); setError((j.errors || ["Échec de la connexion SSO"]).join(", ")); return; }
+      if (await versLiaison(r)) return;
       // Le backend a posé la session ; on recharge pour que le contexte d'auth la reprenne
       // (fonctionne quel que soit le préfixe de l'app : "/" en dev, "/admin" en production).
       window.location.reload();
@@ -93,6 +105,7 @@ export default function Login() {
       const r = await fetch(`/api/auth/sso/annuaires/${encodeURIComponent(annuaireId)}/connexion`, { method: "POST", credentials: "include",
         headers: { "Content-Type": "application/json" }, body: JSON.stringify({ identifiant: username, motDePasse: password }) });
       if (!r.ok) { const j = await r.json().catch(() => ({})); setError((j.errors || [t("login.ldapsChamps")]).join(", ")); return; }
+      if (await versLiaison(r)) return;
       window.location.reload();
     } finally { setBusy(false); }
   }
@@ -249,9 +262,11 @@ export default function Login() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 10px", color: "var(--muted)", fontSize: 12 }}>
           <span style={{ flex: 1, height: 1, background: "#e2e8f0" }} /> {t("login.ou")} <span style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
         </div>
-        <button type="button" className="secondary" data-testid="login-sso-entra" disabled={busy} style={{ width: "100%" }} onClick={ssoLogin}>
-          <span aria-hidden="true">🪟</span> {t("login.microsoft")}
-        </button>
+        {entraActif && (
+          <button type="button" className="secondary" data-testid="login-sso-entra" disabled={busy} style={{ width: "100%" }} onClick={ssoLogin}>
+            <span aria-hidden="true">🪟</span> {t("login.microsoft")}
+          </button>
+        )}
         {samlActif && (
           <a className="btn secondary" data-testid="login-sso-saml" href="/api/auth/sso/saml/login"
             style={{ display: "inline-flex", width: "100%", marginTop: 8, justifyContent: "center", boxSizing: "border-box" }}>

@@ -108,7 +108,7 @@ public final class Annuaires {
     /** Ce que l'administrateur saisit, avant validation. */
     public record Saisie(String nom, String locataireEntra, String clientId, String variableSecret, List<String> domaines,
                          String revendication, List<Correspondance> correspondances, String roleParDefaut, boolean actif,
-                         String fournisseur, String emetteur) {
+                         String fournisseur, String emetteur, boolean provisionnementJat) {
     }
 
     /**
@@ -119,7 +119,7 @@ public final class Annuaires {
      */
     public record Annuaire(String id, String tenantId, String nom, String locataireEntra, String clientId, String variableSecret,
                            List<String> domaines, Revendication revendication, List<Correspondance> correspondances,
-                           Optional<String> roleParDefaut, boolean actif, Fournisseur fournisseur, String emetteur) {
+                           Optional<String> roleParDefaut, boolean actif, Fournisseur fournisseur, String emetteur, boolean provisionnementJat) {
 
         public String autorite() {
             return switch (fournisseur) {
@@ -182,16 +182,6 @@ public final class Annuaires {
         Optional<Personne> authentifier(Annuaire annuaire, String secretService, String identifiant, String motDePasse);
     }
 
-    /** Port : les comptes d'un organisme, tels qu'une connexion par annuaire les trouve, les crée et les reclasse. */
-    public interface Comptes {
-        Optional<Compte> duCourriel(String tenantId, String courriel);
-
-        /** Un compte sans mot de passe utilisable : il n'entre que par son annuaire. */
-        Compte creer(String tenantId, String courriel, String role);
-
-        Compte reclasser(Compte compte, String role);
-    }
-
     /** Port : le jeton de session d'un compte. */
     @FunctionalInterface
     public interface Sessions {
@@ -252,7 +242,7 @@ public final class Annuaires {
             throw new AnnuaireInvalideException(motifs);
         }
         return new Annuaire(id, tenantId, nom, identite.locataire(), identite.clientId(), variable, domaines, revendication, regles, defaut, s.actif(),
-                fournisseur, identite.emetteur());
+                fournisseur, identite.emetteur(), s.provisionnementJat());
     }
 
     /** Ce qui désigne le fournisseur et le client, selon le protocole. */
