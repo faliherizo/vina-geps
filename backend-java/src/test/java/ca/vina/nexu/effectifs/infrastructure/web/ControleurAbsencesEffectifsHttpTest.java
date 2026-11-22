@@ -10,7 +10,15 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectif
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs.Declaration;
 import ca.vina.nexu.effectifs.application.commandes.DecisionRemplacementsAgph;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
+import ca.vina.nexu.effectifs.application.commandes.AvisDeComblement;
+import ca.vina.nexu.effectifs.application.commandes.CascadeOffresQuart;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireComblementAbsences;
+import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurOrdonnanceurOffres;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotOffresQuart;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotParametresOffres;
+import ca.vina.nexu.effectifs.infrastructure.persistance.SchemaOffresQuart;
+import ca.vina.nexu.ordonnanceur.infrastructure.persistance.DepotTaches;
+import ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRemplacementsAgph;
 import ca.vina.nexu.effectifs.application.commandes.SuiviComblementAbsence;
 import ca.vina.nexu.effectifs.application.requetes.LectureDisponibilites;
@@ -220,7 +228,8 @@ class ControleurAbsencesEffectifsHttpTest {
         };
         DepotComblementsAbsences depotCbl = new DepotComblementsAbsences(jdbc, schemaAbs);
         comblement = new GestionnaireComblementAbsences(new GestionnaireComblementAbsences.Lectures(lectEqp, dispo, lectRes, referentiels),
-                new GestionnaireComblementAbsences.Ecritures(depotCbl, new GestionnaireAttributionFinDeCollecte(lectPlanif, dispo, places, journal), avis, journal, seq));
+                new GestionnaireComblementAbsences.Ecritures(depotCbl, new GestionnaireAttributionFinDeCollecte(lectPlanif, dispo, places, journal), avis, journal, seq,
+                        cascade(lectRes, depotCbl, avis, lectEqp, journal, seq)));
         DepotRemplacementsAgph depotRlt = new DepotRemplacementsAgph(jdbc, new SchemaAgph(jdbc), schemaPlanif);
         GestionnaireRemplacementsAgph remplacements = new GestionnaireRemplacementsAgph(depotRlt, new DecisionRemplacementsAgph(depotRlt,
                 new DecisionRemplacementsAgph.Lectures(lectPos, lectRes, referentiels, evaluateur), new DecisionRemplacementsAgph.Quarts(lectEqp, depotEqp), journal),
@@ -231,6 +240,15 @@ class ControleurAbsencesEffectifsHttpTest {
                 new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres), evaluateur, journal, seq);
         http = new ClientHttpEssai(socle, planification, new ControleurAbsencesEffectifs(garde, lecture, absences, suivi));
         semaine();
+    }
+
+    /** L'offre en cascade, réglée par défaut en offre simultanée : ces essais tiennent le comportement d'avant AD-07. */
+    private CascadeOffresQuart cascade(LectureRessources lectRes, DepotComblementsAbsences depotCbl, PublicationAvis avis, LectureEquipages lectEqp,
+                                       DepotJournalEffectifs journal, Sequence seq) {
+        SchemaOffresQuart schemaOfr = new SchemaOffresQuart(jdbc);
+        return new CascadeOffresQuart(new CascadeOffresQuart.Ports(new DepotOffresQuart(jdbc, schemaOfr), new DepotParametresOffres(jdbc, schemaOfr),
+                new AdaptateurOrdonnanceurOffres(new DepotTaches(jdbc, new RegistreExecuteurs()), new RegistreExecuteurs())),
+                new CascadeOffresQuart.Collaborateurs(new AvisDeComblement(lectRes, depotCbl, avis), lectEqp, journal, seq));
     }
 
     private String creer(String chemin, String json) throws Exception {

@@ -20,6 +20,7 @@
 | AD-03 Heures supplémentaires par période de paie et par convention | E-RF-5 | [05_scenarios/AD-03.md](05_scenarios/AD-03.md) |
 | AD-04 Optimisation du budget AGPH | E-CH-1 | [05_scenarios/AD-04.md](05_scenarios/AD-04.md) |
 | AD-05 Renoncer ; délai échu paramétrable | P-CH-2, P-CH-4, P-CH-7 | [05_scenarios/AD-05.md](05_scenarios/AD-05.md) |
+| AD-07 Offre par ancienneté et à tour de rôle | P-GH-3, P-GN-1 | [05_scenarios/AD-07.md](05_scenarios/AD-07.md) |
 | AD-08 Paramétrage de démonstration de la convention SP-CSN | E-GN-12, E-GR-7, E-GR-12, E-RF-5, E-CH-6 | [05_scenarios/AD-08.md](05_scenarios/AD-08.md) (scénarios e2e pilotés par `convention-sp-csn.json`) |
 
 Un lien sans fichier signale une story pas encore livrée (voir le [planificateur](03_planificateur.md)).

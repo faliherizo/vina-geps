@@ -14,7 +14,6 @@ import ca.vina.nexu.effectifs.domaine.Equipage;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifs;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
 import ca.vina.nexu.effectifs.domaine.Planification;
-import ca.vina.nexu.effectifs.domaine.Ressource;
 import ca.vina.nexu.effectifs.domaine.TypeReferentiel;
 import ca.vina.nexu.partage.avis.domaine.PublicationAvis;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
@@ -31,14 +30,16 @@ import java.util.Optional;
  * lui-même, place par place, selon le paramétrage de l'équipage : attribution d'office au prioritaire (quart
  * automatisé), offre aux admissibles avisés (quart manuel), ou réservation au remplacement long terme (absence
  * longue). Chaque geste est celui du mécanisme, journalisé comme tel.
+ * <p>
+ * Quand l'organisme offre ses quarts <strong>par ancienneté et à tour de rôle</strong> (AD-07, art. 16.02), la place
+ * offerte ouvre une offre en cascade : un rang à la fois, avec son délai de réponse, au lieu d'aviser tous les
+ * admissibles ensemble.
  */
 public class GestionnaireComblementAbsences {
 
     /** Le mécanisme qui comble : lui, et non le gestionnaire qui a autorisé l'absence, attribue et avise. */
     public static final String MECANISME = "comblement-sur-absence";
     private static final String URL_QUARTS = "/admin/mesechanges";
-    private static final String COURRIEL = "courriel";
-    private static final String ECHEC = "failed";
     private static final int MINUTES_HEURE = 60;
     private static final int HEURES_JOUR = 24;
 
@@ -47,7 +48,7 @@ public class GestionnaireComblementAbsences {
 
     /** Ce que le mécanisme écrit ou déclenche. */
     public record Ecritures(DepotComblementsAbsencesPort depot, GestionnaireAttributionFinDeCollecte attribution, PublicationAvis avis, JournalEffectifsPort journal,
-                            Sequence sequence) { }
+                            Sequence sequence, CascadeOffresQuart cascade) { }
 
     /** Une place libérée, avec son quart, pour l'avis. */
     private record Quart(String placeId, Equipage equipage) {
@@ -58,10 +59,12 @@ public class GestionnaireComblementAbsences {
 
     private final Lectures lire;
     private final Ecritures ecrire;
+    private final AvisDeComblement avis;
 
     public GestionnaireComblementAbsences(Lectures lire, Ecritures ecrire) {
         this.lire = lire;
         this.ecrire = ecrire;
+        this.avis = new AvisDeComblement(lire.ressources(), ecrire.depot(), ecrire.avis());
     }
 
     static String hhmm(int minutes) {
@@ -117,8 +120,8 @@ public class GestionnaireComblementAbsences {
         }
         String rid = retenu.get().ressourceId();
         DepotComblementsAbsencesPort.Comblement c = enregistrer(sys, absenceId, q, ResultatComblement.ATTRIBUEE, rid);
-        aviser(sys, c.id(), rid, "quart.attribue", "Quart attribué le " + q.equipage().date(),
-                "Le quart " + q.libelle() + " vous est attribué d'office : il remplace une absence et vous étiez prioritaire selon les règles d'attribution.");
+        avis.aviser(sys, c.id(), rid, new AvisDeComblement.Message("quart.attribue", "Quart attribué le " + q.equipage().date(),
+                "Le quart " + q.libelle() + " vous est attribué d'office : il remplace une absence et vous étiez prioritaire selon les règles d'attribution.", URL_QUARTS));
         return ResultatComblement.ATTRIBUEE;
     }
 
@@ -128,30 +131,14 @@ public class GestionnaireComblementAbsences {
             return enregistrer(sys, absenceId, q, ResultatComblement.SANS_CANDIDAT, null).resultat();
         }
         DepotComblementsAbsencesPort.Comblement c = enregistrer(sys, absenceId, q, ResultatComblement.OFFERTE, null);
+        if (ecrire.cascade().estEnCascade(sys.tenantId())) {
+            ecrire.cascade().ouvrir(sys, new CascadeOffresQuart.Ouverture(c.id(), absenceId, q.placeId(), q.equipage(), admissibles));
+            return ResultatComblement.OFFERTE;
+        }
         for (Disponibilites.Candidature x : admissibles) {
-            aviser(sys, c.id(), x.ressourceId(), "quart.offert", "Quart disponible le " + q.equipage().date(),
-                    "Un quart " + q.libelle() + " est disponible et vous y êtes admissible. Faites savoir à votre planificateur si vous le prenez.");
+            avis.aviser(sys, c.id(), x.ressourceId(), new AvisDeComblement.Message("quart.offert", "Quart disponible le " + q.equipage().date(),
+                    "Un quart " + q.libelle() + " est disponible et vous y êtes admissible. Faites savoir à votre planificateur si vous le prenez.", URL_QUARTS));
         }
         return ResultatComblement.OFFERTE;
-    }
-
-    /** Avise une ressource ; ce que chaque canal a rendu est gardé pour l'écran. Un avis n'échoue jamais le comblement. */
-    private void aviser(Contexte sys, String comblementId, String ressourceId, String evenement, String sujet, String corps) {
-        Ressource r = lire.ressources().exiger(sys, ressourceId);
-        for (PublicationAvis.Envoi e : envois(sys, r, evenement, sujet, corps)) {
-            ecrire.depot().aviser(sys.tenantId(), new DepotComblementsAbsencesPort.Avis(comblementId, ressourceId, e.canal(), e.statut(), e.erreur(), sys.maintenant()));
-        }
-    }
-
-    private List<PublicationAvis.Envoi> envois(Contexte sys, Ressource r, String evenement, String sujet, String corps) {
-        if (r.utilisateurId() == null || r.utilisateurId().isEmpty()) {
-            return List.of(new PublicationAvis.Envoi("", COURRIEL, ECHEC, "aucun compte relié à cette ressource : personne à aviser"));
-        }
-        String destinataire = ecrire.depot().employeDuCompte(r.utilisateurId()).filter(s -> !s.isEmpty()).orElse(r.utilisateurId());
-        try {
-            return ecrire.avis().publier(PublicationAvis.Avis.de(sys.tenantId(), evenement, List.of(destinataire), sujet, corps, URL_QUARTS));
-        } catch (RuntimeException panne) {
-            return List.of(new PublicationAvis.Envoi("", COURRIEL, ECHEC, String.valueOf(panne.getMessage())));
-        }
     }
 }
