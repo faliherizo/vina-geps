@@ -41,6 +41,9 @@ import java.util.Map;
 @Transactional
 public class ControleurSocleEffectifs {
 
+    /** La valeur du paramètre {@code historique} qui demande toutes les versions, pas seulement celles en vigueur. */
+    private static final String HISTORIQUE_COMPLET = "1";
+
     private static final String MODULE = "effectifs";
     private static final JsonMapper JSON = JsonMapper.builder().build();
 
@@ -84,20 +87,26 @@ public class ControleurSocleEffectifs {
 
     // ── Référentiels ─────────────────────────────────────────────────────────
 
+    /**
+     * Le registre des référentiels, leur historique complet et les versions d'un code ne servent que l'écran
+     * d'administration des référentiels : ils exigent {@code effectifs.configure}. Les valeurs <em>en vigueur</em> d'un
+     * référentiel restent lisibles par tout compte du module : les formulaires en ont besoin (codes d'absence, unités…).
+     */
     @GetMapping("/referentiels")
     public ResponseEntity<Object> descripteurs(HttpServletRequest r) {
-        return garde.repondre(r, lire(r), 200, ctx -> referentiels.descripteurs());
+        return garde.repondre(r, configurer(r), 200, ctx -> referentiels.descripteurs());
     }
 
     @GetMapping("/referentiels/{type}")
     public ResponseEntity<Object> valeurs(HttpServletRequest r, @PathVariable String type, @RequestParam(required = false) String date,
                                           @RequestParam(required = false) String historique) {
-        return garde.repondre(r, lire(r), 200, ctx -> referentiels.lister(ctx, type, date, "1".equals(historique)));
+        boolean toutLHistorique = HISTORIQUE_COMPLET.equals(historique);
+        return garde.repondre(r, toutLHistorique ? configurer(r) : lire(r), 200, ctx -> referentiels.lister(ctx, type, date, toutLHistorique));
     }
 
     @GetMapping("/referentiels/{type}/{code}/historique")
     public ResponseEntity<Object> historique(HttpServletRequest r, @PathVariable String type, @PathVariable String code) {
-        return garde.repondre(r, lire(r), 200, ctx -> referentiels.historique(ctx, type, code));
+        return garde.repondre(r, configurer(r), 200, ctx -> referentiels.historique(ctx, type, code));
     }
 
     @PostMapping("/referentiels/{type}")

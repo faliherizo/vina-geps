@@ -124,7 +124,10 @@ class ControleurSocleEffectifsHttpTest {
     @Test
     @DisplayName("les référentiels : registre, création, doublon, version datée, fermeture, historique")
     void referentiels() throws Exception {
-        http.get(E + "/referentiels", JULIE).andExpect(status().isOk()).andExpect(jsonPath("$[0].type").value("unites"))
+        // L'écran d'administration des référentiels est réservé à l'administration : registre, historique, versions.
+        http.get(E + "/referentiels", JULIE).andExpect(status().isForbidden());
+        http.get(E + "/referentiels", CHEF).andExpect(status().isForbidden());
+        http.get(E + "/referentiels", ADMIN).andExpect(status().isOk()).andExpect(jsonPath("$[0].type").value("unites"))
                 .andExpect(jsonPath("$[0].attributs[0].type").value("reference")).andExpect(jsonPath("$[0].attributs[0].reference").value("unites"))
                 .andExpect(jsonPath("$[3].comportements[0]").value("TEMPS_COMPLET")).andExpect(jsonPath("$[6].attributs[0].min").value(0));
         socle();
@@ -142,10 +145,13 @@ class ControleurSocleEffectifsHttpTest {
         http.post(E + "/referentiels/unites/EST/versions", ADMIN, "{\"libelleFr\":\"x\",\"depuis\":\"2030-01-01\"}").andExpect(status().is(422))
                 .andExpect(jsonPath("$.errors[0]").value("une modification ne peut pas être rétroactive (2030-01-01 < 2031-01-15)"));
         http.get(E + "/referentiels/unites?date=2031-01-25", JULIE).andExpect(jsonPath("$[?(@.code == 'EST')].libelleFr").value("Opérations Est"));
-        http.get(E + "/referentiels/unites?historique=1", JULIE).andExpect(jsonPath("$", Matchers.hasSize(4)));
+        http.get(E + "/referentiels/unites?historique=1", JULIE).andExpect(status().isForbidden());
+        http.get(E + "/referentiels/unites?historique=1", ADMIN).andExpect(jsonPath("$", Matchers.hasSize(4)));
+        http.get(E + "/referentiels/unites", JULIE).andExpect(status().isOk());
         http.get(E + "/referentiels/unites?date=31-01", JULIE).andExpect(status().is(422));
-        http.get(E + "/referentiels/unites/EST/historique", JULIE).andExpect(jsonPath("$", Matchers.hasSize(2)));
-        http.get(E + "/referentiels/unites/NUL/historique", JULIE).andExpect(status().isNotFound());
+        http.get(E + "/referentiels/unites/EST/historique", JULIE).andExpect(status().isForbidden());
+        http.get(E + "/referentiels/unites/EST/historique", ADMIN).andExpect(jsonPath("$", Matchers.hasSize(2)));
+        http.get(E + "/referentiels/unites/NUL/historique", ADMIN).andExpect(status().isNotFound());
         http.post(E + "/referentiels/unites/OUEST/fermer", ADMIN, "{\"date\":\"2031-02-01\"}").andExpect(status().isOk()).andExpect(jsonPath("$.effectifJusqua").value("2031-02-01"));
         http.post(E + "/referentiels/unites/NUL/fermer", ADMIN, "{\"date\":\"2031-02-01\"}").andExpect(status().isNotFound());
         http.post(E + "/referentiels/unites/OUEST/fermer", ADMIN, "{\"date\":\"2031-03-01\"}").andExpect(status().is(422)).andExpect(jsonPath("$.errors[0]").value("cette valeur est déjà fermée"));
