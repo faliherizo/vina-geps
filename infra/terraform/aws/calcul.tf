@@ -186,7 +186,9 @@ resource "aws_ecs_task_definition" "application" {
       mountPoints  = []
       # Une adresse plutôt qu'un nom : la configuration de nginx résout l'amont à chaque requête, et
       # il n'y a pas de DNS de conteneurs en mode awsvpc. 127.0.0.1 est le conteneur api.
-      environment = [{ name = "API_UPSTREAM", value = "127.0.0.1" }, { name = "API_PORT", value = tostring(local.port_api) }]
+      # API_PROXIES_CONFIANCE : nginx ne croit X-Forwarded-For que du répartiteur, dans le VPC (IN-05).
+      environment = [{ name = "API_UPSTREAM", value = "127.0.0.1" }, { name = "API_PORT", value = tostring(local.port_api) },
+      { name = "API_PROXIES_CONFIANCE", value = aws_vpc.principal.cidr_block }]
       healthCheck = {
         command     = ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:${local.port_web}/ || exit 1"]
         interval    = 30
@@ -203,7 +205,7 @@ locals {
   racine_donnees = "/donnees"
   fichier_base   = "/donnees/payroll.db"
   port_api       = 4000
-  port_web       = 80
+  port_web       = 8080 # nginx sans privilège (IN-01)
 
   journal = {
     logDriver = "awslogs"
@@ -232,7 +234,7 @@ resource "aws_lb" "principal" {
 
 resource "aws_lb_target_group" "application" {
   name        = local.prefixe
-  port        = 80
+  port        = local.port_web
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = aws_vpc.principal.id
@@ -279,7 +281,7 @@ resource "aws_ecs_service" "application" {
   load_balancer {
     target_group_arn = aws_lb_target_group.application.arn
     container_name   = "web"
-    container_port   = 80
+    container_port   = local.port_web
   }
 
   # Un déploiement qui échoue revient en arrière tout seul : à 3 h du matin, personne ne le fera.

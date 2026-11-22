@@ -19,7 +19,7 @@ FROM eclipse-temurin:25-jre-alpine AS runtime
 WORKDIR /app
 RUN apk add --no-cache curl \
  && addgroup -S urgences && adduser -S urgences -G urgences \
- && mkdir -p /app/data && chown urgences:urgences /app/data
+ && mkdir -p /app/data && chown urgences:urgences /app/data && chmod 700 /app/data
 COPY --from=build /app.jar /app/app.jar
 USER urgences
 ENV PORT=4000 \
@@ -27,4 +27,6 @@ ENV PORT=4000 \
     JAVA_OPTS="-XX:MaxRAMPercentage=75"
 EXPOSE 4000
 HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=6 CMD curl -fs http://localhost:${PORT}/api/health || exit 1
-ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar /app/app.jar"]
+# La base, ses journaux et ses sauvegardes ne se lisent que par leur propriétaire (IN-04) : umask 077 pour tout ce que le
+# serveur crée, et les fichiers d'un volume plus ancien ramenés à 600 au démarrage.
+ENTRYPOINT ["sh", "-c", "umask 077 && chmod -R go-rwx /app/data && exec java $JAVA_OPTS -jar /app/app.jar"]

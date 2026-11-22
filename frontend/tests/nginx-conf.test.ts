@@ -108,3 +108,24 @@ describe("nginx — durcissement issu des tests d'intrusion du 22 novembre 2026"
     }
   });
 });
+
+describe("nginx — durcissements IN-01 et IN-05", () => {
+  const dockerfile = readFileSync(join(RACINE, "Dockerfile"), "utf8");
+
+  it("IN-01 : l'image tourne sans privilège et écoute sur un port non privilégié", () => {
+    expect(dockerfile).toMatch(/^FROM nginxinc\/nginx-unprivileged:[\d.]+-alpine AS runtime$/m);
+    expect(dockerfile).toContain("EXPOSE 8080");
+    expect(conf).toMatch(/^\s*listen 8080;$/m);
+    expect(conf).not.toMatch(/^\s*listen 80;$/m);
+  });
+
+  it("IN-05 : X-Forwarded-For n'est cru que des mandataires déclarés, puis réécrit vers l'API", () => {
+    expect(conf).toContain("set_real_ip_from ${API_PROXIES_CONFIANCE};");
+    expect(conf).toContain("real_ip_recursive on;");
+    expect(conf).not.toContain("$proxy_add_x_forwarded_for");
+    for (const location of ["/api/", "/public/"]) {
+      expect(blocEntier(location), location).toContain("proxy_set_header X-Forwarded-For $remote_addr;");
+    }
+    expect(dockerfile).toContain("API_PROXIES_CONFIANCE=127.0.0.1/32");
+  });
+});

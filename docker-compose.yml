@@ -51,6 +51,6 @@ services:
       API_UPSTREAM: backend
       API_PORT: "4000"
     ports:
-      - "${US_WEB_PORT:-8095}:80"
+      - "${US_WEB_PORT:-8095}:8080"
 volumes:
   donnees:

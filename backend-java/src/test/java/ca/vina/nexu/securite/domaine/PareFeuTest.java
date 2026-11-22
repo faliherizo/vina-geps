@@ -54,7 +54,8 @@ class PareFeuTest {
         assertThat(r.echecsConnexionAvantVerrou()).isEqualTo(10);
         assertThat(r.verrouMinutes()).isEqualTo(15);
         assertThat(PareFeu.reglages(Map.of("WAF_MODE", "inactif", "WAF_VERROU_MINUTES", " ")).mode()).isEqualTo(PareFeu.Mode.INACTIF);
-        assertThat(r.enCarte()).containsEntry("mode", "observer").containsEntry("requetesParMinute", 5);
+        assertThat(r.enCarte()).containsEntry("mode", "observer").containsEntry("requetesParMinute", 5).containsEntry("echecsConnexionParAdresse", 50);
+        assertThat(PareFeu.reglages(Map.of("WAF_ECHECS_CONNEXION_ADRESSE", "0")).echecsConnexionParAdresse()).isZero();
     }
 
     @Test
@@ -173,5 +174,28 @@ class PareFeuTest {
         assertThat(f.lire("a", 0)).isEqualTo(0);
         f.oublier("b");
         assertThat(f.lire("b", 0)).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("IN-05 : une adresse qui asperge plusieurs comptes est verrouillée ; une autre adresse, et un compte d'ailleurs, passent")
+    void aspersionParAdresse() {
+        Horloge h = new Horloge();
+        List<String> journal = new ArrayList<>();
+        PareFeu p = new PareFeu(new PareFeu.Reglages(PareFeu.Mode.BLOQUER, 0, 10, 15, 4), () -> h.t,
+                (a, d) -> journal.add(a + ":" + ((Map<?, ?>) d.get("details")).get("regle")));
+        for (String compte : new String[] {"julie", "marc", "lea"}) {
+            p.echecConnexion("6.6.6.6", compte);
+        }
+        assertThat(p.gardeConnexion("6.6.6.6", "theo")).isEmpty();
+        p.echecConnexion("6.6.6.6", "theo");
+        assertThat(journal).containsExactly("securite.waf.bloque:verrou_adresse_pose");
+        PareFeu.Refus r = p.gardeConnexion("6.6.6.6", "nouveau").orElseThrow();
+        assertThat(r.code()).isEqualTo(429);
+        assertThat(journal).last().isEqualTo("securite.waf.bloque:verrou_adresse");
+        // Le verrou tient l'adresse, pas les comptes : depuis ailleurs, julie se connecte.
+        assertThat(p.gardeConnexion("7.7.7.7", "julie")).isEmpty();
+        assertThat(p.etat().get("blocages24h")).isEqualTo(Map.of("verrou_adresse_pose", 1, "verrou_adresse", 1));
+        h.t += 16 * 60_000L;
+        assertThat(p.gardeConnexion("6.6.6.6", "nouveau")).isEmpty();
     }
 }

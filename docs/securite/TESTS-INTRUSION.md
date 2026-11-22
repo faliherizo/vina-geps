@@ -40,12 +40,15 @@ débit et faux positifs d'injection SQL). ZAP a ajouté PT-07 (`Permissions-Poli
 | PT-05 | Faible 2.6 | `X-Frame-Options`, `Referrer-Policy` et `Permissions-Policy` en double et contradictoires sur `/api/` | ✅ en-têtes de l'API seuls sur `/api/`, HSTS par nginx |
 | PT-06 | Faible 3.8 | Un superadmin qui crée un compte avec `X-Tenant-Id` sans `tenantId` dans le corps crée un compte global | ✅ établissement de l'en-tête à défaut du corps |
 
-Observations de durcissement : nginx maître en root, `npm install` sans lockfile dans
-`frontend/Dockerfile` (✅ `npm ci`), avis `npm audit` (outillage de développement surtout ; `exceljs` livré ; ✅ IN-03 : 15 avis → 0 — Vite 8,
-Vitest 5, Capacitor 8 sans projet natif à migrer, `uuid` ≥ 11.1.1 imposé sous `exceljs` par `overrides`
-plutôt que le retour à `exceljs` 3.4.0 que propose npm ; `npm run audit:prod` bloquant en CI),
-base SQLite en 0644, verrou par compte exploitable pour bloquer un compte connu. Le détail est dans le
-rapport.
+Observations de durcissement : **toutes traitées** ([ADR 0092](../adr/0092-adresse-reelle-client-et-durcissements.md)),
+re-test **57/57** :
+- ✅ IN-01 : nginx sans privilège (`nginxinc/nginx-unprivileged`, port 8080, Compose et Terraform alignés) ;
+- ✅ IN-02 : `npm ci` sur le verrou ;
+- ✅ IN-03 : `npm audit` 15 → 0 (vite 8, vitest 5, Capacitor 8, `uuid` forcé sous `exceljs`), `audit:prod` en CI ;
+- ✅ IN-04 : base SQLite en 600, dossier en 700 ;
+- ✅ IN-05 : le serveur voit désormais l'**adresse réelle** du client (il voyait celle de nginx : verrou devenu par compte,
+  limitation de débit commune, plage réseau du pointage jugée sur nginx), sans qu'un `X-Forwarded-For` forgé soit cru ;
+  seuil par adresse contre l'aspersion de mots de passe.
 
 Non couvert : TLS de production, SSO, MFA, téléversements, en-tête `Host` en mode sous-domaine, CVE
 Java (dependency-check non exécuté).
