@@ -6,6 +6,8 @@ export interface Periode {
 export interface Ressource {
   id: string; matricule: string; nom: string; uniteCode: string; corpsEmploiCode: string; titreEmploiCode: string | null;
   statutEmploiCode: string | null; conventionCode: string | null; anciennete: number; actif: boolean;
+  /** Le compte de connexion de la personne : c'est par lui que ses écrans personnels la trouvent. */
+  utilisateurId?: string | null;
 }
 export interface Poste {
   id: string; uniteCode: string; code: string; libelle: string; statutEmploiCode: string; corpsEmploiCode: string; milieuId: string;

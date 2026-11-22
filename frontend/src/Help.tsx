@@ -6,7 +6,8 @@
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { EnTeteEcran } from "./composants";
 import { pageOuverte, sectionsVisibles } from "./aideParEcran";
-import { FICHES, idFiche } from "./aide/fichesEcrans";
+import { FICHES, idFiche, type Prealable } from "./aide/fichesEcrans";
+import { cheminEcran } from "./aide/liensAide";
 import type { Page } from "./App";
 import { useModuleAllowed, usePageMasquee } from "./moduleAccess";
 
@@ -348,17 +349,18 @@ export default function Help({ section }: { section?: string | null }) {
  * coup d'œil, et la fiche visée par « Aide sur cet écran » s'ouvre d'elle-même.
  */
 function FichesDesEcrans({ ouvert, masquee, cible }: { ouvert: (code?: string) => boolean; masquee: (page: string) => boolean; cible: string | null }) {
-  const pages = (Object.keys(FICHES) as Page[]).filter((p) => pageOuverte(p, ouvert, masquee));
+  const ecranOuvert = (p: Page) => pageOuverte(p, ouvert, masquee);
+  const pages = (Object.keys(FICHES) as Page[]).filter(ecranOuvert);
   return (
     <section id="fiches" className="card" aria-labelledby="fiches-h">
       <h2 id="fiches-h">Écran par écran : aide et exemple de remplissage</h2>
       <p>Chaque fiche reprend les libellés de l'écran. Les exemples sont ceux de l'organisme de démonstration : on peut les rejouer tels quels.</p>
-      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} />)}
+      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} ecranOuvert={ecranOuvert} />)}
     </section>
   );
 }
 
-function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
+function FicheEcran({ page, ouverte, ecranOuvert }: { page: Page; ouverte: boolean; ecranOuvert: (p: Page) => boolean }) {
   const f = FICHES[page];
   return (
     <details id={idFiche(page)} className="fiche-ecran" open={ouverte || undefined} data-testid={`help-fiche-${page}`}>
@@ -366,6 +368,10 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
       <VideoFiche page={page} titre={f.titre} />
       <p>{f.objet}</p>
       <p><strong>Qui :</strong> {f.qui}</p>
+      <h4>Avant de commencer</h4>
+      <ol className="fiche-prealables" data-testid={`aide-prealables-${page}`}>
+        {f.prealables.map((pr, i) => <PrealableFiche key={pr.texte} prealable={pr} testId={`aide-prealable-${page}-${i + 1}`} ecranOuvert={ecranOuvert} />)}
+      </ol>
       <h4>Comment faire</h4>
       <ol>{f.etapes.map((e) => <li key={e}>{e}</li>)}</ol>
       <h4>Exemple de remplissage</h4>
@@ -377,6 +383,21 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
       <p><strong>Résultat :</strong> {f.resultat}</p>
       {f.attention && <p className="fiche-attention"><strong>Attention :</strong> {f.attention}</p>}
     </details>
+  );
+}
+
+/**
+ * **Un préalable**, et l'écran où il se fait quand cet écran est ouvert à l'organisme : un lien vers un
+ * écran dont le module est coupé mènerait à une page qui ne s'ouvre pas — le texte suffit alors, il dit
+ * déjà qui accorde le module.
+ */
+function PrealableFiche({ prealable, testId, ecranOuvert }: { prealable: Prealable; testId: string; ecranOuvert: (p: Page) => boolean }) {
+  const { texte, ecran } = prealable;
+  return (
+    <li>
+      {texte}
+      {ecran && ecranOuvert(ecran) && <> <a href={cheminEcran(ecran)} data-testid={`${testId}-lien`}>Ouvrir « {FICHES[ecran].titre} »</a></>}
+    </li>
   );
 }
 

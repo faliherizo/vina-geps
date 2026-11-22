@@ -33,7 +33,9 @@ const RUBRIQUES = [
 const cellule = (t) => String(t).replace(/\|/g, "\\|");
 
 function fiche(page, f) {
-  const l = [`### ${f.titre}`, "", `*Adresse : \`/admin/${page}\` — ${f.qui}*`, "", f.objet, "", "**Comment faire**", ""];
+  const l = [`### ${f.titre}`, "", `*Adresse : \`/admin/${page}\` — ${f.qui}*`, "", f.objet, "", "**Avant de commencer**", ""];
+  f.prealables.forEach((p, i) => l.push(`${i + 1}. ${p.texte}${p.ecran ? ` (écran \`/admin/${p.ecran}\`)` : ""}`));
+  l.push("", "**Comment faire**", "");
   f.etapes.forEach((e, i) => l.push(`${i + 1}. ${e}`));
   l.push("", "**Exemple de remplissage**", "", "| Champ | Valeur saisie |", "|---|---|");
   for (const [champ, valeur] of f.exemple) l.push(`| ${cellule(champ)} | ${cellule(valeur)} |`);

@@ -39,6 +39,7 @@ import type { Ressource } from "./effectifs/planification/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
 import QuartsOfferts from "./effectifs/offres/QuartsOfferts";
+import LienPrealables from "./aide/LienPrealables";
 
 /** Les statuts d'échange qui rendent un quart incertain : il peut encore changer de main. */
 const ECHANGES_OUVERTS = new Set(["PROPOSE", "A_VALIDER"]);
@@ -125,7 +126,8 @@ export default function MonHoraire() {
       />
       {erreur && <Message variante="erreur" testId="mho-erreur">{erreur}</Message>}
       {moi === null && (
-        <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mho-sans-ressource">
+        <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mho-sans-ressource"
+          action={<LienPrealables page="monhoraire" testId="mho-sans-ressource-prealables" />}>
           Demandez à votre planificateur de relier votre compte à votre dossier d'effectif.
         </EtatVide>
       )}

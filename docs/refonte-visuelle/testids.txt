@@ -4,6 +4,7 @@ abs-eff-commentaire
 abs-eff-ressource
 abs-end
 abs-form-error
+abs-form-error-prealables
 abs-formulaire-champs
 abs-start
 abs-submit
@@ -154,6 +155,7 @@ agm-sans-ressource
 agm-titre
 aide-contextuelle
 aide-contextuelle-mobile
+aide-prealables-
 annonce-
 annonce-admin-
 annonce-au
@@ -476,6 +478,7 @@ mdi-refus
 mdi-regles
 mdi-sans-periode
 mdi-sans-ressource
+mdi-sans-ressource-prealables
 mdi-titre
 mec-
 mec-aucun-quart
@@ -485,6 +488,7 @@ mec-info
 mec-proposer
 mec-refus
 mec-sans-ressource
+mec-sans-ressource-prealables
 mec-table
 mec-titre
 mec-vide
@@ -535,6 +539,7 @@ mho-erreur
 mho-fenetre
 mho-proposer-echange
 mho-sans-ressource
+mho-sans-ressource-prealables
 mho-semaine-courante
 mho-semaine-precedente
 mho-semaine-suivante
@@ -984,6 +989,8 @@ pla-res-enregistrer
 pla-res-erreur
 pla-res-matricule
 pla-res-nom
+pla-res-utilisateur
+pla-res-utilisateur-lecture
 pla-ressource-
 pla-ressource-fiche
 pla-ressource-modifier-
