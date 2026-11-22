@@ -1,0 +1,19 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.737
+Codes d'absence. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:05.937 --> 00:00:12.439
+Codes d'absence. L'administrateur de l'organisme ouvre la page des codes d'absence : Maladie et Congé sans solde y sont déjà.
+
+00:00:15.420 --> 00:00:21.179
+L'administration ajoute le code FORM, Formation, planifiable, en vigueur à partir d'aujourd'hui.
+
+00:00:23.019 --> 00:00:28.569
+L'administration ajoute le code VAC, Vacances, planifiable, en vigueur à partir d'aujourd'hui.
+
+00:00:30.537 --> 00:00:37.271
+Il remplace ensuite le code MAL à partir d'aujourd'hui : son nouveau libellé est Maladie ou blessure. L'ancienne version reste dans l'historique.
+
+00:00:40.473 --> 00:00:47.741
+Puis il ferme le Congé sans solde à partir d'aujourd'hui : le code disparaît de la liste en vigueur. L'historique du code Maladie montre ses deux versions.

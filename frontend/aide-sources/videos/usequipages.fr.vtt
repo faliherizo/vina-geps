@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.760
+Quarts et équipages. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:05.960 --> 00:00:12.787
+Le quart est opérationnel. Elle crée ensuite un quart ad hoc, de 18 heures à 22 heures, pour un paramédic à la Caserne 12.
+
+00:00:16.265 --> 00:00:24.044
+Elle tente d'y placer une personne qui sort de son quart. La règle du repos minimal bloque l'attribution, et l'écran nomme le motif : il faut huit heures de repos.
+
+00:00:28.409 --> 00:00:35.282
+Faute d'autre paramédic disponible, elle force l'attribution en la justifiant. L'attribution forcée est marquée comme telle dans l'équipage.
+
+00:00:37.012 --> 00:00:46.184
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur crée un quart ad hoc à deux corps d'emploi. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:00:49.475 --> 00:00:56.627
+Choisir la période, « Quart ad hoc », puis « Ajouter un corps d'emploi » : un quart reçoit une ou plusieurs places, chacune avec son corps d'emploi.
+
+00:01:00.252 --> 00:01:06.823
+Dans le tiroir du quart ad hoc, renseigner « Minimum opérationnel » : sous ce nombre, le comblement classe le quart en sous-minimum.
+
+00:01:08.498 --> 00:01:12.306
+« Quart ad hoc » : date, plage et milieu libres, hors cycle de poste.
+
+00:01:14.142 --> 00:01:19.599
+Champ « Mode d'attribution » du quart : automatisé ou manuel ; « Modifier en lot » le change pour plusieurs quarts.
+
+00:01:21.372 --> 00:01:27.386
+Attribuer une ressource qu'une règle écarte : l'écran liste les avertissements et exige une justification avant de forcer.
+
+00:01:30.731 --> 00:01:34.655
+« Quart ad hoc » crée et gère un quart hors cycle ; « Libérer » le retire avec son motif.
+
+00:01:36.692 --> 00:01:40.338
+Le quart ad hoc n'exige aucun poste : sa nature et sa plage suffisent.

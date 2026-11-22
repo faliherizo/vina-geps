@@ -1,0 +1,139 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.743
+Mise en route.
+
+00:00:01.193 --> 00:00:06.836
+Avant qu'une personne puisse déclarer une absence, lire son horaire ou pointer, l'organisme doit être configuré.
+
+00:00:07.286 --> 00:00:11.071
+Voici les 11 étapes, dans l'ordre : chacune prépare la suivante.
+
+00:00:12.120 --> 00:00:15.092
+Étape 1 : Créer l'organisme et lui accorder ses modules.
+
+00:00:15.542 --> 00:00:17.678
+L'exploitant de la plateforme superadmin.
+
+00:00:18.720 --> 00:00:21.390
+Créer l'organisme avec son compte d'administration.
+
+00:00:21.840 --> 00:00:29.712
+Accorder les modules voulus : le socle effectifs, puis absences, planification, disponibilités, présence, temps, échanges.
+
+00:00:30.162 --> 00:00:33.831
+Un module non accordé n'apparaît pas au menu, et le serveur en refuse l'accès.
+
+00:00:34.560 --> 00:00:36.696
+Étape 2 : Créer les référentiels.
+
+00:00:37.146 --> 00:00:38.958
+L'administration de l'organisme.
+
+00:00:40.000 --> 00:00:44.458
+Les unités d'abord, puis les corps d'emploi, et les titres d'emploi rattachés à leur corps.
+
+00:00:44.908 --> 00:00:50.063
+Ensuite les statuts d'emploi, les conventions, les natures de quart, les plages horaires et les types d'heures.
+
+00:00:50.513 --> 00:00:53.230
+Chaque valeur doit être en vigueur à la date où l'on s'en servira.
+
+00:00:54.160 --> 00:00:56.505
+Étape 3 : Créer les codes d'absence.
+
+00:00:56.955 --> 00:00:58.766
+L'administration de l'organisme.
+
+00:00:59.840 --> 00:01:04.693
+Pour chaque code : payé ou non, catégorie de durée, et s'il peut être planifié d'avance.
+
+00:01:05.143 --> 00:01:09.764
+Au besoin, les titres d'emploi admissibles : un code réservé est refusé aux autres titres.
+
+00:01:10.241 --> 00:01:12.563
+Étape 4 : Créer les milieux physiques.
+
+00:01:13.013 --> 00:01:14.824
+L'administration de l'organisme.
+
+00:01:15.881 --> 00:01:21.152
+Les casernes, centres et points de service, chacun rattaché à son unité : les quarts s'y déroulent.
+
+00:01:22.041 --> 00:01:24.409
+Étape 5 : Créer les comptes et leurs rôles.
+
+00:01:24.859 --> 00:01:26.671
+L'administration de l'organisme.
+
+00:01:27.721 --> 00:01:34.385
+Un compte par personne, dans l'onglet Comptes et rôles : employé, gestionnaire, direction, ressources humaines ou comptable.
+
+00:01:34.835 --> 00:01:38.759
+Le compte permet de se connecter ; il ne suffit pas encore pour être planifié.
+
+00:01:39.761 --> 00:01:42.780
+Étape 6 : Créer les ressources et les relier à leur compte.
+
+00:01:43.230 --> 00:01:46.132
+Un planificateur de l'unité, ou l'administration.
+
+00:01:47.201 --> 00:01:51.520
+Pour chaque personne planifiable : matricule, nom, unité et corps d'emploi.
+
+00:01:51.970 --> 00:01:58.866
+Choisir son Compte utilisateur. C'est ce lien qui manque quand Mes absences répond : votre compte n'est relié à aucune ressource planifiable.
+
+00:01:59.921 --> 00:02:02.452
+Étape 7 : Donner les périmètres de gestion.
+
+00:02:02.902 --> 00:02:04.713
+L'administration de l'organisme.
+
+00:02:05.761 --> 00:02:08.547
+Donner à chaque gestionnaire le niveau Gestion sur son unité.
+
+00:02:08.997 --> 00:02:14.594
+Sans périmètre, les consoles s'ouvrent sur des listes vides, et les absences à approuver n'ont personne pour les décider.
+
+00:02:15.641 --> 00:02:19.310
+Étape 8, facultative : Publier les règles des effectifs.
+
+00:02:19.760 --> 00:02:21.571
+L'administration de l'organisme.
+
+00:02:22.641 --> 00:02:27.610
+Par exemple : un solde insuffisant refuse l'absence, un préavis trop court exige l'approbation.
+
+00:02:28.060 --> 00:02:30.661
+Sans règle, une absence est acceptée d'office.
+
+00:02:31.641 --> 00:02:34.126
+Étape 9 : Ouvrir et publier une période.
+
+00:02:34.576 --> 00:02:37.478
+Un planificateur de l'unité, ou l'administration.
+
+00:02:38.521 --> 00:02:44.372
+Créer la période de l'unité, collecter les disponibilités, puis la publier : les horaires deviennent visibles.
+
+00:02:45.401 --> 00:02:48.164
+Étape 10 : Créer les quarts et attribuer les places.
+
+00:02:48.614 --> 00:02:51.517
+Un planificateur de l'unité, ou l'administration.
+
+00:02:52.561 --> 00:02:58.575
+Créer les équipages de chaque jour, puis attribuer les places aux ressources : une absence libère ensuite ces places.
+
+00:02:59.641 --> 00:03:02.242
+Étape 11 : La personne déclare son absence.
+
+00:03:02.692 --> 00:03:03.830
+La personne elle-même.
+
+00:03:04.881 --> 00:03:08.828
+Tout est en place : la personne ouvre Mes absences et déclare son absence.
+
+00:03:09.278 --> 00:03:13.388
+Elle est acceptée d'office, ou attend la décision de son gestionnaire selon les règles.

@@ -1,13 +1,37 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.760
+00:00:00.000 --> 00:00:02.229
+Validation des temps. Avant de commencer.
+
+00:00:02.679 --> 00:00:05.651
+5 préalables doivent être en place, dans cet ordre :
+
+00:00:06.101 --> 00:00:08.145
+Module accordé à l'organisme : paie.
+
+00:00:08.595 --> 00:00:10.870
+Le compte de la personne, avec son rôle.
+
+00:00:11.320 --> 00:00:12.876
+Feuilles de temps (console).
+
+00:00:13.326 --> 00:00:14.650
+Dossiers de rémunération.
+
+00:00:15.100 --> 00:00:16.145
+Paramètres de la paie.
+
+00:00:16.595 --> 00:00:19.660
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:20.720 --> 00:00:25.480
 Validation des temps. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.960 --> 00:00:16.223
+00:00:26.680 --> 00:00:36.943
 Le contrôle signale une anomalie : Marc Dubé n'a pas de taux, son échelon manque dans l'échelle. Le comptable retourne la feuille de Léa Côté avec son motif : le quart du lundi doit être codé en formation.
 
-00:00:19.345 --> 00:00:25.406
+00:00:40.065 --> 00:00:46.126
 Il valide d'un geste toutes les feuilles sans anomalie, puis celle de Marc, une à une. Chaque validation est signée de son nom.
 
-00:00:27.141 --> 00:00:40.887
+00:00:47.861 --> 00:01:01.607
 Il prépare le cycle de paie. L'écran avertit que Marc Dubé n'a pas de taux : il n'est pas payé tant que la RH n'a pas complété l'échelle. Seule Julie a un bulletin : 816 dollars d'heures régulières, la prime de soins critiques, la prime de soir et l'allocation de rétention.

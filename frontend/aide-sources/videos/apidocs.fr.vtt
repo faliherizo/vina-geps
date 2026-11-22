@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.254
+API (OpenAPI).
+
+00:00:01.704 --> 00:00:05.675
+Lire la description OpenAPI de toutes les routes et les essayer avec son propre compte.
+
+00:00:06.125 --> 00:00:10.211
+Qui s'en sert : Administration, direction, intégrateurs.
+
+00:00:10.661 --> 00:00:11.521
+Comment faire :
+
+00:00:11.971 --> 00:00:14.734
+Ouvrir une route, lire ses paramètres et ses réponses.
+
+00:00:15.184 --> 00:00:17.831
+Essayer : l'appel part avec vos droits, pas plus.
+
+00:00:18.281 --> 00:00:22.112
+Résultat : La réponse réelle s'affiche ; un refus dit quel droit manque.

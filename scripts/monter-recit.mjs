@@ -29,7 +29,8 @@ const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const JOURNAL = join(RACINE, "e2e", "test-results", "recit.jsonl");
 const TRAVAIL = join(process.env.TMPDIR ?? "/tmp", "vina-geps-recit");
 const VITRINE = join(RACINE, "frontend", "public", "vitrine");
-const AIDES = join(RACINE, "frontend", "public", "aide", "videos");
+// Sources des vidéos d'aide : `introduire-aides.mjs` y ajoute « Avant de commencer » et publie dans `public/aide/videos`.
+const AIDES = join(RACINE, "frontend", "aide-sources", "videos");
 const LARGEUR = 1280;
 const HAUTEUR = 720;
 const IMAGES_PAR_SECONDE = 25;

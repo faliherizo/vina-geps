@@ -75,6 +75,8 @@ describe("le rendu", () => {
     const lien = tid(`aide-prealable-mesabsences-${rang}-lien`) as HTMLAnchorElement;
     expect(lien.getAttribute("href")).toBe("/usressources");
     expect(lien.textContent).toBe("Ouvrir « Ressources »");
+    const miseEnRoute = tid("aide-prealables-mesabsences-mise-en-route") as HTMLAnchorElement;
+    expect([miseEnRoute.getAttribute("href"), miseEnRoute.textContent?.replace(/\s+/g, " ")]).toEqual(["#demarrage", "Premiers pas : la mise en route"]);
   });
 
   it("le refus « aucune ressource planifiable » garde son message et mène à la fiche", async () => {

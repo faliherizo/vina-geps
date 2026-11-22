@@ -1,28 +1,46 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.644
+00:00:00.000 --> 00:00:02.113
+Référentiels. Avant de commencer.
+
+00:00:02.563 --> 00:00:05.582
+3 préalables doivent être en place, dans cet ordre :
+
+00:00:06.032 --> 00:00:08.493
+Module accordé à l'organisme : effectifs.
+
+00:00:08.943 --> 00:00:11.219
+Le compte de la personne, avec son rôle.
+
+00:00:11.669 --> 00:00:13.921
+Les unités, puis les corps et titres d'emploi.
+
+00:00:14.371 --> 00:00:17.436
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:18.480 --> 00:00:23.124
 Référentiels. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:05.844 --> 00:00:11.370
+00:00:24.324 --> 00:00:29.850
 Paramétrage des référentiels : l'administrateur choisit le référentiel des types de milieu, encore vide.
 
-00:00:14.089 --> 00:00:20.312
+00:00:32.569 --> 00:00:38.792
 Il ajoute une valeur : le code CASERNE, libellé Caserne, en vigueur depuis le premier janvier 2026.
 
-00:00:23.659 --> 00:00:35.919
+00:00:42.139 --> 00:00:54.399
 Une valeur ne se modifie jamais en place : on la remplace à partir d'une date. Ici, l'administrateur tente un remplacement daté de 2020, avant le début de la valeur. Le serveur doit refuser cette modification rétroactive.
 
-00:00:38.895 --> 00:00:48.996
+00:00:57.375 --> 00:01:07.476
 Refus affiché, avec son motif. On passe aux milieux : l'administrateur crée la Caserne 12, rattachée à l'unité Opérations Est, avec ses coordonnées et un rayon de 150 mètres.
 
-00:00:50.769 --> 00:01:01.706
+00:01:09.249 --> 00:01:20.186
 L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration crée une unité datée, puis la ferme à une date future. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:01:05.457 --> 00:01:16.394
+00:01:23.937 --> 00:01:34.874
 L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration crée un type d'heure avec son comportement et son code de paie. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
 
-00:01:19.805 --> 00:01:25.726
+00:01:38.285 --> 00:01:44.206
 Choisir le type « Unités » : chaque unité est un groupe organisationnel, et postes, règles et quotas s'y rattachent.
 
-00:01:28.643 --> 00:01:34.611
+00:01:47.123 --> 00:01:53.091
 Type « Types d'heures » : chaque type porte son comportement et son code de paie ; les totaux de la feuille sont ventilés par type.

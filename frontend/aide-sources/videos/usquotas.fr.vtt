@@ -1,0 +1,16 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.249
+Quotas. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:05.449 --> 00:00:12.276
+Puis elle tente une surcharge de quota qui commence hier. Une surcharge ne peut pas être rétroactive : l'écran la refuse et dit pourquoi.
+
+00:00:15.571 --> 00:00:25.555
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur définit un quota, distinct par unité et nature. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:00:28.851 --> 00:00:34.493
+« Définir un quota » : clé (période, plage ou type de quart) et valeur, distincts les uns des autres.
+
+00:00:37.633 --> 00:00:43.345
+Surcharger un quota en cours de période : la surcharge est datée de « à partir de », donc sans effet rétroactif.

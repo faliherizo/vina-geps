@@ -1,0 +1,22 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:01.416
+Rétention des effectifs.
+
+00:00:01.866 --> 00:00:06.232
+Fixer combien de temps chaque classe de données est gardée, et purger ce qui a dépassé sa durée.
+
+00:00:06.682 --> 00:00:11.906
+Qui s'en sert : Administration (responsable de la protection des renseignements personnels).
+
+00:00:12.356 --> 00:00:13.216
+Comment faire :
+
+00:00:13.666 --> 00:00:16.591
+Modifier la politique d'une classe : durée et motif.
+
+00:00:17.041 --> 00:00:19.781
+Appliquer la purge : seules les données échues sont touchées.
+
+00:00:20.231 --> 00:00:24.295
+Résultat : La purge est journalisée ; rien de plus récent que la durée n'est retiré.

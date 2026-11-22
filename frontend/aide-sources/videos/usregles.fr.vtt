@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.899
+Règles des effectifs. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:06.099 --> 00:00:11.463
+Moteur de règles. L'administrateur ouvre les règles du contexte des disponibilités, encore vide.
+
+00:00:13.471 --> 00:00:22.365
+Il construit une règle, sans programmer : si le nombre de quarts par semaine est inférieur à trois, alors bloquer, avec un message que la personne lira. Il publie la règle.
+
+00:00:26.617 --> 00:00:33.305
+Il la simule : avec deux quarts déclarés, la règle bloque et nomme son motif. Avec quatre quarts, aucune règle ne s'y oppose.
+
+00:00:36.868 --> 00:00:41.420
+Le registre des décisions garde la trace de chaque évaluation, simulations comprises.
+
+00:00:44.798 --> 00:00:52.762
+Contexte « Disponibilités », « Nouvelle règle » : la portée (unité, corps, statut) et le fait choisis forment la règle de conformité.
+
+00:00:56.024 --> 00:01:01.016
+Contexte « Feuille de temps » : les règles de contrôle temporel se créent, se simulent et se publient datées.
+
+00:01:03.635 --> 00:01:08.372
+Vue « Simulateur » : évaluer une situation d'absence et lire le verdict des règles avant d'agir.

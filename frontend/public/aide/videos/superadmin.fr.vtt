@@ -1,10 +1,25 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:05.550
+00:00:00.000 --> 00:00:03.019
+Organismes (exploitation). Avant de commencer.
+
+00:00:03.469 --> 00:00:06.302
+2 préalables doivent être en place, dans cet ordre :
+
+00:00:06.752 --> 00:00:10.281
+Un compte superadmin de la plateforme, remis par l'exploitation.
+
+00:00:10.731 --> 00:00:12.449
+Le plan d'abonnement de l'organisme.
+
+00:00:12.899 --> 00:00:15.964
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:17.000 --> 00:00:22.550
 Organismes (exploitation). Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:06.750 --> 00:00:10.140
+00:00:23.750 --> 00:00:27.140
 Le superadmin se connecte à la console globale et ouvre Modules et accès.
 
-00:00:11.720 --> 00:00:16.155
+00:00:28.720 --> 00:00:33.155
 Pour l'organisme choisi, la case du module figure dans la famille Gestion des effectifs.

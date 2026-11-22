@@ -1,0 +1,49 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:04.574
+Tableau de bord. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:05.774 --> 00:00:12.578
+Toutes les entrées sont présentes. On ouvre maintenant chaque écran du menu, l'un après l'autre : chacun doit s'ouvrir avec son en-tête.
+
+00:00:17.289 --> 00:00:22.398
+Deuxième cas : les données de démonstration. Voici les sites, ou milieux, de l'organisme.
+
+00:00:24.254 --> 00:00:32.520
+Troisième cas : le menu ne montre que ce que fait cet organisme. Les sections d'un autre métier, comme la comptabilité ou la facturation, sont masquées.
+
+00:00:33.871 --> 00:00:38.190
+Et une vue masquée ne s'ouvre pas non plus par son adresse directe : on revient au tableau de bord.
+
+00:00:40.238 --> 00:00:48.829
+Quatrième cas : Julie Roy, paramédic, ouvre la messagerie du personnel depuis le menu. Elle retrouve la conversation de son équipe, avec le nom de chacun.
+
+00:00:51.417 --> 00:00:58.708
+Dernier cas de ce chapitre : Julie ouvre Mon horaire. Elle voit ses propres quarts, par jour, avec le site, le poste et le statut.
+
+00:01:01.158 --> 00:01:08.124
+Le module des effectifs est coupé pour ce nouvel organisme par le superadmin : l'entrée Administration des effectifs n'apparaît pas dans le menu.
+
+00:01:09.573 --> 00:01:15.657
+Le superadmin active maintenant le module. On recharge la page : l'entrée revient dans le menu, sans reconnexion.
+
+00:01:17.679 --> 00:01:21.603
+Quotas : la planificatrice fixe à deux le quota de l'unité Opérations Est.
+
+00:01:24.357 --> 00:01:33.273
+Côté gestion, le chef ouvre les disponibilités de l'équipe. Celles de Julie sont en attente d'approbation : tant qu'elles le sont, Julie est exclue des candidats d'une place.
+
+00:01:36.369 --> 00:01:45.099
+Absences d'effectifs. Le gestionnaire déclare une absence pour Julie Roy : maladie, du 4 au 5 mars, pour une grippe. Les deux quarts de Julie sont déjà attribués.
+
+00:01:48.730 --> 00:01:55.231
+Deuxième cas : après la dérogation, le comblement automatique prend le relais. Le gestionnaire accorde à nouveau l'absence de Julie.
+
+00:01:58.040 --> 00:02:06.051
+Le chef ouvre les échanges à trancher. Il lit les motifs, valide l'échange avec la mention Remplacement couvert, et les quarts de Julie et de Marc sont permutés.
+
+00:02:09.555 --> 00:02:18.425
+Deuxième cas : c'est le planificateur qui crée l'échange pour Julie, qui n'a pas d'accès à l'écran. Il choisit Julie, le quart qu'elle cède, et celui de Marc qu'elle reçoit.
+
+00:02:23.463 --> 00:02:31.381
+Mon équipe. Marc Lavoie, gestionnaire, voit sa ligne hiérarchique : Julie Roy relève directement de lui. Il rattache Léa Morin à son équipe.

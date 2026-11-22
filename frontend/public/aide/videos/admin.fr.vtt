@@ -1,10 +1,31 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:04.899
+00:00:00.000 --> 00:00:02.369
+Utilisateurs et rôles. Avant de commencer.
+
+00:00:02.819 --> 00:00:05.907
+4 préalables doivent être en place, dans cet ordre :
+
+00:00:06.357 --> 00:00:09.468
+L'exploitant crée l'organisme avec son compte d'administration.
+
+00:00:09.918 --> 00:00:12.821
+Se connecter avec le rôle administration de l'organisme.
+
+00:00:13.271 --> 00:00:14.014
+Ressources.
+
+00:00:14.464 --> 00:00:15.300
+Intégrations.
+
+00:00:15.750 --> 00:00:18.815
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:19.880 --> 00:00:24.779
 Utilisateurs et rôles. Voici comment s'en servir, sur des cas réels joués dans l'application.
 
-00:00:06.099 --> 00:00:11.231
+00:00:25.979 --> 00:00:31.111
 Console de gestion centralisée pour les administrateurs. Ses commandes doivent être présentes à l'écran.
 
-00:00:14.700 --> 00:00:23.640
+00:00:34.580 --> 00:00:43.520
 Créer, modifier, désactiver utilisateurs et groupes (unité, service, spécialité, établissement). Ses commandes doivent être présentes à l'écran.
