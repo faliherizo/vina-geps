@@ -1,6 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.web;
 
 import ca.vina.nexu.effectifs.application.commandes.GestesEchangesApi;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
 import ca.vina.nexu.effectifs.domaine.Contexte;
 import ca.vina.nexu.effectifs.domaine.EchangesApi;
@@ -14,6 +15,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -26,8 +28,9 @@ import java.util.function.Function;
 
 /**
  * {@code /api/echanges/v1} — l'API d'échange de l'organisme (26-015-DO, addenda 5, AD-06), réservée aux applications
- * ({@code client_credentials}, portée {@code read}) : l'organisme y lit les quarts planifiés et leurs correctifs, et les
- * relevés de présence validés, pour alimenter lui-même ses systèmes internes. Une session humaine n'y entre pas.
+ * ({@code client_credentials}, portées {@code read} et {@code write}) : l'organisme y lit les quarts planifiés et leurs
+ * correctifs, et les relevés de présence validés ; il y transmet ses employés, leurs soldes et les absences constatées aux
+ * opérations, pour alimenter lui-même ses systèmes internes. Une session humaine n'y entre pas.
  */
 @RestController
 @RequestMapping("/api/echanges/v1")
@@ -92,6 +95,20 @@ public class ControleurEchangesApi {
     public ResponseEntity<Object> poserSoldes(HttpServletRequest r, @PathVariable("matricule") String matricule,
                                               @RequestBody(required = false) Map<String, Object> corps) {
         return ecrire(r, ctx -> ResponseEntity.ok(Map.of("soldes", gestes.soldes(ctx, matricule, corps))));
+    }
+
+    /**
+     * AD-06c (addenda 5 d) : une absence constatée aux opérations, sur un quart réel ({@code quartId}) ou sur des dates.
+     * Acceptée d'office ; ses places deviennent vacantes et leur comblement part aussitôt. {@code 201} à la première
+     * transmission, {@code 200} quand la même absence est renvoyée. Portée {@code write}.
+     */
+    @PostMapping("/employes/{matricule}/absences")
+    public ResponseEntity<Object> absence(HttpServletRequest r, @PathVariable("matricule") String matricule,
+                                          @RequestBody(required = false) Map<String, Object> corps) {
+        return ecrire(r, ctx -> {
+            GestionnaireAbsencesEffectifs.Constat c = gestes.absence(ctx, matricule, corps == null ? Map.of() : corps);
+            return ResponseEntity.status(c.nouvelle() ? CREE : OK).body(c.resultat().vue());
+        });
     }
 
     /** Relire les soldes tenus pour un employé. Portée {@code read}. */

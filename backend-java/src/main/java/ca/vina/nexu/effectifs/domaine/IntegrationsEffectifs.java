@@ -431,16 +431,17 @@ public final class IntegrationsEffectifs {
      * Les actions du journal qui deviennent des <strong>événements</strong> publiés sur le bus. Le journal est la source :
      * aucun module n'appelle le bus, rien ne se perd si le bus est coupé (le curseur reprend).
      */
-    private static final Map<String, String> EVENEMENTS_ESB = Map.of(
-            "place.attribuee", "effectifs.place.attribuee",
-            "place.attribution.forcee", "effectifs.place.attribuee",
-            "place.liberee", "effectifs.place.liberee",
-            "echange.applique", "effectifs.echange.applique",
-            "absence.approuver", "effectifs.absence.acceptee",
-            "absence.deroger", "effectifs.absence.acceptee",
-            "absence.annuler", "effectifs.absence.annulee",
-            "temps.approuver", "effectifs.feuille.approuvee",
-            "presence.pointage", "effectifs.presence.pointage");
+    private static final Map<String, String> EVENEMENTS_ESB = Map.ofEntries(
+            Map.entry("place.attribuee", "effectifs.place.attribuee"),
+            Map.entry("place.attribution.forcee", "effectifs.place.attribuee"),
+            Map.entry("place.liberee", "effectifs.place.liberee"),
+            Map.entry("echange.applique", "effectifs.echange.applique"),
+            Map.entry("absence.approuver", "effectifs.absence.acceptee"),
+            Map.entry("absence.deroger", "effectifs.absence.acceptee"),
+            Map.entry("absence.constatee", "effectifs.absence.acceptee"),
+            Map.entry("absence.annuler", "effectifs.absence.annulee"),
+            Map.entry("temps.approuver", "effectifs.feuille.approuvee"),
+            Map.entry("presence.pointage", "effectifs.presence.pointage"));
 
     public static Optional<String> evenementDe(String action) {
         return Optional.ofNullable(EVENEMENTS_ESB.get(action));

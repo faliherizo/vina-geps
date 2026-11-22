@@ -94,6 +94,16 @@ Règles d'absence : le code d'absence porte `banque` et `heuresParJour` ; faits 
 Performance : correctifs en trois requêtes par page (au lieu de deux à trois par entrée) ; bornes de curseur indexables ;
 index `(tenantId, date)` des équipages et `(tenantId, approuveeLe)` des feuilles (changeset 0023).
 
+### AD-06c — absence constatée aux opérations ; avis des quarts modifiés ([ADR 0090](../../adr/0090-absence-operations-et-avis-des-quarts.md))
+
+| Couche | Changement |
+|---|---|
+| Domaine | `EchangesApi.cibles` : les quarts que touche une entrée du journal (objet équipage ou place ; places de `places.vacantes` et de `echange.applique`). `EchangesApi.AbsenceOperations` : quart **ou** dates, et un code. `AbsencesEffectifs.Origine {DEMANDE, OPERATIONS}` : statut (acceptée d'office aux opérations), préavis exigé ou non, action du journal ; `estLaMeme` |
+| Application | `GestionnaireAbsencesEffectifs.constater` (même chemin que `declarer`, renvoi identique sans effet) ; `GestesEchangesApi.absence` (le quart donne la date, l'employé doit y tenir une place) ; `JournalAvecAvisDesQuarts` (décorateur du journal : `effectifs.quart.modifie` pour chaque quart exposé touché, clé quart + instant) ; `LectureEchangesApi` : un correctif par place |
+| Persistance | `DepotEchangesApi.journalQuartsApres` retient aussi les actions `places.vacantes` et `echange.applique` ; aucun changeset |
+| Web | `POST /api/echanges/v1/employes/{matricule}/absences` (portée `write`) : 201, 200 au renvoi, 404, 409, 422 |
+| Webhooks | `Webhooks.EVENEMENTS` gagne `effectifs.quart.modifie` ; le bus relaie `absence.constatee` comme `effectifs.absence.acceptee` |
+
 ## AD-07 — offre par ancienneté et à tour de rôle
 
 Décisions et options écartées : [ADR 0089](../../adr/0089-offre-quart-anciennete-tour-de-role.md). Réutilise le

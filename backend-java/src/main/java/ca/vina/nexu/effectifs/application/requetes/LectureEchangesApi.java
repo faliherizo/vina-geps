@@ -5,6 +5,7 @@ import ca.vina.nexu.effectifs.domaine.EchangesApi;
 import ca.vina.nexu.effectifs.domaine.EchangesApiPort;
 import ca.vina.nexu.effectifs.domaine.IntegrationsEffectifs;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,7 +25,8 @@ public class LectureEchangesApi {
     }
 
     /**
-     * Les correctifs après le curseur, chacun avec l'état présent de son quart. Le curseur avance sur toutes les entrées
+     * Les correctifs après le curseur, chacun avec l'état présent de son quart ; une entrée qui touche plusieurs places
+     * (absence, échange) rend un correctif par place. Le curseur avance sur toutes les entrées
      * lues, même celles d'un quart non exposé : sinon une période en confection bloquerait la lecture indéfiniment.
      */
     public EchangesApi.Page<EchangesApi.Modification> modifications(String tenantId, String curseur, int limite) {
@@ -34,19 +36,22 @@ public class LectureEchangesApi {
         }
         // Trois requêtes par page, quel que soit son volume : places → équipages, puis quarts et places des équipages.
         // La lecture entrée par entrée en faisait deux à trois chacune, soit jusqu'à 1 500 pour une page de 500.
-        Map<String, String> equipageDePlace = port.equipagesDesPlaces(tenantId, entrees.stream()
-                .filter(e -> EchangesApi.OBJET_PLACE.equals(e.objetType())).map(DonneesIntegrationPort.EntreeJournal::objetId).collect(Collectors.toSet()));
-        Map<String, EchangesApi.Quart> quarts = port.quartsExposesParId(tenantId, entrees.stream()
-                .map(e -> equipageDe(e, equipageDePlace)).flatMap(Optional::stream).collect(Collectors.toSet()));
-        List<EchangesApi.Modification> modifications = entrees.stream()
-                .flatMap(e -> equipageDe(e, equipageDePlace).map(quarts::get).stream()
-                        .map(q -> new EchangesApi.Modification(IntegrationsEffectifs.curseurDe(e), e.horodatage(), e.action(), e.objetType(), e.objetId(), q)))
+        Map<DonneesIntegrationPort.EntreeJournal, List<EchangesApi.Cible>> cibles = new LinkedHashMap<>();
+        entrees.forEach(e -> cibles.put(e, EchangesApi.cibles(e.action(), e.objetType(), e.objetId(), e.apres())));
+        Map<String, String> equipageDePlace = port.equipagesDesPlaces(tenantId, cibles.values().stream().flatMap(List::stream)
+                .filter(c -> EchangesApi.OBJET_PLACE.equals(c.objetType())).map(EchangesApi.Cible::objetId).collect(Collectors.toSet()));
+        Map<String, EchangesApi.Quart> quarts = port.quartsExposesParId(tenantId, cibles.values().stream().flatMap(List::stream)
+                .map(c -> equipageDe(c, equipageDePlace)).flatMap(Optional::stream).collect(Collectors.toSet()));
+        List<EchangesApi.Modification> modifications = cibles.entrySet().stream()
+                .flatMap(en -> en.getValue().stream().flatMap(c -> equipageDe(c, equipageDePlace).map(quarts::get).stream()
+                        .map(q -> new EchangesApi.Modification(IntegrationsEffectifs.curseurDe(en.getKey()), en.getKey().horodatage(), en.getKey().action(),
+                                c.objetType(), c.objetId(), q))))
                 .toList();
         return new EchangesApi.Page<>(modifications, IntegrationsEffectifs.curseurDe(entrees.getLast()));
     }
 
-    private static Optional<String> equipageDe(DonneesIntegrationPort.EntreeJournal e, Map<String, String> equipageDePlace) {
-        return EchangesApi.OBJET_PLACE.equals(e.objetType()) ? Optional.ofNullable(equipageDePlace.get(e.objetId())) : Optional.of(e.objetId());
+    private static Optional<String> equipageDe(EchangesApi.Cible c, Map<String, String> equipageDePlace) {
+        return EchangesApi.OBJET_PLACE.equals(c.objetType()) ? Optional.ofNullable(equipageDePlace.get(c.objetId())) : Optional.of(c.objetId());
     }
 
     public EchangesApi.Page<EchangesApi.Releve> releves(String tenantId, String curseur, int limite) {

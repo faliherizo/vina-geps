@@ -176,4 +176,30 @@ class AbsencesEffectifsDomaineTest {
         assertThat(b).isEqualTo(new AbsencesEffectifs.BilanComblement(2, 1, 1, 1));
         assertThat(b.vue()).containsExactly(Map.entry("attribuees", 2), Map.entry("offertes", 1), Map.entry("sansCandidat", 1), Map.entry("reservees", 1));
     }
+
+    @Test
+    @DisplayName("AD-06c : une demande suit les règles et le préavis ; une absence constatée aux opérations est acceptée d'office")
+    void origine() {
+        for (ActionRegle a : ActionRegle.values()) {
+            assertThat(AbsencesEffectifs.Origine.OPERATIONS.statut(a)).isEqualTo(Statut.ACCEPTEE);
+            assertThat(AbsencesEffectifs.Origine.DEMANDE.statut(a)).isEqualTo(AbsencesEffectifs.statutDepuisAction(a));
+        }
+        assertThat(AbsencesEffectifs.Origine.DEMANDE.exigeUnCodePlanifiable()).isTrue();
+        assertThat(AbsencesEffectifs.Origine.OPERATIONS.exigeUnCodePlanifiable()).isFalse();
+        assertThat(AbsencesEffectifs.Origine.DEMANDE.actionJournal()).isEqualTo("absence.declaree");
+        assertThat(AbsencesEffectifs.Origine.OPERATIONS.actionJournal()).isEqualTo("absence.constatee");
+    }
+
+    @Test
+    @DisplayName("AD-06c : la même absence — même code, mêmes dates, encore active")
+    void laMeme() {
+        AbsenceEffectifs a = absence("2030-03-04", "2030-03-05");
+        assertThat(AbsencesEffectifs.estLaMeme(a, "MAL", "2030-03-04", "2030-03-05")).isTrue();
+        assertThat(AbsencesEffectifs.estLaMeme(a, "VAC", "2030-03-04", "2030-03-05")).isFalse();
+        assertThat(AbsencesEffectifs.estLaMeme(a, "MAL", "2030-03-03", "2030-03-05")).isFalse();
+        assertThat(AbsencesEffectifs.estLaMeme(a, "MAL", "2030-03-04", "2030-03-06")).isFalse();
+        AbsenceEffectifs annulee = new AbsenceEffectifs("a", "r", null, "EST", "MAL", "2030-03-04", "2030-03-05", null, Statut.ANNULEE, ActionRegle.ACCEPTER,
+                List.of(), new AbsenceEffectifs.Trace("t", "u", null, null, null, null, null));
+        assertThat(AbsencesEffectifs.estLaMeme(annulee, "MAL", "2030-03-04", "2030-03-05")).isFalse();
+    }
 }

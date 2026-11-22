@@ -29,6 +29,8 @@ public class DepotEchangesApi implements EchangesApiPort {
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final List<String> ETATS = EchangesApi.ETATS_EXPOSES.stream().map(Enum::name).sorted().toList();
     private static final List<String> OBJETS = EchangesApi.OBJETS_QUART.stream().sorted().toList();
+    /** AD-06c : les actions qui touchent des places sous un autre objet (absence, échange). */
+    private static final List<String> ACTIONS = EchangesApi.ACTIONS_PLACES.stream().sorted().toList();
     private static final List<String> STATUTS = EchangesApi.STATUTS_VALIDES.stream().map(Enum::name).sorted().toList();
     private static final int ACTIF = 1;
     /**
@@ -106,9 +108,9 @@ public class DepotEchangesApi implements EchangesApiPort {
     @Override
     public List<DonneesIntegrationPort.EntreeJournal> journalQuartsApres(String tenantId, String curseur, int limite) {
         return jdbc.sql("SELECT id, horodatage, action, objetType, objetId, uniteCode, apres FROM eff_journal "
-                        + "WHERE tenantId = ? AND objetType IN (?, ?) AND (? IS NULL OR (horodatage >= substr(?, 1, ?) AND horodatage || id > ?)) "
-                        + "ORDER BY horodatage, id LIMIT ?")
-                .params(tenantId, OBJETS.get(0), OBJETS.get(1), curseur, curseur, LONGUEUR_HORODATAGE, curseur, limite)
+                        + "WHERE tenantId = ? AND (objetType IN (?, ?) OR action IN (?, ?)) "
+                        + "AND (? IS NULL OR (horodatage >= substr(?, 1, ?) AND horodatage || id > ?)) ORDER BY horodatage, id LIMIT ?")
+                .params(tenantId, OBJETS.get(0), OBJETS.get(1), ACTIONS.get(0), ACTIONS.get(1), curseur, curseur, LONGUEUR_HORODATAGE, curseur, limite)
                 .query((rs, i) -> new DonneesIntegrationPort.EntreeJournal(rs.getString("id"), rs.getString("horodatage"), rs.getString("action"),
                         rs.getString("objetType"), rs.getString("objetId"), rs.getString("uniteCode"),
                         rs.getString("apres") == null ? null : JSON.readValue(rs.getString("apres"), Object.class)))

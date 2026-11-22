@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,6 +25,13 @@ public final class EchangesApi {
     public static final String OBJET_EQUIPAGE = "equipage";
     public static final String OBJET_PLACE = "place";
     public static final Set<String> OBJETS_QUART = Set.of(OBJET_EQUIPAGE, OBJET_PLACE);
+    /**
+     * Les actions qui changent des places sans les nommer en objet (AD-06c) : l'absence qui les rend vacantes
+     * ({@code apres.places}) et l'échange qui permute deux titulaires ({@code apres} : place → nouveau titulaire).
+     */
+    public static final String ACTION_PLACES_VACANTES = "places.vacantes";
+    public static final String ACTION_ECHANGE_APPLIQUE = "echange.applique";
+    public static final Set<String> ACTIONS_PLACES = Set.of(ACTION_PLACES_VACANTES, ACTION_ECHANGE_APPLIQUE);
     /** Les périodes dont les quarts sont un horaire opposable. */
     public static final Set<Planification.EtatPeriode> ETATS_EXPOSES = Set.of(Planification.EtatPeriode.PUBLIEE, Planification.EtatPeriode.CLOSE);
     /** Les feuilles dont la présence est validée : approuvées, ou déjà prises dans une paie. */
@@ -78,6 +86,53 @@ public final class EchangesApi {
     /** Un curseur vide repart du début ; sinon il est rendu tel quel par la page précédente. */
     public static String curseur(String saisie) {
         return saisie == null || saisie.isBlank() ? null : saisie.strip();
+    }
+
+    /** Un quart touché par une entrée du journal : l'équipage lui-même, ou l'une de ses places. */
+    public record Cible(String objetType, String objetId) { }
+
+    /**
+     * Les quarts que touche une entrée du journal. Une absence ou un échange consignent leurs places sous leur propre objet :
+     * sans cette lecture, un quart rendu vacant par une absence n'apparaîtrait jamais parmi les correctifs.
+     */
+    public static List<Cible> cibles(String action, String objetType, String objetId, Object apres) {
+        if (OBJETS_QUART.contains(objetType)) {
+            return List.of(new Cible(objetType, objetId));
+        }
+        if (ACTION_PLACES_VACANTES.equals(action) && apres instanceof Map<?, ?> m && m.get("places") instanceof List<?> places) {
+            return places.stream().map(p -> new Cible(OBJET_PLACE, String.valueOf(p))).toList();
+        }
+        if (ACTION_ECHANGE_APPLIQUE.equals(action) && apres instanceof Map<?, ?> m) {
+            return m.keySet().stream().map(p -> new Cible(OBJET_PLACE, String.valueOf(p))).toList();
+        }
+        return List.of();
+    }
+
+    /**
+     * Une absence déclarée aux opérations (addenda 5 d) : sur un quart réel ({@code quartId}), ou sur des dates
+     * ({@code du}, {@code au}) ; l'un ou l'autre, jamais les deux. Les dates elles-mêmes se valident à la déclaration.
+     */
+    public record AbsenceOperations(String codeAbsence, String quartId, String du, String au, Object motif) {
+
+        public static AbsenceOperations de(Map<String, Object> corps) {
+            String code = texte(corps.get("codeAbsence"));
+            if (code == null) {
+                throw new EffectifsInvalideException("« codeAbsence » : exigé");
+            }
+            String quart = texte(corps.get("quartId"));
+            String du = texte(corps.get("du"));
+            if ((quart == null) == (du == null)) {
+                throw new EffectifsInvalideException("nommez le quart réel (« quartId ») ou les dates (« du », « au ») : l'un ou l'autre");
+            }
+            if (quart != null && corps.get("au") != null) {
+                throw new EffectifsInvalideException("« au » : sans objet sur un quart, qui tient en une date");
+            }
+            return new AbsenceOperations(code, quart, du, texte(corps.get("au")), corps.get("motif"));
+        }
+
+        private static String texte(Object v) {
+            return v instanceof String s && !s.isBlank() ? s.strip() : null;
+        }
     }
 
     /** Une place du quart ; {@code ressourceId} et {@code matricule} sont vides tant qu'elle est vacante. */
