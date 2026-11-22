@@ -189,7 +189,7 @@ function connexionMachine(colonnes) {
   return groupe("Jeton d'application (setUp : client_credentials)", [
     jeuCsv("Identifiants (CSV)", "${identifiants}", colonnes),
     requete("POST /api/oauth/token", "POST", "/api/oauth/token", {
-      corps: '{"grant_type":"client_credentials","client_id":"${clientId}","client_secret":"${clientSecret}"}',
+      corps: '{"grant_type":"client_credentials","client_id":"${clientId}","client_secret":"${__P(clientSecret,)}"}',
       enfants: [assertionCode(200), extracteurJson("jeton", "$.access_token"), publierPropriete("jeton", "jeton")],
     }),
   ], { setUp: true });

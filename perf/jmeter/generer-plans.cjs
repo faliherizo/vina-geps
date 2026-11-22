@@ -89,7 +89,9 @@ const SEUIL = { sante: "seuil_lecture", connexion: "seuil_ecriture", rapport: "s
  */
 const COLONNES = ["weekDate", "date", "id", "moisCourant",
   // L'API d'échange (AD-06) : le client d'API de la campagne et l'employé transmis par elle.
-  "clientId", "clientSecret", "matricule",
+  // Le secret du client ne figure pas ici : `donnees/identifiants.csv` est versionné. Il passe en propriété
+  // (-JclientSecret, lue dans donnees/secret-client-<env>.txt, ignoré par git).
+  "clientId", "matricule",
   // Le module `effectifs` (AO 26-015-DO) : la plupart de ses routes portent un paramètre de chemin.
   // Sans ces colonnes, elles seraient balayées avec le jeton neutre « x » — donc mesurées en 404,
   // et un 404 répond toujours vite.
