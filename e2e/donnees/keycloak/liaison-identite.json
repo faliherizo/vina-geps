@@ -1,0 +1,28 @@
+{
+  "description": "Liaison des comptes par Keycloak (ADR 0093, bac-a-sable/docker-compose.yml, royaume realm-vina-geps-liaison.json). Jean a déjà un compte de l'application au même courriel : sa première connexion par Keycloak exige la preuve de son mot de passe, puis la seconde entre directement. L'inconnu n'a aucun compte : rien n'est créé, et la page le dit.",
+  "royaume": "vina-geps-liaison",
+  "motDePasseKeycloak": "Passe!Kc2026",
+  "annuaire": {
+    "nom": "Keycloak liaison",
+    "fournisseur": "oidc",
+    "emetteurChemin": "/realms/vina-geps-liaison",
+    "clientId": "vina-geps-liaison",
+    "variableSecret": "ANNUAIRE_KEYCLOAK_LIAISON",
+    "domaines": ["urgences-sante.qc.ca"],
+    "revendication": "roles",
+    "correspondances": [{ "groupe": "vina-employe", "role": "employee" }],
+    "roleParDefaut": null,
+    "provisionnementJat": false
+  },
+  "jean": {
+    "identifiantKeycloak": "jean.existant",
+    "courriel": "jean.existant@urgences-sante.qc.ca",
+    "indice": "j***@urgences-sante.qc.ca",
+    "motDePasseApplication": "Zephyr-9!Liaison"
+  },
+  "inconnu": {
+    "identifiantKeycloak": "inconnu.nouveau",
+    "courriel": "inconnu.nouveau@urgences-sante.qc.ca",
+    "message": "aucun n'a été créé"
+  }
+}

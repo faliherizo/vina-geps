@@ -121,7 +121,7 @@ class LiaisonLdapsTest {
 
     private static Annuaires.Annuaire annuaire(String url) {
         return Annuaires.valider("ann-ad", "T1", new Annuaires.Saisie("AD local", null, SERVICE, "ANNUAIRE_AD", List.of("urgences-sante.qc.ca"), "groups",
-                List.of(new Annuaires.Correspondance("GEPS-Chefs", "manager")), null, true, "ldaps", url), Set.of("manager"));
+                List.of(new Annuaires.Correspondance("GEPS-Chefs", "manager")), null, true, "ldaps", url, false), Set.of("manager"));
     }
 
     private static Annuaires.Annuaire ad() {
@@ -171,7 +171,7 @@ class LiaisonLdapsTest {
         LiaisonLdaps sansConfiance = new LiaisonLdaps((SSLSocketFactory) SSLSocketFactory.getDefault(), DELAI);
         assertThatThrownBy(() -> sansConfiance.authentifier(ad(), "secret-service", "mroy", "bon-mot")).isInstanceOf(IllegalStateException.class);
         Annuaires.Annuaire illisible = new Annuaires.Annuaire("x", "T1", "X", "", SERVICE, "ANNUAIRE_AD", List.of("a.ca"), Annuaires.Revendication.GROUPES,
-                List.of(), Optional.of("manager"), true, Annuaires.Fournisseur.LDAPS, "ldaps://localhost/(((");
+                List.of(), Optional.of("manager"), true, Annuaires.Fournisseur.LDAPS, "ldaps://localhost/(((", false);
         assertThatThrownBy(() -> liaison.authentifier(illisible, "secret-service", "mroy", "bon-mot")).isInstanceOf(IllegalStateException.class)
                 .hasMessage("URL LDAPS illisible");
     }

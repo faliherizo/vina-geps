@@ -129,16 +129,17 @@ Administration › Organisme › **Déclarer un annuaire** (réservé au rôle `
 | Appartenances lues dans | Rôles d'application (`roles`) | Ou groupes (`groups`), si l'on mappe des groupes plutôt que des rôles |
 | Correspondances | `vina-admin = admin`<br>`vina-directeur = director`<br>`vina-rh = rh`<br>`vina-chef = manager`<br>`vina-employe = employee` | Une par ligne, **par priorité** |
 | Rôle par défaut | Aucun | Sans règle correspondante, la connexion est refusée. Un rôle par défaut ouvrirait l'accès à tout membre du royaume |
+| Créer le compte à la première connexion | Décoché | Provisionnement juste-à-temps (ADR 0093), **désactivé par défaut**. Décoché, une identité inconnue doit relier un compte existant (mot de passe, invitation ou approbation) — voir [CONFIGURER-ENTRA-ID.md § 5](../securite/CONFIGURER-ENTRA-ID.md). Coché, un courriel déjà porté exige quand même la preuve |
 
 ## 5. Gestion des utilisateurs : le cycle de vie
 
 | Événement | Où agir | Effet dans VINA GePS |
 |---|---|---|
-| Arrivée | Keycloak : créer la personne, la placer dans son groupe | Compte **créé** dans l'organisme à la première connexion. Identifiant = courriel ; aucun mot de passe utilisable |
+| Arrivée | Keycloak : créer la personne, la placer dans son groupe | Juste-à-temps coché : compte **créé** et relié à la première connexion (identifiant = courriel ; aucun mot de passe utilisable). Décoché : page « Relier mon compte », aucun compte créé (ADR 0093) |
 | Promotion, mutation | Keycloak : changer de groupe | Rôle **recalculé** à la connexion suivante ; même compte, pas de doublon |
 | Retrait de tous les groupes | Keycloak | Connexion **refusée** : « aucun groupe … ne donne accès » |
 | Désactivation dans Keycloak | Keycloak : *Enabled* Off | Keycloak refuse lui-même ; VINA GePS ne voit rien passer |
-| Mesure d'urgence | VINA GePS : désactiver le compte (Administration › Comptes) | Refusé au retour de Keycloak : « le compte … est désactivé dans l'application » |
+| Mesure d'urgence | VINA GePS : désactiver le compte (Administration › Comptes) | Refusé au retour de Keycloak : « le compte de l'application est désactivé » |
 | Départ | Keycloak : supprimer ou désactiver | Plus aucune connexion. Une session déjà ouverte dure jusqu'à son expiration (voir § 8) |
 
 Chaque connexion, admise ou refusée, est consignée au journal d'audit : `auth.sso.login.ok` avec

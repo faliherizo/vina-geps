@@ -103,11 +103,15 @@ public class EchangeurOidcHttp implements ServiceSso.EchangeurOidc, Annuaires.De
         var cle = Oidc.clePubliqueDuJwks(jwks, kid == null ? null : String.valueOf(kid));
         Map<String, Object> claims;
         try {
-            claims = new java.util.LinkedHashMap<>(Jwts.parser().clock(() -> Date.from(horloge.instant())).verifyWith(cle).requireAudience(cfg.clientId()).build().parseSignedClaims(idToken).getPayload());
+            claims = new java.util.LinkedHashMap<>(Jwts.parser().clock(() -> Date.from(horloge.instant())).clockSkewSeconds(Oidc.TOLERANCE_HORLOGE_S)
+                    .verifyWith(cle).requireAudience(cfg.clientId()).build().parseSignedClaims(idToken).getPayload());
         } catch (io.jsonwebtoken.JwtException e) {
             throw new IllegalStateException("Entra : " + e.getMessage(), e);
         }
-        Oidc.verifierEmetteurEtNonce(claims, String.valueOf(decouverte.getOrDefault("issuer", "")), nonce);
+        String emetteur = String.valueOf(decouverte.getOrDefault("issuer", ""));
+        Oidc.verifierEmetteurPublie(cfg, emetteur);
+        Oidc.verifierEmetteurEtNonce(claims, emetteur, nonce);
+        Oidc.verifierRevendicationsExigees(claims, cfg.clientId());
         return claims;
     }
 }

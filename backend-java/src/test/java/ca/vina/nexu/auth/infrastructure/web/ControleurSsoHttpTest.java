@@ -1,6 +1,12 @@
 package ca.vina.nexu.auth.infrastructure.web;
 
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
+import ca.vina.nexu.auth.domaine.Compte;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
+import ca.vina.nexu.auth.infrastructure.persistance.AdaptateurComptesAnnuaire;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
+import ca.vina.nexu.auth.infrastructure.persistance.DepotDemandesLiaison;
+import ca.vina.nexu.auth.infrastructure.persistance.DepotIdentitesExternes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
 import ca.vina.nexu.auth.infrastructure.persistance.EchangeurOidcHttp;
 import ca.vina.nexu.auth.infrastructure.services.ServiceConnexion;
@@ -100,6 +106,7 @@ class ControleurSsoHttpTest {
     }
 
     private JdbcClient jdbc;
+    private ServiceResolutionIdentite resolution;
     private DepotComptes comptes;
     private JetonDeSession jetons;
     private ServiceSso sso;
@@ -136,9 +143,20 @@ class ControleurSsoHttpTest {
             EntraDemo.Reponse rep = entra.echangerCode(formulaire(r.texte()), base, DonneesDemo.ENTRA_TENANT);
             return new FournisseurFactice.Reponse(rep.statut(), json.writeValueAsString(rep.corps()));
         };
-        sso = new ServiceSso(env, registre, comptes, new ServiceConnexion(comptes, new DepotQuestionsSecretes(jdbc, HORLOGE), jetons, HORLOGE),
-                new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(5), HORLOGE), HORLOGE, new Random(3));
+        // Le mode simulé n'existe que demandé, en essai (balayage des accès du 22 novembre 2026).
+        env.put("NEXU_ESSAI", "1");
+        env.put(Oidc.VARIABLE_SIMULATION, "1");
+        DepotIdentitesExternes identites = new DepotIdentitesExternes(jdbc);
+        DepotDemandesLiaison demandes = new DepotDemandesLiaison(jdbc);
+        resolution = new ServiceResolutionIdentite(new ServiceResolutionIdentite.Ports(identites, identites, new AdaptateurComptesAnnuaire(comptes, new Random(5)),
+                (j, c, t) -> Optional.empty(), demandes, demandes), HORLOGE, new Random(4));
+        sso = service(env, new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(5), HORLOGE)::echanger, HORLOGE);
         http = new ClientHttpEssai(new ControleurSso(sso, audit, AdressePublique.fixe(""), false));
+    }
+
+    private ServiceSso service(Map<String, String> environnement, ServiceSso.EchangeurOidc echangeur, Clock horloge) {
+        return new ServiceSso(environnement, registre, resolution, new ServiceConnexion(comptes, new DepotQuestionsSecretes(jdbc, HORLOGE), jetons, HORLOGE),
+                echangeur, horloge, new Random(3));
     }
 
     @AfterEach
@@ -212,14 +230,82 @@ class ControleurSsoHttpTest {
         String url2 = http.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location");
         http.get("/api/auth/sso/entra/callback?code=0.inconnu&state=" + parametres(url2).get("state"), null).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]").value(startsWith("Entra : invalid_grant — AADSTS70000")));
-        // Un code simulé reste accepté en démonstration (« mock. » l'emporte).
+        // Un code simulé est refusé hors du mode simulé : ses revendications sont écrites par qui le présente (prise de compte).
         String url3 = http.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location");
-        String simule = "mock." + Primitives.base64Url("{\"email\":\"x@y.ca\",\"roles\":[\"Nexu.RH\"]}".getBytes(StandardCharsets.UTF_8));
-        http.get("/api/auth/sso/entra/callback?code=" + simule + "&state=" + parametres(url3).get("state"), null).andExpect(status().isFound());
-        assertThat(comptes.parNom("x@y.ca", null)).isPresent().get().extracting(c -> c.role()).isEqualTo("rh");
-        // Sans courriel dans les revendications : refus.
-        String url4 = http.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location");
-        http.get("/api/auth/sso/entra/callback?code=mock." + Primitives.base64Url("{\"name\":\"x\"}".getBytes(StandardCharsets.UTF_8)) + "&state=" + parametres(url4).get("state"), null)
+        String simule = "mock." + Primitives.base64Url("{\"email\":\"josee.tremblay@cssdc-demo.qc.ca\",\"roles\":[\"Nexu.Admin\"]}".getBytes(StandardCharsets.UTF_8));
+        http.get("/api/auth/sso/entra/callback?code=" + simule + "&state=" + parametres(url3).get("state"), null).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.errors[0]").value("code d'autorisation simulé refusé : le mode simulé n'est pas actif"));
+        // La variante JSON n'existe qu'en mode simulé.
+        http.post("/api/auth/sso/entra/session", null, null).andExpect(status().isNotFound());
+        assertThat(comptes.lister()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("balayage des accès : sans Entra configuré, rien n'est simulé — statut désactivé, routes 404, aucune session ni compte")
+    void entraDesactive() throws Exception {
+        for (Map<String, String> sans : List.of(Map.<String, String>of(), Map.of(Oidc.VARIABLE_SIMULATION, "1"), Map.of("NEXU_ESSAI", "true"))) {
+            ClientHttpEssai h = new ClientHttpEssai(new ControleurSso(service(sans, (c, cfg, d) -> Map.of(), HORLOGE), audit, AdressePublique.fixe(""), false));
+            h.get("/api/auth/sso/entra/status", null).andExpect(status().isOk()).andExpect(jsonPath("$.enabled").value(false)).andExpect(jsonPath("$.mock").value(false));
+            h.get("/api/auth/sso/entra/login", null).andExpect(status().isNotFound()).andExpect(jsonPath("$.errors[0]").value("SSO Entra ID non configuré"));
+            h.post("/api/auth/sso/entra/session", null, null).andExpect(status().isNotFound())
+                    .andExpect(header().doesNotExist("Set-Cookie"));
+            String simule = "mock." + Primitives.base64Url("{\"email\":\"admin@x.ca\",\"roles\":[\"Nexu.Admin\"]}".getBytes(StandardCharsets.UTF_8));
+            h.get("/api/auth/sso/entra/callback?code=" + simule + "&state=x", null).andExpect(status().isNotFound());
+        }
+        assertThat(comptes.lister()).isEmpty();
+        // En mode réel, un code simulé est refusé avant tout échange, même avec un state valide.
+        ServiceSso reel = service(Map.of("AZURE_CLIENT_ID", "cid", "NEXU_ESSAI", "1", Oidc.VARIABLE_SIMULATION, "1"), (c, cfg, d) -> Map.of(), HORLOGE);
+        ClientHttpEssai h = new ClientHttpEssai(new ControleurSso(reel, audit, AdressePublique.fixe(""), false));
+        h.get("/api/auth/sso/entra/status", null).andExpect(jsonPath("$.enabled").value(true)).andExpect(jsonPath("$.mock").value(false));
+        String state = parametres(h.get("/api/auth/sso/entra/login", null).andExpect(status().isFound()).andReturn().getResponse().getHeader("Location")).get("state");
+        String simule = "mock." + Primitives.base64Url("{\"email\":\"admin@x.ca\",\"roles\":[\"Nexu.Admin\"]}".getBytes(StandardCharsets.UTF_8));
+        h.get("/api/auth/sso/entra/callback?code=" + simule + "&state=" + state, null).andExpect(status().isUnauthorized())
+                .andExpect(header().doesNotExist("Set-Cookie"));
+        h.post("/api/auth/sso/entra/session", null, null).andExpect(status().isNotFound());
+        assertThat(comptes.lister()).isEmpty();
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM audit_log WHERE action = 'auth.sso.refus'").query(Integer.class).single()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("SSO d'instance réel (ADR 0093) : identité inconnue → « relier », aucun compte ; reliée à un compte désactivé → 403 ; SAML réel en JSON → liaison")
+    void instanceReelle() throws Exception {
+        comptes.creer(new DepotComptes.Creation("marc.gagnon@cssdc-demo.qc.ca", "mot-de-passe", "manager", null, null, false, false, "marc.gagnon@cssdc-demo.qc.ca", false));
+        java.util.concurrent.atomic.AtomicReference<String> sujet = new java.util.concurrent.atomic.AtomicReference<>("s-marc");
+        ServiceSso reel = service(Map.of("AZURE_CLIENT_ID", "cid"), (c, cfg, d) -> Map.of("iss", "https://login.microsoftonline.com/t/v2.0", "sub", sujet.get(),
+                "email", "marc.gagnon@cssdc-demo.qc.ca"), HORLOGE);
+        ClientHttpEssai h = new ClientHttpEssai(new ControleurSso(reel, audit, AdressePublique.fixe(""), true));
+        String state = parametres(h.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location")).get("state");
+        h.get("/api/auth/sso/entra/callback?code=0.c&state=" + state, null).andExpect(status().isFound()).andExpect(header().string("Location", "/connexion/relier"))
+                .andExpect(header().string("Set-Cookie", containsString("SameSite=Strict")));
+        assertThat(comptes.lister()).hasSize(1);
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM audit_log WHERE action = 'auth.sso.liaison.requise'").query(Integer.class).single()).isOne();
+        // Relié à un compte désactivé : refus nommé, consigné.
+        Compte inactif = comptes.creer(new DepotComptes.Creation("inactif", "mot-de-passe", "employee", null, null, false, false, "i@x.ca", false));
+        comptes.modifier(inactif.id(), new DepotComptes.Modification(null, false, null, null, null, null, null));
+        new DepotIdentitesExternes(jdbc).lier(new IdentitesExternes.Identite(IdentitesExternes.Cle.de("https://login.microsoftonline.com/t/v2.0", "s-inactif"),
+                inactif.id(), IdentitesExternes.Provenance.instance(), HORLOGE.instant(), "x", IdentitesExternes.Preuve.APPROBATION, Optional.empty()));
+        sujet.set("s-inactif");
+        String state2 = parametres(h.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location")).get("state");
+        h.get("/api/auth/sso/entra/callback?code=0.c&state=" + state2, null).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errors[0]").value("le compte de l'application est désactivé"));
+
+        // SAML réel (non démonstration), réponse en JSON : la liaison est rendue en JSON.
+        String pem = "-----BEGIN PUBLIC KEY-----\n" + Base64.getMimeEncoder().encodeToString(samlIdp.clePublique().getEncoded()) + "\n-----END PUBLIC KEY-----";
+        ServiceSso saml = service(Map.of("SAML_IDP_SSO_URL", tiers.url() + "/mock/saml/sso", "SAML_IDP_CERT", pem, "SAML_IDP_ISSUER", DonneesDemo.SAML_ISSUER,
+                "SAML_SP_ACS_URL", tiers.url() + "/api/auth/sso/saml/acs"), (c, cfg, d) -> Map.of(), HORLOGE);
+        ClientHttpEssai hs = new ClientHttpEssai(new ControleurSso(saml, audit, AdressePublique.fixe(""), false));
+        String url = hs.get("/api/auth/sso/saml/login", null).andExpect(status().isFound()).andReturn().getResponse().getHeader("Location");
+        String reponse = samlIdp.reponsePourCompte(Saml.lireAuthnRequest(parametres(url).get("SAMLRequest")), "marc.gagnon@cssdc-demo.qc.ca");
+        hs.post("/api/auth/sso/saml/acs", null, "{\"SAMLResponse\":\"" + reponse + "\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.liaisonRequise").value(true)).andExpect(jsonPath("$.retour").value("/connexion/relier"));
+        assertThat(comptes.lister()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("Entra simulé : sans courriel dans les revendications, refus")
+    void simuleSansCourriel() throws Exception {
+        String state = parametres(http.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location")).get("state");
+        http.get("/api/auth/sso/entra/callback?code=mock." + Primitives.base64Url("{\"name\":\"x\"}".getBytes(StandardCharsets.UTF_8)) + "&state=" + state, null)
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("SSO claims missing email"));
     }
 
@@ -313,20 +399,27 @@ class ControleurSsoHttpTest {
         env.put("AZURE_ROLE_MAPPING", "{\"claim\":\"groups\",\"map\":{\"G1\":\"rh\"},\"fallback\":null}");
         assertThat(sso.mappage().claim()).isEqualTo("groups");
         assertThat(sso.mappage().fallback()).isNull();
-        ServiceSso.Session s = sso.provisionner(Map.of("email", "Rh@X.ca", "groups", List.of("G1")));
+        // Démonstration ou simulé (non réel) : le compte naît de l'identité, avec le rôle mappé.
+        ServiceSso.Session s = (ServiceSso.Session) sso.provisionner(verifiee("s-rh", false, Map.of("email", "Rh@X.ca", "groups", List.of("G1"))));
         assertThat(s.role()).isEqualTo("rh");
         assertThat(s.provisioned()).isTrue();
         // Aucun groupe connu et pas de repli : « employee » tout de même.
-        assertThat(sso.provisionner(Map.of("email", "e@x.ca", "groups", List.of("G9"))).role()).isEqualTo("employee");
+        assertThat(((ServiceSso.Session) sso.provisionner(verifiee("s-e", false, Map.of("email", "e@x.ca", "groups", List.of("G9"))))).role()).isEqualTo("employee");
         env.put("AZURE_ROLE_MAPPING", "{pas du json");
         assertThat(sso.mappage().claim()).isEqualTo("roles");
-        // Retrouvé par courriel (casse indifférente), puis par nom de connexion.
-        assertThat(sso.provisionner(Map.of("email", "rh@x.ca")).provisioned()).isFalse();
-        comptes.creer(new DepotComptes.Creation("marie", "mot-de-passe", "admin", null, null, false, false, null, false));
-        ServiceSso.Session m = sso.provisionner(Map.of("email", "MARIE"));
-        assertThat(m.provisioned()).isFalse();
-        assertThat(m.role()).isEqualTo("admin");
-        assertThat(jetons.lire(m.token()).role()).isEqualTo("admin");
+        // Retrouvé par (émetteur, sujet), même si le courriel a changé chez le fournisseur.
+        assertThat(((ServiceSso.Session) sso.provisionner(verifiee("s-rh", true, Map.of("email", "autre@x.ca")))).provisioned()).isFalse();
+        // Réel, sans juste-à-temps : un compte au même courriel n'est jamais pris d'office — la liaison est exigée, rien n'est créé.
+        comptes.creer(new DepotComptes.Creation("marie", "mot-de-passe", "admin", null, null, false, false, "marie@x.ca", false));
+        assertThat(sso.provisionner(verifiee("s-marie", true, Map.of("email", "marie@x.ca")))).isInstanceOf(ServiceSso.LiaisonRequise.class)
+                .extracting(i -> ((ServiceSso.LiaisonRequise) i).email()).isEqualTo("marie@x.ca");
+        assertThat(sso.provisionner(verifiee("s-inconnu", true, Map.of("email", "inconnu@x.ca")))).isInstanceOf(ServiceSso.LiaisonRequise.class);
+        assertThat(comptes.lister()).hasSize(3);
+        // Réel avec SSO_PROVISIONNEMENT_JAT : le compte inconnu naît ; celui qui existe reste à relier.
+        env.put(ServiceSso.VARIABLE_JAT, "true");
+        assertThat(sso.provisionner(verifiee("s-inconnu", true, Map.of("email", "inconnu@x.ca")))).isInstanceOf(ServiceSso.Session.class);
+        assertThat(sso.provisionner(verifiee("s-marie", true, Map.of("email", "marie@x.ca")))).isInstanceOf(ServiceSso.LiaisonRequise.class);
+        env.remove(ServiceSso.VARIABLE_JAT);
         // Le retour configuré, et les cookies sécurisés en production.
         ClientHttpEssai prod = new ClientHttpEssai(new ControleurSso(sso, audit, AdressePublique.fixe("https://app.exemple.qc.ca/admin"), true));
         Map<String, String> p = parametres(prod.get("/api/auth/sso/entra/login", null).andReturn().getResponse().getHeader("Location"));
@@ -337,13 +430,20 @@ class ControleurSsoHttpTest {
         assertThat(sso.demandesSamlEnCours()).isEmpty();
         // Les demandes expirent : après dix minutes, le state n'existe plus.
         Clock plusTard = Clock.offset(HORLOGE, Duration.ofMinutes(11));
-        ServiceSso tardif = new ServiceSso(env, registre, comptes, new ServiceConnexion(comptes, new DepotQuestionsSecretes(jdbc, HORLOGE), jetons, HORLOGE), (c, cfg, d) -> Map.of(), plusTard, new Random(1));
+        ServiceSso tardif = service(env, (c, cfg, d) -> Map.of(), plusTard);
         Oidc.Debut debut = sso.debuterEntra();
         assertThatThrownBy(() -> tardif.completerEntra("mock.e30", debut.state())).hasMessage("invalid or expired SSO state");
-        // L'échangeur injecté : le réel passe par lui quand le code n'est pas simulé.
-        ServiceSso reel = new ServiceSso(Map.of("AZURE_CLIENT_ID", "cid"), registre, comptes, new ServiceConnexion(comptes, new DepotQuestionsSecretes(jdbc, HORLOGE), jetons, HORLOGE), (c, cfg, d) -> Map.of("email", "reel@x.ca", "code", c), HORLOGE, new Random(1));
+        // L'échangeur injecté : le réel passe par lui ; la clé est (iss, sub), le sujet repli sur oid.
+        ServiceSso reel = service(Map.of("AZURE_CLIENT_ID", "cid"), (c, cfg, d) -> Map.of("email", "reel@x.ca", "code", c, "iss", "https://idp", "oid", "o-1"), HORLOGE);
         Oidc.Debut d2 = reel.debuterEntra();
-        assertThat(reel.completerEntra("0.code", d2.state())).containsEntry("code", "0.code");
+        ServiceSso.Verifiee v = reel.completerEntra("0.code", d2.state());
+        assertThat(v.revendications()).containsEntry("code", "0.code");
+        assertThat(List.of(v.cle().emetteur().valeur(), v.cle().sujet().valeur(), String.valueOf(v.reel()))).containsExactly("https://idp", "o-1", "true");
+        assertThat(reel.configurationEntraActive().clientId()).isEqualTo("cid");
+    }
+
+    private static ServiceSso.Verifiee verifiee(String sujet, boolean reel, Map<String, Object> revendications) {
+        return new ServiceSso.Verifiee(IdentitesExternes.Cle.de("https://idp", sujet), revendications, reel);
     }
 
     @Test
@@ -357,6 +457,8 @@ class ControleurSsoHttpTest {
         assertThat(cfg.entityId()).isEqualTo("urn:sp");
         assertThat(cfg.idpIssuer()).isEqualTo("urn:idp");
         assertThat(Saml.configuration(Map.of("SAML_IDP_SSO_URL", "https://idp/sso"), Optional.empty()).enabled()).isFalse();
+        // Adresse et certificat sans émetteur déclaré : désactivé, plutôt qu'accepter n'importe quel émetteur.
+        assertThat(Saml.configuration(Map.of("SAML_IDP_SSO_URL", "https://idp/sso", "SAML_IDP_CERT", pem), Optional.empty()).enabled()).isFalse();
         assertThatThrownBy(() -> Saml.clePublique("-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----")).isInstanceOf(IllegalStateException.class);
         assertThat(Saml.metadonneesSp(cfg)).contains("Location=\"https://sp/acs\"");
     }

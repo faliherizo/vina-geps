@@ -1,0 +1,82 @@
+{
+  "realm": "vina-geps-liaison",
+  "displayName": "VINA GePS — bac à sable de la liaison des comptes (ADR 0093)",
+  "enabled": true,
+  "sslRequired": "none",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": false,
+  "internationalizationEnabled": true,
+  "supportedLocales": ["fr", "en"],
+  "defaultLocale": "fr",
+  "bruteForceProtected": true,
+  "failureFactor": 10,
+  "roles": {
+    "realm": [
+      { "name": "vina-employe", "description": "Employé." },
+      { "name": "vina-chef", "description": "Chef d'équipe.", "composite": true, "composites": { "realm": ["vina-employe"] } }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "vina-geps-liaison",
+      "name": "VINA GePS — liaison (bac à sable)",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "bac-a-sable-liaison-secret-essai-uniquement",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:5371/api/auth/sso/annuaires/callback",
+        "http://localhost:4071/api/auth/sso/annuaires/callback",
+        "http://localhost:5173/api/auth/sso/annuaires/callback",
+        "http://localhost:8095/api/auth/sso/annuaires/callback"
+      ],
+      "webOrigins": ["+"],
+      "attributes": { "pkce.code.challenge.method": "S256", "post.logout.redirect.uris": "+" },
+      "defaultClientScopes": ["web-origins", "acr", "profile", "email", "basic"],
+      "optionalClientScopes": ["offline_access"],
+      "protocolMappers": [
+        {
+          "name": "roles",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles", "multivalued": "true", "jsonType.label": "String", "id.token.claim": "true",
+            "access.token.claim": "true", "userinfo.token.claim": "true", "introspection.token.claim": "true"
+          }
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "username": "jean.existant",
+      "enabled": true,
+      "email": "jean.existant@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Jean",
+      "lastName": "Existant",
+      "credentials": [{ "type": "password", "value": "Passe!Kc2026", "temporary": false }],
+      "realmRoles": ["vina-employe"],
+      "requiredActions": []
+    },
+    {
+      "username": "inconnu.nouveau",
+      "enabled": true,
+      "email": "inconnu.nouveau@urgences-sante.qc.ca",
+      "emailVerified": true,
+      "firstName": "Inconnu",
+      "lastName": "Nouveau",
+      "credentials": [{ "type": "password", "value": "Passe!Kc2026", "temporary": false }],
+      "realmRoles": ["vina-employe"],
+      "requiredActions": []
+    }
+  ]
+}

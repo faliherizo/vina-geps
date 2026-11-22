@@ -21,7 +21,7 @@ class AnnuairesTest {
 
     private static Annuaires.Saisie saisie(List<Annuaires.Correspondance> regles, String defaut) {
         return new Annuaires.Saisie("  Siège social ", GUID.toUpperCase(), CLIENT, "ANNUAIRE_SIEGE", List.of("Urgences-Sante.QC.ca", " ", "urgences-sante.qc.ca"),
-                null, regles, defaut, true, null, null);
+                null, regles, defaut, true, null, null, false);
     }
 
     private static Annuaires.Annuaire valide(List<Annuaires.Correspondance> regles, String defaut) {
@@ -51,19 +51,20 @@ class AnnuairesTest {
         assertThat(a.autorite()).isEqualTo("https://login.microsoftonline.com/" + GUID);
         assertThat(a.actif()).isTrue();
         assertThat(Annuaires.valider("ann-2", "T1", new Annuaires.Saisie("Sous-traitant", "partenaire.onmicrosoft.com", CLIENT, "ANNUAIRE_P",
-                List.of("partenaire.ca"), "roles", null, " employee ", false, "entra", null), ROLES))
+                List.of("partenaire.ca"), "roles", null, " employee ", false, "entra", null, true), ROLES))
                 .satisfies(b -> {
                     assertThat(b.revendication()).isEqualTo(Annuaires.Revendication.ROLES);
                     assertThat(b.roleParDefaut()).contains("employee");
                     assertThat(b.correspondances()).isEmpty();
                     assertThat(b.actif()).isFalse();
+                    assertThat(b.provisionnementJat()).isTrue();
                 });
     }
 
     @Test
     @DisplayName("une saisie vide dit tout ce qui manque, en une fois")
     void saisieVide() {
-        assertThat(motifs(new Annuaires.Saisie(null, null, null, null, null, null, null, "  ", true, null, null))).containsExactly(
+        assertThat(motifs(new Annuaires.Saisie(null, null, null, null, null, null, null, "  ", true, null, null, false))).containsExactly(
                 "le nom est requis (80 caractères au plus)",
                 "le locataire Entra doit être un GUID ou un domaine (p. ex. organisme.onmicrosoft.com)",
                 "l'identifiant d'application (client) doit être un GUID",
@@ -76,7 +77,7 @@ class AnnuairesTest {
     @DisplayName("une autorité ouverte à tout compte Microsoft est refusée, quelle que soit sa casse")
     void autoriteOuverte() {
         for (String ouverte : List.of("common", "Organizations", "consumers")) {
-            Annuaires.Saisie s = new Annuaires.Saisie("A", ouverte, CLIENT, "ANNUAIRE_A", List.of("a.ca"), "groups", null, "employee", true, null, null);
+            Annuaires.Saisie s = new Annuaires.Saisie("A", ouverte, CLIENT, "ANNUAIRE_A", List.of("a.ca"), "groups", null, "employee", true, null, null, false);
             assertThat(motifs(s)).containsExactly("le locataire « " + ouverte.toLowerCase() + " » admet n'importe quel compte Microsoft : déclarer celui de l'organisme");
         }
     }
@@ -84,7 +85,7 @@ class AnnuairesTest {
     @Test
     @DisplayName("nom trop long, variable hors préfixe, domaine et revendication invalides")
     void champsInvalides() {
-        Annuaires.Saisie s = new Annuaires.Saisie("x".repeat(81), GUID, CLIENT, "NEXU_JWT_SECRET", List.of("localhost"), "upn", null, "employee", true, null, null);
+        Annuaires.Saisie s = new Annuaires.Saisie("x".repeat(81), GUID, CLIENT, "NEXU_JWT_SECRET", List.of("localhost"), "upn", null, "employee", true, null, null, false);
         assertThat(motifs(s)).containsExactly(
                 "le nom est requis (80 caractères au plus)",
                 "la variable du secret doit commencer par ANNUAIRE_ (majuscules, chiffres, _)",
@@ -146,13 +147,13 @@ class AnnuairesTest {
                 .isInstanceOf(Annuaires.ConnexionRefuseeException.class)
                 .hasMessage("aucun groupe de « paul@urgences-sante.qc.ca » ne donne accès dans l'annuaire « Siège social »");
         assertThat(new Annuaires.Annuaire("x", "T", "n", "l", "c", "v", List.of(), Annuaires.Revendication.ROLES, List.of(), Optional.empty(), true,
-                Annuaires.Fournisseur.ENTRA, null)
+                Annuaires.Fournisseur.ENTRA, null, false)
                 .admet("a@b.ca")).isFalse();
     }
 
     private static Annuaires.Saisie oidc(String emetteur, String client) {
         return new Annuaires.Saisie("Keycloak", null, client, "ANNUAIRE_KEYCLOAK", List.of("urgences-sante.qc.ca"), "roles",
-                List.of(new Annuaires.Correspondance("vina-admin", "admin")), "employee", true, "oidc", emetteur);
+                List.of(new Annuaires.Correspondance("vina-admin", "admin")), "employee", true, "oidc", emetteur, false);
     }
 
     @Test
@@ -169,7 +170,7 @@ class AnnuairesTest {
         }
         assertThatThrownBy(() -> Annuaires.valider("k", "T1", oidc("https://sso.ca/r", "client avec espace"), ROLES))
                 .hasMessage("l'identifiant du client OIDC est requis (lettres, chiffres, . _ : @ -)");
-        Annuaires.Saisie inconnu = new Annuaires.Saisie("K", null, "c", "ANNUAIRE_K", List.of("a.ca"), "roles", null, "employee", true, "saml", "https://sso.ca/r");
+        Annuaires.Saisie inconnu = new Annuaires.Saisie("K", null, "c", "ANNUAIRE_K", List.of("a.ca"), "roles", null, "employee", true, "saml", "https://sso.ca/r", false);
         assertThatThrownBy(() -> Annuaires.valider("k", "T1", inconnu, ROLES)).hasMessageContaining("fournisseur inconnu : « saml » (attendu : entra, oidc, ldaps)");
         assertThatThrownBy(() -> Annuaires.Fournisseur.de("x")).isInstanceOf(Annuaires.AnnuaireInvalideException.class);
     }
@@ -186,7 +187,7 @@ class AnnuairesTest {
 
     private static Annuaires.Saisie ldaps(String url, String dn) {
         return new Annuaires.Saisie("AD local", null, dn, "ANNUAIRE_AD", List.of("urgences-sante.qc.ca"), "groups",
-                List.of(new Annuaires.Correspondance("GEPS-Chefs", "manager")), null, true, "ldaps", url);
+                List.of(new Annuaires.Correspondance("GEPS-Chefs", "manager")), null, true, "ldaps", url, false);
     }
 
     @Test

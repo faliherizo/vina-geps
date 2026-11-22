@@ -4,7 +4,8 @@ import ca.vina.nexu.auth.application.ServiceAnnuaires;
 import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.domaine.EcritureAnnuaires;
 import ca.vina.nexu.auth.domaine.RegistreAnnuaires;
-import ca.vina.nexu.auth.infrastructure.persistance.AdaptateurComptesAnnuaire;
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotAnnuaires;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
@@ -78,10 +79,11 @@ public class ControleurAnnuaires {
     private final Dependances d;
 
     @Autowired
-    public ControleurAnnuaires(DepotAnnuaires annuaires, DepotComptes comptes, DepotQuestionsSecretes questions, DepotRolesEtablissement roles,
-                               GardeAcces garde, HoteEtablissement hote, AdressePublique adresse, JournalAudit audit, Sequence sequence, Clock horloge,
-                               PareFeu pareFeu, @Value("${nexu.jwt.secret}") String secret, @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
-        this(new Dependances(new ServiceAnnuaires(new ServiceAnnuaires.Ports(annuaires, new AdaptateurComptesAnnuaire(comptes, ALEA),
+    public ControleurAnnuaires(DepotAnnuaires annuaires, ServiceResolutionIdentite resolution, DepotComptes comptes, DepotQuestionsSecretes questions,
+                               DepotRolesEtablissement roles, GardeAcces garde, HoteEtablissement hote, AdressePublique adresse, JournalAudit audit,
+                               Sequence sequence, Clock horloge, PareFeu pareFeu, @Value("${nexu.jwt.secret}") String secret,
+                               @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
+        this(new Dependances(new ServiceAnnuaires(new ServiceAnnuaires.Ports(annuaires, resolution,
                 new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge)::emettre,
                 new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)::echanger,
                 new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge),
@@ -103,7 +105,7 @@ public class ControleurAnnuaires {
             return geste.get();
         } catch (Annuaires.AnnuaireInvalideException e) {
             return erreur(400, e.motifs());
-        } catch (Annuaires.ConnexionRefuseeException e) {
+        } catch (Annuaires.ConnexionRefuseeException | IdentitesExternes.LiaisonRefuseeException e) {
             return erreur(403, List.of(e.getMessage()));
         } catch (ServiceAnnuaires.IntrouvableException e) {
             return erreur(404, List.of(e.getMessage()));
@@ -190,13 +192,32 @@ public class ControleurAnnuaires {
         return r;
     }
 
-    private ResponseEntity<Object> ouvrirEnJson(ServiceAnnuaires.Ouverture o) {
-        String retour = d.adresse().pour(o.compte().tenantId());
-        return ResponseEntity.ok().headers(h -> h.put(HttpHeaders.SET_COOKIE, session(o)))
-                .body(Map.of("retour", retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour, "role", o.compte().role()));
+    private ResponseEntity<Object> ouvrirEnJson(ServiceAnnuaires.Issue issue) {
+        return switch (issue) {
+            case ServiceAnnuaires.Ouverture o -> {
+                String retour = d.adresse().pour(o.compte().tenantId());
+                yield ResponseEntity.ok().headers(h -> h.put(HttpHeaders.SET_COOKIE, session(o)))
+                        .body(Map.of("retour", retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour, "role", o.compte().role()));
+            }
+            case ServiceAnnuaires.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(d.audit(), l.courriel(), "annuaire");
+                yield ControleurLiaisonIdentite.versRelierJson(l.jetonLiaison(), d.cookieSecurise());
+            }
+        };
     }
 
-    private ResponseEntity<Object> ouvrir(ServiceAnnuaires.Ouverture o) {
+    /** Le retour d'un annuaire OIDC : la session, ou la page « Relier mon compte » si l'identité n'est reliée à aucun compte. */
+    private ResponseEntity<Object> ouvrir(ServiceAnnuaires.Issue issue) {
+        return switch (issue) {
+            case ServiceAnnuaires.Ouverture o -> ouvrirSession(o);
+            case ServiceAnnuaires.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(d.audit(), l.courriel(), "annuaire");
+                yield ControleurLiaisonIdentite.versRelier(l.jetonLiaison(), d.cookieSecurise());
+            }
+        };
+    }
+
+    private ResponseEntity<Object> ouvrirSession(ServiceAnnuaires.Ouverture o) {
         List<String> cookies = session(o);
         String retour = d.adresse().pour(o.compte().tenantId());
         return ResponseEntity.status(302).location(URI.create(retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour))
@@ -235,6 +256,7 @@ public class ControleurAnnuaires {
         v.put("correspondances", a.correspondances().stream().map(c -> Map.of("groupe", c.groupe(), "role", c.role())).toList());
         v.put("roleParDefaut", a.roleParDefaut().orElse(null));
         v.put("actif", a.actif());
+        v.put("provisionnementJat", a.provisionnementJat());
         return v;
     }
 

@@ -108,11 +108,10 @@ class SamlTest {
         String altere = new String(Base64.getDecoder().decode(forger(base())), StandardCharsets.UTF_8).replace("a@b.qc", "c@d.qc");
         assertThatThrownBy(() -> recevoir(Base64.getEncoder().encodeToString(altere.getBytes(StandardCharsets.UTF_8)))).hasMessage("signature SAML absente ou invalide");
         assertThatThrownBy(() -> recevoir(forger(Saml.ReponseFactice.pour("_d1", "a@b.qc", null, "urn:autre", "urn:sp", idp.getPrivate())))).hasMessage("émetteur inattendu : urn:autre");
-        // sans émetteur attendu dans la configuration : accepté tel quel
+        // Sans émetteur attendu, plus rien n'est « accepté tel quel » : l'émetteur de l'assertion doit être celui déclaré.
         Saml.Configuration libre = new Saml.Configuration(true, false, "urn:sp", "http://sp/acs", "http://idp/sso", "", idp.getPublic());
-        assertThat(Saml.recevoirReponse(forger(Saml.ReponseFactice.pour("_d1", "a@b.qc", null, "urn:autre", "urn:sp", idp.getPrivate())), libre, MAINTENANT, "_d1"::equals).claims().roles()).isEmpty();
-        assertThat(Saml.recevoirReponse(forger(base()), new Saml.Configuration(true, false, "urn:sp", "http://sp/acs", "http://idp/sso", null, idp.getPublic()), MAINTENANT, "_d1"::equals).claims().email()).isEqualTo("a@b.qc");
-        assertThatThrownBy(() -> Saml.recevoirReponse(forger(base()), cfg, MAINTENANT, s -> false)).hasMessage("assertion sans demande en cours (rejeu ou demande expirée)");
+        assertThatThrownBy(() -> Saml.recevoirReponse(forger(Saml.ReponseFactice.pour("_d1", "a@b.qc", null, "urn:autre", "urn:sp", idp.getPrivate())), libre, MAINTENANT, "_d1"::equals))
+                .hasMessage("émetteur inattendu : urn:autre");        assertThatThrownBy(() -> Saml.recevoirReponse(forger(base()), cfg, MAINTENANT, s -> false)).hasMessage("assertion sans demande en cours (rejeu ou demande expirée)");
         assertThatThrownBy(() -> recevoir(forger(variante(base(), "2026-09-14T13:00:00Z", null, null, null, idp.getPrivate(), null, false, false)))).hasMessage("assertion pas encore valide");
         assertThatThrownBy(() -> recevoir(forger(variante(base(), null, "2026-09-14T11:58:00Z", null, null, idp.getPrivate(), null, false, false)))).hasMessage("assertion expirée");
         assertThat(recevoir(forger(variante(base(), "2026-09-14T12:00:30Z", "2026-09-14T11:59:30Z", null, null, idp.getPrivate(), null, false, false))).claims().email()).isEqualTo("a@b.qc");

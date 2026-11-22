@@ -20,6 +20,25 @@ services:
     tmpfs: ["/tmp"]
     security_opt: ["no-new-privileges:true"]
 
+  # Keycloak officiel : un vrai fournisseur OpenID Connect, pour la liaison des comptes (ADR 0093) et les annuaires OIDC
+  # (ADR 0075). Il importe les royaumes versionnés d'e2e/donnees/keycloak — `vina-geps-liaison` (Jean, dont le courriel
+  # correspond à un compte existant, et un inconnu) et `vina-geps` (les profils de rôles). Les mots de passe et le secret
+  # client de ces royaumes sont des valeurs de bac à sable, jamais à reprendre ailleurs. Mode développement (HTTP) :
+  # réservé au poste et au réseau privé, comme le reste de ce fichier.
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.3}
+    container_name: us-bac-keycloak
+    command: ["start-dev", "--import-realm", "--hostname", "http://localhost:${BAC_KEYCLOAK_PORT:-18180}"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${BAC_KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${BAC_KEYCLOAK_ADMIN_MDP:-admin}
+    volumes:
+      - ../e2e/donnees/keycloak/realm-vina-geps-liaison.json:/opt/keycloak/data/import/realm-vina-geps-liaison.json:ro
+      - ../e2e/donnees/keycloak/realm-vina-geps.json:/opt/keycloak/data/import/realm-vina-geps.json:ro
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:${BAC_KEYCLOAK_PORT:-18180}:8080"]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+
   # Service de poussée au contrat d'Expo, traduction APNs/FCM et téléphones simulés (iOS, Android).
   poussee:
     build: ./poussee

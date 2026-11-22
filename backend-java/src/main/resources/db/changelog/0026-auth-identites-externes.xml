@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Identités externes et liaison des comptes** (22 novembre 2026, ADR 0093).
+
+    Après une connexion OIDC ou SAML, le compte se retrouvait par le courriel, et se créait s'il manquait : un
+    courriel modifiable chez le fournisseur suffisait à entrer dans le compte d'un autre, et une première connexion
+    créait un second compte à côté de l'existant. Le compte se retrouve désormais par le couple (émetteur, sujet)
+    relié ; la liaison exige une preuve (invitation, mot de passe, approbation), consignée ici. Les demandes
+    d'approbation attendent la décision d'un administrateur de l'organisme.
+  -->
+  <changeSet id="0026-auth-identites-externes" author="auth">
+    <comment>Identités externes reliées et demandes de liaison.</comment>
+    <sql>
+      CREATE TABLE IF NOT EXISTS auth_identites_externes (issuer TEXT NOT NULL, sujet TEXT NOT NULL, userId TEXT NOT NULL, tenantId TEXT,
+        annuaireId TEXT, lieeLe TEXT NOT NULL, lieePar TEXT NOT NULL, preuve TEXT NOT NULL, derniereConnexion TEXT, PRIMARY KEY (issuer, sujet));
+      CREATE INDEX IF NOT EXISTS idx_auth_identites_externes_user ON auth_identites_externes (userId);
+      CREATE TABLE IF NOT EXISTS auth_demandes_liaison (id TEXT PRIMARY KEY, issuer TEXT NOT NULL, sujet TEXT NOT NULL, courriel TEXT NOT NULL,
+        tenantId TEXT NOT NULL, annuaireId TEXT, compteId TEXT NOT NULL, statut TEXT NOT NULL, creeLe TEXT NOT NULL, decideeLe TEXT, decideePar TEXT);
+      CREATE INDEX IF NOT EXISTS idx_auth_demandes_liaison_attente ON auth_demandes_liaison (tenantId, statut);
+    </sql>
+  </changeSet>
+
+  <!--
+    Le provisionnement juste-à-temps devient une option de chaque annuaire, désactivée par défaut : un annuaire
+    existant ne crée plus de compte sans que l'administration l'ait voulu. La colonne se constate par
+    `pragma_table_info` (voir 0004) ; sur une base reprise sans la table, le changeset est constaté.
+  -->
+  <changeSet id="0026-annuaires-provisionnement-jat" author="auth">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'auth_annuaires'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('auth_annuaires') WHERE name = 'provisionnementJat'</sqlCheck>
+    </preConditions>
+    <comment>L'option de provisionnement juste-à-temps de l'annuaire.</comment>
+    <sql>ALTER TABLE auth_annuaires ADD COLUMN provisionnementJat INTEGER NOT NULL DEFAULT 0</sql>
+  </changeSet>
+</databaseChangeLog>

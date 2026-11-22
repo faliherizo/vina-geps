@@ -21,7 +21,7 @@ final class SaisieAnnuaire {
         Annuaires.Saisie s = new Annuaires.Saisie(texte(c, "nom", motifs), texte(c, "locataireEntra", motifs), texte(c, "clientId", motifs),
                 texte(c, "variableSecret", motifs), textes(c, "domaines", motifs), texte(c, "revendication", motifs),
                 correspondances(c.get("correspondances"), motifs), texte(c, "roleParDefaut", motifs), actif(c.get("actif"), motifs),
-                texte(c, "fournisseur", motifs), texte(c, "emetteur", motifs));
+                texte(c, "fournisseur", motifs), texte(c, "emetteur", motifs), provisionnementJat(c.get("provisionnementJat"), motifs));
         if (!motifs.isEmpty()) {
             throw new Annuaires.AnnuaireInvalideException(motifs);
         }
@@ -71,5 +71,14 @@ final class SaisieAnnuaire {
         }
         motifs.add("« actif » doit être vrai ou faux");
         return true;
+    }
+
+    /** Absent : désactivé. Créer des comptes sans preuve se décide, cela ne s'hérite pas d'un oubli (ADR 0093). */
+    private static boolean provisionnementJat(Object v, List<String> motifs) {
+        if (v == null || v instanceof Boolean) {
+            return Boolean.TRUE.equals(v);
+        }
+        motifs.add("« provisionnementJat » doit être vrai ou faux");
+        return false;
     }
 }
