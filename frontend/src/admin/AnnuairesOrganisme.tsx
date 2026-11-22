@@ -17,6 +17,7 @@ interface Correspondance { groupe: string; role: string }
 export interface Annuaire {
   id: string; nom: string; fournisseur?: Fournisseur; locataireEntra: string; emetteur?: string | null; clientId: string; variableSecret: string; secretDeploye: boolean;
   domaines: string[]; revendication: "groups" | "roles"; correspondances: Correspondance[]; roleParDefaut: string | null; actif: boolean;
+  provisionnementJat?: boolean;
 }
 interface Role { role: string; label: string }
 type Fournisseur = "entra" | "oidc" | "ldaps";
@@ -42,6 +43,7 @@ function corpsDe(f: HTMLFormElement): Record<string, unknown> {
     clientId: texte("clientId"), variableSecret: texte("variableSecret"),
     domaines: texte("domaines").split(/[\s,]+/).filter(Boolean), revendication: texte("revendication"),
     correspondances: lireRegles(texte("correspondances")), roleParDefaut: texte("roleParDefaut") || null, actif: d.get("actif") === "on",
+    provisionnementJat: d.get("provisionnementJat") === "on",
   };
 }
 
@@ -128,8 +130,82 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
       <label className="field field-check" htmlFor={id("actif")}>
         <input id={id("actif")} name="actif" type="checkbox" defaultChecked={initial?.actif ?? true} data-testid={id("actif")} />
         <span>Proposé à la connexion</span></label>
+      <label className="field field-check" htmlFor={id("jat")} style={{ gridColumn: "1 / -1" }}>
+        <input id={id("jat")} name="provisionnementJat" type="checkbox" defaultChecked={initial?.provisionnementJat ?? false} data-testid={id("jat")}
+          aria-describedby={id("jat-aide")} />
+        <span>Créer le compte à la première connexion (provisionnement juste-à-temps)</span></label>
+      <p id={id("jat-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+        Désactivé par défaut : une identité inconnue doit alors relier un compte existant (mot de passe, invitation ou votre approbation).
+        Même activé, un courriel déjà porté par un compte exige cette preuve : aucun second compte n'est créé.
+      </p>
       <div className="field field-actions"><button type="submit" className="primary" data-testid={id("enregistrer")}>Enregistrer</button></div>
     </form>
+  );
+}
+
+export interface DemandeLiaison { id: string; courriel: string; emetteur: string; annuaireId: string | null; compteId: string; statut: string; creeLe: string }
+
+/**
+ * **Demandes de liaison** (ADR 0093) : une personne que son annuaire a authentifiée demande que son identité soit
+ * reliée au compte qui porte son courriel. L'administrateur approuve (l'identité est reliée) ou refuse (rien ne l'est).
+ */
+export function DemandesLiaisonOrganisme({ apiFetch }: { apiFetch: Appel }) {
+  const [demandes, setDemandes] = useState<DemandeLiaison[]>([]);
+  const [info, setInfo] = useState("");
+  const [erreur, setErreur] = useState("");
+
+  const charger = useCallback(async () => {
+    const r = await apiFetch("/api/auth/liaisons");
+    setDemandes(liste<DemandeLiaison>(objet<{ demandes: DemandeLiaison[] }>(r.ok ? await r.json() : null)?.demandes));
+  }, [apiFetch]);
+  useEffect(() => { charger().catch(() => setErreur("Les demandes de liaison n'ont pas pu être lues.")); }, [charger]);
+
+  async function decider(d: DemandeLiaison, decision: "approuver" | "refuser") {
+    setInfo(""); setErreur("");
+    const r = await apiFetch(`/api/auth/liaisons/${encodeURIComponent(d.id)}/${decision}`, { method: "POST" });
+    if (r.ok) setInfo(decision === "approuver" ? `Identité de ${d.courriel} reliée à son compte.` : `Demande de ${d.courriel} refusée.`);
+    else {
+      const j = await r.json().catch(() => null);
+      setErreur(Array.isArray(j?.errors) ? j.errors.join(" · ") : `La décision a échoué (erreur ${r.status}).`);
+    }
+    await charger();
+  }
+
+  return (
+    <section className="card" aria-labelledby="liaisons-titre" data-testid="liaisons">
+      <h3 id="liaisons-titre">Demandes de liaison d'identité</h3>
+      <p className="muted">
+        Une personne authentifiée par un annuaire, sans identité reliée, demande à être reliée au compte qui porte son courriel.
+        Vérifiez qu'il s'agit bien d'elle avant d'approuver.
+      </p>
+      {info && <Message variante="succes" testId="liaisons-info">{info}</Message>}
+      {erreur && <Message variante="erreur" testId="liaisons-erreur">{erreur}</Message>}
+      {demandes.length === 0 ? <EtatVide testId="liaisons-vide" titre="Aucune demande en attente" /> : (
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Demandes de liaison (zone défilable au clavier)">
+          <table data-testid="liaisons-table">
+            <caption className="sr-only">Demandes de liaison en attente</caption>
+            <thead><tr><th scope="col">Courriel</th><th scope="col">Fournisseur (émetteur)</th><th scope="col">Reçue le</th><th scope="col">Décision</th></tr></thead>
+            <tbody>
+              {demandes.map((d) => (
+                <tr key={d.id} data-testid={`liaison-${d.id}`}>
+                  <th scope="row">{d.courriel}</th>
+                  <td>{d.emetteur}</td>
+                  <td>{d.creeLe.slice(0, 16).replace("T", " ")}</td>
+                  <td>
+                    <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap" }}>
+                      <button type="button" className="primary" data-testid={`liaison-${d.id}-approuver`} onClick={() => void decider(d, "approuver")}
+                        aria-label={`Approuver la liaison de ${d.courriel}`}>Approuver</button>
+                      <button type="button" className="danger" data-testid={`liaison-${d.id}-refuser`} onClick={() => void decider(d, "refuser")}
+                        aria-label={`Refuser la liaison de ${d.courriel}`}>Refuser</button>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 

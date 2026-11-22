@@ -1,5 +1,7 @@
 package ca.vina.nexu.auth.infrastructure.web;
 
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
 import ca.vina.nexu.auth.infrastructure.persistance.EchangeurOidcHttp;
@@ -50,6 +52,8 @@ public class ControleurSso {
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<Map<String, Object>> CARTE = new TypeReference<>() { };
     private static final SecureRandom ALEA = new SecureRandom();
+    /** Le protocole consigné quand la route n'en nomme pas d'autre. */
+    private static final String ENTRA = "entra";
 
     private final ServiceSso sso;
     private final JournalAudit audit;
@@ -57,9 +61,10 @@ public class ControleurSso {
     private final boolean cookieSecurise;
 
     @Autowired
-    public ControleurSso(DepotComptes comptes, DepotQuestionsSecretes questions, RegistreDemonstrations demonstrations, JournalAudit audit, Clock horloge,
-                         @Value("${nexu.jwt.secret}") String secret, AdressePublique adresse, @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
-        this(new ServiceSso(System.getenv(), demonstrations, comptes, new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge),
+    public ControleurSso(DepotComptes comptes, ServiceResolutionIdentite resolution, DepotQuestionsSecretes questions, RegistreDemonstrations demonstrations,
+                         JournalAudit audit, Clock horloge, @Value("${nexu.jwt.secret}") String secret, AdressePublique adresse,
+                         @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
+        this(new ServiceSso(System.getenv(), demonstrations, resolution, new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge),
                 new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(10), horloge), horloge, ALEA), audit, adresse, cookieSecurise);
     }
 
@@ -104,7 +109,31 @@ public class ControleurSso {
                 ControleurAuth.cookie(ControleurAuth.COOKIE_CSRF, csrf, false, ControleurAuth.DUREE_SESSION, cookieSecurise).toString()));
     }
 
-    private ResponseEntity<Object> repondreJson(ServiceSso.Session s, String protocole) {
+    /** La session, ou — identité reliée à aucun compte — la liaison à prouver (ADR 0093). */
+    private ResponseEntity<Object> repondreJson(ServiceSso.Issue issue, String protocole) {
+        return switch (issue) {
+            case ServiceSso.Session s -> sessionJson(s, protocole);
+            case ServiceSso.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(audit, l.email(), protocole == null ? ENTRA : protocole);
+                yield ControleurLiaisonIdentite.versRelierJson(l.jetonLiaison(), cookieSecurise);
+            }
+        };
+    }
+
+    private ResponseEntity<Object> repondreRedirection(ServiceSso.Issue issue, String protocole) {
+        return switch (issue) {
+            case ServiceSso.Session s -> {
+                Session o = ouvrir(s, protocole);
+                yield ResponseEntity.status(302).location(URI.create(retour(s))).headers(h -> h.put(HttpHeaders.SET_COOKIE, o.cookies())).build();
+            }
+            case ServiceSso.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(audit, l.email(), protocole == null ? ENTRA : protocole);
+                yield ControleurLiaisonIdentite.versRelier(l.jetonLiaison(), cookieSecurise);
+            }
+        };
+    }
+
+    private ResponseEntity<Object> sessionJson(ServiceSso.Session s, String protocole) {
         Session o = ouvrir(s, protocole);
         Map<String, Object> user = new LinkedHashMap<>();
         user.put("id", s.userId());
@@ -120,16 +149,19 @@ public class ControleurSso {
         return ResponseEntity.ok().headers(h -> h.put(HttpHeaders.SET_COOKIE, o.cookies())).body(r);
     }
 
-    private ResponseEntity<Object> repondreRedirection(ServiceSso.Session s, String protocole) {
-        Session o = ouvrir(s, protocole);
-        return ResponseEntity.status(302).location(URI.create(retour(s))).headers(h -> h.put(HttpHeaders.SET_COOKIE, o.cookies())).build();
-    }
-
-    private static ResponseEntity<Object> tenter(int codeErreur, Supplier<ResponseEntity<Object>> geste) {
+    /**
+     * Les refus nommés ont leur statut : Entra non configuré 404, authentification non prouvée 401, compte relié
+     * inadmissible 403 ; le reste (state inconnu, corps illisible) prend le code de la route. Chaque refus est consigné.
+     */
+    private ResponseEntity<Object> tenter(int codeErreur, Supplier<ResponseEntity<Object>> geste) {
         try {
             return geste.get();
+        } catch (Oidc.DesactiveException e) {
+            return erreur(404, e.getMessage());
         } catch (RuntimeException e) {
-            return erreur(codeErreur, e.getMessage());
+            int code = e instanceof Oidc.AuthentificationRefuseeException ? 401 : e instanceof IdentitesExternes.LiaisonRefuseeException ? 403 : codeErreur;
+            audit.consigner("anonymous", ENTRA, "auth.sso.refus", null, Map.of("motif", String.valueOf(e.getMessage())));
+            return erreur(code, e.getMessage());
         }
     }
 
@@ -139,7 +171,7 @@ public class ControleurSso {
     public ResponseEntity<Object> statutEntra() {
         Oidc.Configuration cfg = sso.configurationEntra();
         Map<String, Object> r = new LinkedHashMap<>();
-        r.put("enabled", true);
+        r.put("enabled", cfg.actif());
         r.put("mock", cfg.mock());
         r.put("provider", "Microsoft Entra ID");
         return ResponseEntity.ok(r);
@@ -157,10 +189,16 @@ public class ControleurSso {
         return tenter(400, () -> repondreRedirection(sso.provisionner(sso.completerEntra(code == null ? "" : code, state == null ? "" : state)), null));
     }
 
-    /** Variante pour l'application (JSON) : effectue le flux complet et pose la session — le mode simulé. */
+    /**
+     * Variante pour l'application (JSON), <strong>en mode simulé seulement</strong> : elle joue le flux complet sans
+     * fournisseur. Hors de ce mode, elle n'existe pas (404) : elle rendait une session à tout appel anonyme.
+     */
     @PostMapping("/sso/entra/session")
     public ResponseEntity<Object> sessionEntra() {
         return tenter(400, () -> {
+            if (!sso.configurationEntra().mock()) {
+                throw new Oidc.DesactiveException();
+            }
             Oidc.Debut debut = sso.debuterEntra();
             String code = URI.create(debut.authUrl()).getRawQuery() == null ? "" : parametre(URI.create(debut.authUrl()).getRawQuery(), "code");
             return repondreJson(sso.provisionner(sso.completerEntra(code, debut.state())), null);
@@ -206,12 +244,12 @@ public class ControleurSso {
         boolean json = requete.getContentType() != null && requete.getContentType().startsWith("application/json");
         try {
             String reponse = json ? String.valueOf(JSON.readValue(corps == null ? "{}" : corps, CARTE).getOrDefault("SAMLResponse", "")) : requete.getParameter("SAMLResponse");
-            Saml.AssertionValidee a = sso.recevoirSaml(reponse == null ? "" : reponse);
-            ServiceSso.Session s = sso.provisionner(sso.revendications(a.claims()));
+            ServiceSso.Issue s = sso.provisionner(sso.recevoirSaml(reponse == null ? "" : reponse));
             return json ? repondreJson(s, "saml") : repondreRedirection(s, "saml");
         } catch (RuntimeException e) {
             audit.consigner("anonymous", "saml", "auth.sso.login.refus", null, Map.of("motif", String.valueOf(e.getMessage())));
-            return erreur(e instanceof Saml.ErreurSaml ? 401 : 400, e.getMessage());
+            int code = e instanceof Saml.ErreurSaml ? 401 : e instanceof IdentitesExternes.LiaisonRefuseeException ? 403 : 400;
+            return erreur(code, e.getMessage());
         }
     }
 }

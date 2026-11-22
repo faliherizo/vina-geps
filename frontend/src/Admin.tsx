@@ -13,7 +13,7 @@ import { useAuth } from "./AuthContext";
 import RolesPanel from "./admin/RolesPanel";
 import EmpruntIdentitePanel from "./admin/EmpruntIdentite";
 import OptionsOrganisme from "./admin/OptionsOrganisme";
-import AnnuairesOrganisme from "./admin/AnnuairesOrganisme";
+import AnnuairesOrganisme, { DemandesLiaisonOrganisme } from "./admin/AnnuairesOrganisme";
 import CopiesOrganisme from "./admin/CopiesOrganisme";
 import { useConfirm } from "./Modal";
 import Pagination, { usePagination } from "./Pagination";
@@ -337,6 +337,7 @@ export default function Admin() {
       {section === "taches" && isAdmin && <OrdonnanceurPanel apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <OptionsOrganisme apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <AnnuairesOrganisme apiFetch={apiFetch} />}
+      {section === "organisme" && isAdmin && user?.tenantId && <DemandesLiaisonOrganisme apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <CopiesOrganisme apiFetch={apiFetch} />}
       {section === "audit" && isAdmin && (
       <div className="card" data-testid="siem-console" style={{ marginTop: 12 }}>

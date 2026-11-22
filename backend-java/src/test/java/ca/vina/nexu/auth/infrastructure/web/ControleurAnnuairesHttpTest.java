@@ -11,7 +11,10 @@ import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotRolesEtablissement;
 import ca.vina.nexu.auth.application.ServiceAnnuaires;
 import ca.vina.nexu.auth.domaine.Annuaires;
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
 import ca.vina.nexu.auth.infrastructure.persistance.AdaptateurComptesAnnuaire;
+import ca.vina.nexu.auth.infrastructure.persistance.DepotDemandesLiaison;
+import ca.vina.nexu.auth.infrastructure.persistance.DepotIdentitesExternes;
 import ca.vina.nexu.auth.infrastructure.services.ServiceConnexion;
 import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
@@ -64,6 +67,7 @@ class ControleurAnnuairesHttpTest {
     private static final ContexteRequete ADMIN_T2 = ClientHttpEssai.session("admin", "T2");
 
     private JdbcClient jdbc;
+    private ServiceResolutionIdentite resolution;
     private ClientHttpEssai http;
     private DepotComptes comptes;
     private final Map<String, String> env = new HashMap<>();
@@ -107,13 +111,21 @@ class ControleurAnnuairesHttpTest {
         DepotAnnuaires depot = new DepotAnnuaires(jdbc, HORLOGE);
         ServiceConnexion connexion = new ServiceConnexion(comptes, new DepotQuestionsSecretes(jdbc, HORLOGE), new JetonDeSession("secret-d-essai-de-trente-deux-octets-au-moins"), HORLOGE);
         Random alea = new Random(7);
-        ServiceAnnuaires service = new ServiceAnnuaires(new ServiceAnnuaires.Ports(depot, new AdaptateurComptesAnnuaire(comptes, alea), connexion::emettre,
+        DepotIdentitesExternes identites = new DepotIdentitesExternes(jdbc);
+        DepotDemandesLiaison demandes = new DepotDemandesLiaison(jdbc);
+        resolution = new ServiceResolutionIdentite(new ServiceResolutionIdentite.Ports(identites, identites, new AdaptateurComptesAnnuaire(comptes, alea),
+                (jeton, courriel, tenant) -> Optional.empty(), demandes, demandes), HORLOGE, alea);
+        ServiceAnnuaires service = new ServiceAnnuaires(new ServiceAnnuaires.Ports(depot, resolution, connexion::emettre,
                 (code, cfg, demande) -> {
                     configurationRecue.set(cfg);
                     if ("refuse".equals(code)) {
                         throw new IllegalStateException("Entra : invalid_grant — code expiré");
                     }
-                    return revendications.get();
+                    // Le jeton vérifié porte toujours iss et sub ; le sujet suit le courriel, comme un compte de l'annuaire.
+                    Map<String, Object> m = new HashMap<>(revendications.get());
+                    m.putIfAbsent("iss", cfg.authority());
+                    m.putIfAbsent("sub", "sub-" + String.valueOf(m.get("email")).toLowerCase(java.util.Locale.ROOT));
+                    return m;
                 }, emetteur -> {
                     if (emetteur.contains("injoignable")) {
                         throw new IllegalStateException("Connection refused");
@@ -148,7 +160,7 @@ class ControleurAnnuairesHttpTest {
 
     private static String annuaire(String nom, String variable, String domaine, String regles, String defaut) {
         return "{\"nom\":\"" + nom + "\",\"locataireEntra\":\"" + GUID + "\",\"clientId\":\"" + CLIENT + "\",\"variableSecret\":\"" + variable
-                + "\",\"domaines\":[\"" + domaine + "\"],\"correspondances\":" + regles + (defaut == null ? "" : ",\"roleParDefaut\":\"" + defaut + "\"") + "}";
+                + "\",\"domaines\":[\"" + domaine + "\"],\"correspondances\":" + regles + (defaut == null ? "" : ",\"roleParDefaut\":\"" + defaut + "\"") + ",\"provisionnementJat\":true}";
     }
 
     private static final String SIEGE = annuaire("Siège", "ANNUAIRE_SIEGE", "urgences-sante.qc.ca",
@@ -266,8 +278,18 @@ class ControleurAnnuairesHttpTest {
         Compte paul = comptes.creer(new DepotComptes.Creation("paul@urgences-sante.qc.ca", "Passe!Test2026", "employee", null, "T1", false, false, "paul@urgences-sante.qc.ca", false));
         comptes.modifier(paul.id(), new DepotComptes.Modification(null, false, null, null, null, null, null));
         revendications.set(Map.of("email", "paul@urgences-sante.qc.ca", "groups", List.of("g-admin")));
+        // Paul existe mais son identité n'est reliée à rien : même avec le juste-à-temps, aucun second compte — la liaison.
+        http.get("/api/auth/sso/annuaires/callback?code=c&state=" + partir("ann-1"), null).andExpect(status().isFound())
+                .andExpect(header().string("Location", "/connexion/relier"))
+                .andExpect(header().string("Set-Cookie", containsString("liaison_sso=")));
+        assertThat(comptes.lister().stream().filter(c -> "paul@urgences-sante.qc.ca".equals(c.email())).count()).isOne();
+        // Reliée, son identité le retrouve — et la désactivation locale l'emporte sur l'annuaire.
+        new DepotIdentitesExternes(jdbc).lier(new ca.vina.nexu.auth.domaine.IdentitesExternes.Identite(
+                ca.vina.nexu.auth.domaine.IdentitesExternes.Cle.de("https://login.microsoftonline.com/" + GUID, "sub-paul@urgences-sante.qc.ca"), paul.id(),
+                ca.vina.nexu.auth.domaine.IdentitesExternes.Provenance.annuaire("ann-1", "T1"), HORLOGE.instant(), "admin",
+                ca.vina.nexu.auth.domaine.IdentitesExternes.Preuve.APPROBATION, Optional.empty()));
         http.get("/api/auth/sso/annuaires/callback?code=c&state=" + partir("ann-1"), null).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.errors[0]").value("le compte « paul@urgences-sante.qc.ca » est désactivé dans l'application"));
+                .andExpect(jsonPath("$.errors[0]").value("le compte de l'application est désactivé"));
         assertThat(comptes.parId(paul.id()).orElseThrow().role()).isEqualTo("employee");
         http.get("/api/auth/sso/annuaires/callback?code=refuse&state=" + partir("ann-1"), null).andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.errors[0]").value("l'annuaire n'a pas authentifié la connexion : Entra : invalid_grant — code expiré"));
@@ -296,7 +318,7 @@ class ControleurAnnuairesHttpTest {
 
     private static final String KEYCLOAK = "{\"nom\":\"Keycloak\",\"fournisseur\":\"oidc\",\"emetteur\":\"http://localhost:8180/realms/vina-geps/\","
             + "\"clientId\":\"vina-geps\",\"variableSecret\":\"ANNUAIRE_KEYCLOAK\",\"domaines\":[\"urgences-sante.qc.ca\"],\"revendication\":\"roles\","
-            + "\"correspondances\":[{\"groupe\":\"vina-admin\",\"role\":\"admin\"},{\"groupe\":\"vina-chef\",\"role\":\"manager\"}],\"roleParDefaut\":\"employee\"}";
+            + "\"correspondances\":[{\"groupe\":\"vina-admin\",\"role\":\"admin\"},{\"groupe\":\"vina-chef\",\"role\":\"manager\"}],\"roleParDefaut\":\"employee\",\"provisionnementJat\":true}";
 
     @Test
     @DisplayName("OIDC générique (Keycloak) : adresses lues à la découverte, rôle par priorité, courriel non vérifié refusé, fournisseur injoignable en 503")
@@ -337,7 +359,7 @@ class ControleurAnnuairesHttpTest {
 
     private static final String LDAPS = "{\"nom\":\"AD local\",\"fournisseur\":\"ldaps\",\"emetteur\":\"ldaps://ad.urgences-sante.local:636/OU=Personnel,DC=us,DC=local\","
             + "\"clientId\":\"CN=svc-geps,OU=Services,DC=us,DC=local\",\"variableSecret\":\"ANNUAIRE_AD\",\"domaines\":[\"urgences-sante.qc.ca\"],"
-            + "\"correspondances\":[{\"groupe\":\"GEPS-Chefs\",\"role\":\"manager\"}]}";
+            + "\"correspondances\":[{\"groupe\":\"GEPS-Chefs\",\"role\":\"manager\"}],\"provisionnementJat\":true}";
 
     private String connecterLdaps(String identifiant, String motDePasse) {
         return "{\"identifiant\":\"" + identifiant + "\",\"motDePasse\":\"" + motDePasse + "\"}";
