@@ -97,6 +97,12 @@ article se traduit en règle sur un fait existant, ou révèle un fait manquant.
 | 15.10, 16.02, 16.03 | Offre **par ancienneté et à tour de rôle**, **10 minutes** pour répondre, un refus compte comme fait | Offre simultanée aux admissibles (`GestionnaireComblementAbsences.offrir`) | ⛔ → **AD-07** (story S-05 du fichier 08, confirmée par la convention) |
 | 15.13 à 15.16 | Assignations de 90 jours et plus, 14 jours et plus, moins de 14 jours : trois processus selon la durée | Rejoint la réponse 7 de l'addenda 7 | → **AD-02** (seuil par code) |
 
+**AD-08** (22 novembre) pose ce paramétrage par les gestes de l'application et le joue contre le serveur :
+[05_scenarios/AD-08.md](05_scenarios/AD-08.md). Il précise deux lignes de ce tableau : 15.04 s'exprime en partie (une
+fin de semaine aux deux semaines pour la liste de rappel ; ni les 4 jours par 14 jours ni le vendredi), et le seuil de
+jour et de semaine de 16.01 et 16.09 ne s'exprime pas (journée de 7,75 h, 9,5 h ou 11,25 h selon l'horaire, seuils
+entiers). Quatorze écarts y sont listés avec leur article.
+
 ## 4. Nos questions restées sans réponse
 
 Les **16 questions** du fichier 07 § 7.3 ont **toutes** reçu une réponse (addenda 7). Les neuf du fichier 06 avaient
