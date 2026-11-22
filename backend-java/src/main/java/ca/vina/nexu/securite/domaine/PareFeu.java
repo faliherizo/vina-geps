@@ -39,27 +39,42 @@ public final class PareFeu {
             new Signature("script", "script inséré", Pattern.compile("<\\s*script\\b|javascript\\s*:|onerror\\s*=|onload\\s*=|<\\s*iframe\\b", Pattern.CASE_INSENSITIVE)),
             new Signature("commande", "injection de commande", Pattern.compile("(\\||;|`|\\$\\()\\s*(cat|ls|wget|curl|bash|sh|nc|powershell)\\b", Pattern.CASE_INSENSITIVE)));
 
-    public static final List<String> REGLES = List.of("traversee", "octet_nul", "injection_sql", "script", "commande", "longueur", "debit", "verrou", "verrou_pose");
+    public static final List<String> REGLES = List.of("traversee", "octet_nul", "injection_sql", "script", "commande", "longueur", "debit", "verrou", "verrou_pose", "verrou_adresse", "verrou_adresse_pose");
 
     public record Verdict(boolean bloquee, String regle, String libelle) {
     }
 
-    public record Reglages(Mode mode, int requetesParMinute, int echecsConnexionAvantVerrou, int verrouMinutes) {
+    /**
+     * {@code echecsConnexionParAdresse} : échecs d'une même adresse, tous comptes confondus, avant que l'adresse soit
+     * verrouillée (aspersion de mots de passe, IN-05) ; 0 désactive la règle.
+     */
+    public record Reglages(Mode mode, int requetesParMinute, int echecsConnexionAvantVerrou, int verrouMinutes, int echecsConnexionParAdresse) {
+
+        /** Sans seuil par adresse : les réglages d'avant les tests d'intrusion du 22 novembre 2026. */
+        public Reglages(Mode mode, int requetesParMinute, int echecsConnexionAvantVerrou, int verrouMinutes) {
+            this(mode, requetesParMinute, echecsConnexionAvantVerrou, verrouMinutes, 0);
+        }
+
         public Map<String, Object> enCarte() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("mode", mode.code());
             m.put("requetesParMinute", requetesParMinute);
             m.put("echecsConnexionAvantVerrou", echecsConnexionAvantVerrou);
             m.put("verrouMinutes", verrouMinutes);
+            m.put("echecsConnexionParAdresse", echecsConnexionParAdresse);
             return m;
         }
     }
 
     /** Les réglages depuis l'environnement ({@code WAF_MODE}, {@code WAF_REQUETES_PAR_MINUTE}…), avec les défauts du Node. */
+    /** Cinq comptes à dix essais : au-delà, une même adresse ne devine plus, elle asperge. */
+    static final int ECHECS_PAR_ADRESSE_DEFAUT = 50;
+
     public static Reglages reglages(Map<String, String> env) {
         String mode = env.get("WAF_MODE");
         Mode m = "observer".equals(mode) ? Mode.OBSERVER : "inactif".equals(mode) ? Mode.INACTIF : Mode.BLOQUER;
-        return new Reglages(m, entier(env.get("WAF_REQUETES_PAR_MINUTE"), 20_000), entier(env.get("WAF_ECHECS_CONNEXION"), 10), entier(env.get("WAF_VERROU_MINUTES"), 15));
+        return new Reglages(m, entier(env.get("WAF_REQUETES_PAR_MINUTE"), 20_000), entier(env.get("WAF_ECHECS_CONNEXION"), 10), entier(env.get("WAF_VERROU_MINUTES"), 15),
+                entier(env.get("WAF_ECHECS_CONNEXION_ADRESSE"), ECHECS_PAR_ADRESSE_DEFAUT));
     }
 
     private static int entier(String v, int defaut) {
@@ -271,37 +286,52 @@ public final class PareFeu {
         return ip + "|" + (username == null ? "" : username.toLowerCase());
     }
 
-    /** Avant {@code /login} : un compte verrouillé ne se tente même plus. */
+    /** Toutes les tentatives d'une adresse, quel que soit le compte visé (IN-05). */
+    private static String cleAdresse(String ip) {
+        return ip + "|*";
+    }
+
+    /** Avant {@code /login} : un compte verrouillé, ou une adresse qui asperge, ne se tente même plus. */
     public synchronized Optional<Refus> gardeConnexion(String ip, String username) {
         if (reglages.mode() == Mode.INACTIF) {
             return Optional.empty();
         }
-        Long jusqua = verrous.get(cleVerrou(ip, username));
-        long maintenant = horloge.getAsLong();
-        if (jusqua != null && jusqua > maintenant) {
-            Map<String, Object> d = new LinkedHashMap<>();
-            d.put("username", username);
-            journaliser("verrou", "/api/auth/login", "POST", ip, d);
-            long minutes = (long) Math.ceil((jusqua - maintenant) / 60_000.0);
-            return refuser(429, "compte temporairement verrouillé après trop d'échecs : réessayez dans " + minutes + " min");
-        }
-        return Optional.empty();
+        Optional<Refus> compte = refusSiVerrouille(cleVerrou(ip, username), "verrou", ip, username);
+        return compte.isPresent() ? compte : refusSiVerrouille(cleAdresse(ip), "verrou_adresse", ip, username);
     }
 
-    /** Appelé sur chaque échec d'authentification ; au seuil, le verrou se pose. */
+    private Optional<Refus> refusSiVerrouille(String cle, String regle, String ip, String username) {
+        Long jusqua = verrous.get(cle);
+        long maintenant = horloge.getAsLong();
+        if (jusqua == null || jusqua <= maintenant) {
+            return Optional.empty();
+        }
+        Map<String, Object> d = new LinkedHashMap<>();
+        d.put("username", username);
+        journaliser(regle, "/api/auth/login", "POST", ip, d);
+        long minutes = (long) Math.ceil((jusqua - maintenant) / 60_000.0);
+        return refuser(429, "compte temporairement verrouillé après trop d'échecs : réessayez dans " + minutes + " min");
+    }
+
+    /** Appelé sur chaque échec d'authentification ; au seuil du compte, ou de l'adresse, le verrou se pose. */
     public synchronized void echecConnexion(String ip, String username) {
-        if (reglages.mode() == Mode.INACTIF || reglages.echecsConnexionAvantVerrou() == 0) {
+        if (reglages.mode() == Mode.INACTIF) {
             return;
         }
-        String cle = cleVerrou(ip, username);
-        if (echecs.compter(cle, horloge.getAsLong()) >= reglages.echecsConnexionAvantVerrou()) {
-            verrous.put(cle, horloge.getAsLong() + reglages.verrouMinutes() * 60_000L);
-            echecs.oublier(cle);
-            Map<String, Object> d = new LinkedHashMap<>();
-            d.put("username", username);
-            d.put("minutes", reglages.verrouMinutes());
-            journaliser("verrou_pose", "/api/auth/login", "POST", ip, d);
+        compterEchec(cleVerrou(ip, username), reglages.echecsConnexionAvantVerrou(), "verrou_pose", ip, username);
+        compterEchec(cleAdresse(ip), reglages.echecsConnexionParAdresse(), "verrou_adresse_pose", ip, username);
+    }
+
+    private void compterEchec(String cle, int seuil, String regle, String ip, String username) {
+        if (seuil == 0 || echecs.compter(cle, horloge.getAsLong()) < seuil) {
+            return;
         }
+        verrous.put(cle, horloge.getAsLong() + reglages.verrouMinutes() * 60_000L);
+        echecs.oublier(cle);
+        Map<String, Object> d = new LinkedHashMap<>();
+        d.put("username", username);
+        d.put("minutes", reglages.verrouMinutes());
+        journaliser(regle, "/api/auth/login", "POST", ip, d);
     }
 
     /** Une connexion réussie efface les échecs précédents : ce n'était pas une attaque. */
