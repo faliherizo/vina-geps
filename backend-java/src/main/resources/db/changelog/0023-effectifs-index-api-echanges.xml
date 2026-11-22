@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Index de l'API d'échange** (AD-06, 21 novembre 2026). La fenêtre de quarts filtre par date sans connaître la
+    période (l'index existant commence par la période) ; le curseur des relevés validés parcourt les feuilles par date
+    d'approbation. Sans eux, chaque appel balaie toutes les lignes de l'organisme.
+  -->
+  <changeSet id="0023-effectifs-index-api-echanges" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_equipages'</sqlCheck>
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_feuilles'</sqlCheck>
+    </preConditions>
+    <comment>Index (tenantId, date) des équipages et (tenantId, approuveeLe) des feuilles.</comment>
+    <sql>
+      CREATE INDEX IF NOT EXISTS idx_eff_equipages_date ON eff_equipages (tenantId, date);
+      CREATE INDEX IF NOT EXISTS idx_eff_feuilles_approuvee ON eff_feuilles (tenantId, approuveeLe);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

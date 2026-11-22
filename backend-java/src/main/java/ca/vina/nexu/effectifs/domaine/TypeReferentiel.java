@@ -71,7 +71,10 @@ public enum TypeReferentiel {
                     DescripteurAttribut.simple("planifiable", "Peut être planifiée d'avance", TypeAttribut.BOOLEEN),
                     DescripteurAttribut.reference("titres", "Titres d'emploi admissibles (vide = tous)", TypeAttribut.REFERENCES, TITRES_EMPLOI, false),
                     // Addenda 7, Q7 : au moins ce nombre de jours → remplacement long terme ; sinon, gestion régulière.
-                    DescripteurAttribut.borne(AbsencesEffectifs.SEUIL_LONG_TERME, "Seuil du remplacement long terme (jours)", false, 1, 365));
+                    DescripteurAttribut.borne(AbsencesEffectifs.SEUIL_LONG_TERME, "Seuil du remplacement long terme (jours)", false, 1, 365),
+                    // Addenda 5 (c), AD-06b : la banque de BD Corpo que le code consomme, et ses heures par jour d'absence.
+                    DescripteurAttribut.simple(SoldesBanques.ATTRIBUT_BANQUE, "Banque de congés (code BD Corpo)", TypeAttribut.TEXTE),
+                    DescripteurAttribut.borne(SoldesBanques.ATTRIBUT_HEURES_PAR_JOUR, "Heures par jour d'absence", false, 0.25, 24));
             case TYPES_HEURE -> List.of(DescripteurAttribut.simple("codePaie", "Code de paie (PFT)", TypeAttribut.TEXTE),
                     DescripteurAttribut.borne("majorationPourcent", "Majoration (%)", false, 0, 300));
             case PARAMETRES_POSTE -> List.of(DescripteurAttribut.choix("typeValeur", "Type de valeur", Comportements.noms(Comportements.TypeValeurParametre.values()), true));

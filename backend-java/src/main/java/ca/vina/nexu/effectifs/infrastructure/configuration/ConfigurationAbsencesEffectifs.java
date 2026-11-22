@@ -1,5 +1,6 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
@@ -58,8 +59,8 @@ public class ConfigurationAbsencesEffectifs {
                                                                        DepotEquipagesPort equipages, GestionnaireComblementAbsences comblement,
                                                                        LectureAbsencesEffectifs absences, LectureRessources ressources,
                                                                        LectureReferentiels referentiels, LecturePerimetres perimetres, EvaluateurRegles regles,
-                                                                       JournalEffectifsPort journal, Sequence sequence) {
+                                                                       JournalEffectifsPort journal, Sequence sequence, SoldesBanquesPort soldes) {
         return new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depot, planning, equipages, comblement),
-                new GestionnaireAbsencesEffectifs.Lectures(absences, ressources, referentiels, perimetres), regles, journal, sequence);
+                new GestionnaireAbsencesEffectifs.Lectures(absences, ressources, referentiels, perimetres, soldes), regles, journal, sequence);
     }
 }

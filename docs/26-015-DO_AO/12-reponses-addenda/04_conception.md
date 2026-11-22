@@ -78,3 +78,18 @@ Découpée en trois branches, chacune livrable seule.
 | `GET /releves-presence?depuis=&limite=` | Feuilles approuvées ou payées, segments actifs, et le curseur suivant. |
 
 Limite connue : un client révoqué garde son jeton jusqu'à expiration (une heure), comme avant.
+
+### AD-06b — employés, soldes des banques, jeton standard ([ADR 0088](../../adr/0088-api-echanges-organisme-machine.md))
+
+| Route | Portée | Effet |
+|---|---|---|
+| `PUT /employes/{matricule}` | `write` | Crée (201) ou met à jour (200) la ressource, par `GestionnaireRessources` ; le journal signe `application:<clientId>`. |
+| `PUT /employes/{matricule}/soldes` | `write` | `{"soldes":[{banque, heures, au}]}` : un solde par banque, remplacé à chaque envoi ; écarts nommés ensemble (422). |
+| `GET /employes/{matricule}/soldes` | `read` | Les soldes tenus. |
+| `POST /api/oauth/token` | public | Formulaire (RFC 6749), `client_secret_basic` ou `_post`, JSON d'origine ; `Cache-Control: no-store`. |
+
+Règles d'absence : le code d'absence porte `banque` et `heuresParJour` ; faits `soldeBanqueConnu`, `soldeBanqueHeures`,
+`heuresDemandees`, `soldeBanqueApresHeures` (toujours présents ; faux et zéro sans solde).
+
+Performance : correctifs en trois requêtes par page (au lieu de deux à trois par entrée) ; bornes de curseur indexables ;
+index `(tenantId, date)` des équipages et `(tenantId, approuveeLe)` des feuilles (changeset 0023).

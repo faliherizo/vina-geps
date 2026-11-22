@@ -37,7 +37,11 @@ public enum ContexteRegle {
                     f("absencesSimultanees", NOMBRE, "Absences déjà accordées dans l'unité sur la période"),
                     f("tauxComblementApres", NOMBRE, "Taux de comblement après l'absence (%)"), f("titreEmploi", TEXTE, "Titre d'emploi"),
                     f("premierJour", DATE, "Premier jour de l'absence"), f("planifiable", BOOLEEN, "Code planifiable d'avance (attribut du code)"),
-                    f("absencePlanifiee", BOOLEEN, "Déclarée d'avance, avant son premier jour"));
+                    f("absencePlanifiee", BOOLEEN, "Déclarée d'avance, avant son premier jour"),
+                    // AD-06b : le solde transmis par l'organisme pour la banque du code (addenda 5 c).
+                    f("soldeBanqueConnu", BOOLEEN, "Solde de la banque reçu de l'organisme"), f("soldeBanqueHeures", NOMBRE, "Solde de la banque (heures)"),
+                    f("heuresDemandees", NOMBRE, "Heures demandées (jours × heures par jour du code)"),
+                    f("soldeBanqueApresHeures", NOMBRE, "Solde de la banque après la demande (heures)"));
             case ATTRIBUTION -> List.of(f("admissible", BOOLEEN, "Admissible au poste"), f("reposHeures", NOMBRE, "Heures de repos depuis le quart précédent"),
                     f("heuresSemaine", NOMBRE, "Heures déjà planifiées dans la semaine"), f("formationRequiseAcquise", BOOLEEN, "Formation requise acquise"),
                     f("rang", NOMBRE, "Rang dans le classement"),

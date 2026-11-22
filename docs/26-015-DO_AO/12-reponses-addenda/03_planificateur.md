@@ -30,7 +30,7 @@
 | B5 | AD-05 Renoncer ; délai échu paramétrable | `features/26-015-DO-AD-05-agph-renoncer` (79b2fca) | ✅ fusionnée (b90afe3) | `AgphDelaiEchuTest`, `ControleurAgphEffectifsHttpTest.renoncerEtDelaiEchu`, changeset 0021, BDD `06-agph.feature` ; [scénarios](05_scenarios/AD-05.md) |
 | B6 | AD-06 API d'échange | — | 🔄 | Découpée en trois branches (voir `04_conception.md`) |
 | B6a | AD-06a Garde machine et lectures (critères 1, 2 ; 6 en partie) | `features/26-015-DO-AD-06a-api-echanges-lecture` | ✅ | `GardeMachineTest`, `EchangesApiTest`, `ControleurEchangesApiHttpTest` (quarts, correctifs, relevés, isolation, refus), `JetonClientTest.unJetonMachineNestPasUneSession` ; OpenAPI : tag « Échanges », schéma `clientCredentials` |
-| B6b | AD-06b Employés et soldes des banques (critères 3, 4) | — | ⬜ | Changeset à venir ; fait `soldeBanqueHeures` |
+| B6b | AD-06b Employés et soldes des banques (critères 3, 4) ; jeton OAuth standard ; optimisations | `features/26-015-DO-AD-06b-employes-soldes` | 🔄 | `SoldesBanquesTest`, `ControleurEchangesApiHttpTest` (employés, soldes), `ControleurOAuthHttpTest`, `LectureEchangesApiTest` ; changesets 0022 (soldes) et 0023 (index) ; ADR 0088 ; campagne JMeter `perf/jmeter/campagne-api-echanges.sh` |
 | B6c | AD-06c Absence déclarée aux opérations ; avis des modifications (critères 3, 5) | — | ⬜ | Événement de webhook sur les quarts |
 | B7 | AD-07 Offre en cascade | — | ⬜ | Taille L |
 | B8 | AD-08 Démonstration SP-CSN | — | ⬜ | Débloquée : les faits `heures24h` et `heuresPeriodePaie` existent |

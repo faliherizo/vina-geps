@@ -1,5 +1,11 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
+import java.time.Clock;
+import ca.vina.nexu.effectifs.infrastructure.web.ControleurEchangesApi;
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.domaine.LecturePointagesEffectifsPort;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
+import ca.vina.nexu.effectifs.application.commandes.GestesEchangesApi;
 import ca.vina.nexu.effectifs.application.commandes.BoiteEnvoiIntegration;
 import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
 import ca.vina.nexu.effectifs.domaine.EchangesApiPort;
@@ -46,6 +52,18 @@ public class ConfigurationIntegrationsEffectifs {
     @Bean
     public LectureEchangesApi lectureEchangesApi(EchangesApiPort port) {
         return new LectureEchangesApi(port);
+    }
+
+    /** AD-06b : employés et soldes des banques transmis par l'organisme. */
+    @Bean
+    public GestesEchangesApi gestesEchangesApi(GestionnaireRessources ressources, LectureRessources lecture, LecturePointagesEffectifsPort matricules,
+                                               SoldesBanquesPort soldes, JournalEffectifsPort journal) {
+        return new GestesEchangesApi(new GestesEchangesApi.Ports(ressources, lecture, matricules, soldes), journal);
+    }
+
+    @Bean
+    public ControleurEchangesApi.Services servicesEchangesApi(LectureEchangesApi lecture, GestesEchangesApi gestes, Clock horloge) {
+        return new ControleurEchangesApi.Services(lecture, gestes, horloge);
     }
 
     @Bean

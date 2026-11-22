@@ -255,6 +255,8 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS soutien_messages (id TEXT PRIMARY KEY, ticketId TEXT NOT NULL, auteurId TEXT NOT NULL, auteurNom TEXT NOT NULL, texte TEXT NOT NULL, interne INTEGER NOT NULL DEFAULT 0, le TEXT NOT NULL)",
             "CREATE TABLE IF NOT EXISTS soutien_maintenances (id TEXT PRIMARY KEY, debut TEXT NOT NULL, fin TEXT NOT NULL, description TEXT NOT NULL, statut TEXT NOT NULL DEFAULT 'planifiee', annonceeLe TEXT NOT NULL, annonceePar TEXT NOT NULL, annuleeLe TEXT, nature TEXT NOT NULL DEFAULT 'entretien')",
             "CREATE TABLE IF NOT EXISTS soutien_battements (minute TEXT PRIMARY KEY, le TEXT NOT NULL, latenceMs INTEGER NOT NULL)",
+            // Soldes des banques transmis par l'organisme (changeset 0022, AD-06b).
+            "CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode))",
             // Seuils d'heures supplémentaires par convention (changeset 0020, AD-03).
             "CREATE TABLE IF NOT EXISTS eff_temps_seuils_conventions (tenantId TEXT NOT NULL, conventionCode TEXT NOT NULL, seuilJourHeures INTEGER, seuilSemaineHeures INTEGER, seuilPeriodePaieHeures INTEGER, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL, PRIMARY KEY (tenantId, conventionCode))",
             "CREATE TABLE IF NOT EXISTS soutien_engagements (tenantId TEXT PRIMARY KEY, politique TEXT NOT NULL, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL)",

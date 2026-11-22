@@ -3,6 +3,23 @@ package ca.vina.nexu.effectifs.infrastructure.web;
 import ca.vina.nexu.ClientHttpEssai;
 import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
+import ca.vina.nexu.effectifs.application.commandes.GestesEchangesApi;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
+import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
+import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
+import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotJournalEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotPerimetres;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotPresenceEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotReferentiels;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotRessources;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotSoldesBanques;
+import ca.vina.nexu.effectifs.infrastructure.persistance.SchemaPresenceEffectifs;
+import ca.vina.nexu.partage.identifiants.domaine.Sequence;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.concurrent.atomic.AtomicInteger;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurModulesPourEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotEchangesApi;
 import ca.vina.nexu.effectifs.infrastructure.persistance.SchemaEffectifs;
@@ -25,6 +42,7 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +58,7 @@ class ControleurEchangesApiHttpTest {
     private static final String T = "t-1";
     private static final String AUTRE = "t-2";
     private static final JetonClient JETONS = new JetonClient(SECRET);
+    private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-21T15:00:00Z"), ZoneOffset.UTC);
 
     private JdbcClient jdbc;
     private ClientHttpEssai http;
@@ -54,7 +73,43 @@ class ControleurEchangesApiHttpTest {
                 .params(T, AUTRE).update();
         semer();
         http = new ClientHttpEssai(new ControleurEchangesApi(new GardeMachine(JETONS), new AdaptateurModulesPourEffectifs(jdbc),
-                new LectureEchangesApi(new DepotEchangesApi(jdbc, null, null))));
+                new ControleurEchangesApi.Services(new LectureEchangesApi(new DepotEchangesApi(jdbc, null, null)), gestes(), HORLOGE)));
+    }
+
+    /** Les écritures passent par le vrai gestionnaire des ressources : mêmes référentiels et même journal que l'écran. */
+    private GestesEchangesApi gestes() {
+        AtomicInteger n = new AtomicInteger();
+        Sequence seq = new Sequence() {
+            @Override
+            public String suivant(String prefixe) {
+                return prefixe + "-" + n.incrementAndGet();
+            }
+
+            @Override
+            public String uuid() {
+                return "uuid-" + n.incrementAndGet();
+            }
+
+            @Override
+            public String jetonSignature() {
+                return "jeton";
+            }
+
+            @Override
+            public String jetonBase64Url(int octets) {
+                return "jeton";
+            }
+        };
+        SchemaEffectifs socle = new SchemaEffectifs(jdbc);
+        DepotReferentiels depotRef = new DepotReferentiels(jdbc, socle);
+        LectureReferentiels referentiels = new LectureReferentiels(depotRef);
+        LecturePerimetres perimetres = new LecturePerimetres(new DepotPerimetres(jdbc, socle), referentiels);
+        DepotRessources depotRes = new DepotRessources(jdbc, new SchemaPlanification(jdbc));
+        LectureRessources lecture = new LectureRessources(depotRes, perimetres);
+        DepotJournalEffectifs journal = new DepotJournalEffectifs(jdbc, seq, socle);
+        GestionnaireRessources ressources = new GestionnaireRessources((t, inscription) -> { }, depotRes, lecture, referentiels, perimetres, journal, seq);
+        return new GestesEchangesApi(new GestesEchangesApi.Ports(ressources, lecture,
+                new DepotPresenceEffectifs(jdbc, new SchemaPresenceEffectifs(jdbc), new SchemaPlanification(jdbc), socle), new DepotSoldesBanques(jdbc, socle)), journal);
     }
 
     /** Deux quarts publiés et un en confection pour t-1, un publié pour t-2 ; journal et feuilles à l'avenant. */
@@ -70,6 +125,9 @@ class ControleurEchangesApiHttpTest {
         jdbc.sql(equipage).params("eq-autre", AUTRE, "per-autre", "U9", "2026-12-01", 420, 1140).update();
         jdbc.sql("INSERT INTO eff_ressources (id, tenantId, matricule, nom, uniteCode, corpsEmploiCode, creeLe) VALUES ('r-1', ?, 'M-100', 'Léa', 'U1', 'PARA', 'x')")
                 .params(T).update();
+        String referentiel = "INSERT INTO eff_referentiels (id, tenantId, type, code, libelleFr, effectifDepuis, creeLe, creePar) VALUES (?, ?, ?, ?, ?, '2020-01-01', 'x', 'u')";
+        jdbc.sql(referentiel).params("ref-u1", T, "unites", "U1", "Unité 1").update();
+        jdbc.sql(referentiel).params("ref-para", T, "corps_emploi", "PARA", "Paramédic").update();
         String place = "INSERT INTO eff_places (id, tenantId, equipageId, rang, corpsEmploiCode, ressourceId) VALUES (?, ?, ?, ?, 'PARA', ?)";
         jdbc.sql(place).params("pl-2", T, "eq-1", 2, null).update();
         jdbc.sql(place).params("pl-1", T, "eq-1", 1, "r-1").update();
@@ -169,5 +227,47 @@ class ControleurEchangesApiHttpTest {
         lire("/api/echanges/v1/quarts?du=2026-12-01", machine(T, "read")).andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errors[0]").value("« au » : date AAAA-MM-JJ exigée"));
         lire("/api/echanges/v1/releves-presence?limite=0", machine(T, "read")).andExpect(status().isUnprocessableEntity());
+    }
+
+    private ResultActions ecrire(String chemin, String jeton, String corps) throws Exception {
+        return http.envoyer(put(chemin).header("Authorization", "Bearer " + jeton).contentType("application/json").content(corps), null);
+    }
+
+    @Test
+    @DisplayName("employés : créé (201) puis mis à jour (200) par son matricule, au journal sous le nom de l'application")
+    void employes() throws Exception {
+        String jeton = machine(T, "read", "write");
+        String corps = "{\"nom\":\"Marc Roy\",\"uniteCode\":\"U1\",\"corpsEmploiCode\":\"PARA\",\"anciennete\":4.5}";
+        ecrire("/api/echanges/v1/employes/M-200", jeton, corps).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.matricule").value("M-200")).andExpect(jsonPath("$.nom").value("Marc Roy"));
+        ecrire("/api/echanges/v1/employes/M-200", jeton, corps.replace("Marc Roy", "Marc Roy-Tremblay")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.nom").value("Marc Roy-Tremblay"));
+        org.assertj.core.api.Assertions.assertThat(jdbc.sql("SELECT DISTINCT acteurId FROM eff_journal WHERE objetType = 'ressource'").query(String.class).list())
+                .containsExactly("application:cli-rao");
+        ecrire("/api/echanges/v1/employes/M-201", jeton, "{\"nom\":\"X\",\"uniteCode\":\"U9\",\"corpsEmploiCode\":\"PARA\"}")
+                .andExpect(status().is4xxClientError());
+        ecrire("/api/echanges/v1/employes/M-200", machine(T, "read"), corps).andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errors[0]").value("portée « write » exigée"));
+    }
+
+    @Test
+    @DisplayName("soldes : posés banque par banque, relus ; employé inconnu 404 ; envoi invalide 422 qui nomme chaque écart")
+    void soldes() throws Exception {
+        String jeton = machine(T, "read", "write");
+        ecrire("/api/echanges/v1/employes/M-100/soldes", jeton, "{\"soldes\":[{\"banque\":\"vac\",\"heures\":70.5,\"au\":\"2026-11-20\"},"
+                + "{\"banque\":\"MAL\",\"heures\":-3,\"au\":\"2026-11-20\"}]}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldes[*].banqueCode", contains("MAL", "VAC")));
+        ecrire("/api/echanges/v1/employes/M-100/soldes", jeton, "{\"soldes\":[{\"banque\":\"VAC\",\"heures\":56,\"au\":\"2026-11-21\"}]}")
+                .andExpect(jsonPath("$.soldes[*].heures", contains(-3.00, 56.00)));
+        lire("/api/echanges/v1/employes/M-100/soldes", machine(T, "read")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.soldes[1].auJour").value("2026-11-21"))
+                .andExpect(jsonPath("$.soldes[1].recuLe").value("2026-11-21T15:00:00.000Z"));
+        ecrire("/api/echanges/v1/employes/INCONNU/soldes", jeton, "{\"soldes\":[{\"banque\":\"VAC\",\"heures\":1,\"au\":\"2026-11-20\"}]}")
+                .andExpect(status().isNotFound());
+        ecrire("/api/echanges/v1/employes/M-100/soldes", jeton, "{\"soldes\":[{\"banque\":\"\",\"heures\":\"x\",\"au\":\"demain\"}]}")
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errors[0]").value("soldes[0].banque : code de 1 à 40 lettres, chiffres, tirets ou soulignés ; "
+                        + "soldes[0].heures : nombre de -99999 à 99999 ; soldes[0].au : date AAAA-MM-JJ du solde"));
+        ecrire("/api/echanges/v1/employes/M-100/soldes", jeton, "{}").andExpect(status().isUnprocessableEntity());
     }
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Soldes des banques de vacances et de congés** (AD-06b, 21 novembre 2026). L'addenda 5 de 26-015-DO : l'organisme
+    transmet par l'API d'échange les soldes que tient BD Corpo ; la solution les garde tels que reçus, un par personne et
+    par banque, et s'en sert pour signaler une absence qui les dépasse.
+  -->
+  <changeSet id="0022-effectifs-soldes-banques" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_soldes_banques'</sqlCheck>
+    </preConditions>
+    <comment>Soldes des banques reçus de l'organisme (BD Corpo), un par personne et par banque.</comment>
+    <sql>
+      CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode));
+    </sql>
+  </changeSet>
+</databaseChangeLog>
