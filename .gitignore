@@ -19,3 +19,6 @@ backend-java/data/
 
 # Index local de GitNexus (gitnexus analyze)
 .gitnexus/
+
+# Identifiants générés par scripts/creer-organisme-par-defaut.cjs — jamais versionnés.
+scripts/.organisme-par-defaut.*.local.json
