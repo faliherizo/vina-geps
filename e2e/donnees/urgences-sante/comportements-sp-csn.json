@@ -1,0 +1,180 @@
+{
+  "pourquoi": [
+    "AD-08 (26-015-DO ; addenda 4 Q1, addenda 6 Q2) : chaque règle et chaque seuil de `convention-sp-csn.json`, posés par scripts/semer-sp-csn.cjs sur un organisme neuf, sont joués contre le serveur sur un cas qui les déclenche et un cas qui ne les déclenche pas.",
+    "`prouve` relie un scénario aux règles (par leur clé) et aux paramètres qu'il éprouve : l'essai refuse une règle du paramétrage qui n'aurait pas ses deux cas.",
+    "Personnes : Julie (P1, temps partiel, SP-CSN), Marc (P2, temps complet, SP-CSN), Luc (P3) et Léa (P4), temps partiel **sans convention** — ce sont elles qui montrent qu'une règle à portée de convention ne vise que les siens.",
+    "Dates fixes en 2030, choisies pour leur jour de semaine (le 2030-04-01 est un lundi, le 2030-04-21 un dimanche). Minutes depuis minuit : 420 = 7 h, 1095 = 18 h 15 (un quart de 11,25 h, art. 14.01 c).",
+    "Attendus : `statut`, `corps` (sous-ensemble), `texte` (expression régulière qui doit se trouver), `absent` (expression régulière qui ne doit pas se trouver)."
+  ],
+  "acteurs": {
+    "julie": { "role": "employee" },
+    "marc": { "role": "employee" },
+    "luc": { "role": "employee" },
+    "lea": { "role": "employee" },
+    "chef": { "role": "manager" }
+  },
+  "amorce": [
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/unites", "corps": { "effectifDepuis": "2026-01-01", "code": "EST", "libelleFr": "Opérations Est" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/corps_emploi", "corps": { "effectifDepuis": "2026-01-01", "code": "PARA", "libelleFr": "Paramédics" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/referentiels/types_milieu", "corps": { "effectifDepuis": "2026-01-01", "code": "CASERNE", "libelleFr": "Caserne", "comportement": "CASERNE" }, "attendu": { "statut": 201 } },
+    { "methode": "POST", "chemin": "/api/effectifs/milieux", "corps": { "code": "C12", "libelle": "Caserne 12", "typeCode": "CASERNE", "uniteCode": "EST" }, "attendu": { "statut": 201 }, "capturer": { "c12": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P1", "nom": "Julie", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TP", "conventionCode": "SPCSN", "anciennete": 3, "utilisateurId": "{{u_julie}}" }, "attendu": { "statut": 201 }, "capturer": { "P1": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P2", "nom": "Marc", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TC", "conventionCode": "SPCSN", "anciennete": 9, "utilisateurId": "{{u_marc}}" }, "attendu": { "statut": 201 }, "capturer": { "P2": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P3", "nom": "Luc", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TP", "anciennete": 4, "utilisateurId": "{{u_luc}}" }, "attendu": { "statut": 201 }, "capturer": { "P3": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/planification/ressources", "corps": { "matricule": "P4", "nom": "Léa", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TP", "anciennete": 5, "utilisateurId": "{{u_lea}}" }, "attendu": { "statut": 201 }, "capturer": { "P4": "id" } },
+    { "methode": "POST", "chemin": "/api/effectifs/perimetres", "corps": { "utilisateurId": "{{u_chef}}", "uniteCode": "EST", "etendue": "UNITE", "niveau": "GESTION", "depuis": "2026-01-01" }, "attendu": { "statut": 201 } }
+  ],
+  "scenarios": [
+    {
+      "id": "SP-01",
+      "titre": "Le paramétrage est en place : seuils, présence préalable, seuil des codes d'absence, types d'heure majorés",
+      "exigences": ["E-GN-12", "E-RF-5", "E-CH-6"],
+      "prouve": [{ "parametre": "seuilsHeuresSupplementaires", "cas": "lu" }, { "parametre": "naturesQuart", "cas": "lu" }, { "parametre": "codesAbsence", "cas": "lu" }, { "parametre": "typesHeure", "cas": "lu" }],
+      "etapes": [
+        { "pourquoi": "15.12, 14.11 : 80 h par période de paie ; jour et semaine non posés (écarts E-03, E-04)", "methode": "GET", "chemin": "/api/effectifs/temps/seuils-conventions", "attendu": { "statut": 200, "corps": [{ "conventionCode": "SPCSN", "seuilPeriodePaieHeures": 80, "seuilJourHeures": null, "seuilSemaineHeures": null }] } },
+        { "pourquoi": "14.14 : quinze minutes rémunérées avant le quart", "methode": "GET", "chemin": "/api/effectifs/referentiels/natures_quart", "attendu": { "statut": 200, "texte": "\"presencePrealableMinutes\":15" } },
+        { "pourquoi": "15.15 : quatorze jours et plus", "methode": "GET", "chemin": "/api/effectifs/referentiels/codes_absence", "attendu": { "statut": 200, "texte": "\"seuilJoursLongTerme\":14" } },
+        { "pourquoi": "16.01 a) 50 %, 16.06 100 %", "methode": "GET", "chemin": "/api/effectifs/referentiels/types_heure", "attendu": { "statut": 200, "texte": "\"majorationPourcent\":100" } }
+      ]
+    },
+    {
+      "id": "SP-02",
+      "titre": "Attribution — dix heures de repos entre deux quarts (14.06) : 8,75 h est refusé pour la personne de la convention, 10 h passe ; hors convention, la règle ne vise pas",
+      "exigences": ["E-GR-7"],
+      "prouve": [{ "regle": "sp-csn-repos-attribution", "cas": "declenche" }, { "regle": "sp-csn-repos-attribution", "cas": "ne-declenche" }],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "ATTR", "uniteCode": "EST", "debut": "2030-04-01", "fin": "2030-04-07" }, "attendu": { "statut": 201 }, "capturer": { "attr": "id" } },
+        { "pourquoi": "Lundi 7 h – 18 h 15, Marc et Luc", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{attr}}", "date": "2030-04-01", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 201 }, "capturer": { "lunMarc": "places.0.id", "lunLuc": "places.1.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{lunMarc}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{lunLuc}}/attribuer", "corps": { "ressourceId": "{{P3}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Mardi 3 h – 10 h 45 : 8,75 h après la fin du lundi", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{attr}}", "date": "2030-04-02", "debut": 180, "fin": 645, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 201 }, "capturer": { "tot1": "places.0.id", "tot2": "places.1.id" } },
+        { "pourquoi": "Déclenche : Marc est de la convention", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{tot1}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 409, "texte": "Repos de 8[.,]75 h entre deux quarts : il en faut au moins 10 \\(convention SP-CSN, art\\. 14\\.06\\)" } },
+        { "pourquoi": "Ne déclenche pas : Luc n'est d'aucune convention", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{tot2}}/attribuer", "corps": { "ressourceId": "{{P3}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Mardi 4 h 15 – 12 h : dix heures pile", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{attr}}", "date": "2030-04-02", "debut": 255, "fin": 720, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "matin": "places.0.id" } },
+        { "pourquoi": "Ne déclenche pas : 10 h de repos suffisent", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{matin}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } }
+      ]
+    },
+    {
+      "id": "SP-03",
+      "titre": "Attribution — au plus 16 h sur 24 h (16.02, 16.07) : prolonger le matin de Marc jusqu'à 16,25 h est refusé, jusqu'à 16 h passe ; le travail en continuité n'est pas un repos",
+      "exigences": ["E-GR-7"],
+      "prouve": [{ "regle": "sp-csn-seize-heures-attribution", "cas": "declenche" }, { "regle": "sp-csn-seize-heures-attribution", "cas": "ne-declenche" }],
+      "etapes": [
+        { "pourquoi": "Mardi 12 h – 20 h 30, dans la continuité du matin (7,75 h + 8,5 h)", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{attr}}", "date": "2030-04-02", "debut": 720, "fin": 1230, "natureCode": "HS", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "suite1": "places.0.id" } },
+        { "pourquoi": "Déclenche 16.02 ; le repos nul de la continuité ne déclenche pas 14.06", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{suite1}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 409, "texte": "16[.,]25 h sur 24 h : au plus 16, journée normale comprise \\(convention SP-CSN, art\\. 16\\.02, 16\\.07\\)", "absent": "art\\. 14\\.06" } },
+        { "pourquoi": "Mardi 12 h – 20 h 15 : 16 h pile", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{attr}}", "date": "2030-04-02", "debut": 720, "fin": 1215, "natureCode": "HS", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "suite2": "places.0.id" } },
+        { "pourquoi": "Ne déclenche pas", "methode": "POST", "chemin": "/api/effectifs/planification/places/{{suite2}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } }
+      ]
+    },
+    {
+      "id": "SP-04",
+      "titre": "Disponibilités de la liste de rappel — une fin de semaine aux deux semaines (15.04) : une seule sur un horaire de quatre semaines est refusée, deux passent ; un temps complet n'est pas visé",
+      "exigences": ["E-GN-12", "E-GN-13"],
+      "prouve": [{ "regle": "sp-csn-fins-de-semaine", "cas": "declenche" }, { "regle": "sp-csn-fins-de-semaine", "cas": "ne-declenche" }],
+      "etapes": [
+        { "pourquoi": "Un horaire de quatre semaines (15.09), du lundi 3 au dimanche 30 juin", "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "DISPO", "uniteCode": "EST", "debut": "2030-06-03", "fin": "2030-06-30" }, "attendu": { "statut": 201 }, "capturer": { "dispo": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{dispo}}/etat", "corps": { "etat": "COLLECTE", "finCollecte": "2030-05-20" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Déclenche : une fin de semaine (le samedi 8)", "acteur": "julie", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-06-08", "debut": 420, "fin": 1095, "type": "DISPONIBLE" }, { "date": "2030-06-10", "debut": 420, "fin": 1095, "type": "DISPONIBLE" }] }, "attendu": { "statut": 409, "texte": "1 fin\\(s\\) de semaine offerte\\(s\\) : la liste de rappel en exige une aux deux semaines, soit 2 par horaire de quatre semaines \\(convention SP-CSN, art\\. 15\\.04, 15\\.09\\)" } },
+        { "pourquoi": "Ne déclenche pas : deux fins de semaine (samedis 8 et 22)", "acteur": "julie", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-06-08", "debut": 420, "fin": 1095, "type": "DISPONIBLE" }, { "date": "2030-06-22", "debut": 420, "fin": 1095, "type": "DISPONIBLE" }] }, "attendu": { "statut": 200, "absent": "art\\. 15\\.04" } },
+        { "pourquoi": "Ne déclenche pas : Marc est à temps complet, la règle vise la liste de rappel", "acteur": "marc", "methode": "PUT", "chemin": "/api/effectifs/disponibilites/moi/{{dispo}}", "corps": { "plages": [{ "date": "2030-06-10", "debut": 420, "fin": 1095, "type": "DISPONIBLE" }] }, "attendu": { "statut": 200, "absent": "art\\. 15\\.04" } }
+      ]
+    },
+    {
+      "id": "SP-05",
+      "titre": "Échanges — plages consécutives (14.15), 16 h sur 24 h (16.02), repos (14.06) refusés pour la seule personne concernée ; un échange conforme exige le consentement du supérieur (14.16) ; hors convention, il s'applique",
+      "exigences": ["E-GR-7", "E-GR-12"],
+      "prouve": [
+        { "regle": "sp-csn-plages-consecutives", "cas": "declenche" }, { "regle": "sp-csn-plages-consecutives", "cas": "ne-declenche" },
+        { "regle": "sp-csn-seize-heures-echange", "cas": "declenche" }, { "regle": "sp-csn-seize-heures-echange", "cas": "ne-declenche" },
+        { "regle": "sp-csn-repos-echange", "cas": "declenche" }, { "regle": "sp-csn-repos-echange", "cas": "ne-declenche" },
+        { "regle": "sp-csn-consentement-echange", "cas": "declenche" }, { "regle": "sp-csn-consentement-echange", "cas": "ne-declenche" }
+      ],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "ECH", "uniteCode": "EST", "debut": "2030-04-08", "fin": "2030-04-14" }, "attendu": { "statut": 201 }, "capturer": { "ech": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{ech}}/etat", "corps": { "etat": "CONFECTION" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Julie, lundi de jour", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-08", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "julieLun": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{julieLun}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Marc, mercredi de jour", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-10", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "marcMer": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{marcMer}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Jeudi : Marc de jour (7 h – 18 h 15), Julie de soir (18 h 15 – 23 h)", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-11", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "marcJeu": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{marcJeu}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-11", "debut": 1095, "fin": 1380, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "julieJeuSoir": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{julieJeuSoir}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Vendredi : Julie de soir (19 h – 23 h) ; samedi : Marc de jour", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-12", "debut": 1140, "fin": 1380, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "julieVenSoir": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{julieVenSoir}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-13", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "marcSam": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{marcSam}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Dimanche : Marc de jour, Julie de soir (18 h 15 – 23 h 30)", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-14", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "marcDim": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{marcDim}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-14", "debut": 1095, "fin": 1410, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "julieDimSoir": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{julieDimSoir}}/attribuer", "corps": { "ressourceId": "{{P1}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Luc mardi, Léa jeudi : deux personnes hors convention", "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-09", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "lucMar": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{lucMar}}/attribuer", "corps": { "ressourceId": "{{P3}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{ech}}", "date": "2030-04-11", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 1 }] }, "attendu": { "statut": 201 }, "capturer": { "leaJeu": "places.0.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{leaJeu}}/attribuer", "corps": { "ressourceId": "{{P4}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{ech}}/etat", "corps": { "etat": "PUBLIEE" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "14.15 déclenche : Julie recevrait le jeudi de jour, accolé à son jeudi soir. 16.02 ne déclenche pas : 16 h pile. 14.06 non plus : la continuité n'est pas un repos. Marc n'est pas en cause", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/echanges", "corps": { "placeCedeeId": "{{julieLun}}", "placeVoulueId": "{{marcJeu}}" }, "attendu": { "statut": 409, "corps": { "verdict": { "action": "BLOQUER" } }, "texte": "Pour Julie : L'échange ferait travailler deux plages consécutives \\(convention SP-CSN, art\\. 14\\.15\\)", "absent": "art\\. 16\\.02|art\\. 14\\.06|Pour Marc : (L'échange|Repos|[0-9])" } },
+        { "pourquoi": "16.02 déclenche : le dimanche de jour et le dimanche soir font 16,5 h (14.15 aussi)", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/echanges", "corps": { "placeCedeeId": "{{julieLun}}", "placeVoulueId": "{{marcDim}}" }, "attendu": { "statut": 409, "texte": "Pour Julie : 16[.,]5 h sur 24 h : au plus 16 \\(convention SP-CSN, art\\. 16\\.02, 16\\.07\\)" } },
+        { "pourquoi": "14.06 déclenche : le samedi 7 h suit de 8 h le vendredi soir de Julie ; 14.15 ne déclenche pas", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/echanges", "corps": { "placeCedeeId": "{{julieLun}}", "placeVoulueId": "{{marcSam}}" }, "attendu": { "statut": 409, "texte": "Pour Julie : Repos de 8 h entre deux quarts : il en faut au moins 10 \\(convention SP-CSN, art\\. 14\\.06\\)", "absent": "art\\. 14\\.15" } },
+        { "pourquoi": "Conforme : ni repos, ni plages, ni 16 h ne déclenchent ; 14.16 exige le consentement du supérieur", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/echanges", "corps": { "placeCedeeId": "{{julieLun}}", "placeVoulueId": "{{marcMer}}" }, "attendu": { "statut": 201, "corps": { "statut": "PROPOSE", "actionRegles": "EXIGER_APPROBATION" }, "texte": "art\\. 14\\.16", "absent": "art\\. 14\\.06|art\\. 14\\.15|art\\. 16\\.02" }, "capturer": { "echange": "id" } },
+        { "acteur": "marc", "methode": "POST", "chemin": "/api/effectifs/echanges/{{echange}}/accepter", "corps": {}, "attendu": { "statut": 200, "corps": { "statut": "A_VALIDER" } } },
+        { "pourquoi": "L'employée ne consent pas à la place du supérieur", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/echanges/{{echange}}/valider", "corps": {}, "attendu": { "statut": 403 } },
+        { "acteur": "chef", "methode": "POST", "chemin": "/api/effectifs/echanges/{{echange}}/valider", "corps": { "motif": "Consentement du supérieur immédiat (art. 14.16)" }, "attendu": { "statut": 200, "corps": { "statut": "APPLIQUE" } } },
+        { "pourquoi": "14.16 ne déclenche pas : Luc et Léa ne sont d'aucune convention, l'échange s'applique sans validation", "acteur": "luc", "methode": "POST", "chemin": "/api/effectifs/echanges", "corps": { "placeCedeeId": "{{lucMar}}", "placeVoulueId": "{{leaJeu}}" }, "attendu": { "statut": 201, "corps": { "actionRegles": "ACCEPTER" }, "absent": "art\\. 14\\.16" }, "capturer": { "echangeHors": "id" } },
+        { "acteur": "lea", "methode": "POST", "chemin": "/api/effectifs/echanges/{{echangeHors}}/accepter", "corps": {}, "attendu": { "statut": 200, "corps": { "statut": "APPLIQUE" } } }
+      ]
+    },
+    {
+      "id": "SP-06",
+      "titre": "Absences — à 90 jours, la planificatrice est avertie que l'assignation suit 15.14 ; à 89 jours, rien",
+      "exigences": ["E-GN-5", "E-CH-6"],
+      "prouve": [{ "regle": "sp-csn-assignation-90-jours", "cas": "declenche" }, { "regle": "sp-csn-assignation-90-jours", "cas": "ne-declenche" }],
+      "etapes": [
+        { "pourquoi": "Déclenche : du 1er juillet au 28 septembre, 90 jours ; l'absence est accordée, avec l'avertissement", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "motif": "CA", "du": "2030-07-01", "au": "2030-09-28" }, "attendu": { "statut": 201, "corps": { "statut": "ACCEPTEE" }, "texte": "Absence de 90 jours : l'assignation de 90 jours et plus s'offre d'abord, par ancienneté, aux personnes à temps complet d'une autre plage \\(convention SP-CSN, art\\. 15\\.14\\)" } },
+        { "pourquoi": "Ne déclenche pas : 89 jours", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "motif": "CA", "du": "2030-10-01", "au": "2030-12-28" }, "attendu": { "statut": 201, "corps": { "statut": "ACCEPTEE" }, "absent": "art\\. 15\\.14" } }
+      ]
+    },
+    {
+      "id": "SP-07",
+      "titre": "Seuil des codes d'absence — quatorze jours et plus ouvrent le remplacement long terme (15.15), treize jours se comblent quart par quart (15.16)",
+      "exigences": ["E-CH-6", "E-CH-7", "P-CH-8"],
+      "prouve": [{ "parametre": "codesAbsence", "cas": "declenche" }, { "parametre": "codesAbsence", "cas": "ne-declenche" }],
+      "etapes": [
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes", "corps": { "nom": "LT", "uniteCode": "EST", "debut": "2030-05-06", "fin": "2030-06-02" }, "attendu": { "statut": 201 }, "capturer": { "lt": "id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/periodes/{{lt}}/etat", "corps": { "etat": "CONFECTION" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/equipages", "corps": { "periodeId": "{{lt}}", "date": "2030-05-08", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}", "composition": [{ "corpsEmploiCode": "PARA", "nombre": 2 }] }, "attendu": { "statut": 201 }, "capturer": { "ltMarc": "places.0.id", "ltLea": "places.1.id" } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{ltMarc}}/attribuer", "corps": { "ressourceId": "{{P2}}" }, "attendu": { "statut": 200 } },
+        { "methode": "POST", "chemin": "/api/effectifs/planification/places/{{ltLea}}/attribuer", "corps": { "ressourceId": "{{P4}}" }, "attendu": { "statut": 200 } },
+        { "pourquoi": "Déclenche : congé annuel planifié du 8 au 21 mai, quatorze jours (MAL ne se planifie pas d'avance : le produit le refuse)", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "personneId": "{{P2}}", "motif": "CA", "du": "2030-05-08", "au": "2030-05-21" }, "attendu": { "statut": 201 }, "capturer": { "quatorze": "ids.0" } },
+        { "methode": "GET", "chemin": "/api/effectifs/absences/{{quatorze}}/comblement", "attendu": { "statut": 200, "corps": { "places": [{ "resultat": "REMPLACEMENT_LONG_TERME" }], "remplacementPossible": true } } },
+        { "pourquoi": "Ne déclenche pas : du 8 au 20 mai, treize jours", "methode": "POST", "chemin": "/api/effectifs/absences", "corps": { "personneId": "{{P4}}", "motif": "CA", "du": "2030-05-08", "au": "2030-05-20" }, "attendu": { "statut": 201 }, "capturer": { "treize": "ids.0" } },
+        { "methode": "GET", "chemin": "/api/effectifs/absences/{{treize}}/comblement", "attendu": { "statut": 200, "corps": { "remplacementPossible": false }, "absent": "REMPLACEMENT_LONG_TERME" } }
+      ]
+    },
+    {
+      "id": "SP-08",
+      "titre": "Heures supplémentaires — au-delà de 80 h dans la période de paie (15.12, 14.11), sans excédent de jour ni de semaine ; au-delà de 85 h, la feuille le signale",
+      "exigences": ["E-RF-5", "E-RF-6"],
+      "prouve": [{ "parametre": "seuilsHeuresSupplementaires", "cas": "declenche" }, { "parametre": "seuilsHeuresSupplementaires", "cas": "ne-declenche" }, { "regle": "sp-csn-plafond-periode-paie", "cas": "declenche" }, { "regle": "sp-csn-plafond-periode-paie", "cas": "ne-declenche" }],
+      "etapes": [
+        { "pourquoi": "Une période de paie de quatorze jours, du dimanche 21 avril au samedi 4 mai : elle touche trois semaines civiles", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/preparer", "corps": { "uniteCode": "EST", "debut": "2030-04-21", "fin": "2030-05-04" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "GET", "chemin": "/api/effectifs/temps/moi", "attendu": { "statut": 200, "corps": [{ "debut": "2030-04-21" }] }, "capturer": { "fJulie": "0.id" } },
+        { "pourquoi": "Dix jours de 8 h : 8 h la première semaine, 40 h la deuxième, 32 h la troisième", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-21", "debut": "2030-04-21T12:00:00Z", "fin": "2030-04-21T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-22", "debut": "2030-04-22T12:00:00Z", "fin": "2030-04-22T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-23", "debut": "2030-04-23T12:00:00Z", "fin": "2030-04-23T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-24", "debut": "2030-04-24T12:00:00Z", "fin": "2030-04-24T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-25", "debut": "2030-04-25T12:00:00Z", "fin": "2030-04-25T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-26", "debut": "2030-04-26T12:00:00Z", "fin": "2030-04-26T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-29", "debut": "2030-04-29T12:00:00Z", "fin": "2030-04-29T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-04-30", "debut": "2030-04-30T12:00:00Z", "fin": "2030-04-30T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-05-01", "debut": "2030-05-01T12:00:00Z", "fin": "2030-05-01T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-05-02", "debut": "2030-05-02T12:00:00Z", "fin": "2030-05-02T20:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "80 h : aucune heure supplémentaire, aucun avertissement", "acteur": "julie", "methode": "GET", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}", "attendu": { "statut": 200, "corps": { "heuresSupplementaires": { "total": 0 } }, "absent": "art\\. 15\\.12" } },
+        { "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-05-03", "debut": "2030-05-03T12:00:00Z", "fin": "2030-05-03T16:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "84 h : le seuil de 80 h déclenche (4 h, soit 240 min) ; le plafond de 85 h, non", "acteur": "julie", "methode": "GET", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}", "attendu": { "statut": 200, "corps": { "heuresSupplementaires": { "total": 240 } }, "absent": "art\\. 15\\.12" } },
+        { "pourquoi": "L'avertissement ne bloque pas la saisie : le temps travaillé se déclare", "acteur": "julie", "methode": "POST", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}/segments", "corps": { "date": "2030-05-04", "debut": "2030-05-04T12:00:00Z", "fin": "2030-05-04T16:00:00Z", "typeHeureCode": "REG" }, "attendu": { "statut": 201 } },
+        { "pourquoi": "88 h : 8 h supplémentaires, et le plafond de 85 h est signalé", "acteur": "julie", "methode": "GET", "chemin": "/api/effectifs/temps/feuilles/{{fJulie}}", "attendu": { "statut": 200, "corps": { "heuresSupplementaires": { "total": 480 } }, "texte": "88 h dans la période de paie : au plus 85 \\(convention SP-CSN, art\\. 15\\.12, 14\\.11\\)" } }
+      ]
+    }
+  ]
+}

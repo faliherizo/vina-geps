@@ -175,3 +175,8 @@ Le jeu de démonstration porte les règles de la convention jointe (repos 10 h, 
 approbation du supérieur, deux plages consécutives, seuils d'heures supplémentaires de la période de paie), chacune
 citant son article dans son message : la démonstration de l'addenda 6 (Q2) montre une règle réelle, pas une règle
 d'essai.
+
+Livré le 22 novembre, sans code serveur : paramétrage, semeur, scénarios et écarts dans
+[05_scenarios/AD-08.md](05_scenarios/AD-08.md). Le « vendredi sur deux » de 15.04, l'exception des quarts de 7,75 h de
+14.15, les 8 h au changement de plage (14.13) et la journée régulière de 16.01 ne s'expriment pas : ils sont listés
+comme écarts, pas contournés.

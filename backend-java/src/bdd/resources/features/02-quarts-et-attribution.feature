@@ -410,3 +410,120 @@ Fonctionnalité: Quarts ad hoc, attribution manuelle et postes publiés
       }
       """
     Alors la réponse a le statut 422
+
+  # AD-08 (addenda 4 Q1, addenda 6 Q2) : la convention SP-CSN se paramètre par des règles à portée de convention.
+  # Le paramétrage complet, ses articles et ses écarts : e2e/donnees/urgences-sante/convention-sp-csn.json.
+  @E-GR-7
+  Scénario: Une règle à portée de convention ne vise que ses personnes ; le travail en continuité n'est pas un repos (14.06) mais compte dans les 16 h sur 24 h (16.02)
+    Soit un organisme d'Urgences-santé amorcé
+    Quand admin envoie POST /api/effectifs/referentiels/conventions avec :
+      """json
+      { "effectifDepuis": "2026-01-01", "code": "SPCSN", "libelleFr": "Convention SP-CSN — paramédics" }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie PUT /api/effectifs/planification/ressources/{{P2}} avec :
+      """json
+      { "nom": "Marc", "corpsEmploiCode": "PARA", "uniteCode": "EST", "statutEmploiCode": "TPR", "anciennete": 9,
+        "utilisateurId": "{{u_marc}}", "conventionCode": "SPCSN" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/regles avec :
+      """json
+      { "contexte": "ATTRIBUTION", "cle": "sp-csn-repos", "porteeType": "CONVENTION", "porteeCode": "SPCSN",
+        "condition": { "tous": [ { "fait": "reposHeures", "op": ">", "valeur": 0 }, { "fait": "reposHeures", "op": "<", "valeur": 10 } ] },
+        "action": "BLOQUER", "message": "Repos de {reposHeures} h entre deux quarts : il en faut au moins 10 (art. 14.06)" }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie POST /api/effectifs/regles avec :
+      """json
+      { "contexte": "ATTRIBUTION", "cle": "sp-csn-seize-heures", "porteeType": "CONVENTION", "porteeCode": "SPCSN",
+        "condition": { "fait": "heures24h", "op": ">", "valeur": 16 },
+        "action": "BLOQUER", "message": "{heures24h} h sur 24 h : au plus 16 (art. 16.02, 16.07)" }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie POST /api/effectifs/planification/periodes avec :
+      """json
+      { "nom": "SP-CSN", "uniteCode": "EST", "debut": "2030-04-01", "fin": "2030-04-07" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "p"
+    # Lundi 7 h – 18 h 15 (un quart de 11,25 h, art. 14.01 c), Marc et Julie.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{p}}", "date": "2030-04-01", "debut": 420, "fin": 1095, "natureCode": "REG", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 2 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "lunMarc"
+    Et je retiens "places.1.id" sous le nom "lunJulie"
+    Quand admin envoie POST /api/effectifs/planification/places/{{lunMarc}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/places/{{lunJulie}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    # Mardi 3 h : 8,75 h de repos. Refusé pour Marc (SP-CSN) ; Julie n'est d'aucune convention.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{p}}", "date": "2030-04-02", "debut": 180, "fin": 645, "natureCode": "REG", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 2 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "tot1"
+    Et je retiens "places.1.id" sous le nom "tot2"
+    Quand admin envoie POST /api/effectifs/planification/places/{{tot1}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "Repos de 8[.,]75 h entre deux quarts : il en faut au moins 10 [(]art[.] 14[.]06[)]"
+    Quand admin envoie POST /api/effectifs/planification/places/{{tot2}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    # Mardi 4 h 15 – 12 h : dix heures de repos pile, admis.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{p}}", "date": "2030-04-02", "debut": 255, "fin": 720, "natureCode": "REG", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "matin"
+    Quand admin envoie POST /api/effectifs/planification/places/{{matin}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 200
+    # Prolonger le matin jusqu'à 20 h 30 : 16,25 h sur 24 h. La continuité n'est pas un repos : seule 16.02 refuse.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{p}}", "date": "2030-04-02", "debut": 720, "fin": 1230, "natureCode": "ADH", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "suite1"
+    Quand admin envoie POST /api/effectifs/planification/places/{{suite1}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "16[.,]25 h sur 24 h : au plus 16 [(]art[.] 16[.]02, 16[.]07[)]"
+    Et la réponse ne correspond pas à "14[.]06"
+    # Jusqu'à 20 h 15 : 16 h pile, admis.
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{p}}", "date": "2030-04-02", "debut": 720, "fin": 1215, "natureCode": "ADH", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "suite2"
+    Quand admin envoie POST /api/effectifs/planification/places/{{suite2}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P2}}" }
+      """
+    Alors la réponse a le statut 200

@@ -1,0 +1,160 @@
+{
+  "pourquoi": [
+    "Le paramétrage de démonstration de la convention collective SP-CSN des paramédics (articles 14 à 16, joints à l'addenda 4, Q1), posé par les seuls gestes de l'application : référentiels, règles, seuils. Aucune ligne de code ne connaît cette convention (story AD-08 ; addenda 6, Q2 : « démontrer le paramétrage »).",
+    "Chaque valeur cite son article dans `article`, et chaque règle le répète dans son message : ce que voit la planificatrice dit d'où vient le refus. Source : docs/26-015-DO_AO/questions/reponses/addenda-04.md.",
+    "Ce que le moteur ne sait pas exprimer est listé dans `ecarts`, avec l'article, au lieu d'être approché par une valeur qui ferait semblant.",
+    "Appliqué par scripts/semer-sp-csn.cjs ; prouvé par e2e/tests/e2e/urgences-sante-sp-csn.spec.ts (scénarios dans comportements-sp-csn.json) ; décrit dans docs/26-015-DO_AO/12-reponses-addenda/05_scenarios/AD-08.md."
+  ],
+  "convention": {
+    "code": "SPCSN",
+    "libelleFr": "Convention SP-CSN — paramédics",
+    "libelleEn": "SP-CSN collective agreement — paramedics",
+    "article": "Addenda 4, Q1 : la convention échue demeure appliquée pendant la renégociation"
+  },
+  "statutsEmploi": [
+    { "code": "TC", "libelleFr": "Temps complet", "comportement": "TEMPS_COMPLET", "article": "14.01, 14.10 a)" },
+    { "code": "TPR", "libelleFr": "Temps partiel régulier", "comportement": "TEMPS_PARTIEL_REGULIER", "article": "14.10 c), 15.01 d)" },
+    { "code": "TP", "libelleFr": "Temps partiel (liste de rappel)", "comportement": "TEMPS_PARTIEL_OCCASIONNEL", "article": "15.02, 15.12 ; 14.10 b) (qui ne choisit aucun patron est inscrit sur la liste de rappel)" }
+  ],
+  "naturesQuart": [
+    { "code": "REG", "libelleFr": "Quart régulier", "comportement": "REGULIER", "attributs": { "presencePrealableMinutes": 15 },
+      "article": "14.14 : quinze minutes rémunérées avant le quart (inspection du véhicule, planification)" },
+    { "code": "HS", "libelleFr": "Heures supplémentaires offertes", "comportement": "HEURES_SUPPLEMENTAIRES",
+      "article": "16.01, 16.02 : travail en plus de la journée ou de la semaine régulière, offert par ancienneté" }
+  ],
+  "typesHeure": [
+    { "code": "REG", "libelleFr": "Travail régulier", "comportement": "TRAVAILLEE", "article": "14.01" },
+    { "code": "PREA", "libelleFr": "Présence préalable (véhicule)", "comportement": "PRESENCE_PREALABLE", "article": "14.14" },
+    { "code": "REPAS", "libelleFr": "Période de repas non rémunérée", "comportement": "PAUSE_NON_PAYEE", "article": "14.03 a)" },
+    { "code": "HS", "libelleFr": "Heures supplémentaires (150 %)", "comportement": "SUPPLEMENTAIRE", "attributs": { "majorationPourcent": 50 },
+      "article": "16.01 a), 14.11, 15.12 : taux normal majoré de 50 %" },
+    { "code": "HSF", "libelleFr": "Heures supplémentaires un jour férié (200 %)", "comportement": "SUPPLEMENTAIRE", "attributs": { "majorationPourcent": 100 },
+      "article": "16.06 : taux normal majoré de 100 %" }
+  ],
+  "codesAbsence": {
+    "pourquoi": "Les articles 14 à 16 ne listent pas les motifs d'absence (15.01 b) renvoie aux « motifs prévus à la convention ») : les codes ci-dessous portent des libellés de démonstration. Ce que la convention fixe, c'est le seuil : une assignation de quatorze jours et plus est indivisible et s'offre pour l'horaire suivant (15.15) ; en deçà, elle se fractionne (15.16). Il vaut pour tout motif, donc pour chaque code. La catégorie `duree` est exigée par le produit ; le seuil l'emporte sur elle (AD-02).",
+    "codes": [
+      { "code": "MAL", "libelleFr": "Maladie ou invalidité", "comportement": "PAYE",
+        "attributs": { "duree": "PONCTUELLE", "planifiable": false, "seuilJoursLongTerme": 14 },
+        "article": "Seuil : 15.15 (quatorze jours et plus), 15.16 (moins de quatorze jours) ; motif : 15.13 (invalidité, retour progressif)" },
+      { "code": "CA", "libelleFr": "Congé annuel", "comportement": "PAYE",
+        "attributs": { "duree": "PONCTUELLE", "planifiable": true, "seuilJoursLongTerme": 14 },
+        "article": "Seuil : 15.15, 15.16 ; motif : 15.17 (remplacement des congés annuels)" },
+      { "code": "CSS", "libelleFr": "Congé sans solde", "comportement": "NON_PAYE",
+        "attributs": { "duree": "PONCTUELLE", "planifiable": true, "seuilJoursLongTerme": 14 },
+        "article": "Seuil : 15.15, 15.16 ; motif : 15.04 (« absences ou congés avec ou sans solde »)" }
+    ]
+  },
+  "seuilsHeuresSupplementaires": {
+    "corps": { "seuilPeriodePaieHeures": 80 },
+    "article": "15.12 et 14.11 : au-delà de quatre-vingts heures dans la période de paie de quatorze jours, les heures sont supplémentaires (50 %)",
+    "nonPoses": "seuilJourHeures et seuilSemaineHeures ne sont pas posés : la journée régulière (7,75 h, 9,5 h ou 11,25 h) et la semaine moyenne (38,75 h, 38 h ou 39,375 h sur deux semaines) dépendent de l'horaire et ne sont pas entières (écarts E-03 et E-04). Ceux de l'organisme s'appliquent."
+  },
+  "regles": [
+    {
+      "cle": "sp-csn-repos-attribution", "contexte": "ATTRIBUTION", "action": "BLOQUER",
+      "condition": { "tous": [ { "fait": "reposHeures", "op": ">", "valeur": 0 }, { "fait": "reposHeures", "op": "<", "valeur": 10 } ] },
+      "message": "Repos de {reposHeures} h entre deux quarts : il en faut au moins 10 (convention SP-CSN, art. 14.06)",
+      "article": "14.06",
+      "lecture": "Un repos nul n'est pas un repos entre deux quarts : c'est du travail en continuité (16.05, 16.08), que la règle des 16 h sur 24 h encadre."
+    },
+    {
+      "cle": "sp-csn-seize-heures-attribution", "contexte": "ATTRIBUTION", "action": "BLOQUER",
+      "condition": { "fait": "heures24h", "op": ">", "valeur": 16 },
+      "message": "{heures24h} h sur 24 h : au plus 16, journée normale comprise (convention SP-CSN, art. 16.02, 16.07)",
+      "article": "16.02, 16.07"
+    },
+    {
+      "cle": "sp-csn-consentement-echange", "contexte": "ECHANGE", "action": "EXIGER_APPROBATION",
+      "condition": { "un_de": [ { "fait": "memePeriode", "op": "=", "valeur": true }, { "fait": "memePeriode", "op": "=", "valeur": false } ] },
+      "message": "Échange de quarts : consentement préalable du supérieur immédiat (convention SP-CSN, art. 14.16)",
+      "article": "14.16",
+      "lecture": "Tout échange, dans la même période ou entre deux : le moteur n'a pas de condition « toujours », la disjonction la dit."
+    },
+    {
+      "cle": "sp-csn-plages-consecutives", "contexte": "ECHANGE", "action": "BLOQUER",
+      "condition": { "fait": "contigu", "op": "=", "valeur": true },
+      "message": "L'échange ferait travailler deux plages consécutives (convention SP-CSN, art. 14.15)",
+      "article": "14.15",
+      "lecture": "L'exception des quarts de 7,75 h ne s'exprime pas (écart E-01)."
+    },
+    {
+      "cle": "sp-csn-repos-echange", "contexte": "ECHANGE", "action": "BLOQUER",
+      "condition": { "tous": [ { "fait": "reposHeures", "op": ">", "valeur": 0 }, { "fait": "reposHeures", "op": "<", "valeur": 10 } ] },
+      "message": "Repos de {reposHeures} h entre deux quarts : il en faut au moins 10 (convention SP-CSN, art. 14.06)",
+      "article": "14.06"
+    },
+    {
+      "cle": "sp-csn-seize-heures-echange", "contexte": "ECHANGE", "action": "BLOQUER",
+      "condition": { "fait": "heures24h", "op": ">", "valeur": 16 },
+      "message": "{heures24h} h sur 24 h : au plus 16 (convention SP-CSN, art. 16.02, 16.07)",
+      "article": "16.02, 16.07"
+    },
+    {
+      "cle": "sp-csn-assignation-90-jours", "contexte": "ABSENCE", "action": "AVERTIR",
+      "condition": { "fait": "joursDemandes", "op": ">=", "valeur": 90 },
+      "message": "Absence de {joursDemandes} jours : l'assignation de 90 jours et plus s'offre d'abord, par ancienneté, aux personnes à temps complet d'une autre plage (convention SP-CSN, art. 15.14)",
+      "article": "15.14",
+      "lecture": "Le produit a deux voies (remplacement long terme, quart par quart) ; la troisième voie de 15.14 est signalée à la planificatrice, non routée (écart E-07)."
+    },
+    {
+      "cle": "sp-csn-plafond-periode-paie", "contexte": "HEURES_SUPPLEMENTAIRES", "action": "AVERTIR",
+      "condition": { "fait": "heuresPeriodePaie", "op": ">", "valeur": 85 },
+      "message": "{heuresPeriodePaie} h dans la période de paie : au plus 85 (convention SP-CSN, art. 15.12, 14.11)",
+      "article": "15.12, 14.11"
+    },
+    {
+      "cle": "sp-csn-fins-de-semaine", "contexte": "DISPONIBILITE", "action": "BLOQUER",
+      "portee": { "type": "STATUT_EMPLOI", "code": "TP" },
+      "condition": { "fait": "finsDeSemaine", "op": "<", "valeur": 2 },
+      "message": "{finsDeSemaine} fin(s) de semaine offerte(s) : la liste de rappel en exige une aux deux semaines, soit 2 par horaire de quatre semaines (convention SP-CSN, art. 15.04, 15.09)",
+      "article": "15.04, 15.09",
+      "lecture": "15.04 vise la liste de rappel, d'où la portée par statut ; une période de collecte d'un horaire dure quatre semaines (15.09)."
+    }
+  ],
+  "ecarts": [
+    { "id": "E-01", "article": "14.15", "valeur": "« Toutefois, les personnes salariées dont la durée du quart est de 7,75 h peuvent occasionnellement effectuer deux quarts consécutifs »",
+      "pourquoi": "Le contexte ECHANGE n'expose pas la durée du quart, et aucune portée ne vise une durée : la règle des plages consécutives bloque aussi les quarts de 7,75 h." },
+    { "id": "E-02", "article": "14.13, 14.11, 15.11, 15.14 c)", "valeur": "Huit heures de repos au changement de plage horaire (au lieu de dix)",
+      "pourquoi": "Aucun fait ne dit si deux quarts sont de plages différentes : un seul seuil de repos s'exprime, celui de 14.06 (10 h). La majoration de 50 % des heures faites dans ces huit heures (14.13) n'a pas non plus de type d'heure calculé." },
+    { "id": "E-03", "article": "16.01 a), 14.01", "valeur": "Journée régulière de 7,75 h, 9,5 h ou 11,25 h selon l'horaire",
+      "pourquoi": "Les seuils d'heures supplémentaires sont des heures entières et un seul seuil de jour vaut par convention : ni la fraction ni la dépendance à l'horaire ne s'expriment. Le seuil de jour de l'organisme s'applique." },
+    { "id": "E-04", "article": "16.09, 14.01", "valeur": "Semaine moyenne de 38,75 h, 38 h ou 39,375 h sur deux semaines",
+      "pourquoi": "Même raison qu'E-03 ; de plus, une moyenne sur deux semaines n'est pas un seuil hebdomadaire. Pour un temps complet, elle vaudrait 77,5 h, 76 h ou 78,75 h par période de paie : le seuil de période de paie posé (80 h, 15.12) est celui du temps partiel." },
+    { "id": "E-05", "article": "15.12", "valeur": "Octroyer un quart au temps partiel tant qu'il n'a pas atteint 77,5 h dans la période de paie, sans dépasser 85 h",
+      "pourquoi": "Le contexte ATTRIBUTION n'expose que les heures de la semaine (`heuresSemaine`) et de 24 h, pas celles de la période de paie : le plafond de 85 h n'est jugé qu'à la feuille de temps (règle sp-csn-plafond-periode-paie), après coup." },
+    { "id": "E-06", "article": "14.17", "valeur": "Un quart déjà échangé ne s'échange plus",
+      "pourquoi": "Aucun fait ne dit qu'une place vient d'un échange." },
+    { "id": "E-07", "article": "15.14", "valeur": "Assignation de 90 jours et plus : offerte d'abord aux temps complet d'une autre plage, au plus deux mutations (ou quatre : valeur ambiguë dans l'original)",
+      "pourquoi": "Le comblement a deux voies (long terme au-delà du seuil du code, quart par quart en deçà). La troisième est signalée par une règle ABSENCE (AVERTIR), non routée. Le plafond de mutations n'est pas paramétré : l'addenda converti juxtapose deux valeurs à l'article 15.14 (voir l'en-tête d'addenda-04.md)." },
+    { "id": "E-08", "article": "15.04", "valeur": "Quatre journées par période de quatorze jours ; un vendredi sur deux ; une journée de plus en juin, juillet et août",
+      "pourquoi": "`quartsParSemaine` est le minimum par semaine : « au moins 2 par semaine » serait plus strict que « 4 par 14 jours » (4 + 0 est conforme). Aucun fait ne compte les vendredis. Une règle ne se répète pas d'elle-même chaque été. Seule la fin de semaine est posée." },
+    { "id": "E-09", "article": "14.16", "valeur": "« Un échange de quart de travail ou de congé ne peut en aucun cas entraîner l'application des dispositions concernant les heures supplémentaires »",
+      "pourquoi": "Le calcul des heures supplémentaires d'une feuille ignore l'origine d'un quart (échange ou non)." },
+    { "id": "E-10", "article": "16.06", "valeur": "Heures supplémentaires un jour férié à 200 %",
+      "pourquoi": "Le type d'heure HSF (100 %) existe, mais le calcul automatique reclasse toutes les heures supplémentaires sous un seul type : le férié se saisit à la main sous HSF." },
+    { "id": "E-11", "article": "14.03 d)", "valeur": "Prime d'interruption de repas : 10 $ par interruption",
+      "pourquoi": "La paie porte des primes horaires, en pourcentage et des forfaits par paie ; aucune prime par événement." },
+    { "id": "E-12", "article": "15.10, 16.02, 16.03", "valeur": "Offre par ancienneté et à tour de rôle, 10 minutes pour répondre, un refus compte comme fait",
+      "pourquoi": "Relève d'AD-07 (offre en cascade), non livrée à ce jour : le comblement offre aux admissibles simultanément." },
+    { "id": "E-13", "article": "14.05, 14.07", "valeur": "Patrons à temps complet : une fin de semaine sur deux (du vendredi 22 h au dimanche 22 h), deux jours de repos par semaine en moyenne",
+      "pourquoi": "Ce sont des contraintes de fabrication des patrons d'horaires (postes), qu'aucun contexte de règle ne juge ; la fin de semaine du produit va du samedi au dimanche." },
+    { "id": "E-14", "article": "15.06", "valeur": "Disponibilité modifiable treize fois par année civile, vingt et un jours d'avance",
+      "pourquoi": "Aucun compteur de modifications de disponibilité." }
+  ],
+  "support": {
+    "pourquoi": "Hors convention : ce qu'il faut pour montrer le paramétrage sur des personnes (unité, corps, titre, milieu, comptes). Rien ici n'est tiré des articles 14 à 16.",
+    "organisme": { "nom": "Urgences-santé — convention SP-CSN (démonstration)", "planCode": "enterprise" },
+    "unite": { "code": "OPS", "libelleFr": "Opérations préhospitalières" },
+    "corpsEmploi": { "code": "PARA", "libelleFr": "Paramédic" },
+    "titreEmploi": { "code": "PSP", "libelleFr": "Paramédic en soins primaires" },
+    "typeMilieu": { "code": "CENTRE", "libelleFr": "Centre opérationnel", "comportement": "CENTRE_OPERATIONNEL" },
+    "milieu": { "code": "CO-EST", "libelle": "Centre opérationnel Est" },
+    "personnes": [
+      { "username": "sophie.tremblay", "nom": "Sophie Tremblay", "matricule": "SP-101", "statutEmploiCode": "TC", "anciennete": 12, "role": "employee" },
+      { "username": "kevin.gagnon", "nom": "Kevin Gagnon", "matricule": "SP-102", "statutEmploiCode": "TPR", "anciennete": 6, "role": "employee" },
+      { "username": "amelie.roy", "nom": "Amélie Roy", "matricule": "SP-103", "statutEmploiCode": "TP", "anciennete": 2, "role": "employee" },
+      { "username": "nadia.belanger", "nom": "Nadia Bélanger", "role": "manager", "perimetre": "GESTION" }
+    ]
+  }
+}
