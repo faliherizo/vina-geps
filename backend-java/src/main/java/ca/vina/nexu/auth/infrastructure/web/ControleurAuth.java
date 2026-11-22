@@ -24,6 +24,8 @@ import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.securite.HoteEtablissement;
 import ca.vina.nexu.partage.securite.JetonDeSession;
+import ca.vina.nexu.partage.securite.FiltreSession;
+import ca.vina.nexu.partage.securite.SessionsRevoquees;
 import ca.vina.nexu.partage.temps.Iso;
 import ca.vina.nexu.partage.web.GardeAcces;
 import ca.vina.nexu.securite.domaine.PareFeu;
@@ -94,16 +96,18 @@ public class ControleurAuth {
     private final DepotEmprunts emprunts;
     private final RestrictionPaysConnexion restrictionPays;
     private final DroitDApprouver droitDApprouver;
+    /** PT-02 : la déconnexion ferme la session elle-même, pas seulement le témoin du navigateur. */
+    private final SessionsRevoquees revoquees;
 
     @Autowired
     public ControleurAuth(DepotComptes comptes, DepotQuestionsSecretes questions, DepotRolesEtablissement roles,
                           DepotCatalogueQuestions catalogueQuestions, DepotAudit registre, DepotEtablissementsConnexion etablissements,
                           DepotQuotas quotas, JournalAudit audit, GardeAcces garde, Clock horloge, PareFeu pareFeu, @Value("${nexu.jwt.secret}") String secret,
                           @Value("${nexu.cookie.secure:false}") boolean cookieSecurise, HoteEtablissement hote, DepotEmprunts emprunts,
-                          RestrictionPaysConnexion restrictionPays, DroitDApprouver droitDApprouver) {
+                          RestrictionPaysConnexion restrictionPays, DroitDApprouver droitDApprouver, SessionsRevoquees revoquees) {
         this(comptes, questions, roles, catalogueQuestions, registre, etablissements, quotas, audit, garde, horloge, pareFeu,
                 new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge), cookieSecurise, hote, emprunts, restrictionPays,
-                droitDApprouver);
+                droitDApprouver, revoquees);
     }
 
     /** Sans restriction de pays : les essais qui ne la visent pas. */
@@ -127,6 +131,16 @@ public class ControleurAuth {
                    DepotCatalogueQuestions catalogueQuestions, DepotAudit registre, DepotEtablissementsConnexion etablissements,
                    DepotQuotas quotas, JournalAudit audit, GardeAcces garde, Clock horloge, PareFeu pareFeu, ServiceConnexion connexion, boolean cookieSecurise,
                    HoteEtablissement hote, DepotEmprunts emprunts, RestrictionPaysConnexion restrictionPays, DroitDApprouver droitDApprouver) {
+        this(comptes, questions, roles, catalogueQuestions, registre, etablissements, quotas, audit, garde, horloge, pareFeu, connexion, cookieSecurise, hote,
+                emprunts, restrictionPays, droitDApprouver, SessionsRevoquees.AUCUNE);
+    }
+
+    ControleurAuth(DepotComptes comptes, DepotQuestionsSecretes questions, DepotRolesEtablissement roles,
+                   DepotCatalogueQuestions catalogueQuestions, DepotAudit registre, DepotEtablissementsConnexion etablissements,
+                   DepotQuotas quotas, JournalAudit audit, GardeAcces garde, Clock horloge, PareFeu pareFeu, ServiceConnexion connexion, boolean cookieSecurise,
+                   HoteEtablissement hote, DepotEmprunts emprunts, RestrictionPaysConnexion restrictionPays, DroitDApprouver droitDApprouver,
+                   SessionsRevoquees revoquees) {
+        this.revoquees = revoquees;
         this.droitDApprouver = droitDApprouver;
         this.restrictionPays = restrictionPays;
         this.emprunts = emprunts;
@@ -399,6 +413,9 @@ public class ControleurAuth {
         if (c != null) {
             audit.consigner(c.userId(), c.username(), "auth.logout", null, null);
         }
+        if (requete.getAttribute(FiltreSession.ATTRIBUT_IDENTITE) instanceof JetonDeSession.Identite i && i.id() != null) {
+            revoquees.revoquer(i.id(), i.expireLe());
+        }
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, cookie(COOKIE_SESSION, "", true, Duration.ZERO).toString())
                 .header(HttpHeaders.SET_COOKIE, cookie(COOKIE_CSRF, "", false, Duration.ZERO).toString())
@@ -551,12 +568,22 @@ public class ControleurAuth {
             if (!permanent && password.length() < 8) {
                 return erreur(400, "temporary password must be at least 8 characters");
             }
-            String tenantId = ctx.estSuperadmin() ? texte(corps, "tenantId") : tenantDuDemandeur(requete);
+            String tenantId = ctx.estSuperadmin() ? tenantDuSuperadmin(requete, corps) : tenantDuDemandeur(requete);
             Compte u = comptes.creer(new DepotComptes.Creation(username, password, role, texte(corps, "employeeId"), tenantId,
                     !permanent, true, null, permanent));
             consigner(requete, "auth.user.create", u.id(), Map.of("role", role));
             return ResponseEntity.status(201).body(u.vue());
         });
+    }
+
+    /**
+     * L'établissement d'un compte créé par un superadmin : celui du corps, sinon celui qu'il a choisi en en-tête. Ignorer
+     * l'en-tête créait en silence un compte <em>global</em> (tests d'intrusion du 22 novembre 2026, PT-06). Sans l'un ni
+     * l'autre, le compte est global, comme le superadmin l'a demandé en ne choisissant aucun établissement.
+     */
+    private String tenantDuSuperadmin(HttpServletRequest requete, Map<String, Object> corps) {
+        String duCorps = texte(corps, "tenantId");
+        return duCorps != null ? duCorps : enTeteTenant(requete);
     }
 
     /** Un admin ne voit ni un superadmin ni un compte d'un autre établissement : 404, on ne divulgue rien. */

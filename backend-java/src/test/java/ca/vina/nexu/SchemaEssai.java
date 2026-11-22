@@ -224,6 +224,8 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, loginName TEXT, tenantId TEXT, passwordHash TEXT NOT NULL, role TEXT NOT NULL, employeeId TEXT, createdAt TEXT NOT NULL, active INTEGER NOT NULL DEFAULT 1, mustChangePassword INTEGER NOT NULL DEFAULT 0, securitySetupRequired INTEGER NOT NULL DEFAULT 0, email TEXT, securityMethod TEXT, securityQuestion TEXT, securityAnswerHash TEXT, totpSecret TEXT, pendingTotpSecret TEXT)",
             // Photo de profil (migration 0167) : un renseignement personnel, dans sa propre
             // table — on l'efface sans toucher au compte, et on ne la charge pas à chaque lecture.
+            // Sessions fermées par la déconnexion (changeset 0025, PT-02).
+            "CREATE TABLE IF NOT EXISTS auth_sessions_revoquees (jti TEXT PRIMARY KEY, expireLe TEXT NOT NULL, revoqueeLe TEXT NOT NULL)",
             "CREATE TABLE IF NOT EXISTS auth_photos (userId TEXT PRIMARY KEY, typeMime TEXT NOT NULL, taille INTEGER NOT NULL, contenu TEXT NOT NULL, modifieLe TEXT NOT NULL)",
             "CREATE TABLE IF NOT EXISTS user_security_questions (id TEXT PRIMARY KEY, userId TEXT NOT NULL, question TEXT NOT NULL, answerHash TEXT NOT NULL, sortOrder INTEGER NOT NULL DEFAULT 0, createdAt TEXT NOT NULL)",
             "CREATE TABLE IF NOT EXISTS audit_revues (id TEXT PRIMARY KEY, du TEXT NOT NULL, au TEXT NOT NULL, entrees INTEGER NOT NULL, empreinteFin TEXT, reviseurId TEXT NOT NULL, reviseurNom TEXT NOT NULL, constat TEXT NOT NULL, faiteLe TEXT NOT NULL)",
