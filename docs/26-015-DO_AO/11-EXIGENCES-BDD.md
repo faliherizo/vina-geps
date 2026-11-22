@@ -7,7 +7,7 @@
 
 ## Synthèse
 
-73 scénarios Gherkin. Les 90 exigences fonctionnelles sont découpées en 139 clauses
+74 scénarios Gherkin. Les 90 exigences fonctionnelles sont découpées en 139 clauses
 vérifiables (`clauses-exigences.json`), mot pour mot du client autant que possible : 134 sont prouvées
 par un scénario joué contre le serveur, 5 par un essai Java à horloge figée (le temps réel ne peut
 pas attendre une échéance), 0 sans preuve.
