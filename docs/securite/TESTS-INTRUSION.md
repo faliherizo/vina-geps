@@ -41,7 +41,9 @@ débit et faux positifs d'injection SQL). ZAP a ajouté PT-07 (`Permissions-Poli
 | PT-06 | Faible 3.8 | Un superadmin qui crée un compte avec `X-Tenant-Id` sans `tenantId` dans le corps crée un compte global | ✅ établissement de l'en-tête à défaut du corps |
 
 Observations de durcissement : nginx maître en root, `npm install` sans lockfile dans
-`frontend/Dockerfile` (✅ `npm ci`), avis `npm audit` (outillage de développement surtout ; `exceljs` livré),
+`frontend/Dockerfile` (✅ `npm ci`), avis `npm audit` (outillage de développement surtout ; `exceljs` livré ; ✅ IN-03 : 15 avis → 0 — Vite 8,
+Vitest 5, Capacitor 8 sans projet natif à migrer, `uuid` ≥ 11.1.1 imposé sous `exceljs` par `overrides`
+plutôt que le retour à `exceljs` 3.4.0 que propose npm ; `npm run audit:prod` bloquant en CI),
 base SQLite en 0644, verrou par compte exploitable pour bloquer un compte connu. Le détail est dans le
 rapport.
 
