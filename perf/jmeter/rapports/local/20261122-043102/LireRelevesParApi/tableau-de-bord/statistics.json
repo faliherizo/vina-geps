@@ -1,0 +1,50 @@
+{
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 2409,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 3.817766708177662,
+    "medianResTime" : 4.0,
+    "minResTime" : 2.0,
+    "maxResTime" : 76.0,
+    "pct1ResTime" : 5.0,
+    "pct2ResTime" : 5.0,
+    "pct3ResTime" : 6.0,
+    "throughput" : 19.916662532863732,
+    "receivedKBytesPerSec" : 1281.6439465752476,
+    "sentKBytesPerSec" : 11.299152854597617
+  },
+  "LireRelevesParApi" : {
+    "transaction" : "LireRelevesParApi",
+    "sampleCount" : 2408,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 3.787790697674416,
+    "medianResTime" : 4.0,
+    "minResTime" : 2.0,
+    "maxResTime" : 72.0,
+    "pct1ResTime" : 5.0,
+    "pct2ResTime" : 5.0,
+    "pct3ResTime" : 6.0,
+    "throughput" : 20.07436183870484,
+    "receivedKBytesPerSec" : 1292.3215292424597,
+    "sentKBytesPerSec" : 11.389847879187021
+  },
+  "POST /api/oauth/token" : {
+    "transaction" : "POST /api/oauth/token",
+    "sampleCount" : 1,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 76.0,
+    "medianResTime" : 76.0,
+    "minResTime" : 76.0,
+    "maxResTime" : 76.0,
+    "pct1ResTime" : 76.0,
+    "pct2ResTime" : 76.0,
+    "pct3ResTime" : 76.0,
+    "throughput" : 13.157894736842104,
+    "receivedKBytesPerSec" : 10.857833059210527,
+    "sentKBytesPerSec" : 5.525287828947368
+  }
+}
