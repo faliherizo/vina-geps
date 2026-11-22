@@ -12,8 +12,12 @@ import { adminDeLOrganisme, MDP_PROFIL } from "./urgences-sante";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 
-/** `verifie` nomme un vérificateur des options (p. ex. veraPDF) qui juge les octets de la réponse. */
-export interface Attendu { statut: number; corps?: unknown; texte?: string; verifie?: string }
+/**
+ * `verifie` nomme un vérificateur des options (p. ex. veraPDF) qui juge les octets de la réponse. `absent` est le
+ * contraire de `texte` : une expression qui **ne doit pas** se trouver — le cas où une règle ne se déclenche pas se
+ * prouve par l'absence de son motif, pas seulement par un statut qui passerait aussi pour une autre raison.
+ */
+export interface Attendu { statut: number; corps?: unknown; texte?: string; absent?: string; verifie?: string }
 /**
  * `service` vise un service externe des options (un bac à sable) plutôt que le serveur ; `reessayer` (secondes) rejoue
  * l'étape jusqu'à ce qu'elle passe — pour ce qui arrive de façon asynchrone, comme une poussée.
@@ -25,11 +29,18 @@ export interface Etape {
 export interface ServiceExterne { url: string; entetes?: Record<string, string> }
 /** Rend les écarts constatés sur les octets d'une réponse ; vide si conforme. */
 export type Verificateur = (octets: Buffer) => Promise<string[]>;
+/**
+ * `parametrer` agit sur l'organisme neuf, ses modules posés, **avant** les comptes et l'amorce : c'est là qu'un semis
+ * de démonstration pose son paramétrage par ses propres appels, pour que les scénarios éprouvent le semis lui-même.
+ */
 export interface OptionsComportements {
   prefixe: string; modules: string[];
   services?: Record<string, ServiceExterne>; verificateurs?: Record<string, Verificateur>;
+  parametrer?: (tenantId: string) => void | Promise<void>;
 }
-export interface Scenario { id: string; titre: string; exigences: string[]; etapes: Etape[] }
+/** Ce qu'un scénario éprouve d'un paramétrage : une règle (par sa clé) ou un paramètre, et le cas joué. */
+export interface Preuve { regle?: string; parametre?: string; cas: "declenche" | "ne-declenche" | "lu" }
+export interface Scenario { id: string; titre: string; exigences: string[]; etapes: Etape[]; prouve?: Preuve[] }
 export interface JeuComportements { acteurs: Record<string, { role: string }>; amorce: Etape[]; scenarios: Scenario[] }
 
 const GABARIT_SEUL = /^\{\{([\w:-]+)\}\}$/;
@@ -134,6 +145,8 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
       if (e.attendu.texte !== undefined && !new RegExp(String(rendre(e.attendu.texte, vars)), "m").test(texte)) {
         ecarts.push(`${ou} : le texte ne contient pas /${e.attendu.texte}/ — ${texte.slice(0, 300)}`);
       }
+      const absent = e.attendu.absent === undefined ? null : new RegExp(String(rendre(e.attendu.absent, vars)), "m").exec(texte);
+      if (absent) ecarts.push(`${ou} : le texte contient « ${absent[0]} », qui devait être absent — ${texte.slice(0, 300)}`);
       if (e.attendu.verifie !== undefined) {
         const verifier = options.verificateurs?.[e.attendu.verifie];
         ecarts.push(...(verifier ? await verifier(octets) : [`vérificateur « ${e.attendu.verifie} » non configuré`]).map((x) => `${ou} : ${x}`));
@@ -152,6 +165,7 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
         tenantId = await createTenant(sa, uniq(options.prefixe));
         await setTenantModules(sa, tenantId, options.modules);
       } finally { await sa.dispose(); }
+      await options.parametrer?.(tenantId);
       vars.suffixe = tenantId.slice(-6);
       vars.mois = new Date().toISOString().slice(0, 7);
       vars.mdp = MDP_PROFIL;
@@ -189,8 +203,10 @@ export function declarerComportements(titre: string, jeu: JeuComportements, opti
       test(`${s.id} — ${s.titre} (${s.exigences.join(", ")})`, async () => {
         const ecarts: string[] = [];
         for (const e of s.etapes) {
-          const ici = await jouer(e);
+          // Un gabarit sans valeur naît d'une étape précédente en échec : on s'arrête, mais en montrant d'abord cet échec.
+          const ici = await jouer(e).catch((err: Error) => [`${e.methode} ${e.chemin} : ${err.message}`]);
           ecarts.push(...ici.map((x) => (e.pourquoi ? `${x}\n    pourquoi : ${e.pourquoi}` : x)));
+          if (ici.some((x) => x.includes("aucune valeur capturée"))) break;
         }
         expect(ecarts, ecarts.join("\n")).toEqual([]);
       });
