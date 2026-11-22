@@ -92,7 +92,7 @@ class ScanAccesParRoleTest {
      * capacités ({@code politique-acces.json}) et le menu (entrées réservées à l'administration).
      */
     static final List<String> ADMINISTRATION = List.of("/api/effectifs/referentiels", "/api/habilitations/octrois", "/api/habilitations/objets",
-            "/api/auth/users", "/api/auth/audit", "/api/exploitation/copies-organisme");
+            "/api/auth/users", "/api/auth/audit", "/api/auth/liaisons", "/api/exploitation/copies-organisme");
 
     /** Les routes de la plateforme : aucun rôle d'un établissement n'y obtient rien, l'administrateur compris. */
     static final List<String> PLATEFORME = List.of("/api/superadmin/", "/api/saas/tenants");
