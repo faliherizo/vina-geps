@@ -3,6 +3,9 @@
 > Écrit pour qui ouvre `/monhoraire`, `/mesdisponibilites`, `/monagph`, `/matemps` ou `/usagph` et
 > les trouve **vides**, et pour qui reprend le module. La réponse courte est en bas du tableau :
 > un écran personnel ne se remplit pas par lui-même, il affiche ce que la planification a produit.
+>
+> Pour partir d'un organisme où ces trois conditions sont déjà réunies, pour chaque rôle :
+> [ORGANISME-PAR-DEFAUT.md](../ORGANISME-PAR-DEFAUT.md) (`scripts/creer-organisme-par-defaut.cjs`).
 
 ## La règle qui explique presque tous les écrans vides
 
