@@ -68,15 +68,24 @@ class ControleurHabilitationsHttpTest {
         }
 
         @Test
-        @DisplayName("un employé **consulte** ses droits : l'exigence 91 demande de les rendre consultables")
+        @DisplayName("un employé **consulte** ses droits (exigence 91) ; ceux d'autrui et les octrois de l'établissement restent à l'administration")
         void lectureOuverte() throws Exception {
             http.get("/api/habilitations/permissions", EMPLOYE).andExpect(status().isOk())
                     .andExpect(jsonPath("$[0]").value("aucun"));
             http.get("/api/habilitations/types-objet", EMPLOYE).andExpect(status().isOk())
                     .andExpect(jsonPath("$.length()").value(4));
-            http.get("/api/habilitations/objets", EMPLOYE).andExpect(jsonPath("$.length()").value(2));
-            http.get("/api/habilitations/octrois", EMPLOYE).andExpect(status().isOk());
-            http.get("/api/habilitations/utilisateurs/u1/fiche", EMPLOYE).andExpect(status().isOk());
+            http.get("/api/habilitations/utilisateurs/usr-employee/fiche", EMPLOYE).andExpect(status().isOk());
+            http.get("/api/habilitations/utilisateurs/usr-employee/profils", EMPLOYE).andExpect(status().isOk());
+            // Balayage des accès du 22 novembre 2026 : la carte des droits de tous était lisible par chacun.
+            http.get("/api/habilitations/objets", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/octrois", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/utilisateurs/u1/fiche", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/utilisateurs/u1/profils", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/utilisateurs/u1/permission?objetCode=rap-paie", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/objets/rap-paie/droits", EMPLOYE).andExpect(status().isForbidden());
+            http.get("/api/habilitations/objets", ADMIN).andExpect(jsonPath("$.length()").value(2));
+            http.get("/api/habilitations/octrois", ADMIN).andExpect(status().isOk());
+            http.get("/api/habilitations/utilisateurs/u1/fiche", ADMIN).andExpect(status().isOk());
         }
 
         @Test

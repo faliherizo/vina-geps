@@ -63,7 +63,7 @@ public class ControleurHabilitations {
 
     @GetMapping("/objets")
     public ResponseEntity<Object> objets(HttpServletRequest r) {
-        return GardeHabilitations.repondre(garde.base(r), 200, t -> VueHabilitations.objets(lecture.objets(t)));
+        return GardeHabilitations.repondre(garde.administrer(r), 200, t -> VueHabilitations.objets(lecture.objets(t)));
     }
 
     @PutMapping("/objets")
@@ -77,7 +77,7 @@ public class ControleurHabilitations {
 
     @GetMapping("/octrois")
     public ResponseEntity<Object> octrois(HttpServletRequest r) {
-        return GardeHabilitations.repondre(garde.base(r), 200, t -> VueHabilitations.octrois(lecture.octrois(t)));
+        return GardeHabilitations.repondre(garde.administrer(r), 200, t -> VueHabilitations.octrois(lecture.octrois(t)));
     }
 
     /** Période d'effectivité par profil <strong>et</strong> par utilisateur (exigence 84). */
@@ -102,7 +102,7 @@ public class ControleurHabilitations {
 
     @GetMapping("/utilisateurs/{id}/profils")
     public ResponseEntity<Object> profils(HttpServletRequest r, @PathVariable String id) {
-        return GardeHabilitations.repondre(garde.base(r), 200, t -> lecture.profilsDe(t, id));
+        return GardeHabilitations.repondre(garde.soiOuAdministrer(r, id), 200, t -> lecture.profilsDe(t, id));
     }
 
     @PostMapping("/utilisateurs/{id}/profils")
@@ -127,7 +127,7 @@ public class ControleurHabilitations {
     public ResponseEntity<Object> permission(HttpServletRequest r, @PathVariable String id,
                                              @RequestParam(required = false) String objetCode,
                                              @RequestParam(required = false) String le) {
-        return GardeHabilitations.repondre(garde.base(r), 200,
+        return GardeHabilitations.repondre(garde.soiOuAdministrer(r, id), 200,
                 t -> VueHabilitations.resolution(lecture.permission(t, id, texte(objetCode), le)));
     }
 
@@ -135,7 +135,7 @@ public class ControleurHabilitations {
     @GetMapping("/objets/{code}/droits")
     public ResponseEntity<Object> droits(HttpServletRequest r, @PathVariable String code,
                                          @RequestParam(required = false) String le) {
-        return GardeHabilitations.repondre(garde.base(r), 200,
+        return GardeHabilitations.repondre(garde.administrer(r), 200,
                 t -> VueHabilitations.droits(lecture.droits(t, code, le)));
     }
 
@@ -143,7 +143,7 @@ public class ControleurHabilitations {
     @GetMapping("/utilisateurs/{id}/fiche")
     public ResponseEntity<Object> fiche(HttpServletRequest r, @PathVariable String id,
                                         @RequestParam(required = false) String le) {
-        return GardeHabilitations.repondre(garde.base(r), 200,
+        return GardeHabilitations.repondre(garde.soiOuAdministrer(r, id), 200,
                 t -> VueHabilitations.fiche(lecture.fiche(t, id, le)));
     }
 }
