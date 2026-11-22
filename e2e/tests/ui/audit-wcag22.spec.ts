@@ -177,6 +177,12 @@ const MODULES_AUDIT = {
   "GET /api/alertes/envoyees": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], bilan: { destinataires: 2, lues: 1, repondues: 1, relances: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2030-03-04T14:03:00Z" },
     remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: "2030-03-04T14:03:00Z", reponseId: "rp-1", reponduLe: "2030-03-04T14:03:00Z" }, { personId: "marc", nom: "Marc Dubé", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null }] }],
   "GET /api/alertes/recues": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], maRemise: { personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null } }],
+  // AD-07 : un quart offert à Julie à son tour (Mon horaire), et le réglage de l'offre (Absences et comblement).
+  "GET /api/effectifs/offres/miennes": [{ id: "eofr-1", comblementId: "ecbl-1", absenceId: "abs-1", urgente: false, etat: "OUVERTE", creeLe: "2030-02-20T15:00:00.000Z",
+    attribueeA: null, quart: { placeId: "pl-9", uniteCode: "EST", date: "2030-03-12", debut: 360, fin: 1080 },
+    rangs: [{ rang: 1, ressourceId: "rs-1", nom: "Julie Roy", anciennete: 3, heuresComptees: 0, heuresOffertes: 12, etat: "OFFERT",
+      offertLe: "2030-02-20T15:00:00.000Z", echeance: "2030-02-20T15:10:00.000Z", reponduLe: null, motif: null }] }],
+  "GET /api/effectifs/offres/parametres": { mode: "CASCADE", delaiReponseMinutes: 10, seuilUrgenceMinutes: 120, fenetreRepartitionJours: 91 },
   "GET /api/effectifs/mon-horaire": { ressource: { id: "rs-1", matricule: "P1", nom: "Julie Roy", uniteCode: "EST", corpsEmploiCode: "PARA",
     titreEmploiCode: null, statutEmploiCode: null, conventionCode: null, anciennete: 3, actif: true },
     quarts: [
@@ -756,7 +762,12 @@ const PAGES = [
   { nom: "Comblement", nav: "nav-uscomblement" },
   { nom: "Quarts et équipages", nav: "nav-usequipages" },
   { nom: "Disponibilités de la période", nav: "nav-usdisponibilites" },
-  { nom: "Absences et comblement", nav: "nav-usabsences" },
+  { nom: "Absences et comblement", nav: "nav-usabsences",
+    // AD-07 : le réglage de l'offre des quarts libérés vit dans un tiroir ; il se mesure ouvert, formulaire chargé.
+    etats: [{ nom: "offre des quarts libérés", agir: async (page) => {
+      await page.getByTestId("pla-abs-offres-regler").click();
+      await page.getByTestId("pla-abs-offres-enregistrer").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Demandes et échanges", nav: "nav-usechanges" },
   { nom: "Confection annuelle (AGPH)", nav: "nav-usagph" },
   { nom: "Pointage et présence (console)", nav: "nav-uspresence" },
@@ -942,8 +953,10 @@ const PAGES = [
       await page.getByTestId("pvt-motif").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pvt-retour-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mon horaire", nav: "nav-monhoraire",
-    // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
+    // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture. Le quart offert
+    // (AD-07) s'affiche au-dessus, dans les deux lectures.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {
+      await page.getByTestId("mho-offre-accepter-2030-03-12").waitFor({ state: "visible" });
       await page.getByTestId("mho-vue-liste").click();
       await page.getByTestId("mho-table").or(page.getByTestId("mho-vide")).first().waitFor({ state: "visible" });
     } }] },

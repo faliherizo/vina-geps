@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Offre d'un quart par ancienneté et à tour de rôle** (ADR 0089, AD-07, 22 novembre 2026). La convention SP-CSN
+    (art. 15.10, 16.02, 16.03) offre les quarts un rang à la fois, dix minutes pour répondre, un refus compté comme fait.
+    Un organisme sans réglage garde l'offre simultanée : aucun comportement existant ne change.
+  -->
+  <changeSet id="0024-offres-quart-tour-de-role" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_comblements'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_offres'</sqlCheck>
+    </preConditions>
+    <comment>Réglage de l'offre des quarts par organisme ; offres en cascade et l'ordre de leurs rangs.</comment>
+    <sql>
+      CREATE TABLE IF NOT EXISTS eff_offres_parametres (
+        tenantId TEXT PRIMARY KEY,
+        mode TEXT NOT NULL,
+        delaiReponseMinutes INTEGER NOT NULL,
+        seuilUrgenceMinutes INTEGER NOT NULL,
+        fenetreRepartitionJours INTEGER NOT NULL,
+        modifieLe TEXT NOT NULL,
+        modifiePar TEXT NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS eff_offres (
+        id TEXT PRIMARY KEY,
+        tenantId TEXT NOT NULL,
+        comblementId TEXT NOT NULL,
+        absenceId TEXT NOT NULL,
+        placeId TEXT NOT NULL,
+        urgente INTEGER NOT NULL DEFAULT 0,
+        etat TEXT NOT NULL,
+        creeLe TEXT NOT NULL,
+        fermeeLe TEXT,
+        attribueeA TEXT
+      );
+      CREATE INDEX IF NOT EXISTS idx_eff_offres_absence ON eff_offres (tenantId, absenceId);
+      CREATE INDEX IF NOT EXISTS idx_eff_offres_etat ON eff_offres (tenantId, etat);
+      CREATE TABLE IF NOT EXISTS eff_offre_rangs (
+        tenantId TEXT NOT NULL,
+        offreId TEXT NOT NULL,
+        rang INTEGER NOT NULL,
+        ressourceId TEXT NOT NULL,
+        anciennete REAL NOT NULL,
+        heuresComptees REAL NOT NULL,
+        heuresOffertes REAL NOT NULL,
+        etat TEXT NOT NULL,
+        offertLe TEXT,
+        echeance TEXT,
+        reponduLe TEXT,
+        motif TEXT,
+        PRIMARY KEY (offreId, ressourceId)
+      );
+      CREATE INDEX IF NOT EXISTS idx_eff_offre_rangs_ressource ON eff_offre_rangs (tenantId, ressourceId, etat);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

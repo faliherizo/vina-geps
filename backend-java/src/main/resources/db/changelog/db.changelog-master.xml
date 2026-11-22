@@ -31,5 +31,6 @@
   <include file="db/changelog/0019-soutien-nature-maintenance.xml"/>
   <include file="db/changelog/0020-temps-seuils-periode-paie-et-conventions.xml"/>
   <include file="db/changelog/0021-agph-traitement-delai-echu.xml"/>
+  <include file="db/changelog/0024-offres-quart-tour-de-role.xml"/>
 
 </databaseChangeLog>

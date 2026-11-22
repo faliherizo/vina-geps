@@ -124,8 +124,50 @@ Critères d'acceptation :
 
 ## AD-07 — Offre par ancienneté et à tour de rôle
 
-**Pour** suivre la convention (15.10, 16.02, 16.03). Offre au premier rang, délai de réponse paramétrable
-(10 minutes), passage au rang suivant à l'échéance, refus compté ; offre simultanée conservée comme mode.
+**Pour** suivre la convention SP-CSN : « offrir aux personnes salariées disponibles par ancienneté et à tour de
+rôle, de façon à les répartir équitablement » (16.02), « dix (10) minutes pour accepter » sauf dans les deux
+prochaines heures (15.10, 16.02), « à défaut de réponse dans le délai, réputée avoir refusé » (16.02), et « chaque
+fois que la personne salariée refuse, elle est considérée avoir effectué les heures supplémentaires offertes »
+(16.03). **En tant que** service de planification, **je veux** que le quart libéré par une absence soit offert un
+rang à la fois, dans cet ordre, avec ce délai ; **en tant qu'**employé, **je veux** accepter ou refuser le quart qui
+m'est offert. Décision : [ADR 0089](../../adr/0089-offre-quart-anciennete-tour-de-role.md).
+
+Critères d'acceptation :
+1. **Réglage par organisme** (`GET/PUT /api/effectifs/offres/parametres`) : `mode` `SIMULTANEE` (défaut, le
+   comportement d'avant) ou `CASCADE` ; `delaiReponseMinutes` (1 à 1 440, défaut 10) ; `seuilUrgenceMinutes`
+   (0 à 1 440, défaut 120) ; `fenetreRepartitionJours` (1 à 366, défaut 91). Une valeur hors de son ensemble ou de
+   ses bornes est refusée en la nommant (422). Le réglage est journalisé (`offres.parametres`, avant et après).
+2. **Ordre** : en mode `CASCADE`, la place d'un quart manuel libérée par une absence ouvre une offre. Les admissibles
+   sont ceux de l'offre simultanée (même bassin : disponibilité déposée, aucun chevauchement, pas absent) ; ils sont
+   rangés par **heures comptées** croissantes sur la fenêtre de répartition (tour de rôle, 16.02), puis par
+   **ancienneté** décroissante, puis par identifiant. L'ordre est figé à l'ouverture.
+3. **Un rang à la fois** : seul le rang 1 est avisé, avec l'échéance (maintenant + délai) ; une tâche de
+   l'ordonnanceur est planifiée à cette échéance.
+4. **Accepter** (`POST /api/effectifs/offres/{id}/accepter`, la personne du rang offert seulement) : la place lui est
+   attribuée sous les règles `ATTRIBUTION` (repos, 16 h par 24 h…) ; l'offre est **pourvue**, la tâche annulée. Si
+   une règle ou un chevauchement refuse, la personne est **écartée** (motif conservé, heures non comptées) et le rang
+   suivant est avisé.
+5. **Refuser** (`POST …/refuser`) : le refus est **compté** (16.03) et le rang suivant est avisé aussitôt.
+6. **Échéance** : sans réponse à l'échéance, le rang **expire** (réputé refus, compté) et le suivant est avisé — par
+   l'ordonnanceur, et par rattrapage au début de toute lecture ou de tout geste sur les offres.
+7. **Urgence** (16.02) : un quart qui commence dans le seuil d'urgence est offert à **tous** les rangs à la fois,
+   jusqu'à son début ; le premier qui accepte le prend ; le silence n'est pas compté.
+8. **Fin** : sans plus personne à qui offrir, l'offre est **épuisée** et la place reste vacante (gestion
+   régulière) ; une place pourvue autrement pendant l'offre la **retire**.
+9. **Refus nommés** : hors de l'ordre, 404 ; dans l'ordre mais pas offert, 409 qui dit pourquoi (« ce n'est pas encore
+   votre tour », « vous avez déjà refusé ce quart », « le délai de réponse est échu », « l'offre de ce quart est
+   close »).
+10. **Traçabilité** : chaque geste au journal des effectifs (`offre.ouverte`, `.proposee`, `.acceptee`, `.refusee`,
+    `.expiree`, `.ecartee`, `.epuisee`, `.retiree`), signé du mécanisme ou de l'employé ; l'encadrement relit l'ordre
+    complet d'une absence (`GET /api/effectifs/offres?absenceId=`) ; les avis restent rattachés au comblement.
+    L'employé, lui, ne lit que son propre rang (ni le nom, ni les heures, ni l'ancienneté des collègues).
+11. **Écrans** : l'employé lit et répond dans « Mon horaire » (« Quarts qui me sont offerts ») ; l'encadrement voit
+    l'ordre d'offre dans le comblement d'une absence et règle le mode dans l'écran des absences.
+12. **Schéma** : changeset **0024**, script de retour, table dans `SchemaEssai`.
+
+Hors périmètre, noté : le « délai supplémentaire suffisant » d'une personne déjà au travail (15.10, 16.02) reste un
+geste du planificateur (il attribue la place lui-même) ; le titre d'emploi et le centre opérationnel de préférence
+(16.02) suivent le bassin existant (corps d'emploi de la place, unité).
 
 ## AD-08 — Paramétrage de démonstration de la convention SP-CSN
 

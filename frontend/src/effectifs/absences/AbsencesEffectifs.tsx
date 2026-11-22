@@ -13,6 +13,7 @@ import { heure, useApiEffectifs } from "../api";
 import { libelleDe, useReferentiels } from "../planification/useReferentiels";
 import type { Motif } from "../planification/types";
 import ComblementAbsence from "./ComblementAbsence";
+import ParametresOffres from "../offres/ParametresOffres";
 import FormulaireAbsence, { type AbsenceDeclaree } from "../../absences/FormulaireAbsence";
 import { useAuth } from "../../AuthContext";
 
@@ -61,6 +62,7 @@ export default function AbsencesEffectifs() {
   const [code, setCode] = useState("");
   const [bilan, setBilan] = useState("");
   const [declarer, setDeclarer] = useState(false);
+  const [reglage, setReglage] = useState(false);
   const { apiFetch } = useAuth();
 
   /** Une absence déclarée pour une ressource du périmètre : la décision automatique est dite telle quelle. */
@@ -123,8 +125,17 @@ export default function AbsencesEffectifs() {
             Déclarer une absence pour une ressource
           </button>
         </p>
+        <p>
+          <button type="button" className="secondary" data-testid="pla-abs-offres-regler" onClick={() => setReglage(true)}>
+            Offre des quarts libérés
+          </button>
+        </p>
       </div>
       <p>Une absence déclarée ici l'est pour une ressource de votre périmètre ; on décide ensuite, en voyant son effet sur le comblement.</p>
+      {/* AD-07 : simultanée, ou par ancienneté et à tour de rôle — le réglage de l'organisme. */}
+      <Tiroir ouvert={reglage} onFermer={() => setReglage(false)} titre="Offre des quarts libérés" testId="pla-abs-offres-tiroir">
+        {reglage && <ParametresOffres />}
+      </Tiroir>
       <Tiroir ouvert={declarer} onFermer={() => setDeclarer(false)} titre="Déclarer une absence" testId="pla-abs-declaration">
         <FormulaireAbsence apiFetch={apiFetch} estEmploye={false} onDeclaree={(r) => void declaree(r)} />
       </Tiroir>
