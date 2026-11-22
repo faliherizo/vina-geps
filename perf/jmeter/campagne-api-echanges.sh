@@ -23,6 +23,8 @@ done
 echo "▶ semis : 1 jeu, $SEMAINES semaines de quarts et de feuilles"
 node "$ICI/preparer.cjs" --env local --lignes 1 --quarts "$SEMAINES"
 T="$(cat "$ICI/donnees/tenant-local.txt")"
+# Le secret du client d'API : écrit par preparer.cjs hors du CSV versionné, passé ici en propriété.
+SECRET="$(cat "$ICI/donnees/secret-client-local.txt")"
 for OP in ${=OPERATIONS:-LireQuartsParApi LireCorrectifsParApi LireRelevesParApi TransmettreSoldesParApi}; do
-  "$ICI/lancer.sh" local "operations/$OP.jmx" -Jtenant="$T" -Jduree_operation="$DUREE" || true
+  "$ICI/lancer.sh" local "operations/$OP.jmx" -Jtenant="$T" -Jduree_operation="$DUREE" -JclientSecret="$SECRET" || true
 done

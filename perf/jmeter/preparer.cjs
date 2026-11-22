@@ -72,10 +72,21 @@ async function semerApiEchanges(appel, tenant, effectifs, n) {
   // Un serveur d'avant AD-06b n'a pas l'écriture des employés : la campagne de comparaison n'en mesure que les lectures.
   if (r.status === 404 || r.status === 405) {
     console.log(`⚠ écriture des employés absente de ce serveur (${r.status}) : TransmettreSoldesParApi ne se mesure pas ici`);
-    return { clientId: client.clientId, clientSecret: client.clientSecret, matricule: "" };
+    gardeSecret(client.clientSecret);
+    return { clientId: client.clientId, matricule: "" };
   }
   if (r.status !== 201) throw new Error(`PUT /api/echanges/v1/employes/${matricule} → ${r.status} ${(await r.text()).slice(0, 200)}`);
-  return { clientId: client.clientId, clientSecret: client.clientSecret, matricule };
+  gardeSecret(client.clientSecret);
+  return { clientId: client.clientId, matricule };
+}
+
+/**
+ * Le secret du client d'API ne va jamais dans `donnees/identifiants.csv`, qui est versionné : il est écrit à part, dans un
+ * fichier que git ignore, et la campagne le passe à JMeter par `-JclientSecret`.
+ */
+function gardeSecret(secret) {
+  const env = process.argv.includes("--env") ? process.argv[process.argv.indexOf("--env") + 1] : "local";
+  fs.writeFileSync(path.join(ICI, "donnees", `secret-client-${env}.txt`), `${secret}\n`, { mode: 0o600 });
 }
 
 /**
@@ -100,6 +111,9 @@ async function semerVolumeQuarts(appel, tenant, ligne, semaines) {
   const debut = new Date(`${ligne.dateFuture}T12:00:00Z`);
   let entrees = 0;
   let releves = 0;
+  const motifs = new Set();
+  // La séparation des tâches refuse qu'on approuve ce qu'on a soumis : une directrice de l'organisme approuve.
+  const approbatrice = await approbatriceDeCampagne(appel, tenant, ligne.uniteCode);
   for (let k = 1; k <= semaines; k++) {
     const jour = (d) => { const x = new Date(debut); x.setUTCDate(x.getUTCDate() + 7 * (k + 4) + d); return x.toISOString().slice(0, 10); };
     const periode = await appel("POST", "/api/effectifs/planification/periodes", { nom: `Volume ${k}`, uniteCode: ligne.uniteCode, debut: jour(0), fin: jour(6) }, tenant).catch(() => null);
@@ -115,8 +129,9 @@ async function semerVolumeQuarts(appel, tenant, ligne, semaines) {
       }
     }
     await appel("POST", `/api/effectifs/planification/periodes/${periode.id}/etat`, { etat: "PUBLIEE" }, tenant);
-    releves += await approuverFeuilles(appel, tenant, ligne.uniteCode, jour(0), jour(6));
+    releves += await approuverFeuilles({ soumettre: appel, approuver: approbatrice }, tenant, { uniteCode: ligne.uniteCode, debut: jour(0), fin: jour(6) }, motifs);
   }
+  for (const m of motifs) console.log(`⚠ feuilles non approuvées : ${m}`);
   return { entrees, releves };
 }
 
@@ -124,17 +139,35 @@ async function semerVolumeQuarts(appel, tenant, ligne, semaines) {
  * Les feuilles de la semaine, préparées, soumises puis approuvées jusqu'au dernier palier : ce sont elles que l'API rend
  * comme relevés validés. Sans elles, la lecture des relevés serait mesurée sur une page vide.
  */
-async function approuverFeuilles(appel, tenant, uniteCode, debut, fin) {
-  const feuilles = await appel("POST", "/api/effectifs/temps/feuilles/preparer", { uniteCode, debut, fin }, tenant).catch(() => null);
+async function approuverFeuilles({ soumettre: appel, approuver }, tenant, { uniteCode, debut, fin }, motifs = new Set()) {
+  // Un refus n'est pas avalé : son motif est gardé, et la préparation le dit — un semis qui n'approuve rien
+  // ferait mesurer la lecture des relevés sur une page vide.
+  const noter = (e) => { motifs.add(e.message.slice(0, 160)); return null; };
+  const feuilles = await appel("POST", "/api/effectifs/temps/feuilles/preparer", { uniteCode, debut, fin }, tenant).catch(noter);
   let approuvees = 0;
   for (const id of [...(feuilles?.creees ?? []), ...(feuilles?.existantes ?? [])]) {
-    await appel("POST", `/api/effectifs/temps/feuilles/${id}/soumettre`, {}, tenant).catch(() => null);
+    await appel("POST", `/api/effectifs/temps/feuilles/${id}/soumettre`, {}, tenant).catch(noter);
     for (let palier = 0; palier < PALIERS_MAX; palier++) {
-      const f = await appel("POST", `/api/effectifs/temps/feuilles/${id}/approuver`, {}, tenant).catch(() => null);
+      const f = await approuver("POST", `/api/effectifs/temps/feuilles/${id}/approuver`, {}, tenant).catch(noter);
       if (!f || f.statut === "APPROUVEE") { approuvees += f ? 1 : 0; break; }
     }
   }
   return approuvees;
+}
+
+/**
+ * Une directrice de l'organisme, créée par l'administration, sans le mur de première connexion (comme les essais e2e),
+ * avec un périmètre de gestion sur l'unité ; son mot de passe est tiré au hasard et ne quitte pas ce processus.
+ */
+async function approbatriceDeCampagne(appel, tenant, uniteCode) {
+  const username = `approbatrice-${Date.now().toString(36)}`;
+  const password = `Ap-${require("crypto").randomBytes(12).toString("base64url")}9!`;
+  const cree = await appel("POST", "/api/auth/users", { username, password, role: "director", mustChangePassword: false }, tenant);
+  await appel("PATCH", `/api/auth/users/${cree.id}`, { securitySetupRequired: false }, tenant);
+  // Sans périmètre sur l'unité, les feuilles lui sont invisibles (404) : elle gère l'unité et ses sous-unités.
+  await appel("POST", "/api/effectifs/perimetres",
+    { utilisateurId: cree.id, uniteCode, etendue: "SOUS_ARBRE", niveau: "GESTION", depuis: new Date().toISOString().slice(0, 10) }, tenant);
+  return client(appel.base, { username, password, tenantId: tenant });
 }
 
 /** Les paliers d'approbation d'une feuille vont de 1 à 3 (paramètres du temps) : au-delà, la boucle s'arrête. */

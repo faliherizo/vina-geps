@@ -1,0 +1,2 @@
+# Le secret du client d'API d'une campagne (preparer.cjs) : jamais versionné.
+donnees/secret-client-*.txt

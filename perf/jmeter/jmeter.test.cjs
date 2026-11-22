@@ -272,7 +272,10 @@ test("l'API d'échange (AD-06) : une opération machine obtient son jeton client
   assert.match(plan, /\$\.access_token/);
   assert.doesNotMatch(plan, /\/api\/auth\/login/, "aucune session humaine sur une route machine");
   assert.match(ops["LireQuartsParApi.jmx"], /du=\$\{debutPeriode\}&amp;au=\$\{dateFuture\}/);
-  for (const c of ["clientId", "clientSecret", "matricule"]) assert.ok(COLONNES.includes(c), `colonne ${c} déclarée`);
+  for (const c of ["clientId", "matricule"]) assert.ok(COLONNES.includes(c), `colonne ${c} déclarée`);
+  // Le CSV est versionné : le secret du client n'y entre jamais, il passe en propriété.
+  assert.ok(!COLONNES.includes("clientSecret"));
+  assert.match(plan, /__P\(clientSecret,\)/);
   // Les écritures en dernier : une écriture rejouée 600 s contaminerait les lectures qui la suivraient.
   const catalogue = require("./operations.json").operations.map((o) => o.nom);
   assert.equal(catalogue.at(-1), "TransmettreSoldesParApi");
