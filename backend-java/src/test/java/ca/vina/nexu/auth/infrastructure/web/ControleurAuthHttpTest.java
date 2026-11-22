@@ -13,11 +13,17 @@ import ca.vina.nexu.ClientHttpEssai;
 import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.acces.infrastructure.persistance.RegistrePolitiqueAcces;
 import ca.vina.nexu.auth.domaine.Compte;
+import ca.vina.nexu.auth.domaine.DroitDApprouver;
+import ca.vina.nexu.auth.domaine.RestrictionPaysConnexion;
 import ca.vina.nexu.auth.domaine.Totp;
 import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.securite.HoteEtablissement;
 import ca.vina.nexu.partage.securite.JetonDeSession;
+import ca.vina.nexu.partage.securite.FiltreSession;
+import ca.vina.nexu.partage.securite.SessionsEmpruntees;
+import ca.vina.nexu.partage.securite.SessionsRevoquees;
+import ca.vina.nexu.auth.infrastructure.persistance.DepotSessionsRevoquees;
 import ca.vina.nexu.partage.web.GardeAcces;
 import ca.vina.nexu.saas.infrastructure.persistance.DepotQuotas;
 import ca.vina.nexu.securite.domaine.PareFeu;
@@ -705,5 +711,64 @@ class ControleurAuthHttpTest {
         assertThat(journalWaf).containsExactly("securite.waf.bloque");
         http.post("/api/auth/login", null, "{\"username\":\"admin\",\"password\":\"admin\"}").andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.errors[0]").value(containsString("verrouillé après trop d'échecs : réessayez dans 15 min")));
+    }
+
+    // ── Tests d'intrusion du 22 novembre 2026 ─────────────────────────────────────────────────
+
+    /** Le contrôleur et le vrai filtre de session, qui partagent la liste des sessions révoquées. */
+    private org.springframework.test.web.servlet.MockMvc avecFiltre(SessionsRevoquees revoquees) {
+        DepotQuestionsSecretes questions = new DepotQuestionsSecretes(jdbc, HORLOGE);
+        RegistrePolitiqueAcces acces = new RegistrePolitiqueAcces();
+        ControleurAuth c = new ControleurAuth(comptes, questions, new DepotRolesEtablissement(jdbc, acces, HORLOGE), new DepotCatalogueQuestions(jdbc, HORLOGE),
+                new DepotAudit(jdbc, new JournalAudit(jdbc), HORLOGE), new DepotEtablissementsConnexion(jdbc), new DepotQuotas(jdbc), new JournalAudit(jdbc),
+                new GardeAcces(acces), HORLOGE, pareFeu, new ServiceConnexion(comptes, questions, jetons, HORLOGE), false, HoteEtablissement.selecteur(),
+                new DepotEmprunts(jdbc, HORLOGE, comptes, new JournalAudit(jdbc), jetons), RestrictionPaysConnexion.AUCUNE, DroitDApprouver.PERSONNE, revoquees);
+        return MockMvcBuilders.standaloneSetup(c).addFilters(new FiltreSession(SECRET, HoteEtablissement.selecteur(), SessionsEmpruntees.AUCUNE, revoquees)).build();
+    }
+
+    private static String jetonDe(MvcResult r) throws Exception {
+        Matcher m = JETON.matcher(r.getResponse().getContentAsString());
+        assertThat(m.find()).isTrue();
+        return m.group(1);
+    }
+
+    @Test
+    @DisplayName("PT-02 : après la déconnexion, le jeton ne vaut plus, ni en Bearer ni en témoin ; une nouvelle connexion, si")
+    void laDeconnexionRevoqueLeJeton() throws Exception {
+        var mvc = avecFiltre(new DepotSessionsRevoquees(jdbc, HORLOGE));
+        String jeton = jetonDe(login("admin", "admin", null));
+        mvc.perform(MockMvcRequestBuilders.get("/api/auth/me").header("Authorization", "Bearer " + jeton)).andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/logout").header("Authorization", "Bearer " + jeton)).andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.get("/api/auth/me").header("Authorization", "Bearer " + jeton)).andExpect(status().isUnauthorized());
+        mvc.perform(MockMvcRequestBuilders.get("/api/auth/me").cookie(new Cookie("session", jeton))).andExpect(status().isUnauthorized());
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM auth_sessions_revoquees").query(Integer.class).single()).isEqualTo(1);
+        String nouveau = jetonDe(login("admin", "admin", null));
+        mvc.perform(MockMvcRequestBuilders.get("/api/auth/me").header("Authorization", "Bearer " + nouveau)).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("PT-02 : un jeton émis avant l'identifiant (sans jti) reste lu, et sa déconnexion n'inscrit rien")
+    void unJetonSansIdentifiant() throws Exception {
+        var mvc = avecFiltre(new DepotSessionsRevoquees(jdbc, HORLOGE));
+        Compte admin = comptes.parNom("admin", null).orElseThrow();
+        String ancien = io.jsonwebtoken.Jwts.builder().subject(admin.id()).claim("username", "admin").claim("role", "admin")
+                .expiration(new java.util.Date(System.currentTimeMillis() + 60_000))
+                .signWith(new javax.crypto.spec.SecretKeySpec(SECRET.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256")).compact();
+        mvc.perform(MockMvcRequestBuilders.get("/api/auth/me").header("Authorization", "Bearer " + ancien)).andExpect(status().isOk());
+        mvc.perform(MockMvcRequestBuilders.post("/api/auth/logout").header("Authorization", "Bearer " + ancien)).andExpect(status().isOk());
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM auth_sessions_revoquees").query(Integer.class).single()).isZero();
+    }
+
+    @Test
+    @DisplayName("PT-06 : un superadmin qui choisit un établissement en en-tête y crée le compte ; sans choix, le compte est global")
+    void leSuperadminCreeDansLEtablissementChoisi() throws Exception {
+        http.envoyer(MockMvcRequestBuilders.post("/api/auth/users").header("X-Tenant-Id", "T1").contentType("application/json").content(
+                "{\"username\":\"chef-t1\",\"password\":\"p4ssword-chef\",\"role\":\"admin\"}"), ClientHttpEssai.superadmin()).andExpect(status().isCreated())
+                .andExpect(jsonPath("$.tenantId").value("T1"));
+        http.envoyer(MockMvcRequestBuilders.post("/api/auth/users").header("X-Tenant-Id", "T1").contentType("application/json").content(
+                "{\"username\":\"chef-t3\",\"password\":\"p4ssword-chef\",\"role\":\"admin\",\"tenantId\":\"T3\"}"), ClientHttpEssai.superadmin())
+                .andExpect(jsonPath("$.tenantId").value("T3"));
+        http.post("/api/auth/users", ClientHttpEssai.superadmin(), "{\"username\":\"global\",\"password\":\"p4ssword-glob\",\"role\":\"admin\"}")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.tenantId").value(org.hamcrest.Matchers.nullValue()));
     }
 }

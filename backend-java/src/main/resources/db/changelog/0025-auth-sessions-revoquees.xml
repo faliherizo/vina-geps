@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Sessions révoquées** (tests d'intrusion du 22 novembre 2026, PT-02 ; ASVS 3.3.1). La déconnexion n'effaçait que le
+    témoin du navigateur : un jeton copié restait valide huit heures. Le filtre de session refuse désormais l'identifiant
+    (jti) d'un jeton inscrit ici ; une entrée est purgée après l'échéance de son jeton.
+  -->
+  <changeSet id="0025-auth-sessions-revoquees" author="auth">
+    <comment>Table des sessions fermées avant leur échéance.</comment>
+    <sql>
+      CREATE TABLE IF NOT EXISTS auth_sessions_revoquees (jti TEXT PRIMARY KEY, expireLe TEXT NOT NULL, revoqueeLe TEXT NOT NULL);
+      CREATE INDEX IF NOT EXISTS idx_auth_sessions_revoquees_expire ON auth_sessions_revoquees (expireLe);
+    </sql>
+  </changeSet>
+</databaseChangeLog>

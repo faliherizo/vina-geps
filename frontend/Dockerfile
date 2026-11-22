@@ -3,8 +3,9 @@
 # nginx sert les fichiers statiques et relaie /api vers le serveur Java (API_UPSTREAM:API_PORT).
 FROM node:20-alpine AS build
 WORKDIR /app/frontend
-COPY frontend/package.json ./
-RUN npm install --no-audit --no-fund
+# Le verrou fixe les versions auditées (tests d'intrusion du 22 novembre 2026, IN-02) : npm ci refuse un verrou désaccordé.
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --no-audit --no-fund
 COPY frontend ./
 ENV VITE_API_URL=/api
 RUN npm run build

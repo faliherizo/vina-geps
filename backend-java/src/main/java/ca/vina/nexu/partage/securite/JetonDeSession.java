@@ -7,6 +7,8 @@ import io.jsonwebtoken.JwtException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
  * Lecture et émission du jeton de session, au format exact du backend Node.
@@ -92,27 +94,40 @@ public final class JetonDeSession {
         }
     }
 
+    /**
+     * L'identité d'un jeton lu : son identifiant ({@code jti}, absent des jetons émis avant le 22 novembre 2026) et son
+     * échéance. C'est ce que la déconnexion révoque (PT-02).
+     */
+    public record Identite(String id, Instant expireLe) { }
+
+    /** Un jeton lu : ses revendications et son identité. */
+    public record Lecture(Revendications revendications, Identite identite) { }
+
     /** Retourne les revendications, ou {@code null} si le jeton est invalide, altéré ou expiré. */
     public Revendications lire(String jeton) {
+        Lecture l = lireAvecIdentite(jeton);
+        return l == null ? null : l.revendications();
+    }
+
+    /** Comme {@link #lire}, avec l'identité du jeton ; {@code null} sur tout échec. */
+    public Lecture lireAvecIdentite(String jeton) {
         try {
             Claims c = Jwts.parser().verifyWith(cle).build().parseSignedClaims(jeton).getPayload();
             if (TYP_MACHINE.equals(c.get("typ", String.class))) {
                 return null;
             }
-            return new Revendications(
-                    c.getSubject(),
-                    c.get("username", String.class),
-                    c.get("role", String.class),
-                    c.get("employeeId", String.class),
-                    c.get("tenantId", String.class),
-                    c.get("emprunteur", String.class),
-                    c.get("empruntId", String.class));
+            return new Lecture(revendications(c), new Identite(c.getId(), c.getExpiration() == null ? null : c.getExpiration().toInstant()));
         } catch (JwtException | IllegalArgumentException e) {
             // Le Node répond `null` sur tout échec de vérification, sans distinguer les causes.
             // Reproduire ce silence est un choix de sécurité autant que de compatibilité : le
             // détail de l'échec ne doit pas fuir vers l'appelant.
             return null;
         }
+    }
+
+    private static Revendications revendications(Claims c) {
+        return new Revendications(c.getSubject(), c.get("username", String.class), c.get("role", String.class), c.get("employeeId", String.class),
+                c.get("tenantId", String.class), c.get("emprunteur", String.class), c.get("empruntId", String.class));
     }
 
     /** Émet un jeton dans le format attendu par le backend Node. */
@@ -132,7 +147,8 @@ public final class JetonDeSession {
         if (r.emprunteur() != null) {
             b = b.claim("emprunteur", r.emprunteur()).claim("empruntId", r.empruntId());
         }
-        return b.issuedAt(new java.util.Date(maintenant))
+        // Un identifiant par jeton : c'est lui que la déconnexion révoque (PT-02).
+        return b.id(UUID.randomUUID().toString()).issuedAt(new java.util.Date(maintenant))
                 .expiration(new java.util.Date(maintenant + validiteSecondes * 1000))
                 .signWith(cle)
                 .compact();

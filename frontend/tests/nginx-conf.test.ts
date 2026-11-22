@@ -73,3 +73,38 @@ describe("nginx — fichiers de l'application à la racine du site", () => {
     expect(conf.match(/server_name\s+([^;]+);/)?.[1].trim()).toBe("_");
   });
 });
+
+/** Le bloc entier d'une location : jusqu'à son accolade fermante (indentée de deux espaces), au-delà de `${…}` et `types { … }`. */
+const blocEntier = (location: string) => {
+  const debut = conf.indexOf(`location ${location} {`);
+  expect(debut, `location ${location}`).toBeGreaterThan(-1);
+  return conf.slice(debut, conf.indexOf("\n  }", debut));
+};
+
+describe("nginx — durcissement issu des tests d'intrusion du 22 novembre 2026", () => {
+  it("PT-04 : chaque page HTML porte la politique de sécurité du contenu, sans script en ligne", () => {
+    const politique = conf.slice(conf.indexOf("map $request_method $politique_contenu"), conf.indexOf("server {"));
+    expect(politique).toContain("script-src 'self';");
+    expect(politique).not.toMatch(/script-src[^;]*unsafe-(inline|eval)/);
+    expect(politique).toContain("object-src 'none'");
+    expect(politique).toContain("frame-ancestors 'self'");
+    for (const location of ["@spa_index", "= /", "/vitrine/"]) {
+      expect(blocEntier(location), location).toContain("add_header Content-Security-Policy $politique_contenu always;");
+    }
+    // ZAP (10063) : la vitrine, à la racine, redéclare ses en-têtes ; la politique des permissions n'y manque plus.
+    for (const location of ["@spa_index", "= /"]) {
+      expect(blocEntier(location), location).toContain("add_header Permissions-Policy");
+    }
+    const index = readFileSync(join(RACINE, "index.html"), "utf8");
+    expect(index.match(/<script(?![^>]*(src=|application\/ld\+json))[^>]*>/g) ?? []).toEqual([]);
+    expect(existsSync(join(RACINE, "public", "avertissement-ie.js"))).toBe(true);
+  });
+
+  it("PT-05 : l'API garde ses propres en-têtes ; nginx n'y ajoute que HSTS, une seule fois", () => {
+    for (const location of ["/api/", "/public/"]) {
+      const b = blocEntier(location);
+      expect(b, location).toContain("proxy_hide_header Strict-Transport-Security;");
+      expect(b.match(/^\s*add_header /gm), location).toHaveLength(1);
+    }
+  });
+});
