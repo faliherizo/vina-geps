@@ -85,7 +85,7 @@ export default function MonAgph() {
       {erreur && <Message variante="erreur" testId="agm-erreur">{erreur}</Message>}
       {info && <Message variante="succes" testId="agm-info">{info}</Message>}
 
-      {moi === null && <SansDossierEffectif testId="agm-sans-ressource" />}
+      {moi === null && <SansDossierEffectif testId="agm-sans-ressource" page="monagph" />}
 
       <h2>Campagnes</h2>
       {/* L'attente n'est pas la même chose que l'absence de dossier : promettre un avis

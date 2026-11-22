@@ -6,14 +6,35 @@
 import { useCallback, useEffect, useState } from "react";
 import { Badge, EtatVide, Message, Tableau, Tiroir, type Colonne } from "../../composants";
 import { useApiEffectifs } from "../api";
+import { liste as listeRecue } from "../../formeRecue";
 import type { Valeur } from "../Referentiels";
 import type { Ressource } from "./types";
 import { libelleDe, useReferentiels } from "./useReferentiels";
 
 const API = "/api/effectifs/planification/ressources";
 
+/** Un compte de l'organisme, tel que l'administration le liste. */
+interface Compte { id: string; username: string; role: string }
+
+/**
+ * **Les comptes à relier.** Une ressource sans compte ne trouve pas son propriétaire : ses écrans
+ * personnels répondent « votre compte n'est relié à aucune ressource planifiable ». La liste n'est
+ * servie qu'à l'administration (`/api/auth/users`) ; pour un autre rôle, `null` — le lien existant est
+ * gardé tel quel, et un refus de lecture n'est pas une erreur de l'écran.
+ */
+function useComptes(apiFetch: (chemin: string) => Promise<Response>): Compte[] | null {
+  const [comptes, setComptes] = useState<Compte[] | null>(null);
+  useEffect(() => {
+    void apiFetch("/api/auth/users")
+      .then(async (r) => setComptes(r.ok ? listeRecue<Compte>(await r.json()).filter((c) => c.role !== "superadmin") : null))
+      .catch(() => setComptes(null));
+  }, [apiFetch]);
+  return comptes;
+}
+
 export default function Ressources() {
-  const { lire, envoyer, erreur, setErreur, succes, setSucces } = useApiEffectifs();
+  const { lire, envoyer, erreur, setErreur, succes, setSucces, apiFetch } = useApiEffectifs();
+  const comptes = useComptes(apiFetch);
   const { refs } = useReferentiels(["unites", "corps_emploi", "titres_emploi", "statuts_emploi", "conventions"]);
   const [ressources, setRessources] = useState<Ressource[]>([]);
   const [fiche, setFiche] = useState<Ressource | "nouvelle" | null>(null);
@@ -51,7 +72,7 @@ export default function Ressources() {
           </tr>
         )} />
       {fiche && (
-        <FicheRessource ressource={fiche === "nouvelle" ? null : fiche} refs={refs} erreur={erreur} onFermer={() => setFiche(null)} onEnregistrer={async (c) => {
+        <FicheRessource ressource={fiche === "nouvelle" ? null : fiche} refs={refs} comptes={comptes} erreur={erreur} onFermer={() => setFiche(null)} onEnregistrer={async (c) => {
           const r = fiche === "nouvelle" ? await envoyer<Ressource>(API, c) : await envoyer<Ressource>(`${API}/${fiche.id}`, c, "PUT");
           if (r) { setFiche(null); setSucces(`« ${r.nom} » enregistrée.`); await charger(); }
         }} />
@@ -60,13 +81,16 @@ export default function Ressources() {
   );
 }
 
-function FicheRessource({ ressource, refs, erreur, onFermer, onEnregistrer }: {
-  ressource: Ressource | null; refs: Record<string, Valeur[]>; erreur: string; onFermer: () => void; onEnregistrer: (c: Record<string, unknown>) => Promise<void>;
+function FicheRessource({ ressource, refs, comptes, erreur, onFermer, onEnregistrer }: {
+  ressource: Ressource | null; refs: Record<string, Valeur[]>; comptes: Compte[] | null; erreur: string; onFermer: () => void; onEnregistrer: (c: Record<string, unknown>) => Promise<void>;
 }) {
   const [v, setV] = useState<Record<string, string | boolean>>({
     matricule: ressource?.matricule ?? "", nom: ressource?.nom ?? "", uniteCode: ressource?.uniteCode ?? "", corpsEmploiCode: ressource?.corpsEmploiCode ?? "",
     titreEmploiCode: ressource?.titreEmploiCode ?? "", statutEmploiCode: ressource?.statutEmploiCode ?? "", conventionCode: ressource?.conventionCode ?? "",
     anciennete: String(ressource?.anciennete ?? 0), actif: ressource?.actif ?? true,
+    // Renvoyé à chaque enregistrement : la modification remplace la ressource entière, et un lien omis
+    // y était remis à nul — la personne perdait ses écrans personnels à la première correction de son nom.
+    utilisateurId: ressource?.utilisateurId ?? "",
   });
   const poser = (k: string, x: string | boolean) => setV((o) => ({ ...o, [k]: x }));
   const liste = (cle: string, libelle: string, type: string, requis: boolean) => (
@@ -88,6 +112,7 @@ function FicheRessource({ ressource, refs, erreur, onFermer, onEnregistrer }: {
         {liste("titreEmploiCode", "Titre d'emploi", "titres_emploi", false)}
         {liste("statutEmploiCode", "Statut d'emploi", "statuts_emploi", false)}
         {liste("conventionCode", "Convention collective", "conventions", false)}
+        <ChampCompte comptes={comptes} valeur={String(v.utilisateurId)} onChange={(x) => poser("utilisateurId", x)} />
         <p><label htmlFor="pla-res-anciennete">Ancienneté (selon la convention)</label>
           <input id="pla-res-anciennete" type="number" min={0} step="any" data-testid="pla-res-anciennete" value={String(v.anciennete)} onChange={(e) => poser("anciennete", e.target.value)} /></p>
         {ressource && (
@@ -97,5 +122,30 @@ function FicheRessource({ ressource, refs, erreur, onFermer, onEnregistrer }: {
         <button type="submit" data-testid="pla-res-enregistrer">Enregistrer</button>
       </form>
     </Tiroir>
+  );
+}
+
+/** Le compte de connexion relié à la ressource : choisi par l'administration, lu par les autres rôles. */
+function ChampCompte({ comptes, valeur, onChange }: { comptes: Compte[] | null; valeur: string; onChange: (x: string) => void }) {
+  if (!comptes) {
+    return (
+      <p className="muted" data-testid="pla-res-utilisateur-lecture">
+        Compte utilisateur : {valeur ? "relié" : "aucun — l'administration de l'organisme le relie"}.
+      </p>
+    );
+  }
+  const inconnu = valeur !== "" && !comptes.some((c) => c.id === valeur);
+  return (
+    <p>
+      <label htmlFor="pla-res-utilisateur">Compte utilisateur (facultatif)</label>
+      <select id="pla-res-utilisateur" data-testid="pla-res-utilisateur" aria-describedby="pla-res-utilisateur-aide" value={valeur} onChange={(e) => onChange(e.target.value)}>
+        <option value="">Aucun</option>
+        {inconnu && <option value={valeur}>{valeur}</option>}
+        {comptes.map((c) => <option key={c.id} value={c.id}>{c.username}</option>)}
+      </select>
+      <span className="aide" id="pla-res-utilisateur-aide">
+        Le compte de connexion de la personne : sans lui, son horaire, ses absences et sa feuille de temps lui répondent qu'elle n'est reliée à aucune ressource.
+      </span>
+    </p>
   );
 }

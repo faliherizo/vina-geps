@@ -149,7 +149,7 @@ export default function MaFeuilleTemps() {
 
       {/* Sans dossier d'effectif, l'écran dit ce qui manque — et n'offre aucun geste : le
           formulaire ne pouvait qu'échouer, sur un message écrit pour un planificateur. */}
-      {moi === null && <SansDossierEffectif testId="mft-sans-ressource" />}
+      {moi === null && <SansDossierEffectif testId="mft-sans-ressource" page="matemps" />}
 
       {/* Préparer **crée** une feuille : c'est un ajout, il vit donc dans un dialogue — la page
           reste la relecture de la feuille, et non un formulaire posé au-dessus d'elle. */}

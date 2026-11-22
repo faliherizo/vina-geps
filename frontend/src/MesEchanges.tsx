@@ -15,6 +15,7 @@ import { LIBELLE_STATUT, TON_STATUT, type Echange, type Quart, type QuartEchange
 import type { Motif, Ressource } from "./effectifs/planification/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
+import LienPrealables from "./aide/LienPrealables";
 
 const quart = (q: Quart) => `${q.date} · ${heure(q.debut)}–${heure(q.fin)}`;
 
@@ -74,7 +75,8 @@ export default function MesEchanges() {
   return (
     <PageMaquette module="Urgences-santé" contexte="Mon espace • échanges de quarts">
       <EnTeteEcran titre="Mes échanges" description="Proposez l'échange d'un de vos quarts publiés, et répondez à ceux qu'on vous propose." testId="mec-titre" />
-      {moi === null && <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mec-sans-ressource">Demandez à votre planificateur de relier votre compte à votre dossier d'effectif.</EtatVide>}
+      {moi === null && <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mec-sans-ressource"
+          action={<LienPrealables page="mesechanges" testId="mec-sans-ressource-prealables" />}>Demandez à votre planificateur de relier votre compte à votre dossier d'effectif.</EtatVide>}
       {erreur && <Message variante="erreur" testId="mec-erreur">{erreur}</Message>}
       <Motifs motifs={refus} refus titre="Échange refusé par les règles : voici pourquoi" testId="mec-refus" />
       {info && <Message variante="succes" testId="mec-info">{info}</Message>}

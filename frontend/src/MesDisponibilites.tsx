@@ -18,6 +18,7 @@ import type { Depot, MesDisponibilites as Donnees } from "./effectifs/disponibil
 import type { Motif } from "./effectifs/planification/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
+import LienPrealables from "./aide/LienPrealables";
 
 const ETATS: Record<string, string> = { COLLECTE: "Collecte ouverte", CONFECTION: "En confection", PUBLIEE: "Horaire publié" };
 
@@ -76,7 +77,8 @@ export default function MesDisponibilites() {
     <PageMaquette module="Urgences-santé" contexte="Mon espace • disponibilités">
       <EnTeteEcran titre="Mes disponibilités" description="Déposez vos disponibilités pour chaque période, pendant sa collecte — et sachez d\u2019avance ce qui les juge." testId="mdi-titre" />
       {!donnees.ressource && (
-        <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mdi-sans-ressource">
+        <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mdi-sans-ressource"
+          action={<LienPrealables page="mesdisponibilites" testId="mdi-sans-ressource-prealables" />}>
           Demandez à votre planificateur de relier votre compte à votre dossier d'effectif.
         </EtatVide>
       )}
