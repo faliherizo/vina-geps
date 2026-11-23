@@ -1,0 +1,17 @@
+# Détection de secrets (gitleaks 8.21) — pipeline DevSecOps, gabarit _gabarit-secrets.yml.
+#
+# Les règles par défaut, plus des exemptions de CHEMIN, chacune justifiée : des fixtures d'essai qui doivent contenir un
+# jeton, une clé ou un mot de passe pour éprouver le code qui les refuse. Aucune exemption par motif : un vrai secret collé
+# ailleurs dans ces fichiers serait aussi exempté, et on préfère le voir.
+# Les constats de l'HISTORIQUE (jetons d'essai et journaux JMeter, retirés du suivi) sont figés dans
+# securite/gitleaks-reference.json : la porte n'échoue que sur une fuite nouvelle.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Fixtures d'essai : jetons d'exemple, clé SFTP de test, mots de passe de comptes éphémères"
+paths = [
+  '''backend-java/src/test/''',
+  '''e2e/tests/''',
+  '''securite/intrusion/fx-ao/''',
+]

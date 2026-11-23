@@ -1,7 +1,8 @@
 # VINA GePS — déploiement continu de la démonstration https://geps.vinaitsolution.com (VPS OVH partagé).
 #
+#   secrets           : _gabarit-secrets.yml — gitleaks (historique) et Trivy (arborescence), avant toute construction.
 #   construire-livrer : les deux images construites ici (jamais sur le VPS, qui héberge une douzaine d'applications),
-#                       chargées sur le serveur par SSH (docker save | docker load : aucun registre à ouvrir), puis
+#                       analysées par Trivy (bloquant) avec leur SBOM, chargées sur le serveur par SSH (docker save | docker load : aucun registre à ouvrir), puis
 #                       deploy/geps/deployer.sh — sauvegarde, démarrage, santé, retour arrière automatique.
 #   semer             : semer-demo.yml — les organismes de démonstration et leurs comptes publiés (rien n'est doublé).
 #   recette           : recette-e2e.yml — la pile déployée, en lecture seule : le superadmin, l'API, chaque compte publié.
@@ -36,8 +37,13 @@ permissions:
   contents: read
 
 jobs:
+  # DevSecOps : un secret qui fuit ne part pas en démonstration publique (gabarit commun avec devsecops.yml).
+  secrets:
+    uses: ./.github/workflows/_gabarit-secrets.yml
+
   construire-livrer:
-    name: Construire, livrer, déployer
+    name: Construire, analyser, livrer, déployer
+    needs: secrets
     runs-on: ubuntu-latest
     timeout-minutes: 45
     environment:
@@ -68,6 +74,15 @@ jobs:
           tags: vina-geps/web:${{ steps.version.outputs.version }}
           cache-from: type=gha,scope=geps-web
           cache-to: type=gha,scope=geps-web,mode=max
+      # DevSecOps : une image dont une vulnérabilité élevée ou critique a un correctif ne quitte pas l'exécuteur.
+      - name: Analyse de l'image du serveur Java (Trivy, SBOM)
+        uses: ./.github/actions/trivy
+        with: { commande: image, cible: "vina-geps/backend:${{ steps.version.outputs.version }}", sbom: sbom-backend.cdx.json }
+      - name: Analyse de l'image de l'interface (Trivy, SBOM)
+        uses: ./.github/actions/trivy
+        with: { commande: image, cible: "vina-geps/web:${{ steps.version.outputs.version }}", sbom: sbom-web.cdx.json }
+      - uses: actions/upload-artifact@v4
+        with: { name: "sbom-${{ steps.version.outputs.version }}", path: "*.cdx.json" }
       - name: Clé SSH du déploiement
         env:
           CLE: ${{ secrets.DEPLOY_SSH_KEY }}

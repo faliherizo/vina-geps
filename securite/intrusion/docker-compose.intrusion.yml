@@ -1,0 +1,20 @@
+# Surcharge de docker-compose.yml pour la pile éphémère des tests d'intrusion : d'autres noms de conteneurs, pour cohabiter
+# avec la pile de développement (8095), et l'amorçage des comptes par les secrets tirés au lancement (lancer.sh).
+#
+#   docker compose -f docker-compose.yml -f securite/intrusion/docker-compose.intrusion.yml -p vina-intrusion up -d --build
+services:
+  backend:
+    container_name: vina-intrusion-backend
+    # Aucune variable du poste : la pile d'intrusion ne doit dépendre que de ce que le lanceur lui donne.
+    env_file: !reset []
+    environment:
+      CORS_ORIGINS: http://localhost:${US_WEB_PORT:-8097}
+      PUBLIC_APP_URL: http://localhost:${US_WEB_PORT:-8097}
+      DEMONSTRATION_INTEGRATIONS: entra,saml,sms,antivirus
+      # docker-compose.yml interpole SMS_FOURNISSEUR depuis le .env du poste : vide ici, le texto de démonstration répond.
+      SMS_FOURNISSEUR: ""
+  web:
+    container_name: vina-intrusion-web
+volumes:
+  donnees:
+    name: vina-intrusion-donnees

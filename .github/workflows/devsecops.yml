@@ -1,0 +1,67 @@
+# Orchestrateur DevSecOps de VINA GePS : chaque porte est un gabarit réutilisable (_gabarit-*.yml), et chaque gabarit
+# emploie des outils épinglés en un seul endroit (.github/actions/). Carte complète : docs/securite/DEVSECOPS.md.
+#
+#   secrets ─┐
+#   sast ────┤
+#   dépendances ─┼─▶ images (SBOM) ─▶ intrusion (pile éphémère, ZAP) ─▶ bilan
+#   iac ─────┘
+#
+# Les quatre portes statiques tournent en parallèle ; les images ne se construisent que si elles passent (inutile
+# d'analyser une image dont le code fuit un secret) ; l'intrusion ne joue que sur des images saines.
+name: DevSecOps
+
+on:
+  push:
+    branches: [develop, main, "feature/**"]
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+concurrency:
+  group: devsecops-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  secrets:
+    uses: ./.github/workflows/_gabarit-secrets.yml
+  sast:
+    uses: ./.github/workflows/_gabarit-sast.yml
+  dependances:
+    uses: ./.github/workflows/_gabarit-dependances.yml
+  iac:
+    uses: ./.github/workflows/_gabarit-iac.yml
+  images:
+    needs: [secrets, sast, dependances, iac]
+    uses: ./.github/workflows/_gabarit-images.yml
+    with: { etiquette: "${{ github.sha }}" }
+  intrusion:
+    needs: images
+    uses: ./.github/workflows/intrusion.yml
+    with: { cible: ephemere, zap: true }
+    secrets: inherit
+
+  bilan:
+    name: Bilan des portes
+    needs: [secrets, sast, dependances, iac, images, intrusion]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Bilan
+        run: |
+          {
+            echo "## Portes DevSecOps — ${GITHUB_REF_NAME}"
+            echo "| Porte | Résultat |"
+            echo "|---|---|"
+            echo "| Secrets (gitleaks, Trivy) | ${{ needs.secrets.result }} |"
+            echo "| Analyse statique (Semgrep) | ${{ needs.sast.result }} |"
+            echo "| Dépendances (Trivy, npm audit) | ${{ needs.dependances.result }} |"
+            echo "| Infrastructure (Trivy config) | ${{ needs.iac.result }} |"
+            echo "| Images et SBOM (Trivy) | ${{ needs.images.result }} |"
+            echo "| Intrusion (suite FX-AO, ZAP) | ${{ needs.intrusion.result }} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for r in "${{ needs.secrets.result }}" "${{ needs.sast.result }}" "${{ needs.dependances.result }}" "${{ needs.iac.result }}" "${{ needs.images.result }}" "${{ needs.intrusion.result }}"; do
+            [ "$r" = "success" ] || exit 1
+          done

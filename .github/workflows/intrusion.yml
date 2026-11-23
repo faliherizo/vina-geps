@@ -1,0 +1,81 @@
+# Tests d'intrusion de VINA GePS — suite scriptée FX-AO (securite/intrusion) et balayage ZAP passif.
+#
+#   cible « ephemere » (défaut) : la pile est construite et démarrée DANS l'exécuteur, secrets tirés au hasard, puis
+#                                 détruite. Aucune cible réelle n'est touchée ; aucun secret n'est requis.
+#   cible « environnement »     : un environnement GitHub déployé (APP_URL, SUPERADMIN_PASSWORD). La suite CRÉE des
+#                                 organismes, des comptes et des alertes : elle refuse un environnement qui ne déclare pas
+#                                 COMPTES_DEMO=1 — on n'attaque pas une recette ou une production sans autorisation écrite.
+#
+# Réutilisable (workflow_call) par l'orchestrateur devsecops.yml ; lançable à la main ; hebdomadaire sur la pile éphémère.
+# Plan et résultats : docs/securite/fx-ao/PLAN-TESTS-INTRUSION-FX-AO.md, RAPPORT-TESTS-INTRUSION-FX-AO-2026-11-22.md.
+name: Tests d'intrusion
+
+on:
+  workflow_dispatch:
+    inputs:
+      cible:
+        description: "ephemere | environnement"
+        type: choice
+        options: [ephemere, environnement]
+        default: ephemere
+      environnement:
+        description: "Environnement GitHub (cible « environnement » seulement)"
+        type: string
+        default: geps-demo
+      zap:
+        description: "Balayage ZAP passif"
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      cible: { type: string, default: ephemere }
+      environnement: { type: string, default: geps-demo }
+      zap: { type: boolean, default: true }
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  ephemere:
+    name: Intrusion — pile éphémère
+    if: inputs.cible != 'environnement'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Campagne (pile construite, démarrée puis détruite dans l'exécuteur)
+        env:
+          ZAP: ${{ (inputs.zap == false) && '0' || '1' }}
+        run: securite/intrusion/lancer.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: intrusion-ephemere, path: securite/intrusion/resultats, if-no-files-found: ignore }
+
+  environnement:
+    name: Intrusion — ${{ inputs.environnement }}
+    if: inputs.cible == 'environnement'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: ${{ inputs.environnement }}
+    steps:
+      - name: Cible autorisée
+        run: |
+          [ "${{ vars.COMPTES_DEMO }}" = "1" ] || { echo "::error::${{ inputs.environnement }} n'est pas une démonstration (COMPTES_DEMO≠1) : la suite écrit, refus"; exit 2; }
+          [ -n "${{ vars.APP_URL }}" ] || { echo "::error::APP_URL absente"; exit 2; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Campagne contre l'environnement déployé
+        env:
+          CIBLE: ${{ vars.APP_URL }}
+          SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+          ZAP: ${{ (inputs.zap == false) && '0' || '1' }}
+        run: securite/intrusion/lancer.sh
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: "intrusion-${{ inputs.environnement }}", path: securite/intrusion/resultats, if-no-files-found: ignore }

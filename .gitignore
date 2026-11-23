@@ -26,3 +26,10 @@ scripts/.organisme-par-defaut.*.local.json
 # (.env.geps est déjà couvert par « .env.* ».)
 deploy/geps/.version-*
 deploy/geps/*.local*
+# Tests d'intrusion (securite/intrusion) : l'état d'une campagne et ses résultats bruts restent sur le poste ou l'artefact.
+securite/intrusion/.etat-*.local.json
+securite/intrusion/resultats/
+# Jetons de session de la campagne e2e (réécrits à chaque passage) et résultats bruts JMeter (journaux qui citent les
+# secrets des clients d'API de campagne) : ils ne se versionnent pas (gitleaks, pipeline DevSecOps, 22 nov. 2026).
+e2e/.auth/
+perf/jmeter/resultats/
