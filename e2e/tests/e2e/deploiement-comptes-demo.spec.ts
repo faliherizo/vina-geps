@@ -72,6 +72,13 @@ test.describe("Déploiement — les comptes de démonstration publiés", () => {
     const d: Deploiement = await (await racine.get("/api/auth/deploiement")).json();
     test.skip(d.resolution !== "sous_domaine", "déploiement par sélecteur : la liste des organismes y est publique par conception");
     expect((await racine.get("/api/auth/tenants")).status(), "liste anonyme des organismes").toBe(404);
+    // Le choix de la vitrine (/acceder, ADR 0094) propose chaque organisme de la démonstration, avec l'adresse de son hôte.
+    const proposes: { nom: string; adresse: string }[] = await (await racine.get("/api/auth/organismes")).json();
+    for (const o of comptesDemo.organismes) {
+      const attendue = `https://${o.sousDomaine}.${d.domaineRacine}/admin/login`;
+      expect(proposes.map((p) => p.adresse), `« ${o.nom} » absent du choix de la vitrine`).toContain(attendue);
+    }
+    expect(proposes.every((p) => !("id" in p)), "le choix public ne donne pas d'identifiant").toBe(true);
     // `admin` existe aussi hors organisme (compte global) : seul un compte propre à un organisme prouve le refus.
     const propre = comptesDemo.organismes[0].comptes.find((c) => c.username !== "admin")!;
     const refus = await racine.post("/api/auth/login", { data: { username: propre.username, password: MDP } });

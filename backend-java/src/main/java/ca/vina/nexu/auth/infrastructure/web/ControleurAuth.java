@@ -23,6 +23,7 @@ import ca.vina.nexu.auth.domaine.Totp;
 import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.securite.HoteEtablissement;
+import ca.vina.nexu.partage.securite.ResolutionHote;
 import ca.vina.nexu.partage.securite.JetonDeSession;
 import ca.vina.nexu.partage.securite.FiltreSession;
 import ca.vina.nexu.partage.securite.SessionsRevoquees;
@@ -78,6 +79,9 @@ public class ControleurAuth {
     private static final SecureRandom ALEA = new SecureRandom();
 
     private static final String ETABLISSEMENT_INCONNU = "organisme inconnu ou fermé";
+    private static final String SANS_SOUS_DOMAINE = "aucun hôte par organisme : la connexion propose le choix de l'organisme";
+    /** Où mène le choix d'un organisme : sa page de connexion, sur son hôte. */
+    private static final String CHEMIN_CONNEXION = "/admin/login";
 
     private final HoteEtablissement hote;
     private final PareFeu pareFeu;
@@ -277,6 +281,21 @@ public class ControleurAuth {
         }
         String seul = sousDomaine && c.tenantId() != null ? c.tenantId() : null;
         return ResponseEntity.ok(etablissements.selecteur().stream().filter(t -> seul == null || seul.equals(t.get("id"))).toList());
+    }
+
+    /**
+     * Le choix de l'organisme de la vitrine ({@code /acceder}, ADR 0094) : les organismes ouverts qui ont un sous-domaine,
+     * avec leur nom et l'adresse de leur connexion — ni identifiant, ni statut, ni pays. En sélecteur, il n'y a pas
+     * d'hôte par organisme : la page de connexion offre déjà la liste (404).
+     */
+    @GetMapping("/organismes")
+    public ResponseEntity<Object> organismes() {
+        ResolutionHote.Configuration c = hote.configuration();
+        if (!c.parSousDomaine()) {
+            return erreur(404, SANS_SOUS_DOMAINE);
+        }
+        return ResponseEntity.ok(etablissements.joignables().stream()
+                .map(o -> Map.of("nom", o.nom(), "slug", o.slug(), "adresse", c.urlPublique(o.slug(), null) + CHEMIN_CONNEXION)).toList());
     }
 
     @GetMapping("/tenant-by-slug/{slug}")

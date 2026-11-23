@@ -53,7 +53,7 @@ activé : il ouvre des routes de remise à zéro qui n'ont rien à faire sur une
 
 | Hôte | Ce qu'il sert |
 |---|---|
-| `geps.vinaitsolution.com` | La vitrine, le choix de l'organisme (`/acceder`) et la connexion des **seuls comptes globaux** |
+| `geps.vinaitsolution.com` | La vitrine, le choix de l'organisme (`/acceder`, liste déroulante des organismes du superadmin) et la connexion des **seuls comptes globaux** |
 | `urgence-sante.geps.vinaitsolution.com` | L'organisme Urgences-santé ; sa racine mène à sa connexion |
 | `clincom.geps.vinaitsolution.com` | L'organisme de l'avis FX-AO-20260810 |
 | `urgence-sante-demo.geps.vinaitsolution.com` | Urgences-santé — démonstration (maquettes de l'avis) |
@@ -62,8 +62,10 @@ activé : il ouvre des routes de remise à zéro qui n'ont rien à faire sur une
 `VITRINE_HOTE` pour `geps-web`. Le DNS a une entrée `*.geps.vinaitsolution.com` vers le VPS, mais le certificat nomme
 chaque hôte (défi HTTP, sans clés de l'API OVH sur le serveur). **Ajouter un organisme** :
 
-1. son `sousDomaine` dans `e2e/donnees/geps/comptes-demo.json` (le semis pose le slug) et sa carte dans
-   `frontend/public/vitrine/acceder.html` ;
+1. son slug, posé par le superadmin (Espace d'exploitation › organisme › « Slug d'URL ») ou, pour un organisme semé,
+   par `sousDomaine` dans `e2e/donnees/geps/comptes-demo.json`. Il apparaît aussitôt dans la liste de `/acceder`
+   (`GET /api/auth/organismes` : organismes ouverts qui ont un slug) — mais son adresse ne répond qu'après les deux
+   étapes suivantes ;
 2. son nom au `server_name` des deux blocs geps de `~/vina-cms/nginx/prod.conf` (bloc `listen 80` et bloc 443), édité
    **sans `sed -i`** (voir l'encadré ⚠️ du § 2), puis `docker exec vina_nginx nginx -t` et `nginx -s reload` ;
 3. le certificat étendu, puis un nouveau rechargement :
