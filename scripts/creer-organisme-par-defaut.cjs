@@ -318,7 +318,9 @@ async function absence(tenantId, etat) {
   const jeton = await connecter({ username: demo.cle, password: motDePasseConnu(etat, demo.cle), tenantId });
   const moi = { jeton, tenantId };
   const miennes = await appeler("/api/effectifs/absences", moi);
-  if ((miennes ?? []).some((x) => x.du === demo.corps.du || x.debut === demo.corps.du)) { compter("absences", false); return; }
+  // Les dates suivent le jour du semis (J+21) : celle d'un semis antérieur chevauche presque toujours la nouvelle, et le
+  // serveur refuse un chevauchement (409). Toute absence qui chevauche la période compte donc comme déjà semée.
+  if ((miennes ?? []).some((x) => D.chevauche(x, demo.corps))) { compter("absences", false); return; }
   await appeler("/api/effectifs/absences", { ...moi, methode: "POST", corps: demo.corps });
   compter("absences", true);
 }

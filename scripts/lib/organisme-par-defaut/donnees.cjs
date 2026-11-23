@@ -253,8 +253,21 @@ function absenceDeDemo(aujourdhui) {
   return { cle: "employe1", corps: { motif: "VAC", du: decaler(aujourdhui, 21), au: decaler(aujourdhui, 22), commentaire: "Absence de démonstration" } };
 }
 
+/**
+ * Une absence existante chevauche-t-elle la période `{ du, au }` ? Le serveur nomme ses bornes `du`/`au` ou
+ * `debut`/`fin` selon la route.
+ */
+function chevauche(existante, { du, au }) {
+  const debut = existante.du ?? existante.debut;
+  const fin = existante.au ?? existante.fin ?? debut;
+  // Comme le serveur (AbsencesEffectifs.Statut.estActive) : seules une absence acceptée ou à approuver occupent ses dates.
+  const statut = existante.statut ?? existante.status;
+  if (!debut || (statut && !["ACCEPTEE", "A_APPROUVER"].includes(statut))) return false;
+  return String(debut).slice(0, 10) <= au && String(fin).slice(0, 10) >= du;
+}
+
 module.exports = {
   EFFECTIF_DEPUIS, FAMILLES_HORS_PRODUIT, MODULES_DU_PRODUIT, UNITES, CORPS_EMPLOI, TITRES_EMPLOI, STATUTS_EMPLOI, CONVENTIONS,
   NATURES_QUART, PLAGES_HORAIRES, TYPES_MILIEU, CODES_ABSENCE, TYPES_HEURE, ACTIVITES_PRESENCE, MILIEUX, REGLES, PARAMETRES_TEMPS,
-  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo,
+  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo, chevauche,
 };

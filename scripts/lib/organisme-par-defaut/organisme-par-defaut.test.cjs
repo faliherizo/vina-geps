@@ -261,3 +261,13 @@ test("ErreurApi résume un corps textuel ou absent", () => {
   assert.match(new ErreurApi("GET", "/a", 500, "panne").message, /GET \/a → 500 panne/);
   assert.match(new ErreurApi("GET", "/a", 502, undefined).message, /→ 502 ""/);
 });
+
+test("absence de démonstration : celle d'un semis antérieur (dates décalées) compte comme déjà semée", () => {
+  const voulue = { du: "2026-12-14", au: "2026-12-15" };
+  assert.equal(D.chevauche({ du: "2026-12-13", au: "2026-12-14", statut: "ACCEPTEE" }, voulue), true);
+  assert.equal(D.chevauche({ debut: "2026-12-15T00:00:00Z", fin: "2026-12-16", statut: "A_APPROUVER" }, voulue), true);
+  assert.equal(D.chevauche({ du: "2026-12-10", au: "2026-12-13", statut: "ACCEPTEE" }, voulue), false);
+  // Annulée ou refusée, elle libère ses dates : le serveur accepte alors la nouvelle.
+  assert.equal(D.chevauche({ du: "2026-12-14", au: "2026-12-15", statut: "ANNULEE" }, voulue), false);
+  assert.equal(D.chevauche({ au: "2026-12-15" }, voulue), false);
+});
