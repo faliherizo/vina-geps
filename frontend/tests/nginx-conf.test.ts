@@ -129,6 +129,13 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
     expect(dockerfile).toContain("API_PROXIES_CONFIANCE=127.0.0.1/32");
   });
 
+  it("isolation de l'origine (ZAP 90004) : CORP partout où nosniff est posé, COOP partout où la CSP l'est — jamais sur l'API", () => {
+    const compter = (motif: RegExp) => (conf.match(motif) ?? []).length;
+    expect(compter(/add_header X-Content-Type-Options "nosniff" always;/g)).toBe(compter(/add_header Cross-Origin-Resource-Policy "same-origin" always;/g));
+    expect(compter(/add_header Content-Security-Policy \$politique_contenu always;/g)).toBe(compter(/add_header Cross-Origin-Opener-Policy "same-origin" always;/g));
+    for (const location of ["/api/", "/public/"]) expect(blocEntier(location), location).not.toContain("Cross-Origin-");
+  });
+
   it("co-hébergement : /public/ vise le même amont configuré que /api/, jamais un nom d'hôte en dur", () => {
     for (const location of ["/api/", "/public/"]) {
       const b = blocEntier(location);

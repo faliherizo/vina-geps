@@ -118,6 +118,9 @@ resource "aws_security_group" "repartiteur" {
   }
 }
 
+# Sortie limitée au port 443 : les fournisseurs (GRICS, textos, courriel, Entra ID) n'ont pas d'adresses fixes publiées,
+# une liste d'adresses se périmerait sans prévenir. La sortie passe par la passerelle NAT, journalisée.
+#trivy:ignore:aws-vpc-no-public-egress-sgr
 resource "aws_security_group" "application" {
   name        = "${local.prefixe}-application"
   description = "Taches applicatives"
