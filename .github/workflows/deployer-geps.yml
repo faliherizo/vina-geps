@@ -3,11 +3,14 @@
 #   construire-livrer : les deux images construites ici (jamais sur le VPS, qui héberge une douzaine d'applications),
 #                       chargées sur le serveur par SSH (docker save | docker load : aucun registre à ouvrir), puis
 #                       deploy/geps/deployer.sh — sauvegarde, démarrage, santé, retour arrière automatique.
-#   semer             : les organismes de démonstration et leurs comptes publiés (idempotent : rien n'est doublé).
-#   fumee             : la pile déployée, en lecture seule — le superadmin, l'API, et chaque compte publié ouvre une session.
+#   semer             : semer-demo.yml — les organismes de démonstration et leurs comptes publiés (rien n'est doublé).
+#   recette           : recette-e2e.yml — la pile déployée, en lecture seule : le superadmin, l'API, chaque compte publié.
+# La performance (perf.yml) se lance à part, à la main : elle charge un serveur partagé.
 #
 # Déclenché à chaque poussée sur develop (la démonstration montre la version en cours), ou à la main (Actions › Run).
-# Secrets : DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS, GEPS_SUPERADMIN_PASSWORD — docs/DEPLOIEMENT-GEPS-OVH.md §4.
+# Secrets du dépôt (livraison OVH) : DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS.
+# Environnement GitHub geps-demo : APP_URL, COMPTES_DEMO, PERF_PROFIL ; SUPERADMIN_PASSWORD, PERF_COMPTE_PASSWORD.
+# Détail : docs/DEPLOIEMENT-GEPS-OVH.md §3, et docs/PIPELINES-ENVIRONNEMENTS.md pour un nouvel environnement (Azure).
 name: Déployer geps (démonstration)
 
 on:
@@ -31,10 +34,6 @@ concurrency:
 
 permissions:
   contents: read
-
-env:
-  GEPS_URL: https://geps.vinaitsolution.com
-  NODE_VERSION: "22"
 
 jobs:
   construire-livrer:
@@ -90,40 +89,27 @@ jobs:
             && deploy/geps/deployer.sh ${{ steps.version.outputs.version }}"
       - name: La version servie est la bonne
         run: |
-          for i in $(seq 1 30); do curl -fsS "$GEPS_URL/api/health" && exit 0; sleep 5; done; exit 1
+          for i in $(seq 1 30); do curl -fsS "${{ vars.APP_URL }}/api/health" && exit 0; sleep 5; done; exit 1
 
+
+  # Les deux étapes suivantes ne sont PAS propres à OVH : ce sont les pipelines réutilisables, paramétrés par
+  # l'environnement GitHub (geps-demo : APP_URL, COMPTES_DEMO, SUPERADMIN_PASSWORD…). Un déploiement Azure les appellera
+  # de la même façon, avec son propre environnement.
   semer:
-    name: Semer les organismes de démonstration
+    name: Semer
     needs: construire-livrer
     if: github.event_name == 'push' || inputs.semer
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "${{ env.NODE_VERSION }}" }
-      - run: node scripts/semer-demo-geps.cjs --api "$GEPS_URL" ${{ inputs.forcer_semis && '--forcer' || '' }}
-        env:
-          SUPERADMIN_PASSWORD: ${{ secrets.GEPS_SUPERADMIN_PASSWORD }}
+    uses: ./.github/workflows/semer-demo.yml
+    with:
+      environnement: geps-demo
+      forcer: ${{ inputs.forcer_semis == true }}
+    secrets: inherit
 
-  fumee:
-    name: Fumée (lecture seule)
+  recette:
+    name: Recette
     needs: [construire-livrer, semer]
     if: always() && needs.construire-livrer.result == 'success' && needs.semer.result != 'failure'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with: { node-version: "${{ env.NODE_VERSION }}" }
-      - run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
-        working-directory: e2e
-      - run: npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
-        working-directory: e2e
-        env:
-          CI: "1"
-          E2E_BASE_URL: ${{ env.GEPS_URL }}
-          E2E_SUPERADMIN_PASSWORD: ${{ secrets.GEPS_SUPERADMIN_PASSWORD }}
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with: { name: rapport-fumee-geps, path: e2e/playwright-report }
+    uses: ./.github/workflows/recette-e2e.yml
+    with:
+      environnement: geps-demo
+    secrets: inherit
