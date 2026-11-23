@@ -1,9 +1,11 @@
 # Urgences-santé — portes de qualité bloquantes, à chaque poussée et chaque demande de fusion.
 #
-#   serveur   : mvn verify (ArchUnit, normes Java, JaCoCo ≥ 96 % par classe)
+#   serveur   : mvn verify (ArchUnit, normes Java, JaCoCo ≥ 96 % par classe), puis veraPDF sur l'échantillon PDF/A-2b
 #   interface : tsc, Vitest, construction
 #   écrans    : Playwright « interface » (API doublée) — audit WCAG 2.2 AA, géométrie à quatre largeurs
 #   parcours  : Playwright « e2e » contre le vrai serveur Java (base vierge bâtie par Liquibase)
+#   bacs      : le Java branché sur les bacs à sable — alerte critique jusqu'au téléphone simulé, PDF/A par veraPDF
+#   infra     : terraform fmt, validate et test (fournisseurs simulés) — p. ex. aucun certificat générique (critère 84)
 name: CI
 
 on:
@@ -30,9 +32,26 @@ jobs:
         with: { distribution: temurin, java-version: "${{ env.JAVA_VERSION }}", cache: maven }
       - run: mvn -B verify
         working-directory: backend-java
+      # ST-G10 (critère 39) : l'échantillon PDF/A-2b que dépose PdfAConformiteTest est validé par veraPDF.
+      - run: scripts/verifier-pdfa.sh backend-java/target/pdfa
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: couverture-java, path: backend-java/target/site/jacoco }
+
+  infra:
+    name: Infrastructure (terraform fmt, validate, test)
+    runs-on: ubuntu-latest
+    defaults:
+      run: { working-directory: infra/terraform/aws }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with: { terraform_version: "1.12.0" }
+      - run: terraform fmt -check -recursive
+      # Sans dorsale : la CI n'a pas accès à l'état, et n'en a pas besoin pour valider ni tester.
+      - run: terraform init -backend=false -input=false
+      - run: terraform validate
+      - run: terraform test
 
   interface:
     name: Interface (tsc, Vitest, construction)
@@ -43,12 +62,17 @@ jobs:
         with: { node-version: "${{ env.NODE_VERSION }}" }
       - run: npm install --no-audit --no-fund
         working-directory: frontend
+      # IN-03 (tests d'intrusion du 22 novembre 2026) : aucun avis élevé ou critique dans ce qui est livré.
+      - run: npm run audit:prod
+        working-directory: frontend
       - run: npx tsc --noEmit
         working-directory: frontend
       - run: npx vitest run
         working-directory: frontend
       - run: npm run build
         working-directory: frontend
+      # Chaque exigence fonctionnelle des deux avis a son scénario e2e, et docs/SCENARIOS-E2E.md est à jour.
+      - run: node scripts/construire-scenarios-e2e.cjs --verifier
 
   ecrans:
     name: Écrans (WCAG 2.2 AA, géométrie)
@@ -89,3 +113,33 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: rapport-parcours, path: e2e/playwright-report }
+
+  # FX-AO-20260810, critères 18 et 39 (ADR 0086) : le vrai serveur Java, branché par EXPO_PUSH_URL sur le service de
+  # poussée du bac à sable, et ses exports PDF soumis à veraPDF officiel. Données : e2e/donnees/fx-ao/bac-a-sable.json.
+  bacs-a-sable:
+    name: Bacs à sable (alerte critique jusqu'au téléphone, PDF/A par veraPDF)
+    runs-on: ubuntu-latest
+    needs: [serveur, interface]
+    services:
+      verapdf:
+        image: verapdf/rest:latest
+        ports: ["18492:8080"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "${{ env.JAVA_VERSION }}", cache: maven }
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: sudo apt-get update && sudo apt-get install -y zsh
+      - run: npm test
+        working-directory: bac-a-sable/poussee
+      - run: npm install --no-audit --no-fund
+        working-directory: frontend
+      - run: npm install --no-audit --no-fund && npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: for i in $(seq 1 60); do curl -sf http://127.0.0.1:18492/api/info && break; sleep 2; done
+      - run: bac-a-sable/campagne.sh
+        env: { CI: "1" }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: rapport-bacs-a-sable, path: e2e/playwright-report }

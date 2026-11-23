@@ -17,9 +17,12 @@
 import { test as base, expect, type Page, type Route } from "@playwright/test";
 
 /** Réponse d'une doublure : une valeur JSON, ou une fonction qui la calcule. */
-export type StubValue =
-  | unknown
-  | ((info: { url: URL; method: string; body: unknown }) => unknown | { status: number; body?: unknown });
+export type StubFonction = (info: { url: URL; method: string; body: unknown }) => unknown | { status: number; body?: unknown };
+/**
+ * Pas `unknown | StubFonction` : `unknown` absorbe l'union, et la fonction perdait le typage de son argument
+ * (`({ body }) => …` devenait un `any` implicite). Les formes JSON, nommées, laissent la fonction typée.
+ */
+export type StubValue = StubFonction | string | number | boolean | null | object;
 
 /** Table de doublures : `"GET /api/auth/me"` → réponse. Le verbe est optionnel (GET par défaut). */
 export type ApiStubs = Record<string, StubValue>;
@@ -41,7 +44,7 @@ export const DEFAULT_MODULES = [
   "approvals", "notifications", "integrations", "confidentialite",
   "effectifs", "effectifs_regles", "effectifs_planification", "effectifs_disponibilites",
   "effectifs_absences", "effectifs_echanges", "effectifs_agph", "effectifs_presence",
-  "effectifs_temps", "effectifs_communication", "effectifs_integrations", "alertes",
+  "effectifs_temps", "effectifs_communication", "effectifs_integrations", "alertes", "paie",
 ];
 
 /** Doublures minimales pour que l'application démarre et affiche sa navigation. */

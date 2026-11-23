@@ -4,6 +4,7 @@ import ca.vina.nexu.personnel.application.requetes.LecturePersonnes;
 import ca.vina.nexu.personnel.domaine.RepertoirePersonnes;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
 import ca.vina.nexu.partage.personnel.FichesPersonnelPort;
+import ca.vina.nexu.personnel.application.commandes.GestionnaireEquipe;
 import ca.vina.nexu.personnel.application.commandes.GestionnaireHierarchie;
 import ca.vina.nexu.personnel.application.commandes.GestionnairePersonnes;
 import ca.vina.nexu.personnel.application.commandes.InscriptionDepuisEffectifs;
@@ -38,5 +39,10 @@ public class ConfigurationPersonnel {
     @Bean
     public GestionnaireHierarchie gestionnaireHierarchie(DepotAnnuaireEmployes annuaire) {
         return new GestionnaireHierarchie(annuaire, annuaire);
+    }
+
+    @Bean
+    public GestionnaireEquipe gestionnaireEquipe(ComptesPersonnelPort comptes, DepotAnnuaireEmployes annuaire, RepertoirePersonnes repertoire) {
+        return new GestionnaireEquipe(new GestionnaireEquipe.Ports(comptes, annuaire, repertoire, annuaire));
     }
 }

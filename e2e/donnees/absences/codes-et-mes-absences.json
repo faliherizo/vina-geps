@@ -1,0 +1,86 @@
+{
+  "$commentaire": "Codes d'absence tenus par l'administration, puis déclarés dans « Mes absences » ; joué par absences-codes.spec.ts. « aujourdhui » est remplacé par la date du jour.",
+  "codesInitiaux": [
+    {
+      "code": "MAL",
+      "libelleFr": "Maladie",
+      "comportement": "PAYE",
+      "attributs": {
+        "duree": "PONCTUELLE",
+        "planifiable": false
+      }
+    },
+    {
+      "code": "SSOLDE",
+      "libelleFr": "Congé sans solde",
+      "comportement": "NON_PAYE",
+      "attributs": {
+        "duree": "LONG_TERME",
+        "planifiable": true
+      }
+    }
+  ],
+  "ajouts": [
+    {
+      "code": "FORM",
+      "libelleFr": "Formation",
+      "comportement": "PAYE",
+      "duree": "PONCTUELLE",
+      "planifiable": true,
+      "date": "aujourdhui"
+    },
+    {
+      "code": "VAC",
+      "libelleFr": "Vacances",
+      "comportement": "PAYE",
+      "duree": "MOYEN_TERME",
+      "planifiable": true,
+      "date": "aujourdhui"
+    }
+  ],
+  "remplacement": {
+    "code": "MAL",
+    "libelleFr": "Maladie ou blessure",
+    "date": "aujourdhui",
+    "$pourquoi": "Un code ne se remplace pas le jour même où sa version commence : on remplace donc MAL, en vigueur depuis janvier, et non un code créé aujourd'hui."
+  },
+  "fermeture": {
+    "code": "SSOLDE",
+    "date": "aujourdhui",
+    "$pourquoi": "Une fermeture suit le début de la version : on ferme un code en vigueur depuis janvier, jamais un code né aujourd'hui."
+  },
+  "attendu": {
+    "offerts": {
+      "FORM": "Formation",
+      "VAC": "Vacances",
+      "MAL": "Maladie ou blessure"
+    },
+    "absents": [
+      "SSOLDE"
+    ]
+  },
+  "declarations": [
+    {
+      "code": "FORM",
+      "du": "2031-05-12",
+      "au": "2031-05-12",
+      "statut": "Acceptée"
+    },
+    {
+      "code": "VAC",
+      "du": "2031-07-07",
+      "au": "2031-07-11",
+      "statut": "Acceptée"
+    },
+    {
+      "code": "MAL",
+      "du": "2031-06-02",
+      "au": "2031-06-02",
+      "erreur": "ne se planifie pas d'avance"
+    }
+  ],
+  "annuler": {
+    "du": "2031-05-12",
+    "au": "2031-05-12"
+  }
+}

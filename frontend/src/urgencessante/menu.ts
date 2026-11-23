@@ -85,6 +85,10 @@ export const NOTIONS_US: NotionUs[] = [
     { cle: "mesechanges", icone: "🔁", roles: TOUS, module: "effectifs_echanges" },
     { cle: "usechanges", icone: "📋", roles: ENCADREMENT, module: "effectifs_echanges" },
   ] },
+  // Mon équipe (comme dans Nexu VINA) : la ligne hiérarchique du gestionnaire, ses feuilles à approuver, sa suppléance.
+  { cle: null, icone: "👥", entrees: [
+    { cle: "monequipe", icone: "👥", roles: [...ENCADREMENT, "rh"], module: "effectifs" },
+  ] },
   /**
    * **La communication du personnel** (AO 26-015-DO : se joindre entre collègues).
    *
@@ -100,7 +104,10 @@ export const NOTIONS_US: NotionUs[] = [
   ] },
   // Le paramétrage : il règle la façon dont tout le reste se comporte.
   { cle: "usadministration", icone: "🛠️", entrees: [
-    { cle: "usreferentiels", icone: "📚", roles: ENCADREMENT, module: "effectifs" },
+    // Les référentiels décident pour tous : leur écran est réservé à l'administration (le serveur exige effectifs.configure).
+    { cle: "usreferentiels", icone: "📚", roles: ["admin", "superadmin"], module: "effectifs" },
+    // Les codes d'absence sont un référentiel ; leur page à leur nom les rend trouvables (les tenir exige effectifs.configure).
+    { cle: "uscodesabsence", icone: "🌴", roles: ["admin", "superadmin"], module: "effectifs_absences" },
     { cle: "usregles", icone: "⚖️", roles: ENCADREMENT, module: "effectifs_regles" },
     { cle: "usmilieux", icone: "🏥", roles: ENCADREMENT, module: "effectifs" },
     { cle: "usperimetres", icone: "🔐", roles: ENCADREMENT, module: "effectifs" },

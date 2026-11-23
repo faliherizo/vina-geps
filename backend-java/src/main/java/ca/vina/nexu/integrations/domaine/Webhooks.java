@@ -31,7 +31,9 @@ public final class Webhooks {
     public static final List<String> EVENEMENTS = List.of("absence.declaree", "absence.annulee", "besoin.cree", "besoin.attribue", "besoin.annule",
             "contrat.expirant", "document.expirant", "employe.cree",
             // AO 26-015-DO, lot R10 (E-TN-7) : ce que les effectifs annoncent au bus d'entreprise.
-            "effectifs.feuille.approuvee", "effectifs.lot_paie.transmis", "effectifs.echange.applique", "effectifs.absence.acceptee");
+            "effectifs.feuille.approuvee", "effectifs.lot_paie.transmis", "effectifs.echange.applique", "effectifs.absence.acceptee",
+            // 26-015-DO, addenda 5 b (AD-06c) : un quart publié a changé ; l'avis renvoie à la lecture des correctifs.
+            "effectifs.quart.modifie");
     /** {@code Map.ofEntries} : {@code Map.of} s'arrête à dix paires. */
     public static final Map<String, String> LIBELLE_EVENEMENT = Map.ofEntries(
             Map.entry("absence.declaree", "Absence déclarée"),
@@ -45,7 +47,8 @@ public final class Webhooks {
             Map.entry("effectifs.feuille.approuvee", "Feuille de temps approuvée (effectifs)"),
             Map.entry("effectifs.lot_paie.transmis", "Lot de paie transmis à la paie (effectifs)"),
             Map.entry("effectifs.echange.applique", "Échange de quarts appliqué (effectifs)"),
-            Map.entry("effectifs.absence.acceptee", "Absence d'effectifs acceptée"));
+            Map.entry("effectifs.absence.acceptee", "Absence d'effectifs acceptée"),
+            Map.entry("effectifs.quart.modifie", "Quart publié modifié (effectifs)"));
     /** Attentes avant chaque nouvelle tentative, en minutes (règle WH-4). */
     public static final List<Integer> ATTENTES_MINUTES = List.of(1, 5, 30, 120, 720);
     public static final int ECHECS_AVANT_SUSPENSION = 10;

@@ -107,14 +107,82 @@ const MODULES_AUDIT = {
     jamais mesurés. Un écran ajouté sans son contrôle est une livraison incomplète ; un contrôle
     qui mesure l'état vide d'un écran l'est autant.
   */
+  // Paie (ADR 0076) : un cycle préparé, une personne sans dossier, des remises et des relevés — chaque tableau rempli.
+  "GET /api/paie/cycles/cy-1": { cycle: { id: "cy-1", debut: "2030-02-16", fin: "2030-03-01", datePaie: "2030-03-07", etat: "prepare", prepareLe: "2030-03-02T15:00:00Z", preparePar: "paie.admin" },
+    bulletins: [{ id: "b-1", cycleId: "cy-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", datePaie: "2030-03-07", heuresRegulieres: 70, heuresSupplementaires: 2,
+    retenues: { brut: 2190, impotFederal: 150.1, impotQuebec: 190.2, rrq: 129.49, rrq2: 0, ae: 28.47, rqap: 9.42, gainsRrq: 2190, gainsAe: 2190, gainsRqap: 2190,
+      employeur: { rrq: 129.49, rrq2: 0, ae: 39.86, rqap: 13.18, fss: 93.29, cnt: 1.31, cnesst: 38.98 } },
+    totalRetenues: 507.68, net: 1682.32, cotisationsEmployeur: 316.11, coutEmployeur: 2506.11, feuilles: ["ft-1", "ft-2"] }] },
+  "GET /api/paie/cycles": [{ id: "cy-1", debut: "2030-02-16", fin: "2030-03-01", datePaie: "2030-03-07", etat: "prepare", prepareLe: "2030-03-02T15:00:00Z", preparePar: "paie.admin" },
+    { id: "cy-0", debut: "2030-02-02", fin: "2030-02-15", datePaie: "2030-02-21", etat: "traite", prepareLe: "x", preparePar: "paie.admin", traiteLe: "y", traitePar: "paie.admin" }],
+  "GET /api/paie/dossiers": [
+    { ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", dossier: { ressourceId: "rs-1", mode: "horaire", frequence: "aux-deux-semaines", tauxHoraire: 30, salaireAnnuel: null,
+      montantPersonnelFederal: 16452, montantPersonnelQuebec: 18952 } },
+    { ressourceId: "rs-2", matricule: "P2", nom: "Marc Dubé", dossier: null }],
+  "GET /api/paie/remises": [{ mois: "2030-02", echeance: "2030-03-15", impotQuebec: 190.2, rrq: 258.98, rqap: 22.6, fss: 93.29, revenuQuebec: 565.07, impotFederal: 150.1, ae: 68.33, arc: 218.43, cnt: 1.31, cnesst: 38.98 }],
+  "GET /api/paie/releves": [{ ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", rl1: { a: 2190, b: 129.49, rrq2: 0, c: 28.47, e: 190.2, g: 2190, h: 9.42, i: 2190 },
+    t4: { c14: 2190, c17: 129.49, rrq2: 0, c18: 28.47, c22: 150.1, c24: 2190, c26: 2190, c55: 9.42, c56: 2190 } }],
+  "GET /api/paie/mes-bulletins": [{ id: "b-1", cycleId: "cy-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", datePaie: "2030-03-07", heuresRegulieres: 70, heuresSupplementaires: 2,
+    retenues: { brut: 2190, impotFederal: 150.1, impotQuebec: 190.2, rrq: 129.49, rrq2: 0, ae: 28.47, rqap: 9.42, gainsRrq: 2190, gainsAe: 2190, gainsRqap: 2190,
+      employeur: { rrq: 129.49, rrq2: 0, ae: 39.86, rqap: 13.18, fss: 93.29, cnt: 1.31, cnesst: 38.98 } },
+    totalRetenues: 507.68, net: 1682.32, cotisationsEmployeur: 316.11, coutEmployeur: 2506.11, feuilles: ["ft-1", "ft-2"] }],
+  "GET /api/paie/reglages": { annee: 2030, tauxFss: 0.0426, tauxCnesst: 0.0178, majorationSupplementaire: 0.5, validationTempsExigee: true },
+  // ADR 0084 : règles de paie variable et validation des temps.
+  "GET /api/paie/regles": [
+    { id: "rg-1", code: "TAUX_INF_E3", libelle: "Infirmière, échelon 3", type: "taux-de-base", valeur: 34, titreEmploi: "INF", convention: "FIQ", echelon: 3,
+      heureDebut: null, heureFin: null, jours: [], feriesSeulement: false, codesPaie: [], valideDu: "2030-01-01", valideAu: null, actif: true },
+    { id: "rg-2", code: "PRIME_NUIT", libelle: "Prime de nuit", type: "prime-pourcentage", valeur: 0.12, titreEmploi: null, convention: null, echelon: null,
+      heureDebut: "00:00", heureFin: "08:00", jours: [1, 2, 3, 4, 5], feriesSeulement: false, codesPaie: ["REG"], valideDu: "2030-01-01", valideAu: "2030-12-31", actif: true },
+  ],
+  "GET /api/paie/temps": {
+    feuilles: [
+      { feuilleId: "ft-1", ressourceId: "rs-1", matricule: "P1", nom: "Julie Roy", debut: "2030-02-17", etat: "approuvee", heuresRegulieres: 35, heuresSupplementaires: 2,
+        anomalies: [], incalculable: null, validee: false, validable: true, validation: null },
+      { feuilleId: "ft-2", ressourceId: "rs-2", matricule: "P2", nom: "Marc Dubé", debut: "2030-02-17", etat: "soumise", heuresRegulieres: 62, heuresSupplementaires: 0,
+        anomalies: ["non-approuvee", "sans-taux", "heures-elevees"], incalculable: null, validee: false, validable: false, validation: null },
+    ],
+    sansFeuille: [{ ressourceId: "rs-3", matricule: "P3", nom: "Léa Côté", anomalies: ["aucune-feuille"] }],
+  },
+  "GET /api/paie/bareme": { annee: 2030, rrq: { tauxBase: 0.053, tauxSupplementaire: 0.01, exemption: 3500, mga: 74600, plafondSupplementaire: 85000, tauxRrq2: 0.04 },
+    ae: { tauxEmploye: 0.013, maximumAssurable: 68900 }, rqap: { tauxEmploye: 0.0043, tauxEmployeur: 0.00602, maximumAssurable: 103000 },
+    federal: { montantPersonnel: 16452 }, quebec: { montantPersonnel: 18952 } },
   // Communications cliniques (ADR 0074).
   "GET /api/alertes/reponses": [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }, { id: "rp-2", libelle: "Indisponible", semantique: "refus", active: false }],
-  "GET /api/alertes/modeles": [{ id: "mo-1", titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], actif: true }],
+  "GET /api/alertes/modeles/mo-1/versions": [
+    { version: 2, titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], creeLe: "2031-01-15T14:00:00.000Z", creePar: "admin" },
+    { version: 1, titre: "Code bleu (ancien)", corps: "Chambre", priorite: "critique", reponseIds: [], creeLe: "reprise", creePar: "reprise" }],
+  "GET /api/alertes/modeles": [{ id: "mo-1", titre: "Code bleu", corps: "Chambre à préciser", priorite: "critique", reponseIds: ["rp-1"], groupeIds: ["gt-1"], version: 2, actif: true }],
+  // R1-bis : droits de l'écran, listes de distribution, réglages d'organisme, groupes transverses (ST-G01, ST-G02, ST-G09).
+  "GET /api/alertes/droits": { envoyer: true, critique: true, configurer: true },
+  "GET /api/alertes/listes": [{ id: "l-garde", nom: "Garde de nuit — liste" }],
+  "GET /api/alertes/reglages": { copieCourriel: true },
+  // Notes sur les destinataires (ST-G12).
+  "GET /api/alertes/notes": [{ personId: "julie", texte: "Joindre sur le cellulaire de garde", ecriteLe: "2030-03-04T14:00:00Z", ecritePar: "chef" }],
+  // Utilisateurs actifs du mois (ST-G08).
+  "GET /api/alertes/utilisateurs-actifs": { mois: "2030-03", total: 2, actifs: [
+    { personId: "julie", nom: "Julie Roy", premiereTentative: "2030-03-04T14:02:00Z", alerteId: "al-1", titre: "Code bleu chambre 512" },
+    { personId: "marc", nom: "Marc Dubé", premiereTentative: "2030-03-04T14:07:00Z", alerteId: "al-1", titre: "Code bleu chambre 512" }] },
+  // Relances et cascades (ST-G04).
+  "GET /api/alertes/politiques": [{ id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [
+    { cible: "initiaux", cibleId: null, canaux: ["poussee"], delaiMinutes: 5 }, { cible: "groupe", cibleId: "gt-1", canaux: ["texto", "courriel"], delaiMinutes: 10 }] }],
+  "GET /api/alertes/envoyees/al-1/cascade": { cascade: { politique: { id: "po-1", nom: "Code bleu", arret: "prise_en_charge", version: 2, actif: true, etapes: [] },
+    etape: 2, etapes: 2, echeanceLe: "2030-03-04T14:15:00Z", etat: "armee" },
+    traces: [{ evenement: "armee", etape: 1, personnes: [], instant: "2030-03-04T14:02:00Z", par: "chef" },
+      { evenement: "etape", etape: 1, personnes: ["julie"], instant: "2030-03-04T14:07:00Z", par: "cascade" }],
+    appels: [{ personId: "julie", etape: 1, resultat: "repondu", touche: "1", dureeSecondes: 42, lanceLe: "2030-03-04T14:07:00Z", termineLe: "2030-03-04T14:08:00Z" }] },
+  "GET /api/communication/groupes-transverses": [{ id: "gt-1", nom: "Garde de nuit", nature: "garde", actif: true,
+    membres: [{ personId: "julie", nom: "Julie Roy", depuis: "2031-01-13", jusqua: "2031-01-19", moderateur: true }, { personId: "marc", nom: "Marc Dubé", depuis: null, jusqua: null, moderateur: false }] }],
   "GET /api/alertes/groupes/EST/membres": [{ personId: "julie", nom: "Julie Roy" }, { personId: "marc", nom: "Marc Dubé" }],
-  "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }],
-  "GET /api/alertes/envoyees": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], bilan: { destinataires: 2, lues: 1, repondues: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2030-03-04T14:03:00Z" },
+  "GET /api/alertes/groupes": [{ id: "EST", nom: "Opérations Est" }, { id: "gt-1", nom: "Garde de nuit" }],
+  "GET /api/alertes/envoyees": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], bilan: { destinataires: 2, lues: 1, repondues: 1, relances: 1, priseEnChargePar: "Julie Roy", priseEnChargeLe: "2030-03-04T14:03:00Z" },
     remises: [{ personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: "2030-03-04T14:03:00Z", reponseId: "rp-1", reponduLe: "2030-03-04T14:03:00Z" }, { personId: "marc", nom: "Marc Dubé", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null }] }],
   "GET /api/alertes/recues": [{ id: "al-1", titre: "Code bleu chambre 512", corps: "5e étage, répondez à la prise en charge", priorite: "critique", expediteurId: "chef", envoyeeLe: "2030-03-04T14:02:00Z", reponses: [{ id: "rp-1", libelle: "J'arrive", semantique: "prise_en_charge", active: true }], maRemise: { personId: "julie", nom: "Julie Roy", envoyeeLe: "2030-03-04T14:02:00Z", lueLe: null, reponseId: null, reponduLe: null } }],
+  // AD-07 : un quart offert à Julie à son tour (Mon horaire), et le réglage de l'offre (Absences et comblement).
+  "GET /api/effectifs/offres/miennes": [{ id: "eofr-1", comblementId: "ecbl-1", absenceId: "abs-1", urgente: false, etat: "OUVERTE", creeLe: "2030-02-20T15:00:00.000Z",
+    attribueeA: null, quart: { placeId: "pl-9", uniteCode: "EST", date: "2030-03-12", debut: 360, fin: 1080 },
+    rangs: [{ rang: 1, ressourceId: "rs-1", nom: "Julie Roy", anciennete: 3, heuresComptees: 0, heuresOffertes: 12, etat: "OFFERT",
+      offertLe: "2030-02-20T15:00:00.000Z", echeance: "2030-02-20T15:10:00.000Z", reponduLe: null, motif: null }] }],
+  "GET /api/effectifs/offres/parametres": { mode: "CASCADE", delaiReponseMinutes: 10, seuilUrgenceMinutes: 120, fenetreRepartitionJours: 91 },
   "GET /api/effectifs/mon-horaire": { ressource: { id: "rs-1", matricule: "P1", nom: "Julie Roy", uniteCode: "EST", corpsEmploiCode: "PARA",
     titreEmploiCode: null, statutEmploiCode: null, conventionCode: null, anciennete: 3, actif: true },
     quarts: [
@@ -313,6 +381,19 @@ const MODULES_AUDIT = {
     { id: "sg-1", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:00:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 2, remplaceId: "sg-0", motif: "Sortie pointée en retard" },
     { id: "sg-0", date: "2031-01-15", debut: "2031-01-15T11:00:00.000Z", fin: "2031-01-15T23:10:00.000Z", typeHeureCode: "REG", comportement: "TRAVAILLEE", source: "POINTAGE", placeId: "pl-1", version: 1, remplaceId: null, motif: null },
   ],
+  // ADR 0075 : un annuaire Entra et un annuaire OpenID Connect (Keycloak) ; le second fait paraître la colonne « Fournisseur » complète.
+  "GET /api/auth/annuaires": { rappel: "https://app.urgences-sante.qc.ca/api/auth/sso/annuaires/callback", annuaires: [
+    { id: "ann-1", nom: "Entra du siège", fournisseur: "entra", locataireEntra: "0f8fad5b-d9cb-469f-a165-70867728950e", emetteur: null, clientId: "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      variableSecret: "ANNUAIRE_SIEGE", secretDeploye: true, domaines: ["urgences-sante.qc.ca"], revendication: "groups", correspondances: [{ groupe: "g-admin", role: "admin" }], roleParDefaut: null, actif: true },
+    { id: "ann-2", nom: "Keycloak Urgences-santé", fournisseur: "oidc", locataireEntra: "", emetteur: "https://sso.urgences-sante.qc.ca/realms/vina-geps", clientId: "vina-geps",
+      variableSecret: "ANNUAIRE_KEYCLOAK", secretDeploye: false, domaines: ["urgences-sante.qc.ca"], revendication: "roles",
+      correspondances: [{ groupe: "vina-admin", role: "admin" }, { groupe: "vina-chef", role: "manager" }], roleParDefaut: null, actif: true }] },
+  // Mon équipe (comme dans Nexu VINA) : un direct, un indirect, une personne à rattacher ; une suppléance en cours.
+  "GET /api/personnel/equipe": { moiId: "e-chef", moiNom: "Marc Lavoie", membres: [
+    { id: "e-julie", nom: "Julie Roy", titre: "Paramédic", courriel: "julie.roy@urgences-sante.qc.ca", superieurId: "e-chef", superieurNom: "Marc Lavoie", niveau: 1 },
+    { id: "e-luc", nom: "Luc Bouchard", titre: null, courriel: null, superieurId: "e-julie", superieurNom: "Julie Roy", niveau: 2 }],
+    sansSuperieur: [{ id: "e-lea", nom: "Léa Morin", titre: "Paramédic", courriel: null, superieurId: null, superieurNom: null, niveau: 0 }] },
+  "GET /api/approvals/delegations": [{ id: "adel-1", toUserId: "usr-dir", toNom: "Diane Roy", fromDate: "2031-03-20", toDate: "2031-03-27", createdAt: "2031-03-01T10:00:00.000Z" }],
   // L'organigramme que lit l'approbateur « supérieur hiérarchique » : Julie relève de Marc.
   "GET /api/personnel/hierarchie": [{ id: "e-chef", nom: "Marc Lavoie", superieurId: null }, { id: "e-julie", nom: "Julie Roy", superieurId: "e-chef" }],
   // La feuille qui s'adapte à l'emploi : un champ de chaque type, et un désactivé qui garde sa valeur (colonne conservée).
@@ -610,7 +691,14 @@ const PAGES = [
       await page.getByTestId("incident-formulaire").waitFor({ state: "visible" });
       await page.getByTestId("incident-gravite").selectOption("elevee");
     // Le formulaire est un dialogue : refermé avant de quitter la page, sinon son voile intercepte la navigation.
-    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("incident-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("incident-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "organisme › déclarer un annuaire OpenID Connect (Keycloak)", agir: async (page) => {
+      await page.getByTestId("admin-tab-organisme").click();
+      await page.getByTestId("annuaire-ann-2").waitFor({ state: "visible" });
+      await page.getByTestId("annuaire-nouveau-ouvrir").click();
+      await page.getByTestId("annuaire-nouveau-fournisseur").selectOption("oidc");
+      await page.getByTestId("annuaire-nouveau-emetteur").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("annuaire-nouveau-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Guide et aide", nav: "nav-help" },
   { nom: "Soutien", nav: "nav-soutien", onglets: ["soutien-tab-niveaux", "soutien-tab-billets"], etats: [
     { nom: "ouvrir un billet, une pièce retenue et une refusée", agir: async (page) => {
@@ -674,7 +762,12 @@ const PAGES = [
   { nom: "Comblement", nav: "nav-uscomblement" },
   { nom: "Quarts et équipages", nav: "nav-usequipages" },
   { nom: "Disponibilités de la période", nav: "nav-usdisponibilites" },
-  { nom: "Absences et comblement", nav: "nav-usabsences" },
+  { nom: "Absences et comblement", nav: "nav-usabsences",
+    // AD-07 : le réglage de l'offre des quarts libérés vit dans un tiroir ; il se mesure ouvert, formulaire chargé.
+    etats: [{ nom: "offre des quarts libérés", agir: async (page) => {
+      await page.getByTestId("pla-abs-offres-regler").click();
+      await page.getByTestId("pla-abs-offres-enregistrer").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Demandes et échanges", nav: "nav-usechanges" },
   { nom: "Confection annuelle (AGPH)", nav: "nav-usagph" },
   { nom: "Pointage et présence (console)", nav: "nav-uspresence" },
@@ -702,6 +795,7 @@ const PAGES = [
   { nom: "Ressources", nav: "nav-usressources" },
   { nom: "Quotas", nav: "nav-usquotas" },
   { nom: "Référentiels", nav: "nav-usreferentiels" },
+  { nom: "Codes d'absence", nav: "nav-uscodesabsence" },
   { nom: "Règles des effectifs", nav: "nav-usregles", onglets: ["rgl-vue-regles", "rgl-vue-simulateur", "rgl-vue-decisions"] },
   { nom: "Milieux physiques", nav: "nav-usmilieux" },
   { nom: "Périmètres", nav: "nav-usperimetres" },
@@ -768,12 +862,19 @@ const PAGES = [
       await page.getByTestId("aln-critique").waitFor({ state: "visible" });
       await page.getByTestId("aln-groupe-personnes").selectOption("EST");
       await page.getByTestId("aln-pers-julie").waitFor({ state: "visible" });
+      await page.getByTestId("aln-l-l-garde").waitFor({ state: "visible" });
     } }] },
   { nom: "Suivi des alertes", nav: "nav-alsuivi",
     etats: [{ nom: "détail des destinataires", agir: async (page) => {
       await page.getByTestId("als-alerte-al-1-detail").click();
       await page.getByTestId("als-fiche").waitFor({ state: "visible" });
-    } }] },
+      await page.getByTestId("als-cascade-trace").waitFor({ state: "visible" });
+    } },
+    { nom: "note d'un destinataire en édition", agir: async (page) => {
+      if (!(await page.getByTestId("als-fiche").isVisible())) await page.getByTestId("als-alerte-al-1-detail").click();
+      await page.locator('[data-testid^="als-note-"][data-testid$="-modifier"]').first().click();
+      await page.getByTestId("als-note-texte").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("als-note-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mes alertes", nav: "nav-mesalertes",
     etats: [{ nom: "alerte dépliée, réponses offertes", agir: async (page) => {
       // L'audit a peut-être déjà déplié les replis de la page : cliquer le résumé replierait l'alerte.
@@ -786,16 +887,92 @@ const PAGES = [
       await page.getByTestId("alp-reponse-ouvrir").click();
       await page.getByTestId("alp-r-libelle").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } },
+    { nom: "dialogue « Nouvelle politique de relance », deux étapes", agir: async (page) => {
+      await page.getByTestId("alp-politique-ouvrir").click();
+      await page.getByTestId("alp-pol-ajouter-etape").click();
+      await page.getByTestId("alp-pol-e1-cible").selectOption("prochain_disponible");
+      await page.getByTestId("alp-pol-e1-groupe").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-politique-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
     { nom: "dialogue « Nouveau modèle »", agir: async (page) => {
       await page.getByTestId("alp-modele-ouvrir").click();
       await page.getByTestId("alp-m-titre").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } },
+    { nom: "modifier un modèle : nouvelle version, périmètre coché", agir: async (page) => {
+      await page.getByTestId("alp-modele-mo-1-modifier").click();
+      await page.getByTestId("alp-m-g-gt-1").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-modification-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "versions d'un modèle", agir: async (page) => {
+      await page.getByTestId("alp-modele-mo-1-versions").click();
+      await page.getByTestId("alp-versions-table").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-versions-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "groupe transverse : membres et inscription", agir: async (page) => {
+      await page.getByTestId("alp-gt-gt-1-gerer").click();
+      await page.getByTestId("alp-gt-membres").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("alp-gt-gestion-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  // Paie (ADR 0076) : chaque écran, et ses dialogues ouverts.
+  { nom: "Cycles de paie", nav: "nav-paiecycles",
+    etats: [{ nom: "dialogue « Préparer un cycle »", agir: async (page) => {
+      await page.getByTestId("pcy-preparer-ouvrir").click();
+      await page.getByTestId("pcy-debut").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pcy-preparer-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "cycle ouvert, gestes offerts", agir: async (page) => {
+      await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-traiter").waitFor({ state: "visible" });
+    } },
+    { nom: "détail d'un bulletin", agir: async (page) => {
+      if (!(await page.getByTestId("pcy-ouvert").isVisible())) await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-bulletin-rs-1-voir").click();
+      await page.getByTestId("pcy-b-retenues").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pcy-bulletin-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "confirmation du traitement", agir: async (page) => {
+      if (!(await page.getByTestId("pcy-ouvert").isVisible())) await page.getByTestId("pcy-cycle-cy-1-voir").click();
+      await page.getByTestId("pcy-traiter").click();
+      await page.getByTestId("pcy-confirmer-traiter-confirm").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+  { nom: "Dossiers de rémunération", nav: "nav-paiedossiers",
+    etats: [{ nom: "dialogue du dossier, au salaire", agir: async (page) => {
+      await page.getByTestId("pdo-rs-1-modifier").click();
+      await page.getByTestId("pdo-mode").selectOption("salaire");
+      await page.getByTestId("pdo-salaire").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pdo-dossier-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  { nom: "Remises et relevés", nav: "nav-paiedeclarations" },
+  { nom: "Mes bulletins de paie", nav: "nav-mesbulletins",
+    etats: [{ nom: "détail d'un bulletin", agir: async (page) => {
+      await page.getByTestId("mbu-b-1-voir").click();
+      await page.getByTestId("mbu-b-employeur").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+  { nom: "Paramètres de la paie", nav: "nav-paieparametres" },
+  { nom: "Règles de paie variable", nav: "nav-paieregles",
+    etats: [{ nom: "dialogue d'une prime", agir: async (page) => {
+      await page.getByTestId("prg-rg-2-modifier").click();
+      await page.getByTestId("prg-heures").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("prg-regle-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
+  { nom: "Validation des temps", nav: "nav-paietemps",
+    etats: [{ nom: "dialogue de retour", agir: async (page) => {
+      await page.getByTestId("pvt-ft-1-retourner").click();
+      await page.getByTestId("pvt-motif").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("pvt-retour-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } }] },
   { nom: "Mon horaire", nav: "nav-monhoraire",
-    // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture.
+    // Le calendrier du mois est la vue par défaut ; la liste de la semaine est l'autre lecture. Le quart offert
+    // (AD-07) s'affiche au-dessus, dans les deux lectures.
     etats: [{ nom: "liste de la semaine", agir: async (page) => {
+      await page.getByTestId("mho-offre-accepter-2030-03-12").waitFor({ state: "visible" });
       await page.getByTestId("mho-vue-liste").click();
       await page.getByTestId("mho-table").or(page.getByTestId("mho-vide")).first().waitFor({ state: "visible" });
     } }] },
+  { nom: "Mon équipe", nav: "nav-monequipe",
+    etats: [{ nom: "changer le supérieur d'un membre", agir: async (page) => {
+      await page.getByTestId("meq-e-luc-changer").click();
+      await page.getByTestId("meq-nouveau").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); await page.getByTestId("meq-changement-modal").waitFor({ state: "hidden", timeout: 3000 }).catch(() => {}); } },
+    { nom: "détacher un subordonné direct, à confirmer", agir: async (page) => {
+      await page.getByTestId("meq-e-julie-detacher").click();
+      await page.getByTestId("meq-detacher-confirm").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.getByTestId("meq-detacher-cancel").click(); } },
+    { nom: "mettre fin à une suppléance, à confirmer", agir: async (page) => {
+      await page.getByTestId("meq-deleg-adel-1-terminer").click();
+      await page.getByTestId("meq-fin-confirm").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.getByTestId("meq-fin-cancel").click(); } }] },
   { nom: "Ma feuille de temps", nav: "nav-matemps",
     etats: [{ nom: "correction d'un segment et ses versions", agir: async (page) => {
       await page.getByTestId("mft-s-sg-1-modifier").click();
@@ -1082,10 +1259,11 @@ async function amenerLeLienDansLEcran(page: import("@playwright/test").Page, nav
  * fil auquel on répond.
  */
 const SANS_FORMULAIRE_EN_LIGNE = new Set([
-  "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges",
+  "nav-monhoraire", "nav-mesdisponibilites", "nav-mesabsences", "nav-monagph", "nav-monpointage", "nav-matemps", "nav-mesechanges", "nav-monequipe",
   "nav-uscomblement", "nav-usequipages", "nav-usdisponibilites", "nav-usabsences", "nav-usechanges", "nav-usagph", "nav-uspresence",
-  "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-usregles",
+  "nav-ustemps", "nav-uspostes", "nav-usperiodes", "nav-usressources", "nav-usquotas", "nav-usreferentiels", "nav-uscodesabsence", "nav-usregles",
   "nav-usmilieux", "nav-usperimetres", "nav-usintegrations", "nav-usretention", "nav-usjournal", "nav-alparametres",
+  "nav-paiecycles", "nav-paiedossiers", "nav-mesbulletins",
 ]);
 const NATURES_EN_LIGNE = ["requete", "en-place"];
 
@@ -1107,7 +1285,9 @@ test.describe("Audit WCAG 2.2 — géométrie et mise en page", () => {
       page.setDefaultTimeout(10_000);
       await mock(MODULES_AUDIT);
       await page.setViewportSize({ width: ecran.width, height: ecran.height });
-      await page.goto("/");
+      // Le premier chargement a son propre budget : l'essai qui part le premier trouve un Vite froid, qui compile ses
+      // dépendances à cette requête (plus de 10 s sur une machine chargée). Le budget court vaut pour les gestes.
+      await page.goto("/", { timeout: 60_000 });
       // La navigation n'existe qu'une fois la session et les modules chargés. Sans cette attente,
       // le tout premier écran est déclaré injoignable pour la seule raison qu'on l'a demandé trop
       // tôt — et l'audit accuse l'application d'un défaut qui est le sien.

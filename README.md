@@ -1,6 +1,6 @@
-# VINA GEPS — VINA Gestion des Personnels de la Santé
+# VINA GePS — VINA Gestion des Personnels de la Santé
 
-**VINA GEPS** est la gestion des effectifs des personnels de la santé : horaires, disponibilités,
+**VINA GePS** est la gestion des effectifs des personnels de la santé : horaires, disponibilités,
 absences, confection annuelle (AGPH), quarts, pointage, feuilles de temps et messagerie sécurisée.
 Son premier client est **Urgences-santé** (AO 26-015-DO, Corporation d'urgences-santé), dont il
 reprend le module né dans Nexu VINA, séparé pour vivre dans son propre dépôt : un serveur **Java seul** (Spring Boot 4, Java 25), une
@@ -47,3 +47,9 @@ La CI (`.github/workflows/ci.yml`) joue les quatre premières portes et les parc
 Copie du 13 novembre 2026 depuis `~/Projects/freelance-invoicing`, branche `features/urgence-sante`,
 commit `52087a5` (« Finalisation: urgence sante et front end »), sans l'historique Git (décision D4).
 Le dépôt d'origine n'a pas été modifié ; le sort du module là-bas (décision D5) reste à trancher.
+
+## Reindexer gitnexus
+
+FX
+
+

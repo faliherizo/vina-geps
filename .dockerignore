@@ -25,3 +25,6 @@ perf/jmeter/resultats
 infra/terraform/**/.terraform
 **/.DS_Store
 *.log
+
+# Les sources des vidéos d'aide (sans leur introduction) : seule la version publiée, dans public/, entre dans l'image.
+frontend/aide-sources

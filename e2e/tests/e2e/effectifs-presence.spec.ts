@@ -12,6 +12,8 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -76,10 +78,10 @@ async function amorcer(tenantId: string, comptes: { julie: string; marc: string 
 }
 
 async function employe(browser: Browser, identifiant: string, tenantId: string, position: boolean) {
-  const ctx = await browser.newContext({
+  const ctx = await browser.newContext(optionsFilmees({
     storageState: { cookies: [], origins: [] },
     ...(position ? { geolocation: { ...CASERNE, accuracy: 10 }, permissions: ["geolocation"] } : { permissions: [] }),
-  });
+  }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
@@ -98,6 +100,7 @@ test("pointer à la caserne, pointer sans preuve, faire approuver l'écart", asy
 
   // ── Julie, à la caserne ────────────────────────────────────────────────────────────────
   const julie = await employe(browser, comptes.julie, tenantId, true);
+  await raconter(julie.page, "Présence et pointage. Julie Roy ouvre Mon pointage depuis la Caserne 12, où se trouve son quart. Sa position est fournie. Elle pointe son entrée : conforme, à zéro mètre du milieu. Puis elle commence sa pause.");
   await expect(julie.page.getByTestId("mpo-quart")).toContainText("Caserne 12");
   await expectNoA11yViolations(julie.page);
   await julie.page.getByTestId("mpo-ENTREE").click();
@@ -112,6 +115,7 @@ test("pointer à la caserne, pointer sans preuve, faire approuver l'écart", asy
 
   // ── Marc, sans géolocalisation ─────────────────────────────────────────────────────────
   const marc = await employe(browser, comptes.marc, tenantId, false);
+  await raconter(marc.page, "Marc Dubé pointe sans partager sa position, alors que le géorepérage est exigé à la caserne. Le pointage est enregistré, mais en écart : son gestionnaire devra l'approuver.");
   await marc.page.getByTestId("mpo-position").uncheck();
   await marc.page.getByTestId("mpo-ENTREE").click();
   await expect(marc.page.getByTestId("mpo-info")).toContainText("Écart : preuve exigée absente : votre gestionnaire l'approuvera.");
@@ -123,10 +127,11 @@ test("pointer à la caserne, pointer sans preuve, faire approuver l'écart", asy
   await marc.ctx.close();
 
   // ── Le planificateur tranche ───────────────────────────────────────────────────────────
-  const ctxChef = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
   await ouvrirNav(chef, "nav-uspresence");
+  await raconter(chef, "Le chef ouvre la présence : le pointage de Marc est à trancher, la distance exigée n'a pas été fournie. Il l'approuve avec un motif : téléphone sans GPS, présence confirmée par le répartiteur.");
   const trancher = chef.locator('[data-testid^="pla-pre-"][data-testid$="-trancher"]');
   await expect(trancher).toHaveCount(1);
   await trancher.click();
@@ -135,6 +140,7 @@ test("pointer à la caserne, pointer sans preuve, faire approuver l'écart", asy
   await chef.getByTestId("pla-pre-motif").fill("Téléphone sans GPS, présence confirmée par le répartiteur");
   await chef.getByTestId("pla-pre-approuver").click();
   await expect(chef.getByTestId("pla-pre-bilan")).toContainText("Marc Dubé : pointage approuvé.");
+  await raconter(chef, "Le chef affiche enfin le code QR de la Caserne 12, à afficher sur place : il change toutes les cinq minutes.");
   await chef.getByTestId("pla-pre-qr").locator("summary").click();
   await chef.getByTestId("pla-pre-milieu").selectOption({ label: "C12 — Caserne 12" });
   await chef.getByTestId("pla-pre-afficher-code").click();

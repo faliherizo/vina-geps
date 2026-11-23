@@ -70,11 +70,11 @@ test.describe("26-015-DO — la section Urgences-santé et son réglage", () => 
     await seConnecterOrganisme(page, tenantId);
 
     // La rubrique elle-même (planche s01) : « Menu principal », le tableau de bord en tête. Le
-    // client se nomme dans la barre du haut, à côté de la marque VINA GEPS.
+    // client se nomme dans la barre du haut, à côté de la marque VINA GePS.
     const section = page.getByTestId("nav-group-urgencessante");
     await expect(section).toHaveCount(1);
     await expect(section).toContainText("Menu principal");
-    await expect(page.getByTestId("marque-produit")).toContainText("VINA GEPS");
+    await expect(page.getByTestId("marque-produit")).toContainText("VINA GePS");
 
     // Une entrée de menu, une page : « Comblement » ouvre son écran, et non un onglet.
     await ouvrirNav(page, "nav-uscomblement");

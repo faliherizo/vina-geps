@@ -34,7 +34,7 @@
   --warning: #8a5000;        /* 6,10:1 — la maquette proposait #B66A00, à 3,90 */
   --sidebar: #073f70;        /* le bleu marine de P17, mesuré au pixel ; blanc dessus : 10,75:1 */
   --sidebar-hover: #0f4c8f;
-  /* VINA GEPS (planche s01, ADR 0073) : barre marine, colonne blanche, entrée courante bleu pâle. */
+  /* VINA GePS (planche s01, ADR 0073) : barre marine, colonne blanche, entrée courante bleu pâle. */
   --marine: #13294b;         /* blanc dessus : 14,5:1 */
   --nav-courant: #dbe8f7;    /* --text dessus : 10,6:1 */
   /* Ombres douces et étagées (profondeur discrète, rendu moderne) */
@@ -1541,3 +1541,13 @@ fieldset > button, fieldset > p > button { margin-top: 4px; }
 .mal-liste { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
 .mal-liste details > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .mal-reponses .primary, .mal-reponses .secondary { min-height: 44px; }
+
+/* Aide : la démonstration commentée de chaque écran — jamais plus large que sa colonne, ni que 720 px. */
+.fiche-video { margin: 8px 0 16px; max-width: 720px; }
+.fiche-video video { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; }
+.fiche-video figcaption { margin-top: 8px; }
+
+/* La mise en route (guide, « Premiers pas ») : une étape par élément, son lien et son passage de vidéo côte à côte. */
+.mise-en-route > li { margin-bottom: 16px; }
+.mise-en-route > li > p { margin: 4px 0; }
+.mise-en-route-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 4px; }

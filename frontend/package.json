@@ -16,7 +16,8 @@
     "mobile:android": "cap copy android && cap open android",
     "mobile:ios": "cap copy ios && cap open ios",
     "testids": "node scripts/lister-testids.cjs",
-    "guide:ecrans": "node scripts/generer-guide-ecrans.mjs"
+    "guide:ecrans": "node scripts/generer-guide-ecrans.mjs",
+    "audit:prod": "npm audit --omit=dev --audit-level=high"
   },
   "dependencies": {
     "exceljs": "^4.4.0",
@@ -26,17 +27,22 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "@capacitor/android": "^6.1.2",
-    "@capacitor/cli": "^6.1.2",
-    "@capacitor/core": "^6.1.2",
-    "@capacitor/ios": "^6.1.2",
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/cli": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/ios": "^8.6.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "@vitest/coverage-v8": "^2.1.9",
+    "@vitejs/plugin-react": "^6.3.0",
+    "@vitest/coverage-v8": "^5.1.1",
     "jsdom": "^25.0.1",
     "typescript": "^5.4.5",
-    "vite": "^5.3.1",
-    "vitest": "^2.1.8"
+    "vite": "^8.3.8",
+    "vitest": "^5.1.1"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   }
 }

@@ -32,6 +32,9 @@ public interface EcritureFeuillesTempsPort {
 
     void enregistrerParametres(Contexte ctx, TempsEffectifs.Parametres p);
 
+    /** Pose les seuils d'une convention ; des seuils vides retirent la surcharge. */
+    void enregistrerSeuilsConvention(Contexte ctx, SeuilsConvention s);
+
     void insererFeuille(Contexte ctx, NouvelleFeuille f);
 
     void insererSegment(Contexte ctx, String feuilleId, NouveauSegment s, Filiation f);
@@ -61,4 +64,7 @@ public interface EcritureFeuillesTempsPort {
 
     /** Pose le statut et le palier ; la date d'approbation est celle du contexte si la feuille est approuvée, nulle sinon. */
     void poserIssue(Contexte ctx, String id, TempsEffectifs.Issue issue);
+
+    /** La feuille entre dans une paie traitée : statut PAYEE, la paie et l'instant notés. */
+    void marquerPayee(Contexte ctx, String id, String paieId);
 }

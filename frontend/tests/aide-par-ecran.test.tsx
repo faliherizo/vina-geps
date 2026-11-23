@@ -22,6 +22,7 @@ import { resolve } from "node:path";
 import Help from "../src/Help";
 import { AIDE_PAR_PAGE, IDS_SECTIONS, SECTIONS_AIDE, ancreConnue, sectionsVisibles, titreDeSection } from "../src/aideParEcran";
 import { FICHES, idFiche } from "../src/aide/fichesEcrans";
+import { ModuleAccessProvider } from "../src/moduleAccess";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -184,7 +185,7 @@ describe("le guide se restreint aux modules souscrits", () => {
 
   it("les écrans du module renvoient à ses deux sections : les effectifs, et la communication", () => {
     const us = Object.entries(AIDE_PAR_PAGE).filter(([page]) => page.startsWith("us"));
-    expect(us).toHaveLength(22);
+    expect(us).toHaveLength(23);
     expect([...new Set(us.map(([, s]) => s))].sort()).toEqual(["communication", "effectifs-planification"]);
   });
 });
@@ -203,5 +204,46 @@ describe("une fiche par écran, avec un exemple de remplissage", () => {
     expect(ancreConnue("fiche-usechanges")).toBe(true);
     expect(ancreConnue("fiche-inexistant")).toBe(false);
     expect(ancreConnue("autre")).toBe(false);
+  });
+});
+
+/**
+ * **L'aide suit le menu de l'établissement.** Un écran que le superadmin a retiré du menu (toutes ses vues masquées,
+ * comme l'organisme FX-AO réduit à son avis) n'a ni fiche ni section : l'aide d'une fonctionnalité qu'on n'a pas ne sert
+ * à rien, et fait chercher au menu une entrée absente.
+ */
+describe("le guide se restreint au menu que le superadmin laisse à l'établissement", () => {
+  const PAIE = ["paiecycles", "paiedossiers", "paiedeclarations", "mesbulletins", "paieparametres", "paieregles", "paietemps"];
+
+  it("une section dont tous les écrans sont masqués disparaît, même si son module est ouvert", () => {
+    const vues = sectionsVisibles(() => true, (page) => PAIE.includes(page)).map((s) => s.id);
+    expect(vues).not.toContain("paie");
+    expect(vues).toContain("alertes");
+  });
+
+  it("une section garde son aide tant qu'un de ses écrans reste au menu", () => {
+    const vues = sectionsVisibles(() => true, (page) => PAIE.filter((p) => p !== "mesbulletins").includes(page)).map((s) => s.id);
+    expect(vues).toContain("paie");
+  });
+
+  it("la page d'aide ne montre ni la fiche ni la section d'un écran masqué, et garde les autres", () => {
+    const conteneur = document.createElement("div");
+    document.body.appendChild(conteneur);
+    const racine = createRoot(conteneur);
+    act(() => {
+      racine.render(
+        <ModuleAccessProvider value={null} pagesMasquees={new Set([...PAIE, "superadmin"])}>
+          <Help section={null} />
+        </ModuleAccessProvider>,
+      );
+    });
+    const fiches = [...conteneur.querySelectorAll("[data-testid^='help-fiche-']")].map((f) => f.getAttribute("data-testid")!.slice("help-fiche-".length));
+    expect(fiches.filter((p) => PAIE.includes(p) || p === "superadmin")).toEqual([]);
+    expect(fiches).toContain("alnouvelle");
+    expect(conteneur.querySelector("#paie")).toBeNull();
+    expect(conteneur.querySelector("[data-testid='help-sommaire-paie']")).toBeNull();
+    expect(conteneur.querySelector("#alertes")).not.toBeNull();
+    act(() => racine.unmount());
+    conteneur.remove();
   });
 });

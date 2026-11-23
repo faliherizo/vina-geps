@@ -1,6 +1,18 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
+import java.time.Clock;
+import ca.vina.nexu.effectifs.infrastructure.web.ControleurEchangesApi;
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.domaine.LecturePointagesEffectifsPort;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
+import ca.vina.nexu.effectifs.application.commandes.GestesEchangesApi;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
+import ca.vina.nexu.effectifs.application.commandes.JournalAvecAvisDesQuarts;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotJournalEffectifs;
+import ca.vina.nexu.partage.modules.EmetteurEvenements;
 import ca.vina.nexu.effectifs.application.commandes.BoiteEnvoiIntegration;
+import ca.vina.nexu.effectifs.application.requetes.LectureEchangesApi;
+import ca.vina.nexu.effectifs.domaine.EchangesApiPort;
 import ca.vina.nexu.effectifs.application.commandes.ExportPaieTemps;
 import ca.vina.nexu.effectifs.application.commandes.GestesEntrantsIntegration;
 import ca.vina.nexu.effectifs.application.commandes.GestesSortantsIntegration;
@@ -24,6 +36,7 @@ import ca.vina.nexu.effectifs.infrastructure.web.ControleurIntegrationsEffectifs
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import java.net.http.HttpClient;
 
@@ -38,6 +51,41 @@ public class ConfigurationIntegrationsEffectifs {
     public RegistreConnecteursIntegration registreConnecteursIntegrationEffectifs(SecretsIntegrationPort secrets) {
         HttpClient client = HttpClient.newBuilder().connectTimeout(ClientHttpIntegration.DELAI).build();
         return new RegistreConnecteursIntegration(secrets, ClientHttpIntegration.reseau(client));
+    }
+
+    /** L'API d'échange de l'organisme (AD-06) : lectures machine des quarts, correctifs et relevés. */
+    @Bean
+    public LectureEchangesApi lectureEchangesApi(EchangesApiPort port) {
+        return new LectureEchangesApi(port);
+    }
+
+    /** AD-06b : employés et soldes des banques transmis par l'organisme. */
+    @Bean
+    public GestesEchangesApi.Ports portsGestesEchangesApi(GestionnaireRessources ressources, LectureRessources lecture, LecturePointagesEffectifsPort matricules,
+                                                         SoldesBanquesPort soldes) {
+        return new GestesEchangesApi.Ports(ressources, lecture, matricules, soldes);
+    }
+
+    /** AD-06c : l'absence constatée aux opérations passe par la déclaration d'absence, comme à l'écran. */
+    @Bean
+    public GestesEchangesApi gestesEchangesApi(GestesEchangesApi.Ports ports, GestionnaireAbsencesEffectifs absences, EchangesApiPort quarts,
+                                               JournalEffectifsPort journal) {
+        return new GestesEchangesApi(ports, new GestesEchangesApi.Absences(absences, quarts), journal);
+    }
+
+    /**
+     * AD-06c : le journal que reçoivent tous les gestes des effectifs annonce aussi les quarts modifiés aux webhooks.
+     * {@code @Primary} : l'adaptateur SQLite reste un bean, mais c'est ce décorateur qu'injecte le type du port.
+     */
+    @Bean
+    @Primary
+    public JournalEffectifsPort journalEffectifsAvecAvis(DepotJournalEffectifs depot, EchangesApiPort quarts, EmetteurEvenements emetteur) {
+        return new JournalAvecAvisDesQuarts(depot, quarts, emetteur);
+    }
+
+    @Bean
+    public ControleurEchangesApi.Services servicesEchangesApi(LectureEchangesApi lecture, GestesEchangesApi gestes, Clock horloge) {
+        return new ControleurEchangesApi.Services(lecture, gestes, horloge);
     }
 
     @Bean

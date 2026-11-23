@@ -1,4 +1,4 @@
-# ADR 0074 — Les communications cliniques sont un contexte `alertes` de VINA GEPS, activable par organisme
+# ADR 0074 — Les communications cliniques sont un contexte `alertes` de VINA GePS, activable par organisme
 
 - **Statut** : accepté pour le **socle** (phase R1), le 14 novembre 2026. Les phases R2 et
   suivantes restent soumises aux réponses du client (section « Points ouverts »).
@@ -13,7 +13,7 @@
 ## Contexte
 
 L'appel d'offres FX-AO-20260810 (Santé Québec Laurentides) demande une distribution de
-communications cliniques. Sur ses 32 critères fonctionnels, VINA GEPS en sert déjà 13 et 12 en
+communications cliniques. Sur ses 32 critères fonctionnels, VINA GePS en sert déjà 13 et 12 en
 partie : identité, messagerie, avis multi-canaux, groupes, disponibilités, journal. Il manque
 l'**alerte** : un objet ciblé, priorisé et suivi, que le fil de discussion n'est pas.
 
@@ -48,9 +48,23 @@ l'**alerte** : un objet ciblé, priorisé et suivi, que le fil de discussion n'e
 
 | Question au client | Choix provisoire du socle | Réversible ? |
 |---|---|---|
-| **Q-TEL** — fournisseur de téléphonie | Aucun appel automatique dans le socle. En R3, le port `notifications.Appels` (ADR 0022) avec Twilio en région canadienne, ou un fournisseur québécois | Oui : c'est un adaptateur |
+| **Q-TEL** — fournisseur de téléphonie | **Tranché le 14 novembre 2026 par l'équipe VINA (choix technologique qui lui revient) : Twilio**, déjà branché (`notifications/infrastructure/persistance/Twilio.java`, `AppelHttp`). Textos sortants et entrants (R2-b) et appels avec synthèse vocale et DTMF (R3) passent par lui, derrière les ports `PublicationAvis` et `notifications.Appels` (ADR 0022) | Oui : c'est un adaptateur ; un autre fournisseur ne remplacerait que lui |
 | **Q-ALC** — alertes critiques iOS | La priorité critique force poussée, texto et courriel. *Critical Alerts* attend l'autorisation d'Apple | Oui : ajout d'un canal |
 | **Q-DOS** — « note au dossier » | Interprétée comme une **note interne sur la fiche du destinataire**, non implantée dans le socle (R4) | Oui : rien n'est écrit dans un dossier clinique |
+
+## Complément du 14 novembre 2026 (R1-bis)
+
+- **Les groupes transverses appartiennent à `communication`**, pas à `alertes` : ce sont des données de
+  l'organisme que la messagerie, les listes et les alertes partagent, et `communication` ne peut pas dépendre
+  d'`alertes` (cycle refusé par `ArchitectureTest`). Un port composé, `GroupesDeCommunication` (unités + groupes
+  transverses actifs, appartenance au jour de Montréal), est l'implantation **principale** de
+  `GroupesDeTravailPort`. L'acheminement des appels par unité reçoit explicitement les unités seules (bean
+  qualifié par son nom, sans dépendance de code vers `effectifs`).
+- **La priorité critique est une capacité**, `alertes.critique` (administration et direction par défaut,
+  surchargeable par organisme). Un refus est un 403 nommé ; l'écran grise la priorité et ne propose pas un
+  modèle critique à qui ne peut pas l'envoyer.
+- **Une alerte retient la version du modèle dont elle part** ; les versions sont datées et signées, jamais
+  réécrites. Le périmètre d'un modèle se range en table, comme toute liste du contexte.
 
 ## Options écartées
 

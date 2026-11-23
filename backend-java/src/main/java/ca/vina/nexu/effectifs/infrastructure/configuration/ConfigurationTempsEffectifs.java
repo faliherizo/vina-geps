@@ -10,6 +10,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnairePreparationTemps
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireSegmentsTemps;
 import ca.vina.nexu.effectifs.application.commandes.RestrictionModificationHeures;
 import ca.vina.nexu.effectifs.application.requetes.CalculFeuillesTemps;
+import ca.vina.nexu.effectifs.application.requetes.FeuillesPourPaie;
 import ca.vina.nexu.effectifs.application.requetes.LectureFeuillesTemps;
 import ca.vina.nexu.effectifs.application.requetes.LectureFluxApprobations;
 import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
@@ -18,14 +19,18 @@ import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
 import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
 import ca.vina.nexu.effectifs.application.requetes.RapportsTemps;
 import ca.vina.nexu.effectifs.application.requetes.SourcesFeuillesTemps;
+import ca.vina.nexu.effectifs.domaine.DepotRessourcesPort;
 import ca.vina.nexu.effectifs.domaine.EcritureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.JournalEffectifsPort;
 import ca.vina.nexu.effectifs.domaine.LectureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.SourcesTempsEffectifsPort;
 import ca.vina.nexu.effectifs.infrastructure.web.ControleurTempsEffectifs;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
+import ca.vina.nexu.partage.temps.Iso;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
 
 /** Le câblage des feuilles de temps des effectifs (lot R9) : du Java nu, assemblé ici. */
 @Configuration
@@ -61,6 +66,15 @@ public class ConfigurationTempsEffectifs {
     @Bean
     public ExportPaieTemps exportPaieTempsEffectifs(LectureFeuillesTemps lecture, JournalEffectifsPort journal) {
         return new ExportPaieTemps(lecture, journal);
+    }
+
+    /** Les feuilles approuvées et le verrou PAYEE, offerts à la paie par les ports de {@code partage.paie} (ADR 0076). */
+    @Bean
+    public FeuillesPourPaie feuillesPourPaie(LectureFeuillesTemps lecture, ExportPaieTemps export, EcritureFeuillesTempsPort depot,
+                                             JournalEffectifsPort journal, DepotRessourcesPort ressources,
+                                             GestionnaireApprobationTemps approbation, Clock horloge) {
+        FeuillesPourPaie.Dependances d = new FeuillesPourPaie.Dependances(lecture, export, depot, journal, ressources);
+        return new FeuillesPourPaie(d, approbation, () -> Iso.de(horloge.instant()));
     }
 
     @Bean

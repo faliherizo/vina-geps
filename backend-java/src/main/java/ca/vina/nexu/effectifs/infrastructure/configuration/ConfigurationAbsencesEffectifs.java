@@ -1,5 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.application.commandes.CascadeOffresQuart;
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
@@ -39,9 +41,10 @@ public class ConfigurationAbsencesEffectifs {
     public GestionnaireComblementAbsences gestionnaireComblementAbsencesEffectifs(LectureEquipages equipages, LectureDisponibilites disponibilites,
                                                                                   LectureRessources ressources, LectureReferentiels referentiels,
                                                                                   DepotComblementsAbsencesPort depot, GestionnaireAttributionFinDeCollecte attribution,
-                                                                                  PublicationAvis avis, JournalEffectifsPort journal, Sequence sequence) {
+                                                                                  PublicationAvis avis, JournalEffectifsPort journal, Sequence sequence,
+                                                                                  CascadeOffresQuart cascade) {
         return new GestionnaireComblementAbsences(new GestionnaireComblementAbsences.Lectures(equipages, disponibilites, ressources, referentiels),
-                new GestionnaireComblementAbsences.Ecritures(depot, attribution, avis, journal, sequence));
+                new GestionnaireComblementAbsences.Ecritures(depot, attribution, avis, journal, sequence, cascade));
     }
 
     @Bean
@@ -58,8 +61,8 @@ public class ConfigurationAbsencesEffectifs {
                                                                        DepotEquipagesPort equipages, GestionnaireComblementAbsences comblement,
                                                                        LectureAbsencesEffectifs absences, LectureRessources ressources,
                                                                        LectureReferentiels referentiels, LecturePerimetres perimetres, EvaluateurRegles regles,
-                                                                       JournalEffectifsPort journal, Sequence sequence) {
+                                                                       JournalEffectifsPort journal, Sequence sequence, SoldesBanquesPort soldes) {
         return new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depot, planning, equipages, comblement),
-                new GestionnaireAbsencesEffectifs.Lectures(absences, ressources, referentiels, perimetres), regles, journal, sequence);
+                new GestionnaireAbsencesEffectifs.Lectures(absences, ressources, referentiels, perimetres, soldes), regles, journal, sequence);
     }
 }

@@ -263,10 +263,44 @@
     "libelle": "Envoyer une alerte et suivre les alertes de l'organisme",
     "portee": "Le suivi est partagé entre expéditeurs autorisés (FX-AO-20260810, critère 12)."
   },
+  "alertes.suivre": {
+    "roles": [
+      "admin",
+      "director",
+      "manager"
+    ],
+    "libelle": "Suivre les alertes de l'organisme : preuve de livraison, fiche, cascade et export",
+    "portee": "Distincte de l'envoi (ADR 0085) : la preuve de livraison est due aux expéditeurs, aux gestionnaires et aux pilotes (FX-AO-20260810, addenda 2, Q31)."
+  },
   "alertes.configure": {
     "roles": [
       "admin"
     ],
     "libelle": "Tenir les réponses prédéfinies et les modèles d'alerte"
+  },
+  "alertes.critique": {
+    "roles": [
+      "admin",
+      "director"
+    ],
+    "libelle": "Envoyer une alerte de priorité critique",
+    "portee": "La priorité critique force tous les canaux de chaque destinataire ; un organisme peut l'ouvrir à d'autres rôles (FX-AO-20260810, ST-G01)."
+  },
+  "paie.gerer": {
+    "roles": [
+      "admin",
+      "rh",
+      "accountant"
+    ],
+    "libelle": "Valider les temps, préparer et traiter la paie, produire le registre et les fiches de paie, lire les remises et les relevés",
+    "portee": "Lire ses propres bulletins n'exige que le module (ADR 0076). Valider les temps ne réapprouve pas une feuille : l'approbation reste au gestionnaire (ADR 0084)."
+  },
+  "paie.configurer": {
+    "roles": [
+      "admin",
+      "rh"
+    ],
+    "libelle": "Tenir les règles de paie variable, l'échelle salariale, les dossiers de rémunération et les réglages de la paie",
+    "portee": "Le comptable paie selon des règles qu'il ne modifie pas (ADR 0084)."
   }
 }

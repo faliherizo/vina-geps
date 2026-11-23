@@ -108,6 +108,17 @@ public class ControleurTempsEffectifs {
         return garde.repondre(r, configurer(r), 200, ctx -> agir.parametres().modifier(ctx, corps(c)));
     }
 
+    /** AD-03 (addenda 7, Q15) : les seuils d'heures supplémentaires propres à une convention collective. */
+    @GetMapping("/seuils-conventions")
+    public ResponseEntity<Object> seuilsConventions(HttpServletRequest r) {
+        return garde.repondre(r, module(r), 200, ctx -> lire.feuilles().seuilsConventions(ctx.tenantId()));
+    }
+
+    @PutMapping("/seuils-conventions/{code}")
+    public ResponseEntity<Object> modifierSeuilsConvention(HttpServletRequest r, @PathVariable String code, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, configurer(r), 200, ctx -> agir.parametres().modifierSeuilsConvention(ctx, code, corps(c)));
+    }
+
     private GardeAcces.Verdict configurer(HttpServletRequest r) {
         return garde.capacite(r, MODULE, GardeEffectifs.Capacite.CONFIGURER);
     }
@@ -193,6 +204,18 @@ public class ControleurTempsEffectifs {
     @PostMapping("/feuilles/{id}/retourner")
     public ResponseEntity<Object> retourner(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
         return garde.repondre(r, gerer(r), 200, ctx -> agir.approbation().decider(ctx, id, TempsEffectifs.Decision.RETOURNER, corps(c)));
+    }
+
+    /** La personne (ou qui a soumis pour elle) reprend sa feuille avant la paie, pour la corriger. */
+    @PostMapping("/feuilles/{id}/rappeler")
+    public ResponseEntity<Object> rappeler(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, module(r), 200, ctx -> agir.approbation().rappeler(ctx, id, corps(c)));
+    }
+
+    /** L'encadrement rouvre une feuille approuvée, avant la paie, et la renvoie avec un motif. */
+    @PostMapping("/feuilles/{id}/rouvrir")
+    public ResponseEntity<Object> rouvrir(HttpServletRequest r, @PathVariable String id, @RequestBody(required = false) Map<String, Object> c) {
+        return garde.repondre(r, gerer(r), 200, ctx -> agir.approbation().rouvrir(ctx, id, corps(c)));
     }
 
     @GetMapping("/export-paie")

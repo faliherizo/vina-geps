@@ -1,6 +1,6 @@
-# FX-AO-20260810 : maquettes du module « Communications cliniques » dans VINA GEPS
+# FX-AO-20260810 : maquettes du module « Communications cliniques » dans VINA GePS
 
-> Écrit pour la conception et la soumission. Une maquette par écran, dans le gabarit de VINA GEPS
+> Écrit pour la conception et la soumission. Une maquette par écran, dans le gabarit de VINA GePS
 > (barre marine, colonne blanche, ADR 0073), avec le menu, ce que voit chaque profil et les
 > critères de la grille que chaque écran sert. Ce sont des maquettes de conception : rien n'est
 > implanté (ADR 0074 proposé).
@@ -9,7 +9,7 @@
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────┐
-│ VINA GEPS   CISSS des Laurentides             ✉ 3  🔔 1  ? Aide   Dre Tremblay ▾ │
+│ VINA GePS   CISSS des Laurentides             ✉ 3  🔔 1  ? Aide   Dre Tremblay ▾ │
 ├──────────────────────┬─────────────────────────────────────────────────────────┤
 │ MENU PRINCIPAL       │                                                         │
 │ ▣ Tableau de bord    │   (écran courant)                                       │
@@ -94,7 +94,7 @@ Journal : 14:02 envoi (15) · 14:02 remise (13) · 14:03 prise en charge · 14:0
 
 ```
 ┌──────────────────────────────┐
-│ VINA GEPS            🔔 2  ☰ │
+│ VINA GePS            🔔 2  ☰ │
 │ ⚠ CRITIQUE · 14:02           │
 │ Code bleu chambre 512,       │
 │ 5e étage.                    │

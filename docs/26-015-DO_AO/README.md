@@ -19,6 +19,7 @@
 | [08-VERIFICATION-EXIGENCES-FONCTIONNELLES.md](08-VERIFICATION-EXIGENCES-FONCTIONNELLES.md) | Les 90 exigences fonctionnelles vérifiées une à une, et le dispositif qui empêche un jugement de vieillir |
 | [09-CHARGE-ET-NIVEAUX-DE-SERVICE.md](09-CHARGE-ET-NIVEAUX-DE-SERVICE.md) | JMeter sur le module des effectifs, couverture utile, SLI/SLO/SLA et verdict sur E-TN-17 |
 | [10-GRILLE-EXIGENCES-FONCTIONNELLES.md](10-GRILLE-EXIGENCES-FONCTIONNELLES.md) | **Généré** (`construire-grille-fonctionnelle.py`) — préparation de la soumission : les 90 exigences fonctionnelles avec la réponse à inscrire dans la grille, puis tout ce qui n'est pas conforme à ce jour |
+| [12-reponses-addenda/](12-reponses-addenda/01_traitement_des_reponses.md) | **20 nov. 2026** — les réponses d'Urgences-santé (addenda 1 à 7, grille v2) traitées une à une contre le code : écarts, questions sans réponse, stories AD-01 à AD-08, planificateur, conception et scénarios |
 | [questions/](questions/README.md) | Les 137 questions à poser à Urgences-santé — validation de la solution livrée (54), exigences à clarifier (50), contrat et régie (33) — et les 28 données à obtenir, chacune avec sa source, notre hypothèse et le moment où la poser |
 | [MATRICE-COUVERTURE.md](MATRICE-COUVERTURE.md) | **Généré** — les 144 exigences avec verdict, lot, recette de vérification à l'interface, preuves et écart |
 

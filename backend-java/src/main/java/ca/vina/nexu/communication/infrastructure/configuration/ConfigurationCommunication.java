@@ -1,6 +1,11 @@
 package ca.vina.nexu.communication.infrastructure.configuration;
 
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
+import ca.vina.nexu.communication.application.commandes.GestionnaireGroupesTransverses;
+import ca.vina.nexu.communication.application.requetes.GroupesDeCommunication;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotGroupesTransverses;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Primary;
 import ca.vina.nexu.communication.application.commandes.BalayageSonneries;
 import ca.vina.nexu.communication.application.commandes.GestionnaireAppelsDirects;
 import ca.vina.nexu.communication.application.commandes.GestionnaireAppelsGroupe;
@@ -44,6 +49,9 @@ import java.time.Clock;
 @Configuration
 public class ConfigurationCommunication {
 
+    /** Le bean des unités d'effectifs, désigné par son nom : aucune dépendance de code vers le contexte des effectifs. */
+    public static final String UNITES = "adaptateurGroupesDeTravail";
+
     @Bean
     public DepotAppelsDirects depotAppelsDirects(JdbcClient jdbc) {
         return new DepotAppelsDirects(jdbc);
@@ -81,18 +89,40 @@ public class ConfigurationCommunication {
         return new LectureAppelsGroupe(depot, horloge);
     }
 
+    /**
+     * <strong>Les groupes où l'on communique</strong> (ST-G09) : les unités et les groupes transverses. Principal : la
+     * messagerie, les listes et les alertes le reçoivent. L'acheminement des appels, lui, demande les unités seules
+     * ({@link #UNITES}) : on ne route pas un appel vers une garde transverse.
+     */
     @Bean
-    public AcheminementPort acheminement(GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages) {
+    @Primary
+    public GroupesDeCommunication groupesDeCommunication(@Qualifier(UNITES) GroupesDeTravailPort unites, DepotGroupesTransverses transverses, Clock horloge) {
+        return new GroupesDeCommunication(unites, transverses, horloge);
+    }
+
+    @Bean
+    public DepotGroupesTransverses depotGroupesTransverses(JdbcClient jdbc) {
+        return new DepotGroupesTransverses(jdbc);
+    }
+
+    @Bean
+    public GestionnaireGroupesTransverses gestionnaireGroupesTransverses(DepotGroupesTransverses depot) {
+        // L'identifiant est tiré ici, à la frontière : le domaine le reçoit, il ne le tire jamais.
+        return new GestionnaireGroupesTransverses(depot, depot, () -> java.util.UUID.randomUUID().toString());
+    }
+
+    @Bean
+    public AcheminementPort acheminement(@Qualifier(UNITES) GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages) {
         return new AcheminementParUnite(groupes, reglages);
     }
 
     @Bean
-    public LectureReglagesAcheminement lectureReglagesAcheminement(GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages) {
+    public LectureReglagesAcheminement lectureReglagesAcheminement(@Qualifier(UNITES) GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages) {
         return new LectureReglagesAcheminement(groupes, reglages);
     }
 
     @Bean
-    public GestionnaireReglagesAcheminement gestionnaireReglagesAcheminement(GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages,
+    public GestionnaireReglagesAcheminement gestionnaireReglagesAcheminement(@Qualifier(UNITES) GroupesDeTravailPort groupes, DepotReglagesAcheminement reglages,
                                                                              JournalCommunicationPort journal, Clock horloge) {
         return new GestionnaireReglagesAcheminement(new GestionnaireReglagesAcheminement.Dependances(groupes, reglages, journal), horloge);
     }

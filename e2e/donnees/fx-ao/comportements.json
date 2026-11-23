@@ -1,0 +1,962 @@
+{
+ "pourquoi": "Les critères de la grille FX-AO-20260810 (Santé Québec Laurentides), joués par l'API contre le serveur Java et jugés sur des valeurs. Interprète : e2e/tests/e2e/helpers/comportements.ts ; essai : fx-ao-comportements.spec.ts.",
+ "acteurs": {
+  "chef": {
+   "role": "manager"
+  },
+  "dir": {
+   "role": "director"
+  },
+  "julie": {
+   "role": "employee"
+  },
+  "marc": {
+   "role": "employee"
+  }
+ },
+ "amorce": [
+  {
+   "pourquoi": "Un groupe de garde transverse, sans module d'effectifs (ST-G09)",
+   "methode": "POST",
+   "chemin": "/api/communication/groupes-transverses",
+   "corps": {
+    "nom": "Garde de nuit — Saint-Jérôme",
+    "nature": "garde"
+   },
+   "attendu": {
+    "statut": 201
+   },
+   "capturer": {
+    "garde": "id"
+   }
+  },
+  {
+   "methode": "PUT",
+   "chemin": "/api/communication/groupes-transverses/{{garde}}/membres/{{p_julie}}",
+   "corps": {
+    "moderateur": true
+   },
+   "attendu": {
+    "statut": 200
+   }
+  },
+  {
+   "methode": "PUT",
+   "chemin": "/api/communication/groupes-transverses/{{garde}}/membres/{{p_marc}}",
+   "corps": {},
+   "attendu": {
+    "statut": 200
+   }
+  }
+ ],
+ "scenarios": [
+  {
+   "id": "FX-01",
+   "titre": "Les réponses prédéfinies ont une sémantique fermée ; seule l'administration les tient",
+   "exigences": [
+    "10",
+    "32",
+    "77"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/alertes/reponses",
+     "corps": {
+      "libelle": "J'arrive",
+      "semantique": "prise_en_charge"
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "libelle": "J'arrive",
+       "semantique": "prise_en_charge",
+       "active": true
+      }
+     },
+     "capturer": {
+      "arrive": "id"
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/alertes/reponses",
+     "corps": {
+      "libelle": "Indisponible",
+      "semantique": "refus"
+     },
+     "attendu": {
+      "statut": 201
+     },
+     "capturer": {
+      "indispo": "id"
+     }
+    },
+    {
+     "pourquoi": "Une sémantique hors de l'ensemble fermé est refusée",
+     "methode": "POST",
+     "chemin": "/api/alertes/reponses",
+     "corps": {
+      "libelle": "Peut-être",
+      "semantique": "oui"
+     },
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "pourquoi": "La gestionnaire envoie, elle ne paramètre pas",
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes/reponses",
+     "corps": {
+      "libelle": "X",
+      "semantique": "refus"
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-02",
+   "titre": "Un modèle d'alerte propose ses réponses et se versionne à chaque modification",
+   "exigences": [
+    "6",
+    "32"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/alertes/modeles",
+     "corps": {
+      "titre": "Code bleu",
+      "corps": "Chambre 512, 5e étage",
+      "priorite": "urgente",
+      "reponseIds": [
+       "{{arrive}}",
+       "{{indispo}}"
+      ]
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "version": 1,
+       "actif": true
+      }
+     },
+     "capturer": {
+      "modele": "id"
+     }
+    },
+    {
+     "methode": "PUT",
+     "chemin": "/api/alertes/modeles/{{modele}}",
+     "corps": {
+      "titre": "Code bleu — 5e",
+      "corps": "Chambre 512, 5e étage, aile B",
+      "priorite": "urgente",
+      "reponseIds": [
+       "{{arrive}}",
+       "{{indispo}}"
+      ]
+     },
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "version": 2
+      }
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/modeles/{{modele}}/versions",
+     "attendu": {
+      "statut": 200,
+      "corps": [
+       {
+        "version": 2
+       },
+       {
+        "version": 1
+       }
+      ]
+     }
+    },
+    {
+     "pourquoi": "La priorité est un ensemble fermé",
+     "methode": "POST",
+     "chemin": "/api/alertes/modeles",
+     "corps": {
+      "titre": "X",
+      "corps": "Y",
+      "priorite": "haute"
+     },
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "pourquoi": "La gestionnaire voit le modèle actif",
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/modeles",
+     "attendu": {
+      "statut": 200,
+      "texte": "Code bleu — 5e"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-03",
+   "titre": "Les droits se lisent pour l'écran : la gestionnaire envoie sans priorité critique ; la directrice a la critique",
+   "exigences": [
+    "30",
+    "77",
+    "78"
+   ],
+   "etapes": [
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/droits",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "envoyer": true,
+       "critique": false,
+       "configurer": false
+      }
+     }
+    },
+    {
+     "acteur": "dir",
+     "methode": "GET",
+     "chemin": "/api/alertes/droits",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "envoyer": true,
+       "critique": true,
+       "configurer": false
+      }
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/alertes/droits",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "envoyer": false,
+       "critique": false,
+       "configurer": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-04",
+   "titre": "La console envoie à un groupe ou à des personnes nommées ; critique réservée ; destinataire inconnu refusé",
+   "exigences": [
+    "1",
+    "3",
+    "5",
+    "7",
+    "28"
+   ],
+   "etapes": [
+    {
+     "pourquoi": "Recherche du destinataire par son nom dès trois caractères (critère 3)",
+     "methode": "GET",
+     "chemin": "/api/communication/groupes-transverses/personnes?q=jul",
+     "attendu": {
+      "statut": 200,
+      "texte": "{{p_julie}}"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/groupes",
+     "attendu": {
+      "statut": 200,
+      "texte": "Garde de nuit"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "Code bleu",
+      "corps": "Chambre 512",
+      "priorite": "urgente",
+      "reponseIds": [
+       "{{arrive}}",
+       "{{indispo}}"
+      ],
+      "groupes": [
+       "{{garde}}"
+      ],
+      "modeleId": "{{modele}}"
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "bilan": {
+        "destinataires": 2,
+        "lues": 0,
+        "repondues": 0
+       }
+      }
+     },
+     "capturer": {
+      "alerte": "id"
+     }
+    },
+    {
+     "pourquoi": "La priorité critique exige la capacité alertes.critique",
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "Critique",
+      "corps": "x",
+      "priorite": "critique",
+      "personnes": [
+       "{{p_julie}}"
+      ]
+     },
+     "attendu": {
+      "statut": 403
+     }
+    },
+    {
+     "acteur": "dir",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "Évacuation aile B",
+      "corps": "Rendez-vous au poste",
+      "priorite": "critique",
+      "personnes": [
+       "{{p_julie}}",
+       "{{p_marc}}"
+      ]
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "priorite": "critique",
+       "bilan": {
+        "destinataires": 2
+       }
+      }
+     },
+     "capturer": {
+      "critique": "id"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "Info",
+      "corps": "x",
+      "priorite": "information",
+      "personnes": [
+       "inconnu-{{suffixe}}"
+      ]
+     },
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "pourquoi": "Un destinataire n'envoie pas d'alerte",
+     "acteur": "julie",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "x",
+      "corps": "x",
+      "priorite": "information",
+      "personnes": [
+       "{{p_marc}}"
+      ]
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-05",
+   "titre": "Le destinataire lit, puis prend en charge d'un geste ; une seconde réponse est refusée",
+   "exigences": [
+    "4",
+    "9",
+    "13",
+    "24"
+   ],
+   "etapes": [
+    {
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/alertes/recues",
+     "attendu": {
+      "statut": 200,
+      "texte": "Code bleu"
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "POST",
+     "chemin": "/api/alertes/recues/{{alerte}}/lue",
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "acteur": "marc",
+     "methode": "POST",
+     "chemin": "/api/alertes/recues/{{alerte}}/reponse",
+     "corps": {
+      "reponseId": "{{indispo}}"
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "POST",
+     "chemin": "/api/alertes/recues/{{alerte}}/reponse",
+     "corps": {
+      "reponseId": "{{arrive}}"
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "pourquoi": "Une réponse donnée ne se réécrit pas",
+     "acteur": "julie",
+     "methode": "POST",
+     "chemin": "/api/alertes/recues/{{alerte}}/reponse",
+     "corps": {
+      "reponseId": "{{indispo}}"
+     },
+     "attendu": {
+      "statut": 409
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-06",
+   "titre": "Le suivi est partagé entre expéditeurs, filtrable et exportable ; il dit qui a lu, répondu, pris en charge",
+   "exigences": [
+    "11",
+    "12",
+    "31",
+    "38",
+    "89",
+    "93"
+   ],
+   "etapes": [
+    {
+     "pourquoi": "La directrice voit l'alerte de la gestionnaire (critère 12) ; répondre vaut lecture",
+     "acteur": "dir",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/{{alerte}}",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "bilan": {
+        "destinataires": 2,
+        "lues": 2,
+        "repondues": 2,
+        "relances": 0
+       }
+      }
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees?etat=prise_en_charge",
+     "attendu": {
+      "statut": 200,
+      "texte": "Code bleu"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees?etat=sans_prise_en_charge",
+     "attendu": {
+      "statut": 200,
+      "texte": "Évacuation aile B"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees?etat=perdue",
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=csv",
+     "attendu": {
+      "statut": 200,
+      "texte": "relances"
+     }
+    },
+    {
+     "pourquoi": "L'export PDF est un PDF (PDF/A-2b, critère 39 ; veraPDF en CI)",
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=pdf",
+     "attendu": {
+      "statut": 200,
+      "texte": "^%PDF-"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-07",
+   "titre": "La copie par courriel se règle par organisme",
+   "exigences": [
+    "8"
+   ],
+   "etapes": [
+    {
+     "methode": "PUT",
+     "chemin": "/api/alertes/reglages",
+     "corps": {
+      "copieCourriel": true
+     },
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "copieCourriel": true
+      }
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/reglages",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "copieCourriel": true
+      }
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "PUT",
+     "chemin": "/api/alertes/reglages",
+     "corps": {
+      "copieCourriel": false
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-08",
+   "titre": "Une politique de relance arme une cascade ; l'expéditeur la reprend à l'étape choisie, et la trace le dit",
+   "exigences": [
+    "14",
+    "15",
+    "16",
+    "17",
+    "19",
+    "25"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/alertes/politiques",
+     "corps": {
+      "nom": "Code bleu — relance",
+      "arret": "prise_en_charge",
+      "etapes": [
+       {
+        "cible": "initiaux",
+        "canaux": [
+         "poussee"
+        ],
+        "delaiMinutes": 5
+       },
+       {
+        "cible": "prochain_disponible",
+        "cibleId": "{{garde}}",
+        "canaux": [
+         "texto"
+        ],
+        "delaiMinutes": 10
+       },
+       {
+        "cible": "initiaux",
+        "canaux": [
+         "appel"
+        ],
+        "delaiMinutes": 15
+       }
+      ]
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "version": 1
+      }
+     },
+     "capturer": {
+      "politique": "id"
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/alertes/politiques",
+     "corps": {
+      "nom": "X",
+      "arret": "jamais",
+      "etapes": []
+     },
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes",
+     "corps": {
+      "titre": "Relance de garde",
+      "corps": "Répondez",
+      "priorite": "urgente",
+      "reponseIds": [
+       "{{arrive}}"
+      ],
+      "personnes": [
+       "{{p_julie}}"
+      ],
+      "politiqueId": "{{politique}}"
+     },
+     "attendu": {
+      "statut": 201
+     },
+     "capturer": {
+      "relancee": "id"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/{{relancee}}/cascade",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "cascade": {
+        "etat": "armee",
+        "etape": 1,
+        "etapes": 3
+       },
+       "traces": [
+        {
+         "evenement": "armee"
+        }
+       ]
+      }
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes/envoyees/{{relancee}}/cascade/reprendre",
+     "corps": {
+      "etape": 2
+     },
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "cascade": {
+        "etat": "armee",
+        "etape": 2
+       }
+      }
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "POST",
+     "chemin": "/api/alertes/envoyees/{{relancee}}/cascade/reprendre",
+     "corps": {
+      "etape": 9
+     },
+     "attendu": {
+      "statut": 400
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "POST",
+     "chemin": "/api/alertes/envoyees/{{relancee}}/cascade/reprendre",
+     "corps": {
+      "etape": 1
+     },
+     "attendu": {
+      "statut": 403
+     }
+    },
+    {
+     "acteur": "dir",
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/{{relancee}}/cascade",
+     "attendu": {
+      "statut": 200,
+      "texte": "reprise"
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-09",
+   "titre": "Une note courte et datée sur le destinataire, lue par les expéditeurs",
+   "exigences": [
+    "2"
+   ],
+   "etapes": [
+    {
+     "acteur": "chef",
+     "methode": "PUT",
+     "chemin": "/api/alertes/notes/{{p_julie}}",
+     "corps": {
+      "texte": "Joindre sur le cellulaire de garde"
+     },
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "texte": "Joindre sur le cellulaire de garde"
+      }
+     }
+    },
+    {
+     "acteur": "dir",
+     "methode": "GET",
+     "chemin": "/api/alertes/notes?personnes={{p_julie}}",
+     "attendu": {
+      "statut": 200,
+      "texte": "cellulaire de garde"
+     }
+    },
+    {
+     "acteur": "marc",
+     "methode": "PUT",
+     "chemin": "/api/alertes/notes/{{p_julie}}",
+     "corps": {
+      "texte": "x"
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-10",
+   "titre": "Les utilisateurs actifs du mois se comptent une fois chacun, avec leur justificatif exportable",
+   "exigences": [
+    "bordereau"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/utilisateurs-actifs?mois={{mois}}",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "mois": "{{mois}}",
+       "total": 2
+      }
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/utilisateurs-actifs/export?mois={{mois}}&format=csv",
+     "attendu": {
+      "statut": 200,
+      "texte": "{{p_julie}}"
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/utilisateurs-actifs?mois={{mois}}",
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-11",
+   "titre": "Mots de passe : la politique se vérifie ; le changement refuse un mot de passe déjà employé",
+   "exigences": [
+    "85",
+    "86"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/password-policy/check",
+     "corps": {
+      "password": "court"
+     },
+     "attendu": {
+      "statut": 200,
+      "texte": "issues"
+     }
+    },
+    {
+     "acteur": "marc",
+     "methode": "POST",
+     "chemin": "/api/auth/change-password",
+     "corps": {
+      "oldPassword": "{{mdp}}",
+      "newPassword": "Nouveau!Passe2026x"
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "pourquoi": "Un des 10 derniers mots de passe des 6 derniers mois est refusé",
+     "acteur": "marc",
+     "methode": "POST",
+     "chemin": "/api/auth/change-password",
+     "corps": {
+      "oldPassword": "Nouveau!Passe2026x",
+      "newPassword": "{{mdp}}"
+     },
+     "attendu": {
+      "statut": 400
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-12",
+   "titre": "Un annuaire LDAP ne se déclare qu'en LDAPS",
+   "exigences": [
+    "81",
+    "82"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/annuaires",
+     "corps": {
+      "nom": "AD local",
+      "fournisseur": "ldaps",
+      "emetteur": "ldap://ad.cissslau.local:389/DC=cissslau,DC=local",
+      "clientId": "CN=svc-geps,DC=cissslau,DC=local",
+      "variableSecret": "ANNUAIRE_AD",
+      "domaines": [
+       "ssss.gouv.qc.ca"
+      ],
+      "roleParDefaut": "employee"
+     },
+     "attendu": {
+      "statut": 400,
+      "texte": "ldap:// en clair est refusé"
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/annuaires",
+     "corps": {
+      "nom": "AD local",
+      "fournisseur": "ldaps",
+      "emetteur": "ldaps://ad.cissslau.local:636/OU=Personnel,DC=cissslau,DC=local",
+      "clientId": "CN=svc-geps,DC=cissslau,DC=local",
+      "variableSecret": "ANNUAIRE_AD",
+      "domaines": [
+       "ssss.gouv.qc.ca"
+      ],
+      "roleParDefaut": "employee"
+     },
+     "attendu": {
+      "statut": 201,
+      "corps": {
+       "fournisseur": "ldaps"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "FX-13",
+   "titre": "Un accès se désactive aussitôt, et le journal des actions le trace",
+   "exigences": [
+    "27",
+    "80",
+    "90",
+    "93"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/users",
+     "corps": {
+      "username": "temp-{{suffixe}}",
+      "password": "{{mdp}}",
+      "role": "employee",
+      "mustChangePassword": false
+     },
+     "attendu": {
+      "statut": 201
+     },
+     "capturer": {
+      "temp": "id"
+     }
+    },
+    {
+     "methode": "PATCH",
+     "chemin": "/api/auth/users/{{temp}}",
+     "corps": {
+      "active": false
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/auth/journal-actions",
+     "attendu": {
+      "statut": 200,
+      "texte": "/api/auth/users"
+     }
+    }
+   ]
+  }
+ ]
+}

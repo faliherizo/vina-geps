@@ -113,11 +113,19 @@ public class DepotAbonnementsPoussee {
     }
 
     public void pousserPourNotification(String tenantId, String typeDestinataire, String destinataireId, String sujet, String corps, String url) {
-        if (TypeDestinataire.de(typeDestinataire).map(t -> !t.personne()).orElse(true)) {
+        pousserPourNotification(tenantId, new Poussee(typeDestinataire, destinataireId, sujet, corps, url, ca.vina.nexu.notifications.domaine.Evenements.ETIQUETTE_NOTIFICATION));
+    }
+
+    /** Une poussée : à qui, quoi, vers quel écran, et son étiquette (ordinaire, ou critique — ST-G07). */
+    public record Poussee(String typeDestinataire, String destinataireId, String sujet, String corps, String url, String etiquette) { }
+
+    public void pousserPourNotification(String tenantId, Poussee p) {
+        String destinataireId = p.destinataireId();
+        if (TypeDestinataire.de(p.typeDestinataire()).map(t -> !t.personne()).orElse(true)) {
             return;
         }
         try {
-            PousseeWeb.Charge charge = new PousseeWeb.Charge(sujet, corps, url, "notification");
+            PousseeWeb.Charge charge = new PousseeWeb.Charge(p.sujet(), p.corps(), p.url(), p.etiquette());
             pousserVers(tenantId, destinataireId, charge);
             // Les appareils mobiles de la même personne (refonte E ★) reçoivent la même charge, par le même raccord.
             appareils.pousserVers(tenantId, comptesDe(tenantId, destinataireId), charge);

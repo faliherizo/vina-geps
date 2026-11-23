@@ -1,0 +1,70 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.369
+Paramètres des alertes. Avant de commencer.
+
+00:00:02.819 --> 00:00:05.907
+4 préalables doivent être en place, dans cet ordre :
+
+00:00:06.357 --> 00:00:08.609
+Module accordé à l'organisme : alertes.
+
+00:00:09.059 --> 00:00:11.335
+Le compte de la personne, avec son rôle.
+
+00:00:11.785 --> 00:00:12.760
+Référentiels.
+
+00:00:13.210 --> 00:00:14.418
+Utilisateurs et rôles.
+
+00:00:14.868 --> 00:00:17.933
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:19.000 --> 00:00:23.899
+Paramètres des alertes. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:25.099 --> 00:00:32.344
+Communications cliniques. L'administration paramètre les alertes. Elle crée une réponse, J'arrive, qui vaut prise en charge.
+
+00:00:34.832 --> 00:00:42.007
+Puis un modèle d'alerte, Code bleu : chambre 512, cinquième étage, priorité urgente, avec la réponse J'arrive.
+
+00:00:45.856 --> 00:00:49.339
+Elle crée le groupe Garde de nuit, et y inscrit Julie Roy en cherchant son nom.
+
+00:00:52.927 --> 00:01:00.891
+Deuxième cas, les relances. L'administration crée une politique de relance, Garde, relance, dont la première étape part après trente secondes.
+
+00:01:04.523 --> 00:01:17.457
+Alertes, suite. L'administration coche la copie par courriel : chaque destinataire d'une alerte recevra aussi un courriel. Le réglage tient après rechargement. Plus bas, les utilisateurs actifs du mois : Julie Roy, comptée une fois.
+
+00:01:21.138 --> 00:01:32.028
+Elle déclare ensuite l'annuaire de l'établissement, son Active Directory. Une adresse ldap en clair est refusée : seul LDAPS, chiffré, est accepté. Avec l'adresse ldaps, l'annuaire est déclaré.
+
+00:01:35.712 --> 00:01:40.078
+Messages prédéfinis pour les expéditeurs. Ses commandes doivent être présentes à l'écran.
+
+00:01:43.008 --> 00:01:48.511
+Copie courriel d'un message, si configurée par l'organisme. Ses commandes doivent être présentes à l'écran.
+
+00:01:50.691 --> 00:01:56.218
+Réponses prédéfinies, configurées par les administrateurs. Ses commandes doivent être présentes à l'écran.
+
+00:01:58.199 --> 00:02:04.260
+Appel téléphonique automatique en cas de non-réponse, délai programmable. Ses commandes doivent être présentes à l'écran.
+
+00:02:06.145 --> 00:02:10.302
+Relances automatisées configurables. Ses commandes doivent être présentes à l'écran.
+
+00:02:11.915 --> 00:02:16.745
+Cascades entre utilisateurs d'un groupe ou de groupes distincts. Ses commandes doivent être présentes à l'écran.
+
+00:02:18.614 --> 00:02:24.094
+Délais, séquences, règles d'arrêt et de reprise des cascades. Ses commandes doivent être présentes à l'écran.
+
+00:02:26.104 --> 00:02:30.980
+Cloisonner les utilisateurs dans un ou plusieurs groupes. Ses commandes doivent être présentes à l'écran.
+
+00:02:32.826 --> 00:02:41.580
+Configuration des messages et réponses prédéfinis, relances, groupes, cascades, droits, disponibilité. Ses commandes doivent être présentes à l'écran.

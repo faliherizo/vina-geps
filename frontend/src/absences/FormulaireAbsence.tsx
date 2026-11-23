@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { Message } from "../composants";
 import DeclarationEffectifs from "./DeclarationEffectifs";
+import LienPrealables, { estSansRessource } from "../aide/LienPrealables";
 
 export interface AbsenceDeclaree {
   categorie: "effectifs"; ids: string[];
@@ -67,7 +68,13 @@ export default function FormulaireAbsence({ apiFetch, estEmploye, onDeclaree }: 
 
   return (
     <form data-testid="abs-formulaire-champs" onSubmit={(e) => { e.preventDefault(); void envoyer(); }} noValidate>
-      {erreur && <Message variante="erreur" testId="abs-form-error">{erreur}</Message>}
+      {/* Le message du serveur reste tel quel ; un refus que la personne ne lève pas seule y gagne le chemin de ce qui manque. */}
+      {erreur && (
+        <Message variante="erreur" testId="abs-form-error">
+          {erreur}
+          {estSansRessource(erreur) && <> <LienPrealables page="mesabsences" testId="abs-form-error-prealables" /></>}
+        </Message>
+      )}
       <div className="row-form">
         <div>
           <label htmlFor="f-abs-start">Du <span className="req-star" aria-hidden="true">*</span></label>

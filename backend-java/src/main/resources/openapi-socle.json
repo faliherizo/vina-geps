@@ -59,6 +59,10 @@
     {
       "name": "RH scolaire",
       "description": "Calendrier scolaire, postes et affectations, contacts d'urgence, règles RH, versions de documents (cadrage RH, écarts E1–E8)."
+    },
+    {
+      "name": "Échanges",
+      "description": "API d'échange de l'organisme (26-015-DO, addenda 5) : l'organisme alimente lui-même ses systèmes internes (RAO, SAAV, PFT, BD Corpo). Jeton client_credentials, organisme porté par le jeton. Avis en quasi temps réel : webhook « effectifs.quart.modifie » (voir x-webhooks), à déclarer dans Intégrations › Webhooks."
     }
   ],
   "components": {
@@ -83,6 +87,19 @@
         "type": "openIdConnect",
         "openIdConnectUrl": "/api/auth/sso/entra/.well-known/openid-configuration",
         "description": "Fédération Microsoft Entra ID (OIDC) — NF-19/20."
+      },
+      "clientCredentials": {
+        "type": "oauth2",
+        "description": "Application de l'organisme (26-015-DO, addenda 5) : jeton obtenu par POST /api/oauth/token (client_id, client_secret). Une session humaine n'est pas acceptée sur /api/echanges/v1.",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "/api/oauth/token",
+            "scopes": {
+              "read": "Lire les quarts, leurs correctifs et les relevés de présence validés",
+              "write": "Transmettre employés, soldes de banques et modifications de quarts réels"
+            }
+          }
+        }
       }
     },
     "parameters": {
@@ -10627,6 +10644,510 @@
           }
         }
       }
+    },
+    "/api/echanges/v1/quarts": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Quarts planifiés d'une fenêtre (périodes publiées ou closes), avec leurs places et la personne attribuée",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "du",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "au",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Inclus ; 62 jours au plus après « du »"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK — heures en minutes depuis minuit ; une fin inférieure au début finit le lendemain",
+            "content": {
+              "application/json": {
+                "example": {
+                  "quarts": [
+                    {
+                      "id": "eq-1",
+                      "periodeId": "per-dec",
+                      "uniteCode": "U1",
+                      "date": "2026-12-01",
+                      "debutMinutes": 420,
+                      "finMinutes": 1140,
+                      "natureCode": "JOUR",
+                      "milieuId": "m-1",
+                      "places": [
+                        {
+                          "id": "pl-1",
+                          "rang": 1,
+                          "corpsEmploiCode": "PARA",
+                          "ressourceId": "r-1",
+                          "matricule": "M-100"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/quarts/modifications": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Correctifs des quarts depuis un curseur, chacun avec l'état présent du quart ; rappeler avec le curseur rendu",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "depuis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Curseur rendu par la page précédente ; absent : depuis le début"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "example": {
+                  "modifications": [
+                    {
+                      "curseur": "2026-11-20T13:00:00.000Zj-4",
+                      "horodatage": "2026-11-20T13:00:00.000Z",
+                      "action": "place.attribuee",
+                      "objetType": "place",
+                      "objetId": "pl-1",
+                      "quart": {
+                        "id": "eq-1",
+                        "periodeId": "per-dec",
+                        "uniteCode": "U1",
+                        "date": "2026-12-01",
+                        "debutMinutes": 420,
+                        "finMinutes": 1140,
+                        "natureCode": "JOUR",
+                        "milieuId": "m-1",
+                        "places": [
+                          {
+                            "id": "pl-1",
+                            "rang": 1,
+                            "corpsEmploiCode": "PARA",
+                            "ressourceId": "r-1",
+                            "matricule": "M-100"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "curseur": "2026-11-20T13:00:00.000Zj-4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/releves-presence": {
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Relevés de présence validés (feuilles approuvées ou payées) depuis un curseur, avec leurs segments actifs",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "depuis",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Curseur rendu par la page précédente ; absent : depuis le début"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "example": {
+                  "releves": [
+                    {
+                      "curseur": "2026-11-17T09:00:00.000Zf-1",
+                      "feuilleId": "f-1",
+                      "ressourceId": "r-1",
+                      "matricule": "M-100",
+                      "uniteCode": "U1",
+                      "debut": "2026-11-01",
+                      "fin": "2026-11-14",
+                      "statut": "APPROUVEE",
+                      "approuveeLe": "2026-11-17T09:00:00.000Z",
+                      "segments": [
+                        {
+                          "date": "2026-11-03",
+                          "debut": "2026-11-03T12:00:00.000Z",
+                          "fin": "2026-11-03T20:00:00.000Z",
+                          "typeHeureCode": "REG",
+                          "placeId": "pl-1"
+                        }
+                      ]
+                    }
+                  ],
+                  "curseur": "2026-11-20T13:00:00.000Zj-4"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Paramètre invalide, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/employes/{matricule}": {
+      "put": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Transmettre un employé (création ou mise à jour), clé : le matricule",
+        "security": [
+          {
+            "clientCredentials": [
+              "write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "matricule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Matricule de BD Corpo"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "nom": "Tremblay",
+                "prenom": "Julie",
+                "uniteCode": "U1",
+                "titreEmploiCode": "PARA",
+                "conventionCode": "SP-CSN"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Employé mis à jour"
+          },
+          "201": {
+            "description": "Employé créé"
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « write » absente, ou module des effectifs non activé"
+          },
+          "422": {
+            "description": "Champ invalide ou référentiel inconnu, nommé dans errors"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/employes/{matricule}/soldes": {
+      "put": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Transmettre les soldes des banques de vacances et de congés (un solde par banque, remplacé à chaque envoi)",
+        "security": [
+          {
+            "clientCredentials": [
+              "write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "matricule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Matricule de BD Corpo"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "example": {
+                "soldes": [
+                  {
+                    "banque": "VAC",
+                    "heures": "112.50",
+                    "au": "2026-11-20"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Soldes tenus après l'envoi",
+            "content": {
+              "application/json": {
+                "example": {
+                  "soldes": [
+                    {
+                      "ressourceId": "r-1",
+                      "banque": "VAC",
+                      "heures": "112.50",
+                      "au": "2026-11-20",
+                      "recuLe": "2026-11-22T14:00:00.000Z"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « write » absente, ou module des effectifs non activé"
+          },
+          "404": {
+            "description": "Matricule inconnu : transmettre l'employé d'abord"
+          },
+          "422": {
+            "description": "Soldes invalides, tous les écarts nommés ensemble"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Relire les soldes tenus pour un employé",
+        "security": [
+          {
+            "clientCredentials": [
+              "read"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "matricule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Matricule de BD Corpo"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « read » absente, ou module des effectifs non activé"
+          },
+          "404": {
+            "description": "Matricule inconnu"
+          }
+        }
+      }
+    },
+    "/api/echanges/v1/employes/{matricule}/absences": {
+      "post": {
+        "tags": [
+          "Échanges"
+        ],
+        "summary": "Absence constatée aux opérations sur un quart réel (ou sur des dates) : acceptée d'office, places rendues vacantes, comblement lancé",
+        "description": "Nommer le quart (`quartId`, rendu par /quarts) ou les dates (`du`, `au`), l'un ou l'autre. Les règles ABSENCE sont évaluées et leur verdict consigné (avertissement), sans bloquer : l'absence est un fait. Renvoyer la même absence (même code, mêmes dates) rend 200 sans rien doubler.",
+        "security": [
+          {
+            "clientCredentials": [
+              "write"
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "matricule",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Matricule de BD Corpo"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "examples": {
+                "surUnQuart": {
+                  "value": {
+                    "quartId": "eq-1",
+                    "codeAbsence": "MAL",
+                    "motif": "Appel au répartiteur, 6 h 40"
+                  }
+                },
+                "surDesDates": {
+                  "value": {
+                    "du": "2026-12-01",
+                    "au": "2026-12-02",
+                    "codeAbsence": "MAL"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Absence constatée",
+            "content": {
+              "application/json": {
+                "example": {
+                  "id": "eabs-12",
+                  "ressourceId": "r-1",
+                  "codeAbsence": "MAL",
+                  "du": "2026-12-01",
+                  "au": "2026-12-01",
+                  "statut": "ACCEPTEE",
+                  "placesLiberees": 1,
+                  "comblement": {
+                    "attribuees": 0,
+                    "offertes": 1,
+                    "sansCandidat": 0,
+                    "reservees": 0
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "La même absence était déjà constatée : rendue telle quelle"
+          },
+          "401": {
+            "description": "Jeton d'application absent, illisible ou de session"
+          },
+          "403": {
+            "description": "Portée « write » absente, ou module des effectifs non activé"
+          },
+          "404": {
+            "description": "Matricule, code d'absence ou quart inconnu (ou quart non publié)"
+          },
+          "409": {
+            "description": "Une autre absence couvre ces dates, ou l'employé ne tient aucune place du quart"
+          },
+          "422": {
+            "description": "Corps invalide : quart et dates ensemble, code absent, date illisible"
+          }
+        }
+      }
     }
   },
   "x-contrats": {
@@ -19945,6 +20466,26 @@
               "planCode": "enterprise"
             }
           }
+        }
+      }
+    }
+  },
+  "x-webhooks": {
+    "effectifs.quart.modifie": {
+      "summary": "Un quart publié a changé (addenda 5 b) — avis mince ; l'état présent se lit par /api/echanges/v1/quarts/modifications",
+      "description": "POST JSON signé (en-tête x-signature-256 : HMAC-SHA256 du corps avec le secret du webhook), x-evenement, x-livraison. Livré au cycle suivant de l'ordonnanceur (ORDONNANCEUR_INTERVALLE_MS, 60 s par défaut), repris à 1 min, 5 min, 30 min, 2 h, 12 h ; un avis par quart et par geste. Les quarts d'une période en confection ne sont pas annoncés.",
+      "example": {
+        "evenement": "effectifs.quart.modifie",
+        "tenantId": "t-us",
+        "survenuLe": "2026-12-01T11:40:00.000Z",
+        "livraison": "7f1c…",
+        "donnees": {
+          "quartId": "eq-1",
+          "date": "2026-12-01",
+          "uniteCode": "U1",
+          "action": "places.vacantes",
+          "horodatage": "2026-12-01T11:40:00.000Z",
+          "lire": "/api/echanges/v1/quarts/modifications"
         }
       }
     }

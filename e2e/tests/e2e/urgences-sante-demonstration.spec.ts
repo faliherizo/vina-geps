@@ -13,8 +13,9 @@ import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { test, expect } from "@playwright/test";
 import { auditA11y } from "./helpers/a11y";
-import { ouvrirNav } from "./helpers/nav";
+import { menuPret, ouvrirNav } from "./helpers/nav";
 import donnees from "../../donnees/urgences-sante/demonstration.json";
+import { raconter } from "./helpers/recit";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 const SCRIPT = path.join(__dirname, "..", "..", "..", "scripts", "semer-urgences-sante.cjs");
@@ -54,6 +55,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     await page.getByTestId("login-pass").fill(mdp);
     await page.getByTestId("login-submit").click();
     await expect(page.getByTestId("dashboard-page")).toBeVisible({ timeout: 60_000 });
+    await menuPret(page);
   };
 
   test("le menu porte les entrées des planches, et chaque écran porte leur chrome", async ({ page }) => {
@@ -65,11 +67,14 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
       premier essai expirait sur une application parfaitement fonctionnelle.
     */
     test.setTimeout(MENU_DES_PLANCHES.length * 20_000 + 300_000);
+    await raconter(page, "Premier cas : l'administrateur de l'organisme de démonstration se connecte. Le menu principal porte chacune des fonctionnalités : horaire, disponibilités, absences, confection annuelle, gestion des quarts, pointage, feuilles de temps et administration.");
     await connecter(page, "admin", MDP);
 
     const section = page.getByTestId("nav-group-urgencessante");
     await expect(section).toHaveCount(1);
-    await expect(section).toContainText("Urgences-santé");
+    // Les rubriques ont des titres fixes (« Menu principal », « Administration », « Aide et compte ») : le module
+    // ne nomme plus la rubrique, il la remplit.
+    await expect(section).toContainText("Menu principal");
 
     /*
       **La présence, et non le dépliage.** Le contenu d'un `<details>` replié reste dans le
@@ -91,6 +96,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     expect(manquantes, "entrées des planches absentes du menu").toEqual([]);
 
     // Et chaque écran porte le chrome des planches : il est posé une fois, pour tous.
+    await raconter(page, "Toutes les entrées sont présentes. On ouvre maintenant chaque écran du menu, l'un après l'autre : chacun doit s'ouvrir avec son en-tête.");
     const sansChrome: string[] = [];
     for (const entree of MENU_DES_PLANCHES) {
       const ecran = entree.testId.replace("nav-", "");
@@ -107,6 +113,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     await connecter(page, "admin", MDP);
 
     // Les trois sites de la planche s01, à l'écran des milieux.
+    await raconter(page, "Deuxième cas : les données de démonstration. Voici les sites, ou milieux, de l'organisme.");
     await page.goto("/usmilieux");
     await expect(page.getByTestId("mil-ecran")).toBeVisible({ timeout: 30_000 });
     // Le premier site attendu sert de **signal de chargement** : la liste arrive après le rendu,
@@ -115,6 +122,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     for (const m of donnees.milieux) await expect(page.locator("body")).toContainText(m.libelle);
 
     // Les personnes des planches s02 et s07, à l'écran des ressources.
+    await raconter(page, "Puis les ressources planifiables : chaque personne qui travaille sur le terrain a sa fiche. Les ressources humaines, qui ne font pas de quarts, n'y figurent pas.");
     await page.goto("/usressources");
     await expect(page.getByTestId("usressources-titre")).toBeVisible({ timeout: 30_000 });
     const planifiables = donnees.personnes.filter((p) => p.matricule);
@@ -152,13 +160,10 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     /*
       **Attendre la disparition, et non compter tout de suite.**
 
-      Le menu se rend une première fois **avant** que les modules et les vues masquées de
-      l'établissement ne soient connus : à cet instant, `enabledModules` vaut `null` et tout
-      s'affiche. Compter là mesure l'avancement du chargement, pas le réglage — et l'essai
-      échouait en nommant les cinq sections, ce qui ressemblait à un masquage sans effet.
-
-      La section du module sert de témoin : elle est la dernière chose que la recomposition pose.
+      Le menu porte `aria-busy` tant que les modules et les vues masquées ne sont pas connus (`connecter` attend
+      sa fin) ; l'attente de détachement reste, par prudence, pour une section qui partirait au rendu suivant.
     */
+    await raconter(page, "Troisième cas : le menu ne montre que ce que fait cet organisme. Les sections d'un autre métier, comme la comptabilité ou la facturation, sont masquées.");
     await expect(page.getByTestId("nav-group-urgencessante")).toHaveCount(1, { timeout: 30_000 });
 
     const absentes: string[] = [];
@@ -174,7 +179,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     expect(absentes, "sections qui n'ont rien à faire chez un organisme préhospitalier").toEqual([]);
 
     // Et ce qui reste est utilisable : la porte d'entrée, le module, mon espace, l'administration.
-    for (const cle of ["pilotage", "space", "admin"]) {
+    for (const cle of ["urgencessante", "space", "admin"]) {
       await expect(page.getByTestId(`nav-group-${cle}`), `section ${cle}`).toHaveCount(1);
     }
 
@@ -183,6 +188,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
       réglage ne serait qu'un rangement de menu. (Ce n'est pas pour autant un contrôle d'accès :
       la frontière de sécurité reste le module, gardé au serveur en refus par défaut.)
     */
+    await raconter(page, "Et une vue masquée ne s'ouvre pas non plus par son adresse directe : on revient au tableau de bord.");
     await page.goto("/orgchart");
     await expect(page.getByTestId("dashboard-page"), "une vue masquée ne s'ouvre pas par son adresse")
       .toBeVisible({ timeout: 30_000 });
@@ -200,6 +206,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
     // la connexion, et l'essai expirait sur un écran qui affichait tout ce qu'on lui demandait.
     test.setTimeout(120_000);
     await connecter(page, "julie.roy", MDP);
+    await raconter(page, "Quatrième cas : Julie Roy, paramédic, ouvre la messagerie du personnel depuis le menu. Elle retrouve la conversation de son équipe, avec le nom de chacun.");
     await ouvrirNav(page, "nav-usmessages");
     await expect(page.getByTestId("sq-titre-usmessages")).toBeVisible({ timeout: 30_000 });
     // Le bandeau nomme **ce** module : il nommait « Santé Québec » en dur, et changer de page
@@ -216,6 +223,7 @@ test.describe("26-015-DO — l'organisme de démonstration", () => {
   test("Julie Roy voit son horaire, et c'est le sien", async ({ page }) => {
     test.setTimeout(120_000);
     await connecter(page, "julie.roy", MDP);
+    await raconter(page, "Dernier cas de ce chapitre : Julie ouvre Mon horaire. Elle voit ses propres quarts, par jour, avec le site, le poste et le statut.");
     await ouvrirNav(page, "nav-monhoraire");
     await expect(page.getByTestId("mho-titre")).toBeVisible({ timeout: 30_000 });
     // Le calendrier du mois est la vue par défaut : la table est celle de la liste de la semaine.

@@ -66,7 +66,7 @@ class ControleurEngagementsSoutienHttpTest {
         http.get("/api/soutien/engagements", ALICE).andExpect(status().isForbidden());
         http.put("/api/soutien/engagements/t-us", ALICE, "{\"politique\":\"service-essentiel\"}").andExpect(status().isForbidden());
         http.get("/api/soutien/engagements", SA).andExpect(status().isOk())
-                .andExpect(jsonPath("$.politiques[*].code", contains("standard", "service-essentiel")))
+                .andExpect(jsonPath("$.politiques[*].code", contains("standard", "service-essentiel", "communications-cliniques")))
                 .andExpect(jsonPath("$.organismes[*].nom", contains("CSS des Chênes", "Urgences-santé")))
                 .andExpect(jsonPath("$.organismes[*].politique", contains("standard", "standard")))
                 .andExpect(jsonPath("$.organismes[0].modifieLe").isEmpty());

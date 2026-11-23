@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:00.743
+Ressources.
+
+00:00:01.193 --> 00:00:08.879
+Tenir les personnes planifiables : matricule, nom, unité, corps et statut d'emploi, ancienneté, et le compte auquel elles sont reliées.
+
+00:00:09.329 --> 00:00:13.764
+Qui s'en sert : Planificateurs, ressources humaines, administration.
+
+00:00:14.214 --> 00:00:15.073
+Comment faire :
+
+00:00:15.523 --> 00:00:20.841
+Ajouter une ressource avec son matricule, son nom, son unité, son corps d'emploi et son statut.
+
+00:00:21.291 --> 00:00:25.865
+Renseigner l' Ancienneté (selon la convention) : elle ordonne l'AGPH et les remplacements.
+
+00:00:26.315 --> 00:00:31.865
+Relier la ressource au compte de la personne ( Personne ) : sans ce lien, ses écrans personnels restent vides.
+
+00:00:32.315 --> 00:00:37.586
+Résultat : La personne devient planifiable et voit son horaire, ses disponibilités et sa feuille de temps.

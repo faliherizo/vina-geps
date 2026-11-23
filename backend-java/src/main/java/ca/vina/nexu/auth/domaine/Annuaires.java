@@ -8,18 +8,23 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.net.URI;
 import java.util.regex.Pattern;
 
 /**
  * <strong>Les annuaires d'un organisme</strong> — AO 26-015-DO P-TN-2 (« l'intégration à plusieurs
  * annuaires actifs, tel que : Active Directories »), conception § 6.9.
  *
- * <p>Un annuaire est un locataire Microsoft Entra ID que l'organisme déclare : un organisme peut en
+ * <p>Un annuaire est un fournisseur d'identité que l'organisme déclare — un locataire Microsoft Entra ID,
+ * tout fournisseur <strong>OpenID Connect</strong> (Keycloak, Okta, Auth0…) désigné par son émetteur
+ * (ADR 0075), ou un annuaire <strong>LDAP joint en LDAPS seulement</strong> (Active Directory local, ADR 0083 ;
+ * FX-AO-20260810, critère 82). Un organisme peut en
  * déclarer plusieurs (fusion, sous-traitants, établissements partenaires), et chacun dit quels de
- * ses groupes donnent quel rôle. Trois invariants, vérifiés ici plutôt qu'à l'écran :
+ * ses groupes donnent quel rôle. Quatre invariants, vérifiés ici plutôt qu'à l'écran :
  * <ul>
  *   <li>une autorité <em>multi-locataire</em> ({@code common}, {@code organizations},
  *       {@code consumers}) est refusée : elle laisserait entrer n'importe quel compte Microsoft ;</li>
+ *   <li>un courriel que le fournisseur déclare non vérifié ({@code email_verified: false}) n'entre pas ;</li>
  *   <li>un courriel hors des domaines déclarés n'entre pas, même authentifié par l'annuaire (les
  *       invités B2B d'un locataire Entra portent le domaine de leur propre organisation) ;</li>
  *   <li>appartenir à l'annuaire ne suffit pas : sans groupe correspondant ni rôle par défaut, la
@@ -37,6 +42,41 @@ public final class Annuaires {
     private static final int GROUPE_MAX = 256;
     private static final String SUPERADMIN = "superadmin";
     private static final String AUTORITE_ENTRA = "https://login.microsoftonline.com/";
+    /** L'identifiant d'un client OIDC générique : Keycloak et ses pairs acceptent un nom, pas seulement un GUID. */
+    private static final Pattern CLIENT_OIDC = Pattern.compile("^[A-Za-z0-9._:@-]{1,255}$");
+    /** HTTP en clair n'est admis que sur la machine même : le poste de développement et les essais. */
+    private static final Set<String> HOTES_LOCAUX = Set.of("localhost", "127.0.0.1");
+    private static final Set<String> SCHEMAS_PUBLICS = Set.of("https");
+    private static final Set<String> SCHEMAS_LOCAUX = Set.of("https", "http");
+    private static final String VERIFIE = "email_verified";
+    /** LDAP en clair est refusé : le critère 82 exige LDAPS, et un mot de passe ne traverse jamais le réseau en clair. */
+    private static final String SCHEMA_LDAPS = "ldaps";
+    private static final int DN_MAX = 512;
+
+    /** Le protocole de l'annuaire : il décide d'où viennent les adresses d'autorisation et d'échange. */
+    public enum Fournisseur {
+        /** Microsoft Entra ID : l'autorité se déduit du locataire. */
+        ENTRA("entra"),
+        /** Tout fournisseur OpenID Connect : les adresses se lisent dans son document de découverte. */
+        OIDC("oidc"),
+        /** Un annuaire LDAP, joint en LDAPS : l'identifiant et le mot de passe sont vérifiés par une liaison (bind). */
+        LDAPS("ldaps");
+
+        private final String code;
+
+        Fournisseur(String code) {
+            this.code = code;
+        }
+
+        public String code() {
+            return code;
+        }
+
+        public static Fournisseur de(String code) {
+            return Arrays.stream(values()).filter(f -> f.code.equals(code)).findFirst()
+                    .orElseThrow(() -> new AnnuaireInvalideException(List.of("fournisseur inconnu : « " + code + " » (attendu : entra, oidc, ldaps)")));
+        }
+    }
 
     private Annuaires() {
     }
@@ -67,16 +107,25 @@ public final class Annuaires {
 
     /** Ce que l'administrateur saisit, avant validation. */
     public record Saisie(String nom, String locataireEntra, String clientId, String variableSecret, List<String> domaines,
-                         String revendication, List<Correspondance> correspondances, String roleParDefaut, boolean actif) {
+                         String revendication, List<Correspondance> correspondances, String roleParDefaut, boolean actif,
+                         String fournisseur, String emetteur, boolean provisionnementJat) {
     }
 
-    /** Un annuaire validé. {@code roleParDefaut} vide : l'annuaire seul ne donne aucun accès. */
+    /**
+     * Un annuaire validé. {@code roleParDefaut} vide : l'annuaire seul ne donne aucun accès. {@code locataireEntra}
+     * ne vaut que pour Entra ; {@code emetteur} est l'émetteur d'un fournisseur OIDC générique, ou l'URL LDAPS
+     * (RFC 4516 : {@code ldaps://hôte:636/base}) d'un annuaire LDAP, dont {@code clientId} est alors le DN du compte
+     * de service qui cherche les personnes.
+     */
     public record Annuaire(String id, String tenantId, String nom, String locataireEntra, String clientId, String variableSecret,
                            List<String> domaines, Revendication revendication, List<Correspondance> correspondances,
-                           Optional<String> roleParDefaut, boolean actif) {
+                           Optional<String> roleParDefaut, boolean actif, Fournisseur fournisseur, String emetteur, boolean provisionnementJat) {
 
         public String autorite() {
-            return AUTORITE_ENTRA + locataireEntra;
+            return switch (fournisseur) {
+                case ENTRA -> AUTORITE_ENTRA + locataireEntra;
+                case OIDC, LDAPS -> emetteur;
+            };
         }
 
         /** Le domaine du courriel figure parmi ceux de l'organisme. */
@@ -105,14 +154,32 @@ public final class Annuaires {
         Map<String, Object> echanger(String code, Oidc.Configuration configuration, Oidc.Demande demande);
     }
 
-    /** Port : les comptes d'un organisme, tels qu'une connexion par annuaire les trouve, les crée et les reclasse. */
-    public interface Comptes {
-        Optional<Compte> duCourriel(String tenantId, String courriel);
+    /** Port : les adresses qu'un fournisseur OIDC publie dans son document de découverte. */
+    @FunctionalInterface
+    public interface Decouverte {
+        Points points(String emetteur);
 
-        /** Un compte sans mot de passe utilisable : il n'entre que par son annuaire. */
-        Compte creer(String tenantId, String courriel, String role);
+        /** Où envoyer l'usager s'authentifier, et où échanger le code. */
+        record Points(String autorisation, String jeton) {
+        }
+    }
 
-        Compte reclasser(Compte compte, String role);
+    /** Une personne que l'annuaire LDAP a authentifiée : son courriel, et les groupes dont elle est membre (DN et CN). */
+    public record Personne(String courriel, List<String> groupes) {
+        public Personne {
+            groupes = List.copyOf(groupes);
+        }
+    }
+
+    /**
+     * Port : la liaison LDAPS. Le compte de service retrouve la personne par son identifiant, puis une liaison <em>à son
+     * nom</em> vérifie son mot de passe. Vide : identifiant inconnu, ambigu, ou mot de passe refusé — sans dire lequel.
+     *
+     * @throws IllegalStateException si l'annuaire est injoignable ou refuse le compte de service
+     */
+    @FunctionalInterface
+    public interface Liaison {
+        Optional<Personne> authentifier(Annuaire annuaire, String secretService, String identifiant, String motDePasse);
     }
 
     /** Port : le jeton de session d'un compte. */
@@ -153,12 +220,12 @@ public final class Annuaires {
         if (nom.isEmpty() || nom.length() > NOM_MAX) {
             motifs.add("le nom est requis (" + NOM_MAX + " caractères au plus)");
         }
-        String locataire = texte(s.locataireEntra()).toLowerCase(Locale.ROOT);
-        verifierLocataire(locataire, motifs);
-        String clientId = texte(s.clientId()).toLowerCase(Locale.ROOT);
-        if (!GUID.matcher(clientId).matches()) {
-            motifs.add("l'identifiant d'application (client) doit être un GUID");
-        }
+        Fournisseur fournisseur = fournisseurDe(s.fournisseur(), motifs);
+        Identite identite = switch (fournisseur) {
+            case ENTRA -> identiteEntra(s, motifs);
+            case OIDC -> identiteOidc(s, motifs);
+            case LDAPS -> identiteLdaps(s, motifs);
+        };
         String variable = texte(s.variableSecret());
         if (!VARIABLE_SECRET.matcher(variable).matches()) {
             motifs.add("la variable du secret doit commencer par ANNUAIRE_ (majuscules, chiffres, _)");
@@ -174,7 +241,88 @@ public final class Annuaires {
         if (!motifs.isEmpty()) {
             throw new AnnuaireInvalideException(motifs);
         }
-        return new Annuaire(id, tenantId, nom, locataire, clientId, variable, domaines, revendication, regles, defaut, s.actif());
+        return new Annuaire(id, tenantId, nom, identite.locataire(), identite.clientId(), variable, domaines, revendication, regles, defaut, s.actif(),
+                fournisseur, identite.emetteur(), s.provisionnementJat());
+    }
+
+    /** Ce qui désigne le fournisseur et le client, selon le protocole. */
+    private record Identite(String locataire, String emetteur, String clientId) {
+    }
+
+    private static Fournisseur fournisseurDe(String code, List<String> motifs) {
+        try {
+            return Fournisseur.de(code == null || code.isBlank() ? Fournisseur.ENTRA.code() : code.trim());
+        } catch (AnnuaireInvalideException e) {
+            motifs.addAll(e.motifs());
+            return Fournisseur.ENTRA;
+        }
+    }
+
+    private static Identite identiteEntra(Saisie s, List<String> motifs) {
+        String locataire = texte(s.locataireEntra()).toLowerCase(Locale.ROOT);
+        verifierLocataire(locataire, motifs);
+        String clientId = texte(s.clientId()).toLowerCase(Locale.ROOT);
+        if (!GUID.matcher(clientId).matches()) {
+            motifs.add("l'identifiant d'application (client) doit être un GUID");
+        }
+        return new Identite(locataire, null, clientId);
+    }
+
+    private static Identite identiteOidc(Saisie s, List<String> motifs) {
+        String emetteur = texte(s.emetteur()).replaceAll("/+$", "");
+        verifierEmetteur(emetteur, motifs);
+        String clientId = texte(s.clientId());
+        if (!CLIENT_OIDC.matcher(clientId).matches()) {
+            motifs.add("l'identifiant du client OIDC est requis (lettres, chiffres, . _ : @ -)");
+        }
+        return new Identite("", emetteur, clientId);
+    }
+
+    /**
+     * Un annuaire LDAP : son URL en {@code ldaps://} seulement, avec la base de recherche, et le DN du compte de service.
+     * Aucune exception pour la machine locale : même en essai, l'échange est chiffré.
+     */
+    private static Identite identiteLdaps(Saisie s, List<String> motifs) {
+        String url = texte(s.emetteur()).replaceAll("/+$", "");
+        if (!urlLdapsValide(url)) {
+            motifs.add("l'adresse de l'annuaire doit être une URL ldaps:// avec sa base de recherche (p. ex. ldaps://ad.etablissement.local:636/OU=Personnel,DC=etablissement,DC=local) ; ldap:// en clair est refusé");
+        }
+        String dn = texte(s.clientId());
+        if (dn.isEmpty() || dn.length() > DN_MAX || !dn.contains("=")) {
+            motifs.add("le DN du compte de service est requis (p. ex. CN=svc-geps,OU=Services,DC=etablissement,DC=local)");
+        }
+        return new Identite("", url, dn);
+    }
+
+    private static boolean urlLdapsValide(String url) {
+        try {
+            URI uri = URI.create(url);
+            String base = uri.getPath() == null ? "" : uri.getPath().replaceFirst("^/", "");
+            return SCHEMA_LDAPS.equals(uri.getScheme()) && uri.getHost() != null && base.contains("=") && uri.getRawQuery() == null
+                    && uri.getRawFragment() == null;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    /**
+     * L'émetteur d'un fournisseur OIDC : une adresse absolue, en HTTPS — sauf sur la machine même, où un
+     * Keycloak de développement écoute en clair. Ni requête ni fragment : l'émetteur se compare à la lettre
+     * à la revendication {@code iss} du jeton.
+     */
+    private static void verifierEmetteur(String emetteur, List<String> motifs) {
+        URI uri;
+        try {
+            uri = URI.create(emetteur);
+        } catch (IllegalArgumentException e) {
+            motifs.add("l'émetteur OIDC doit être une adresse (p. ex. https://sso.organisme.ca/realms/vina-geps)");
+            return;
+        }
+        boolean local = uri.getHost() != null && HOTES_LOCAUX.contains(uri.getHost());
+        boolean schemaAdmis = uri.getScheme() != null && (local ? SCHEMAS_LOCAUX : SCHEMAS_PUBLICS).contains(uri.getScheme());
+        if (emetteur.isEmpty() || uri.getHost() == null || !schemaAdmis || uri.getRawQuery() != null || uri.getRawFragment() != null) {
+            motifs.add("l'émetteur OIDC doit être une adresse https sans requête (http n'est admis que sur localhost)");
+        }
     }
 
     private static String texte(String brut) {
@@ -239,6 +387,10 @@ public final class Annuaires {
      * @throws ConnexionRefuseeException sinon
      */
     public static String admettre(Annuaire a, String courriel, Map<String, Object> revendications) {
+        // Un courriel que le fournisseur déclare non vérifié ne prouve rien : n'importe qui peut l'avoir saisi.
+        if (Boolean.FALSE.equals(revendications.get(VERIFIE))) {
+            throw new ConnexionRefuseeException("le courriel « " + courriel + " » n'est pas vérifié par l'annuaire « " + a.nom() + " »");
+        }
         if (!a.admet(courriel)) {
             throw new ConnexionRefuseeException("le domaine de « " + courriel + " » n'est pas admis par l'annuaire « " + a.nom() + " »");
         }

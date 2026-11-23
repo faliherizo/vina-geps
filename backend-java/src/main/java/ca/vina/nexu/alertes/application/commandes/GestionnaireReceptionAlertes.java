@@ -4,6 +4,7 @@ import ca.vina.nexu.alertes.domaine.Acteur;
 import ca.vina.nexu.alertes.domaine.Alertes.Alerte;
 import ca.vina.nexu.alertes.domaine.EcritureAlertesPort;
 import ca.vina.nexu.alertes.domaine.LectureAlertesPort;
+import ca.vina.nexu.alertes.domaine.ReactionsAlertes;
 import ca.vina.nexu.alertes.domaine.RefusAlerte;
 
 import java.time.Clock;
@@ -18,11 +19,18 @@ public final class GestionnaireReceptionAlertes {
     private final LectureAlertesPort lecture;
     private final EcritureAlertesPort ecriture;
     private final Clock horloge;
+    private final ReactionsAlertes reactions;
 
     public GestionnaireReceptionAlertes(LectureAlertesPort lecture, EcritureAlertesPort ecriture, Clock horloge) {
+        this(lecture, ecriture, horloge, ReactionsAlertes.AUCUNE);
+    }
+
+    /** Avec les cascades (ST-G04) : une lecture ou une réponse qui atteint le critère arrête la cascade aussitôt. */
+    public GestionnaireReceptionAlertes(LectureAlertesPort lecture, EcritureAlertesPort ecriture, Clock horloge, ReactionsAlertes reactions) {
         this.lecture = lecture;
         this.ecriture = ecriture;
         this.horloge = horloge;
+        this.reactions = reactions;
     }
 
     public Alerte lire(Acteur acteur, String alerteId) {
@@ -30,13 +38,16 @@ public final class GestionnaireReceptionAlertes {
         Alerte apres = avant.lue(acteur.personId(), Instant.now(horloge).toString());
         if (apres != avant) {
             ecriture.mettreAJour(acteur.tenantId(), alerteId, apres.remiseDe(acteur.personId()));
+            reactions.apresReaction(acteur.tenantId(), alerteId, apres.remiseDe(acteur.personId()).lueLe());
         }
         return apres;
     }
 
     public Alerte repondre(Acteur acteur, String alerteId, String reponseId) {
-        Alerte apres = alerte(acteur, alerteId).repondue(acteur.personId(), reponseId, Instant.now(horloge).toString());
+        String maintenant = Instant.now(horloge).toString();
+        Alerte apres = alerte(acteur, alerteId).repondue(acteur.personId(), reponseId, maintenant);
         ecriture.mettreAJour(acteur.tenantId(), alerteId, apres.remiseDe(acteur.personId()));
+        reactions.apresReaction(acteur.tenantId(), alerteId, maintenant);
         return apres;
     }
 

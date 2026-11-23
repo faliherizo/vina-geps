@@ -110,8 +110,10 @@ public final class Saml {
         }
         String idpSsoUrl = env(env, "SAML_IDP_SSO_URL", "");
         String cert = env(env, "SAML_IDP_CERT", "").replace("\\n", "\n");
-        return new Configuration(!idpSsoUrl.isEmpty() && !cert.isEmpty(), false, entityId, env(env, "SAML_SP_ACS_URL", "http://localhost:4000/api/auth/sso/saml/acs"),
-                idpSsoUrl, env(env, "SAML_IDP_ISSUER", ""), cert.isEmpty() ? null : clePublique(cert));
+        // L'émetteur est exigé comme l'adresse et le certificat : sans lui, l'émetteur d'une assertion n'était pas vérifié.
+        String issuer = env(env, "SAML_IDP_ISSUER", "");
+        return new Configuration(!idpSsoUrl.isEmpty() && !cert.isEmpty() && !issuer.isEmpty(), false, entityId,
+                env(env, "SAML_SP_ACS_URL", "http://localhost:4000/api/auth/sso/saml/acs"), idpSsoUrl, issuer, cert.isEmpty() ? null : clePublique(cert));
     }
 
     /** La clé publique d'un certificat X.509 en PEM — ou d'une clé publique en PEM, ce que les IdP exportent aussi. */
@@ -312,7 +314,7 @@ public final class Saml {
             throw new ErreurSaml("signature SAML absente ou invalide");
         }
         String issuer = texte(assertion.getElementsByTagNameNS(NS_SAML, "Issuer").item(0));
-        if (cfg.idpIssuer() != null && !cfg.idpIssuer().isEmpty() && !issuer.equals(cfg.idpIssuer())) {
+        if (!issuer.equals(cfg.idpIssuer())) {
             throw new ErreurSaml("émetteur inattendu : " + issuer);
         }
         String inResponseTo = reponse.getAttribute("InResponseTo");

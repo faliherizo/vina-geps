@@ -16,6 +16,9 @@ import java.util.Map;
 @Component
 public class ProvisionnementComptes {
 
+    /** Le mode d'essai (campagnes e2e, BDD, banc de charge) garde des comptes amorcés prêts à l'emploi. */
+    static final String PROPRIETE_ESSAI = "nexu.essai";
+
     private final DepotComptes comptes;
     private final JournalAudit audit;
     private final Environment env;
@@ -33,16 +36,23 @@ public class ProvisionnementComptes {
 
     public void assurer() {
         if (comptes.lister().isEmpty()) {
-            creer(env.getProperty("ADMIN_USERNAME", "admin"), env.getProperty("ADMIN_PASSWORD", "admin"), "admin");
+            creer("admin", env.getProperty("ADMIN_USERNAME", "admin"), env.getProperty("ADMIN_PASSWORD"));
         }
         String superadmin = env.getProperty("SUPERADMIN_USERNAME", "superadmin");
         if (comptes.parNom(superadmin, null).isEmpty()) {
-            creer(superadmin, env.getProperty("SUPERADMIN_PASSWORD", "superadmin"), "superadmin");
+            creer("superadmin", superadmin, env.getProperty("SUPERADMIN_PASSWORD"));
         }
     }
 
-    private void creer(String nom, String motDePasse, String role) {
-        comptes.creer(new DepotComptes.Creation(nom, motDePasse, role, null, null, false, false, null, false));
+    /**
+     * Sans mot de passe fourni, le compte reçoit celui de son rôle — connu de tous (tests d'intrusion du 22 novembre 2026,
+     * PT-03). Hors du mode d'essai, il doit alors être changé à la première connexion : une pile montée sans ses secrets
+     * n'offre plus un accès administrateur à qui devine {@code admin/admin}.
+     */
+    private void creer(String role, String nom, String motDePasse) {
+        boolean parDefaut = motDePasse == null || motDePasse.isBlank() || motDePasse.equals(role);
+        boolean aChanger = parDefaut && !env.getProperty(PROPRIETE_ESSAI, Boolean.class, false);
+        comptes.creer(new DepotComptes.Creation(nom, parDefaut ? role : motDePasse, role, null, null, aChanger, false, null, false));
         audit.consigner(null, nom, "auth.provision", nom, Map.of());
     }
 }

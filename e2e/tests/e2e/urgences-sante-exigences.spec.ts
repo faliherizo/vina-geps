@@ -29,6 +29,7 @@ import { auditA11y } from "./helpers/a11y";
 import { commandePresente, poser, type Geste } from "./helpers/gestes";
 import { amorcerOrganisme, modulesDeLOrganisme, seConnecterOrganisme } from "./helpers/urgences-sante";
 import jeu from "../../donnees/urgences-sante/exigences-fonctionnelles.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -57,7 +58,7 @@ test.describe.serial("26-015-DO — les 90 exigences fonctionnelles, à l'écran
   test.beforeAll(async () => {
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("US-EXIG"));
+      tenantId = await createTenant(sa, uniq("Demo-Ecrans"));
       await setTenantModules(sa, tenantId, modulesDeLOrganisme);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId, { avecTempsEtCollecte: true });
@@ -84,6 +85,7 @@ test.describe.serial("26-015-DO — les 90 exigences fonctionnelles, à l'écran
 
       // Les gestes qui mènent à l'état utile — un tiroir à ouvrir, une vue à choisir. Ils sont
       // **dans le fichier de données** : un écran qui change se rattrape sans toucher à ce code.
+      await raconter(page, e.geste);
       for (const geste of e.prealable ?? []) await poser(page, geste);
 
       for (const commande of e.preuve) {

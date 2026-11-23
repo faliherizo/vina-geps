@@ -1,0 +1,172 @@
+{
+  "pourquoi": "FX-AO-20260810, critères 18 et 39 : l'alerte critique jouée de bout en bout jusqu'au téléphone simulé (contrat Expo, APNs, FCM, règles d'iOS et d'Android), et les rapports PDF validés par veraPDF officiel. Bacs à sable : bac-a-sable/README.md ; interprète : e2e/tests/e2e/helpers/comportements.ts ; essai : fx-ao-bac-a-sable.spec.ts ; ADR 0086.",
+  "acteurs": {
+    "chef": { "role": "manager" },
+    "dir": { "role": "director" },
+    "julie": { "role": "employee" },
+    "marc": { "role": "employee" },
+    "lea": { "role": "employee" },
+    "paul": { "role": "employee" }
+  },
+  "amorce": [
+    {
+      "pourquoi": "Julie : iPhone, application avec le droit Critical Alerts accordé par Apple, autorisé par elle ; téléphone en silencieux et en Ne pas déranger",
+      "service": "poussee", "methode": "PUT", "chemin": "/bac-a-sable/appareils/ExponentPushToken%5Biphone-julie-{{suffixe}}%5D",
+      "corps": { "plateforme": "ios", "nom": "iPhone de Julie", "application": { "droitAlertesCritiques": true },
+        "utilisateur": { "autoriseAlertesCritiques": true, "modeSilencieux": true, "nePasDeranger": true } },
+      "attendu": { "statut": 200 }
+    },
+    {
+      "pourquoi": "Marc : iPhone, application SANS le droit d'Apple (Q-ALC en attente) ; silencieux et Ne pas déranger",
+      "service": "poussee", "methode": "PUT", "chemin": "/bac-a-sable/appareils/ExponentPushToken%5Biphone-marc-{{suffixe}}%5D",
+      "corps": { "plateforme": "ios", "nom": "iPhone de Marc", "application": { "droitAlertesCritiques": false },
+        "utilisateur": { "autoriseAlertesCritiques": true, "modeSilencieux": true, "nePasDeranger": true } },
+      "attendu": { "statut": 200 }
+    },
+    {
+      "pourquoi": "Léa : Android, l'application a créé le canal « critique » (importance maximale, son d'alarme, contourne Ne pas déranger) et Léa a accordé l'accès",
+      "service": "poussee", "methode": "PUT", "chemin": "/bac-a-sable/appareils/ExponentPushToken%5Bandroid-lea-{{suffixe}}%5D",
+      "corps": { "plateforme": "android", "nom": "Pixel de Léa",
+        "application": { "canaux": [ { "id": "critique", "importance": "max", "contourneNePasDeranger": true, "usageAudio": "alarme" } ] },
+        "utilisateur": { "accesNePasDeranger": true, "modeSilencieux": true, "nePasDeranger": true } },
+      "attendu": { "statut": 200 }
+    },
+    {
+      "pourquoi": "Paul : Android, ancienne version de l'application qui n'a pas créé le canal « critique » ; silencieux",
+      "service": "poussee", "methode": "PUT", "chemin": "/bac-a-sable/appareils/ExponentPushToken%5Bandroid-paul-{{suffixe}}%5D",
+      "corps": { "plateforme": "android", "nom": "Galaxy de Paul", "application": { "canaux": [] }, "utilisateur": { "modeSilencieux": true } },
+      "attendu": { "statut": 200 }
+    },
+    { "acteur": "julie", "methode": "POST", "chemin": "/api/notifications/appareils",
+      "corps": { "jeton": "ExponentPushToken[iphone-julie-{{suffixe}}]", "plateforme": "ios", "nom": "iPhone de Julie" }, "attendu": { "statut": 201 } },
+    { "acteur": "marc", "methode": "POST", "chemin": "/api/notifications/appareils",
+      "corps": { "jeton": "ExponentPushToken[iphone-marc-{{suffixe}}]", "plateforme": "ios", "nom": "iPhone de Marc" }, "attendu": { "statut": 201 } },
+    { "acteur": "lea", "methode": "POST", "chemin": "/api/notifications/appareils",
+      "corps": { "jeton": "ExponentPushToken[android-lea-{{suffixe}}]", "plateforme": "android", "nom": "Pixel de Léa" }, "attendu": { "statut": 201 } },
+    { "acteur": "paul", "methode": "POST", "chemin": "/api/notifications/appareils",
+      "corps": { "jeton": "ExponentPushToken[android-paul-{{suffixe}}]", "plateforme": "android", "nom": "Galaxy de Paul" }, "attendu": { "statut": 201 } }
+  ],
+  "scenarios": [
+    {
+      "id": "BAC-01",
+      "titre": "La directrice envoie une alerte critique : le serveur la remet au service de poussée, qui l'accepte",
+      "exigences": ["18", "22"],
+      "etapes": [
+        { "acteur": "dir", "methode": "POST", "chemin": "/api/alertes",
+          "corps": { "titre": "Évacuation bloc B {{suffixe}}", "corps": "Rendez-vous au point de rassemblement", "priorite": "critique",
+            "personnes": ["{{p_julie}}", "{{p_marc}}", "{{p_lea}}", "{{p_paul}}"] },
+          "attendu": { "statut": 201, "corps": { "priorite": "critique", "bilan": { "destinataires": 4 } } }, "capturer": { "critique": "id" } }
+      ]
+    },
+    {
+      "id": "BAC-02",
+      "titre": "iPhone avec le droit d'Apple : la charge APNs est critique, et le téléphone sonne malgré le silencieux et Ne pas déranger",
+      "exigences": ["18"],
+      "etapes": [
+        { "service": "poussee", "methode": "GET", "reessayer": 30,
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Biphone-julie-{{suffixe}}%5D&titre=%C3%89vacuation%20bloc%20B%20{{suffixe}}",
+          "attendu": { "statut": 200, "corps": [ {
+            "plateforme": "ios",
+            "message": { "priority": "high", "interruptionLevel": "critical", "sound": { "critical": true, "volume": 1 } },
+            "fournisseur": { "nom": "apns", "entetes": { "apns-priority": "10" },
+              "charge": { "aps": { "interruption-level": "critical", "sound": { "critical": 1, "volume": 1 } } } },
+            "presentation": { "affichee": true, "sonore": true, "contourneSilencieux": true, "contourneNePasDeranger": true, "niveau": "critical" }
+          } ] } }
+      ]
+    },
+    {
+      "id": "BAC-03",
+      "titre": "iPhone sans le droit d'Apple (Q-ALC) : même charge, mais iOS la ramène au niveau active — elle s'affiche sans sonner",
+      "exigences": ["18"],
+      "etapes": [
+        { "service": "poussee", "methode": "GET", "reessayer": 30,
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Biphone-marc-{{suffixe}}%5D&titre=%C3%89vacuation%20bloc%20B%20{{suffixe}}",
+          "attendu": { "statut": 200, "corps": [ {
+            "fournisseur": { "charge": { "aps": { "interruption-level": "critical" } } },
+            "presentation": { "affichee": true, "sonore": false, "contourneSilencieux": false, "niveau": "active",
+              "motif": "critique demandée, droit Critical Alerts absent : ramenée au niveau active" }
+          } ] } }
+      ]
+    },
+    {
+      "id": "BAC-04",
+      "titre": "Android avec le canal « critique » : FCM en priorité haute sur ce canal, bannière, son d'alarme malgré le silencieux",
+      "exigences": ["18"],
+      "etapes": [
+        { "service": "poussee", "methode": "GET", "reessayer": 30,
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Bandroid-lea-{{suffixe}}%5D&titre=%C3%89vacuation%20bloc%20B%20{{suffixe}}",
+          "attendu": { "statut": 200, "corps": [ {
+            "plateforme": "android",
+            "fournisseur": { "nom": "fcm", "message": { "android": { "priority": "HIGH" }, "data": { "channelId": "critique" } } },
+            "presentation": { "affichee": true, "sonore": true, "contourneSilencieux": true, "contourneNePasDeranger": true, "canal": "critique", "banniere": true }
+          } ] } }
+      ]
+    },
+    {
+      "id": "BAC-05",
+      "titre": "Android sans le canal : canal de repli, muette en silencieux — c'est à l'application de créer le canal",
+      "exigences": ["18"],
+      "etapes": [
+        { "service": "poussee", "methode": "GET", "reessayer": 30,
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Bandroid-paul-{{suffixe}}%5D&titre=%C3%89vacuation%20bloc%20B%20{{suffixe}}",
+          "attendu": { "statut": 200, "corps": [ {
+            "presentation": { "affichee": true, "sonore": false, "canal": "expo_notifications_fallback_notification_channel",
+              "motif": "canal « critique » non créé par l'application : canal de repli" }
+          } ] } }
+      ]
+    },
+    {
+      "id": "BAC-06",
+      "titre": "Une alerte urgente n'est pas critique : son ordinaire, sans niveau d'interruption ; l'iPhone en silencieux reste muet",
+      "exigences": ["18", "22"],
+      "etapes": [
+        { "acteur": "chef", "methode": "POST", "chemin": "/api/alertes",
+          "corps": { "titre": "Renfort urgence {{suffixe}}", "corps": "Besoin d'une infirmière au triage", "priorite": "urgente", "personnes": ["{{p_julie}}"] },
+          "attendu": { "statut": 201 } },
+        { "service": "poussee", "methode": "GET", "reessayer": 30,
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Biphone-julie-{{suffixe}}%5D&titre=Renfort%20urgence%20{{suffixe}}",
+          "attendu": { "statut": 200, "corps": [ {
+            "message": { "sound": "default" },
+            "fournisseur": { "charge": { "aps": { "sound": "default" } } },
+            "presentation": { "affichee": true, "sonore": false, "contourneSilencieux": false, "motif": "notification ordinaire" }
+          } ] } }
+      ]
+    },
+    {
+      "id": "BAC-07",
+      "titre": "Paul désinstalle l'application : le service répond DeviceNotRegistered, et le serveur cesse de viser cet appareil",
+      "exigences": ["18"],
+      "etapes": [
+        { "service": "poussee", "methode": "DELETE", "chemin": "/bac-a-sable/appareils/ExponentPushToken%5Bandroid-paul-{{suffixe}}%5D", "attendu": { "statut": 204 } },
+        { "acteur": "dir", "methode": "POST", "chemin": "/api/alertes",
+          "corps": { "titre": "Confinement {{suffixe}}", "corps": "Restez dans vos unités", "priorite": "critique", "personnes": ["{{p_paul}}"] },
+          "attendu": { "statut": 201 } },
+        { "pourquoi": "Le téléphone désinstallé ne reçoit rien",
+          "service": "poussee", "methode": "GET",
+          "chemin": "/bac-a-sable/notifications?jeton=ExponentPushToken%5Bandroid-paul-{{suffixe}}%5D&titre=Confinement%20{{suffixe}}",
+          "attendu": { "statut": 200, "texte": "^\\[\\]$" } },
+        { "pourquoi": "Le serveur a retiré l'appareil périmé de la liste de Paul",
+          "acteur": "paul", "methode": "GET", "chemin": "/api/notifications/appareils", "reessayer": 30,
+          "attendu": { "statut": 200, "texte": "^\\[\\]$" } }
+      ]
+    },
+    {
+      "id": "BAC-08",
+      "titre": "Le suivi des alertes exporté en PDF est conforme PDF/A-2b selon veraPDF officiel",
+      "exigences": ["39"],
+      "etapes": [
+        { "acteur": "chef", "methode": "GET", "chemin": "/api/alertes/envoyees/export?format=pdf",
+          "attendu": { "statut": 200, "texte": "^%PDF-", "verifie": "pdfa-2b" } }
+      ]
+    },
+    {
+      "id": "BAC-09",
+      "titre": "Le justificatif des utilisateurs actifs exporté en PDF est conforme PDF/A-2b selon veraPDF officiel",
+      "exigences": ["39"],
+      "etapes": [
+        { "acteur": "admin", "methode": "GET", "chemin": "/api/alertes/utilisateurs-actifs/export?format=pdf",
+          "attendu": { "statut": 200, "texte": "^%PDF-", "verifie": "pdfa-2b" } }
+      ]
+    }
+  ]
+}

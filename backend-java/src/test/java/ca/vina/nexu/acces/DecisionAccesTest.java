@@ -29,9 +29,9 @@ class DecisionAccesTest {
     private static final Map<String, Boolean> SANS_SURCHARGE = Map.of();
 
     @Test
-    @DisplayName("les 35 capacités sont chargées, libellé et portée compris")
+    @DisplayName("les 39 capacités sont chargées, libellé et portée compris")
     void tableComplete() {
-        assertThat(politique.capacites()).hasSize(35);
+        assertThat(politique.capacites()).hasSize(39);
         PolitiqueAcces.Regle r = politique.regle("employee.create");
         assertThat(r.roles()).containsExactly("admin", "rh", "manager");
         assertThat(r.libelle()).isEqualTo("Créer un employé");
@@ -43,25 +43,27 @@ class DecisionAccesTest {
     @Test
     @DisplayName("chaque rôle intégré retrouve exactement son décompte de capacités")
     void decomptesParRole() {
-        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(35);
-        assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(27);
-        assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(12);
-        assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(7);
+        assertThat(decision.capacitesDe("admin", SANS_SURCHARGE)).hasSize(39);
+        assertThat(decision.capacitesDe("manager", SANS_SURCHARGE)).hasSize(28);
+        // La RH produit et configure la paie (ADR 0084) : paie.gerer et paie.configurer.
+        assertThat(decision.capacitesDe("rh", SANS_SURCHARGE)).hasSize(14);
+        assertThat(decision.capacitesDe("director", SANS_SURCHARGE)).hasSize(9);
         // Aucun droit par défaut : l'employé n'agit que sur ses propres données, par des routes en
         // libre-service qui ne passent pas par cette table.
         assertThat(decision.capacitesDe("employee", SANS_SURCHARGE)).isEmpty();
-        // Le comptable tient les fiches clients, leur risque et leur recouvrement — jamais le confidentiel.
+        // Le comptable tient les fiches clients, leur risque et leur recouvrement — jamais le confidentiel ; il produit la
+        // paie, sans en modifier les règles ni les dossiers (ADR 0084).
         assertThat(decision.capacitesDe("accountant", SANS_SURCHARGE))
-                .containsExactly("clients.manage", "clients.risque", "clients.recouvrement");
+                .containsExactly("clients.manage", "clients.risque", "clients.recouvrement", "paie.gerer");
     }
 
     @Test
-    @DisplayName("le directeur décide des approbations, tient le budget, les effectifs, les rapports d'horaire et envoie des alertes, rien d'autre")
+    @DisplayName("le directeur décide des approbations, tient le budget, les effectifs, les rapports d'horaire et envoie des alertes, critiques comprises, rien d'autre")
     void directeur() {
         // La gestion des effectifs (AO 26-015-DO) : le directeur d'opérations planifie, dans son périmètre d'unités.
         assertThat(decision.capacitesDe("director", SANS_SURCHARGE))
                 .containsExactly("approval.decide", "budget.line.manage", "budget.transfer", "accounting.govern", "effectifs.manage",
-                        "horaire.rapporter", "alertes.envoyer");
+                        "horaire.rapporter", "alertes.envoyer", "alertes.suivre", "alertes.critique");
         // Le virement de budget est réservé : l'accorder au gestionnaire viderait le contrôle.
         assertThat(decision.peut("manager", "budget.transfer", SANS_SURCHARGE)).isFalse();
         assertThat(decision.peut("director", "budget.transfer", SANS_SURCHARGE)).isTrue();
@@ -111,7 +113,7 @@ class DecisionAccesTest {
         for (String c : politique.capacites()) {
             toutRetire.put(c, false);
         }
-        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(35);
+        assertThat(decision.capacitesDe("admin", toutRetire)).hasSize(39);
         assertThat(decision.peut("admin", "org.manage", toutRetire)).isTrue();
 
         // Le gestionnaire, lui, perd bien tout : la garde ne vaut que pour l'administrateur.
@@ -124,7 +126,7 @@ class DecisionAccesTest {
         // Une surcharge enregistrée hier ne doit pas rendre un droit que le produit ne connaît
         // plus — sinon la suppression d'une capacité laisserait une porte ouverte.
         Map<String, Boolean> fantome = Map.of("capacite.disparue", true);
-        assertThat(decision.capacitesDe("rh", fantome)).hasSize(12);
+        assertThat(decision.capacitesDe("rh", fantome)).hasSize(14);
         assertThat(decision.peut("rh", "capacite.disparue", fantome)).isFalse();
     }
 

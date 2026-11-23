@@ -111,8 +111,8 @@ resource "aws_security_group" "repartiteur" {
 
   egress {
     description     = "Vers les taches applicatives (interface et relais de l'API)"
-    from_port       = 80
-    to_port         = 80
+    from_port       = local.port_web
+    to_port         = local.port_web
     protocol        = "tcp"
     security_groups = [aws_security_group.application.id]
   }
@@ -143,8 +143,8 @@ resource "aws_security_group" "application" {
 
 resource "aws_security_group_rule" "application_depuis_repartiteur" {
   type                     = "ingress"
-  from_port                = 80
-  to_port                  = 80
+  from_port                = local.port_web
+  to_port                  = local.port_web
   protocol                 = "tcp"
   security_group_id        = aws_security_group.application.id
   source_security_group_id = aws_security_group.repartiteur.id

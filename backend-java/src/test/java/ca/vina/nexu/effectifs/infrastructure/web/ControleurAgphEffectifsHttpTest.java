@@ -438,6 +438,37 @@ class ControleurAgphEffectifsHttpTest {
     }
 
     @Test
+    @DisplayName("AD-05 — à son tour, Ana renonce : le tour passe et la clôture lui donne le temps partiel ; au délai échu, PASSER ne sert personne d'office")
+    void renoncerEtDelaiEchu() throws Exception {
+        String camp = campagneOuverte();
+        String base = A + "/campagnes/" + camp;
+        http.put(base + "/parametres", ADMIN, "{\"traitementDelaiEchu\":\"OUBLIER\"}").andExpect(status().is(422))
+                .andExpect(jsonPath("$.errors[0]").value("« traitementDelaiEchu » : ATTRIBUER, PASSER"));
+        http.put(base + "/parametres", ADMIN, "{\"budgetHeuresSemaine\":60}").andExpect(status().isOk()).andExpect(jsonPath("$.traitementDelaiEchu").value("ATTRIBUER"));
+        // Une clé absente garde sa valeur : régler le délai échu ne retire pas le budget.
+        http.put(base + "/parametres", ADMIN, "{\"traitementDelaiEchu\":\"PASSER\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.traitementDelaiEchu").value("PASSER")).andExpect(jsonPath("$.budgetHeuresSemaine").value(60.0));
+        http.post(base + "/renoncer", ANA, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("la campagne est en depot : le tour de rôle n'est pas en cours"));
+        http.post(base + "/demarrer", ADMIN, null).andExpect(status().isOk());
+        http.post(base + "/renoncer", BOB, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value(Matchers.startsWith("ce n'est pas encore le tour de Bob")));
+        http.post(base + "/renoncer", ANA, null).andExpect(status().isOk())
+                .andExpect(jsonPath("$.rangs[0].etat").value("RENONCE")).andExpect(jsonPath("$.rangs[1].etat").value("A_SON_TOUR"));
+        http.post(base + "/renoncer", ANA, null).andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errors[0]").value("Ana a déjà été servi (a renoncé à tout poste) : un seul choix par rang"));
+        // Les délais de Bob puis de Cléo expirent : avec PASSER, personne n'est servi d'office.
+        String bobFin = campagnes.lire(ctx(MAINTENANT), camp).rangs().get(1).tourFin();
+        LectureAgph.VueCampagne fin = campagnes.lire(ctx(plus(bobFin, 31)), camp);
+        assertThat(fin.choix()).isEmpty();
+        assertThat(fin.rangs().stream().map(r -> r.etat().name()).toList()).containsExactly("RENONCE", "PASSE", "PASSE");
+        http.post(base + "/clore", ADMIN, null).andExpect(status().isOk());
+        assertThat(List.of(statut("P1"), statut("P2"), statut("P3"))).containsExactly("TP", "TP", "TP");
+        assertThat(jdbc.sql("SELECT COUNT(*) FROM eff_journal WHERE tenantId = ? AND action = 'agph.tour.renonce'").param(T).query(Integer.class).single())
+                .isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("clore : statuts TPR, TC et temps partiel ; le poste resté libre devient vacant (E-CH-10, P-CH-5, P-CH-6, P-CH-7)")
     void clore() throws Exception {
         String camp = toursExpires();

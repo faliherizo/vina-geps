@@ -53,7 +53,16 @@ export async function deplierJusqua(page: Page, testId: string): Promise<void> {
   }
 }
 
+/**
+ * **Le menu est complet** : il porte `aria-busy="true"` tant que les modules de l'établissement ne sont pas
+ * connus, et n'affiche alors que le cœur. Lire ou cliquer le menu avant serait juger un menu en chargement.
+ */
+export async function menuPret(page: Page): Promise<void> {
+  await page.locator('nav.nav-groups[aria-busy="false"]').waitFor({ timeout: 30_000 });
+}
+
 export async function ouvrirNav(page: Page, testId: string): Promise<void> {
+  await menuPret(page);
   const lien = page.getByTestId(testId);
   for (let essai = 0; essai < 6; essai++) {
     if (!(await estAffiche(page, testId))) await deplierJusqua(page, testId);

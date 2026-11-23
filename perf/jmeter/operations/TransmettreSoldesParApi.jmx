@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Accord de niveau de service — TransmettreSoldesParApi">
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.tearDown_on_shutdown">true</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="Variables du plan">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <stringProp name="TestPlan.user_define_classpath"></stringProp>
+    </TestPlan>
+    <hashTree>
+<Arguments guiclass="ArgumentsPanel" testclass="Arguments" testname="Environnement (propriétés -q env/*.properties)"><collectionProp name="Arguments.arguments"><elementProp name="protocole" elementType="Argument"><stringProp name="Argument.name">protocole</stringProp><stringProp name="Argument.value">${__P(protocole,http)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="hote" elementType="Argument"><stringProp name="Argument.name">hote</stringProp><stringProp name="Argument.value">${__P(hote,localhost)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="port" elementType="Argument"><stringProp name="Argument.name">port</stringProp><stringProp name="Argument.value">${__P(port,4020)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="tenant" elementType="Argument"><stringProp name="Argument.name">tenant</stringProp><stringProp name="Argument.value">${__P(tenant,default)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="comptes" elementType="Argument"><stringProp name="Argument.name">comptes</stringProp><stringProp name="Argument.value">${__P(comptes,donnees/comptes.csv)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="identifiants" elementType="Argument"><stringProp name="Argument.name">identifiants</stringProp><stringProp name="Argument.value">${__P(identifiants,donnees/identifiants.csv)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="utilisateurs" elementType="Argument"><stringProp name="Argument.name">utilisateurs</stringProp><stringProp name="Argument.value">${__P(utilisateurs,1)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="montee" elementType="Argument"><stringProp name="Argument.name">montee</stringProp><stringProp name="Argument.value">${__P(montee,1)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="duree" elementType="Argument"><stringProp name="Argument.name">duree</stringProp><stringProp name="Argument.value">${__P(duree,30)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="reflexion" elementType="Argument"><stringProp name="Argument.name">reflexion</stringProp><stringProp name="Argument.value">${__P(reflexion,0)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="debit" elementType="Argument"><stringProp name="Argument.name">debit</stringProp><stringProp name="Argument.value">${__P(debit,20)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="unites_operation" elementType="Argument"><stringProp name="Argument.name">unites_operation</stringProp><stringProp name="Argument.value">${__P(unites_operation,10)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="duree_operation" elementType="Argument"><stringProp name="Argument.name">duree_operation</stringProp><stringProp name="Argument.value">${__P(duree_operation,600)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="ecritures" elementType="Argument"><stringProp name="Argument.name">ecritures</stringProp><stringProp name="Argument.value">${__P(ecritures,true)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_lecture" elementType="Argument"><stringProp name="Argument.name">seuil_lecture</stringProp><stringProp name="Argument.value">${__P(seuil_lecture,500)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_ecriture" elementType="Argument"><stringProp name="Argument.name">seuil_ecriture</stringProp><stringProp name="Argument.value">${__P(seuil_ecriture,1000)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp><elementProp name="seuil_rapport" elementType="Argument"><stringProp name="Argument.name">seuil_rapport</stringProp><stringProp name="Argument.value">${__P(seuil_rapport,2000)}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></Arguments>
+<hashTree>
+
+</hashTree>
+<ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="Défauts HTTP (hôte, port, protocole de l'environnement)">
+      <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments"><collectionProp name="Arguments.arguments"/></elementProp>
+      <stringProp name="HTTPSampler.domain">${hote}</stringProp><stringProp name="HTTPSampler.port">${port}</stringProp><stringProp name="HTTPSampler.protocol">${protocole}</stringProp><stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+      <stringProp name="HTTPSampler.connect_timeout">5000</stringProp><stringProp name="HTTPSampler.response_timeout">30000</stringProp><stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+    </ConfigTestElement>
+<hashTree>
+
+</hashTree>
+<HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="En-têtes (JSON, jeton, établissement)"><collectionProp name="HeaderManager.headers"><elementProp name="" elementType="Header"><stringProp name="Header.name">Content-Type</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">Accept</stringProp><stringProp name="Header.value">application/json</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">Authorization</stringProp><stringProp name="Header.value">Bearer ${__P(jeton,)}</stringProp></elementProp><elementProp name="" elementType="Header"><stringProp name="Header.name">X-Tenant-Id</stringProp><stringProp name="Header.value">${tenant}</stringProp></elementProp></collectionProp></HeaderManager>
+<hashTree>
+
+</hashTree>
+<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Identifiants (CSV)"><stringProp name="filename">${identifiants}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">weekDate,date,id,moisCourant,clientId,matricule,periodeId,placeId,ressourceId,segmentId,uniteCode,typeRef,codeRef,absenceEffectifId,campagneId,remplacementId,echangeId,milieuEffId,posteEffId,equipageId,regleId,feuilleId,pointageId,quotaId,perimetreId,messageEsbId,connecteurCode,relaisCode,profilCode,fluxRegleId,conversationId,messageId,listeId,corpsEmploiCode,statutEmploiCode,natureCode,plageCode,typeMilieuCode,employeId,debutPeriode,dateEquipage,periodeCollecteId,dateCollecte,dateFuture,finManifestation,placeEchangeId,placePartenaireId</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
+<hashTree>
+
+</hashTree>
+<SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="Jeton d'application (setUp : client_credentials)">
+      <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController"><stringProp name="LoopController.loops">1</stringProp><boolProp name="LoopController.continue_forever">false</boolProp></elementProp>
+      <stringProp name="ThreadGroup.num_threads">1</stringProp><stringProp name="ThreadGroup.ramp_time">1</stringProp>
+      <boolProp name="ThreadGroup.scheduler">false</boolProp><stringProp name="ThreadGroup.duration"></stringProp><stringProp name="ThreadGroup.delay"></stringProp>
+      <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+    </SetupThreadGroup>
+<hashTree>
+<CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="Identifiants (CSV)"><stringProp name="filename">${identifiants}</stringProp><stringProp name="fileEncoding">UTF-8</stringProp><stringProp name="variableNames">weekDate,date,id,moisCourant,clientId,matricule,periodeId,placeId,ressourceId,segmentId,uniteCode,typeRef,codeRef,absenceEffectifId,campagneId,remplacementId,echangeId,milieuEffId,posteEffId,equipageId,regleId,feuilleId,pointageId,quotaId,perimetreId,messageEsbId,connecteurCode,relaisCode,profilCode,fluxRegleId,conversationId,messageId,listeId,corpsEmploiCode,statutEmploiCode,natureCode,plageCode,typeMilieuCode,employeId,debutPeriode,dateEquipage,periodeCollecteId,dateCollecte,dateFuture,finManifestation,placeEchangeId,placePartenaireId</stringProp><boolProp name="ignoreFirstLine">true</boolProp><stringProp name="delimiter">,</stringProp><boolProp name="quotedData">true</boolProp><boolProp name="recycle">true</boolProp><boolProp name="stopThread">false</boolProp><stringProp name="shareMode">shareMode.all</stringProp></CSVDataSet>
+<hashTree>
+
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /api/oauth/token">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;grant_type&quot;:&quot;client_credentials&quot;,&quot;client_id&quot;:&quot;${clientId}&quot;,&quot;client_secret&quot;:&quot;${__P(clientSecret,)}&quot;}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/oauth/token</stringProp><stringProp name="HTTPSampler.method">POST</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Code 200"><collectionProp name="Asserion.test_strings"><stringProp name="0">200</stringProp></collectionProp><stringProp name="Assertion.custom_message">code 200 attendu</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">false</boolProp><intProp name="Assertion.test_type">8</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<JSONPostProcessor guiclass="JSONPostProcessorGui" testclass="JSONPostProcessor" testname="Extraire jeton"><stringProp name="JSONPostProcessor.referenceNames">jeton</stringProp><stringProp name="JSONPostProcessor.jsonPathExprs">$.access_token</stringProp><stringProp name="JSONPostProcessor.match_numbers">1</stringProp><stringProp name="JSONPostProcessor.defaultValues"></stringProp></JSONPostProcessor>
+<hashTree>
+
+</hashTree>
+<JSR223PostProcessor guiclass="TestBeanGUI" testclass="JSR223PostProcessor" testname="Publier jeton"><stringProp name="scriptLanguage">groovy</stringProp><stringProp name="script">props.put(&quot;jeton&quot;, vars.get(&quot;jeton&quot;) ?: &quot;&quot;)</stringProp><stringProp name="parameters"></stringProp><stringProp name="filename"></stringProp><stringProp name="cacheKey">true</stringProp></JSR223PostProcessor>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+<ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Opération TransmettreSoldesParApi — débit fixe">
+      <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+      <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController"><stringProp name="LoopController.loops">-1</stringProp><boolProp name="LoopController.continue_forever">false</boolProp></elementProp>
+      <stringProp name="ThreadGroup.num_threads">${unites_operation}</stringProp><stringProp name="ThreadGroup.ramp_time">1</stringProp>
+      <boolProp name="ThreadGroup.scheduler">true</boolProp><stringProp name="ThreadGroup.duration">${duree_operation}</stringProp><stringProp name="ThreadGroup.delay"></stringProp>
+      <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+    </ThreadGroup>
+<hashTree>
+<ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="Débit fixe (${debit} requêtes/s, toutes unités)"><intProp name="calcMode">2</intProp><stringProp name="throughput">${__jexl3(${debit} * 60)}</stringProp></ConstantThroughputTimer>
+<hashTree>
+
+</hashTree>
+<HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="TransmettreSoldesParApi">
+      <boolProp name="HTTPSampler.postBodyRaw">true</boolProp><elementProp name="HTTPsampler.Arguments" elementType="Arguments"><collectionProp name="Arguments.arguments"><elementProp name="" elementType="HTTPArgument"><boolProp name="HTTPArgument.always_encode">false</boolProp><stringProp name="Argument.value">{&quot;soldes&quot;:[{&quot;banque&quot;:&quot;VAC&quot;,&quot;heures&quot;:70.5,&quot;au&quot;:&quot;${date}&quot;},{&quot;banque&quot;:&quot;MAL&quot;,&quot;heures&quot;:21,&quot;au&quot;:&quot;${date}&quot;}]}</stringProp><stringProp name="Argument.metadata">=</stringProp></elementProp></collectionProp></elementProp>
+      <stringProp name="HTTPSampler.path">/api/echanges/v1/employes/${matricule}/soldes</stringProp><stringProp name="HTTPSampler.method">PUT</stringProp><boolProp name="HTTPSampler.follow_redirects">false</boolProp><boolProp name="HTTPSampler.auto_redirects">false</boolProp><boolProp name="HTTPSampler.use_keepalive">true</boolProp><boolProp name="HTTPSampler.DO_MULTIPART_POST">false</boolProp>
+    </HTTPSamplerProxy>
+<hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Code 200"><collectionProp name="Asserion.test_strings"><stringProp name="0">200</stringProp></collectionProp><stringProp name="Assertion.custom_message">code 200 attendu</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">false</boolProp><intProp name="Assertion.test_type">8</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+<ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Aucune erreur du serveur (pas de 5xx)"><collectionProp name="Asserion.test_strings"><stringProp name="0">^[1-4]\d\d$</stringProp></collectionProp><stringProp name="Assertion.custom_message">réponse 5xx : erreur du serveur</stringProp><stringProp name="Assertion.test_field">Assertion.response_code</stringProp><boolProp name="Assertion.assume_success">true</boolProp><intProp name="Assertion.test_type">1</intProp></ResponseAssertion>
+<hashTree>
+
+</hashTree>
+</hashTree>
+</hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

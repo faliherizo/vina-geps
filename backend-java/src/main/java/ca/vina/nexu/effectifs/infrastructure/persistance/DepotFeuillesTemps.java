@@ -1,6 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.persistance;
 
 import ca.vina.nexu.effectifs.domaine.ActionCorroboration;
+import ca.vina.nexu.effectifs.domaine.ConflitException;
 import ca.vina.nexu.effectifs.domaine.Contexte;
 import ca.vina.nexu.effectifs.domaine.CorroborationTemps;
 import ca.vina.nexu.effectifs.domaine.ChampsFeuille;
@@ -9,6 +10,7 @@ import ca.vina.nexu.effectifs.domaine.FeuilleTemps;
 import ca.vina.nexu.effectifs.domaine.LectureFeuillesTempsPort;
 import ca.vina.nexu.effectifs.domaine.Planification;
 import ca.vina.nexu.effectifs.domaine.PresenceEffectifs;
+import ca.vina.nexu.effectifs.domaine.SeuilsConvention;
 import ca.vina.nexu.effectifs.domaine.SourcesTempsEffectifsPort;
 import ca.vina.nexu.effectifs.domaine.TempsEffectifs;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -99,11 +101,25 @@ public class DepotFeuillesTemps implements LectureFeuillesTempsPort, EcritureFeu
     @Override
     public Optional<TempsEffectifs.Parametres> parametres(String tenantId) {
         return jdbc.sql("SELECT seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes, toleranceCorroborationMinutes, "
-                        + "actionNonCorrobore, actionSourcesDivergentes FROM eff_temps_parametres WHERE tenantId = ?")
+                        + "actionNonCorrobore, actionSourcesDivergentes, seuilPeriodePaieHeures FROM eff_temps_parametres WHERE tenantId = ?")
                 .params(tenantId).query((rs, i) -> new TempsEffectifs.Parametres(rs.getInt("seuilJourHeures"), rs.getInt("seuilSemaineHeures"),
                         rs.getInt("paliersApprobation"), rs.getInt("toleranceEcartMinutes"), rs.getInt("toleranceCorroborationMinutes"),
-                        ActionCorroboration.valueOf(rs.getString("actionNonCorrobore")), ActionCorroboration.valueOf(rs.getString("actionSourcesDivergentes"))))
+                        ActionCorroboration.valueOf(rs.getString("actionNonCorrobore")), ActionCorroboration.valueOf(rs.getString("actionSourcesDivergentes")),
+                        rs.getInt("seuilPeriodePaieHeures")))
                 .optional();
+    }
+
+    @Override
+    public List<SeuilsConvention> seuilsConventions(String tenantId) {
+        return jdbc.sql("SELECT conventionCode, seuilJourHeures, seuilSemaineHeures, seuilPeriodePaieHeures FROM eff_temps_seuils_conventions "
+                        + "WHERE tenantId = ? ORDER BY conventionCode")
+                .params(tenantId).query((rs, i) -> new SeuilsConvention(rs.getString("conventionCode"), entier(rs, "seuilJourHeures"),
+                        entier(rs, "seuilSemaineHeures"), entier(rs, "seuilPeriodePaieHeures"))).list();
+    }
+
+    private static Integer entier(ResultSet rs, String colonne) throws SQLException {
+        int v = rs.getInt(colonne);
+        return rs.wasNull() ? null : v;
     }
 
     @Override
@@ -210,14 +226,31 @@ public class DepotFeuillesTemps implements LectureFeuillesTempsPort, EcritureFeu
     @Override
     public void enregistrerParametres(Contexte ctx, TempsEffectifs.Parametres p) {
         jdbc.sql("INSERT INTO eff_temps_parametres (tenantId, seuilJourHeures, seuilSemaineHeures, paliersApprobation, toleranceEcartMinutes, "
-                        + "toleranceCorroborationMinutes, actionNonCorrobore, actionSourcesDivergentes, modifieLe, modifiePar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                        + "toleranceCorroborationMinutes, actionNonCorrobore, actionSourcesDivergentes, seuilPeriodePaieHeures, modifieLe, modifiePar) "
+                        + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                         + "ON CONFLICT (tenantId) DO UPDATE SET seuilJourHeures = excluded.seuilJourHeures, "
                         + "seuilSemaineHeures = excluded.seuilSemaineHeures, paliersApprobation = excluded.paliersApprobation, "
                         + "toleranceEcartMinutes = excluded.toleranceEcartMinutes, toleranceCorroborationMinutes = excluded.toleranceCorroborationMinutes, "
                         + "actionNonCorrobore = excluded.actionNonCorrobore, actionSourcesDivergentes = excluded.actionSourcesDivergentes, "
-                        + "modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
+                        + "seuilPeriodePaieHeures = excluded.seuilPeriodePaieHeures, modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
                 .params(ctx.tenantId(), p.seuilJourHeures(), p.seuilSemaineHeures(), p.paliersApprobation(), p.toleranceEcartMinutes(),
-                        p.toleranceCorroborationMinutes(), p.actionNonCorrobore().name(), p.actionSourcesDivergentes().name(), ctx.maintenant(), ctx.acteurId())
+                        p.toleranceCorroborationMinutes(), p.actionNonCorrobore().name(), p.actionSourcesDivergentes().name(), p.seuilPeriodePaieHeures(),
+                        ctx.maintenant(), ctx.acteurId())
+                .update();
+    }
+
+    @Override
+    public void enregistrerSeuilsConvention(Contexte ctx, SeuilsConvention s) {
+        if (s.estVide()) {
+            jdbc.sql("DELETE FROM eff_temps_seuils_conventions WHERE tenantId = ? AND conventionCode = ?").params(ctx.tenantId(), s.conventionCode()).update();
+            return;
+        }
+        jdbc.sql("INSERT INTO eff_temps_seuils_conventions (tenantId, conventionCode, seuilJourHeures, seuilSemaineHeures, seuilPeriodePaieHeures, "
+                        + "modifieLe, modifiePar) VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT (tenantId, conventionCode) DO UPDATE SET "
+                        + "seuilJourHeures = excluded.seuilJourHeures, seuilSemaineHeures = excluded.seuilSemaineHeures, "
+                        + "seuilPeriodePaieHeures = excluded.seuilPeriodePaieHeures, modifieLe = excluded.modifieLe, modifiePar = excluded.modifiePar")
+                .params(ctx.tenantId(), s.conventionCode(), s.seuilJourHeures(), s.seuilSemaineHeures(), s.seuilPeriodePaieHeures(), ctx.maintenant(),
+                        ctx.acteurId())
                 .update();
     }
 
@@ -278,5 +311,15 @@ public class DepotFeuillesTemps implements LectureFeuillesTempsPort, EcritureFeu
         String approuveeLe = issue.statut() == TempsEffectifs.StatutFeuille.APPROUVEE ? ctx.maintenant() : null;
         jdbc.sql("UPDATE eff_feuilles SET statut = ?, palier = ?, approuveeLe = ? WHERE tenantId = ? AND id = ?")
                 .params(issue.statut().name(), issue.palier(), approuveeLe, ctx.tenantId(), id).update();
+    }
+
+    /** Seule une feuille encore approuvée passe payée : une réouverture concurrente l'emporte, et rien ne se paie deux fois. */
+    @Override
+    public void marquerPayee(Contexte ctx, String id, String paieId) {
+        int n = jdbc.sql("UPDATE eff_feuilles SET statut = ?, payeeLe = ?, paieId = ? WHERE tenantId = ? AND id = ? AND statut = ?")
+                .params(TempsEffectifs.StatutFeuille.PAYEE.name(), ctx.maintenant(), paieId, ctx.tenantId(), id, TempsEffectifs.StatutFeuille.APPROUVEE.name()).update();
+        if (n == 0) {
+            throw new ConflitException("la feuille " + id + " n'est plus approuvée : elle n'entre pas dans cette paie");
+        }
     }
 }

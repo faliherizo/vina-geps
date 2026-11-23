@@ -25,14 +25,14 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
     Quand chef envoie POST /api/alertes avec :
       """json
       { "titre": "Code bleu chambre 512", "corps": "5e étage, répondez à la prise en charge",
-        "priorite": "critique", "reponseIds": ["{{arrive}}", "{{indispo}}"],
+        "priorite": "urgente", "reponseIds": ["{{arrive}}", "{{indispo}}"],
         "personnes": ["{{n_julie}}", "{{n_marc}}", "{{n_chef}}"] }
       """
     Alors la réponse a le statut 201
     # L'expéditeur n'est pas destinataire de sa propre alerte (R2).
     Et la réponse contient :
       """json
-      { "priorite": "critique", "bilan": { "destinataires": 2, "lues": 0, "repondues": 0 } }
+      { "priorite": "urgente", "bilan": { "destinataires": 2, "lues": 0, "repondues": 0 } }
       """
     Et je retiens "id" sous le nom "alerte"
     Quand julie envoie GET /api/alertes/recues
@@ -105,3 +105,148 @@ Fonctionnalité: Communications cliniques — alertes priorisées, réponses pr�
       """
     Alors la réponse a le statut 400
     Et la réponse correspond à "n'existe pas ou n'est plus active"
+
+  Scénario: La priorité critique se réserve à qui en a le droit (ST-G01, critère 7)
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu chambre 512", "corps": "5e étage", "priorite": "critique", "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 403
+    Quand directeur envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu chambre 512", "corps": "5e étage", "priorite": "critique", "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "priorite": "critique", "bilan": { "destinataires": 1 } }
+      """
+
+  Scénario: Une politique de relance arme la cascade ; la prise en charge l'arrête ; le chef la reprend (ST-G04)
+    # Critères 15, 17, 19, 32. Les étapes à échéance (relance, escalade, prochain disponible : 15, 16, 25) sont
+    # éprouvées à horloge réglée dans ControleurCascadesHttpTest, redémarrage et concurrence compris.
+    Quand admin envoie POST /api/alertes/politiques avec :
+      """json
+      { "nom": "Code bleu", "arret": "prise_en_charge",
+        "etapes": [ { "cible": "initiaux", "canaux": ["poussee"], "delaiMinutes": 5 },
+                    { "cible": "personne", "cibleId": "{{n_marc}}", "canaux": ["texto"], "delaiMinutes": 10 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et la réponse contient :
+      """json
+      { "nom": "Code bleu", "version": 1, "actif": true }
+      """
+    Et je retiens "id" sous le nom "politique"
+    Quand chef envoie POST /api/alertes/politiques avec :
+      """json
+      { "nom": "X", "arret": "toutes_lues", "etapes": [] }
+      """
+    Alors la réponse a le statut 403
+    Quand chef envoie GET /api/alertes/politiques
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu 512", "corps": "5e étage", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}"], "politiqueId": "{{politique}}" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "alerte"
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "cascade": { "etat": "armee", "etape": 1, "etapes": 2 } }
+      """
+    Quand julie envoie POST /api/alertes/recues/{{alerte}}/reponse avec :
+      """json
+      { "reponseId": "{{arrive}}" }
+      """
+    Alors la réponse a le statut 200
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse contient :
+      """json
+      { "cascade": { "etat": "arretee" } }
+      """
+    Et la réponse correspond à "evenement.{3}arretee"
+    Quand chef envoie POST /api/alertes/envoyees/{{alerte}}/cascade/reprendre avec :
+      """json
+      { "etape": 2 }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "cascade": { "etat": "armee", "etape": 2 } }
+      """
+    Quand chef envoie GET /api/alertes/envoyees/{{alerte}}/cascade
+    Alors la réponse correspond à "evenement.{3}reprise"
+    Quand julie envoie POST /api/alertes/envoyees/{{alerte}}/cascade/reprendre avec :
+      """json
+      { "etape": 1 }
+      """
+    Alors la réponse a le statut 403
+
+  Scénario: Un texto entrant sans signature Twilio valide est refusé avant toute lecture (ST-G05)
+    # Critères 4, 9 : la réponse par texto. Signature vraie, « 1 », « NON », mot inconnu, rejeu et numéro inconnu sont
+    # éprouvés dans ControleurWebhooksAlertesHttpTest ; ici, la porte publique ne s'ouvre pas sans la signature.
+    Quand anonyme envoie POST /api/alertes/webhooks/texto avec :
+      """json
+      { "MessageSid": "SM1", "From": "+15145550101", "Body": "1" }
+      """
+    Alors la réponse a le statut 403
+
+  Scénario: Le retour d'un appel automatique sans signature Twilio valide est refusé (ST-G06)
+    # Critères 13, 14 : l'étape « appel », la touche « 1 », le résultat et la durée sont éprouvés dans
+    # ControleurCascadesHttpTest ; ici, ni la touche ni le statut n'entrent sans la signature.
+    Quand anonyme envoie POST /api/alertes/webhooks/voix?appel=ap-1 avec :
+      """json
+      { "Digits": "1" }
+      """
+    Alors la réponse a le statut 403
+    Quand anonyme envoie POST /api/alertes/webhooks/voix/statut?appel=ap-1 avec :
+      """json
+      { "CallStatus": "completed" }
+      """
+    Alors la réponse a le statut 403
+
+  Scénario: Les utilisateurs actifs du mois se comptent une fois chacun, et se réservent à l'administration (ST-G08)
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu", "corps": "5e", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}", "{{n_marc}}"] }
+      """
+    Alors la réponse a le statut 201
+    Quand chef envoie POST /api/alertes avec :
+      """json
+      { "titre": "Code bleu, encore", "corps": "5e", "priorite": "urgente", "reponseIds": ["{{arrive}}"],
+        "personnes": ["{{n_julie}}"] }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie GET /api/alertes/utilisateurs-actifs
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "total": 2 }
+      """
+    Quand chef envoie GET /api/alertes/utilisateurs-actifs
+    Alors la réponse a le statut 403
+
+  Scénario: Une note courte et datée sur la fiche d'un destinataire, tenue par les expéditeurs (ST-G12)
+    # Critère 2, dans la lecture « note interne » de Q-DOS.
+    Quand chef envoie PUT /api/alertes/notes/{{n_julie}} avec :
+      """json
+      { "texte": "Joindre sur le cellulaire de garde" }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "texte": "Joindre sur le cellulaire de garde" }
+      """
+    Quand chef envoie GET /api/alertes/notes?personnes={{n_julie}}
+    Alors la réponse a le statut 200
+    Et la réponse compte 1 élément
+    Quand julie envoie PUT /api/alertes/notes/{{n_julie}} avec :
+      """json
+      { "texte": "x" }
+      """
+    Alors la réponse a le statut 403

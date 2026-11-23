@@ -116,6 +116,19 @@ class PlanificationDomaineTest {
         }
 
         @Test
+        @DisplayName("heures sur 24 h (addenda 7, Q8) : la pire fenêtre qui touche le quart, nuit comprise")
+        void heuresSur24hGlissantes() {
+            assertThat(heuresSur24h(List.of(), new Creneau("2027-03-02", 360, 1080))).isEqualTo(12.0);
+            // 6 h-18 h puis 19 h-7 h : 23 h dans la fenêtre qui commence à 6 h (la nuit déborde sur le lendemain).
+            assertThat(heuresSur24h(List.of(new Creneau("2027-03-01", 360, 1080)), new Creneau("2027-03-01", 1140, 420))).isEqualTo(23.0);
+            // Un quart à 25 h d'écart n'entre dans aucune fenêtre avec le nouveau.
+            assertThat(heuresSur24h(List.of(new Creneau("2027-03-01", 0, 300)), new Creneau("2027-03-02", 360, 720))).isEqualTo(6.0);
+            // 2 h-6 h, 10 h-18 h, puis 23 h-3 h : 16 h en tout sur 25 h, donc 15 h au plus sur 24 h.
+            assertThat(heuresSur24h(List.of(new Creneau("2027-03-01", 120, 360), new Creneau("2027-03-01", 600, 1080)),
+                    new Creneau("2027-03-01", 1380, 180))).isEqualTo(15.0);
+        }
+
+        @Test
         @DisplayName("compte les heures de la semaine ISO, du lundi au dimanche")
         void semaine() {
             assertThat(List.of(lundiDe("2027-03-01"), lundiDe("2027-03-07"), lundiDe("1970-01-01"), lundiDe("1969-12-28")))

@@ -1,5 +1,9 @@
 package ca.vina.nexu.approbations.infrastructure.web;
 
+import ca.vina.nexu.approbations.domaine.Approbations;
+
+import com.jayway.jsonpath.JsonPath;
+
 import ca.vina.nexu.personnel.infrastructure.persistance.DepotAnnuaireEmployes;
 import ca.vina.nexu.approbations.infrastructure.configuration.ConfigurationApprobations;
 import ca.vina.nexu.approbations.infrastructure.persistance.AdaptateurComptesApprobations;
@@ -183,6 +187,16 @@ class ControleurApprobationsHttpTest {
         assertThat(depot.delegataireActif("t-1", "usr-mgr")).isEqualTo(delId);
         http.post("/api/approvals/delegations", DIRECTEUR, "{\"toUserId\":\"usr-tard\",\"fromDate\":\"2027-01-01\"}").andExpect(status().isCreated());
         assertThat(depot.delegataireActif("t-1", "usr-dir")).isEqualTo("usr-sans-courriel");
+        // Reçues : le délégataire sait pour qui il approuve aujourd'hui ; une délégation remplacée ne compte plus.
+        assertThat(depot.delegationsRecues("t-1", delId)).extracting(Approbations.Delegation::fromUserId).containsExactly("usr-mgr");
+        assertThat(depot.delegationsRecues("t-1", "usr-del")).isEmpty();
+        // Le retour d'absence : l'auteur révoque la sienne ; celle d'un autre est introuvable, et ne bouge pas.
+        String aRevoquer = JsonPath.read(http.get("/api/approvals/delegations?mine=1", MANAGER).andReturn().getResponse().getContentAsString(), "$[0].id");
+        http.delete("/api/approvals/delegations/" + aRevoquer, DIRECTEUR).andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errors[0]").value("délégation introuvable : " + aRevoquer));
+        http.delete("/api/approvals/delegations/" + aRevoquer, MANAGER).andExpect(status().isNoContent());
+        assertThat(depot.delegationActive("t-1", "usr-mgr")).isEmpty();
+        assertThat(depot.delegataireActif("t-1", "usr-mgr")).isNull();
 
         // Par document, puis relance selon la tolérance.
         http.get("/api/approvals/by-document?documentType=purchase_order&documentId=po-1", ADMIN).andExpect(jsonPath("$.id").value(demande));

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Réponse par texto** (FX-AO-20260810, ST-G05, 14 novembre 2026) : la trace de chaque texto entrant, par son
+    identifiant chez le fournisseur — un message rejoué est reconnu et ignoré. Le contenu du texto n'est pas conservé,
+    seulement ce qu'on en a fait.
+  -->
+  <changeSet id="0014-alertes-textos-entrants" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'alr_textos_entrants'</sqlCheck>
+    </preConditions>
+    <comment>Textos entrants reçus, contre le rejeu.</comment>
+    <sql>
+      CREATE TABLE alr_textos_entrants (
+        messageSid TEXT NOT NULL PRIMARY KEY,
+        tenantId TEXT,
+        alerteId TEXT,
+        personId TEXT,
+        issue TEXT NOT NULL,
+        recuLe TEXT NOT NULL
+      )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

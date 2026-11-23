@@ -41,6 +41,20 @@ public final class CartesIntegrations {
         return Optional.ofNullable(env.get(cle)).orElse("");
     }
 
+    private static final java.util.Set<String> VRAI = java.util.Set.of("1", "true");
+
+    /** L'Entra ID simulé n'existe que demandé, en essai (ADR 0093) : la même règle que la connexion, lue ici sans en dépendre. */
+    static boolean entraSimule(Map<String, String> env) {
+        return VRAI.contains(env(env, "SSO_SIMULE")) && VRAI.contains(env(env, "NEXU_ESSAI"));
+    }
+
+    static String etatEntra(Map<String, String> env) {
+        if (!env(env, "AZURE_CLIENT_ID").isEmpty()) {
+            return "configure";
+        }
+        return entraSimule(env) ? "simule" : "non_configure";
+    }
+
     /** GRICS est configuré avec un couple client, ou une URL et un jeton (même règle que {@code configGricsDepuisEnv}). */
     static boolean gricsConfigure(Map<String, String> env) {
         boolean client = !env(env, "GRICS_CLIENT_ID").isEmpty() && !env(env, "GRICS_CLIENT_SECRET").isEmpty();
@@ -90,8 +104,8 @@ public final class CartesIntegrations {
                                 : "http".equals(d.modeAts()) ? "ATS configuré pour cet établissement (jeton et webhook)"
                                 : ats ? "secret partagé configuré : POST /api/scolaire/integrations/ats/candidats" : "ATS_WEBHOOK_SECRET absent : la route répond 404 ; le repli fichier reste disponible",
                         null, 0, "scolaire:reprise", null),
-                carte(d, "entra", "Microsoft Entra ID (SSO)", entraClient.isEmpty() ? "simule" : "configure",
-                        entraClient.isEmpty() ? "mode simulé : aucun AZURE_CLIENT_ID"
+                carte(d, "entra", "Microsoft Entra ID (SSO)", etatEntra(env),
+                        entraClient.isEmpty() ? (entraSimule(env) ? "mode simulé (SSO_SIMULE, essai) : aucun AZURE_CLIENT_ID" : "aucun AZURE_CLIENT_ID : la connexion Entra n'est pas offerte")
                                 : "client " + entraClient.substring(0, Math.min(6, entraClient.length())) + "…, locataire " + Optional.ofNullable(env.get("AZURE_TENANT_ID")).orElse("common"),
                         "login", "Entra ID de démonstration embarqué (/mock/entra) : découverte OIDC, PKCE, id_token RS256 vérifié par JWKS"),
                 carte(d, "saml", "SAML 2.0 (SSO)", saml ? "configure" : "non_configure",

@@ -13,6 +13,8 @@ pas une conversation.
 | [04-DONNEES-A-OBTENIR.md](04-DONNEES-A-OBTENIR.md) | Les données que seul le client possède : structure, personnes, codes, règles de convention, interfaces | 28 |
 | [05-QUESTIONS-RECADREES.md](05-QUESTIONS-RECADREES.md) | **À jour au 10 nov. 2026** : la réponse d'Urgences-santé (configuration renvoyée à plus tard, références = devis + deux grilles) et les seules questions qui restent, neutres | 9 |
 | [07-ADDENDA-06-ET-QUESTIONS-METIER.md](07-ADDENDA-06-ET-QUESTIONS-METIER.md) | **À jour au 12 nov. 2026** : l'addenda n° 06 traité réponse par réponse, les ajustements de la solution qu'il impose, et 16 nouvelles questions métier, neutres | 16 |
+| [08-QUESTIONS-METIER-COMPLEMENTAIRES.md](08-QUESTIONS-METIER-COMPLEMENTAIRES.md) | **19 nov. 2026** : besoins du cahier absents des grilles (banques de congés, congés annuels, horaires types, compétences…) à déclarer dans la proposition, et exigences au sens ouvert à poser en atelier ; période de questions close le 18 nov. | 19 |
+| [reponses/](reponses/) | **20 nov. 2026** : les addenda 1 à 7 et la grille v2 convertis (`convertir-reponses.py`) ; traitement, questions sans réponse et stories dans [../12-reponses-addenda](../12-reponses-addenda/01_traitement_des_reponses.md). Les 16 questions du fichier 07 ont toutes reçu réponse (addenda 7) | — |
 
 ## Quand les poser — le calendrier a tourné
 

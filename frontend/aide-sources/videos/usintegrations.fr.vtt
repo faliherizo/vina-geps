@@ -1,0 +1,16 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:05.248
+Intégrations des effectifs. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:06.448 --> 00:00:16.270
+Intégrations. L'administrateur ouvre les connecteurs : tous sont coupés. Il active le système d'aide à la répartition, le SAAV, puis le bus d'entreprise, en mode simulateur.
+
+00:00:20.171 --> 00:00:27.787
+Il publie les équipages du 15 janvier pour l'unité Opérations Est vers le SAAV, puis relaie le journal vers le bus. Les deux messages déposés sont listés.
+
+00:00:31.191 --> 00:00:40.293
+Il configure ensuite le lot de paie vers le système de paie externe. Une adresse en http est refusée : un protocole sécurisé est exigé. La clé saisie est mise en majuscules.
+
+00:00:43.708 --> 00:00:51.858
+En SFTP, l'empreinte de la clé d'hôte est exigée : sans elle, la configuration est refusée. Avec l'empreinte, le connecteur est enregistré.

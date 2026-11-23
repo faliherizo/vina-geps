@@ -1,8 +1,7 @@
 package ca.vina.nexu.auth.infrastructure.services;
 
-import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
-
-import ca.vina.nexu.auth.domaine.Compte;
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
 import ca.vina.nexu.auth.domaine.Oidc;
 import ca.vina.nexu.auth.domaine.Saml;
 import ca.vina.nexu.integrations.domaine.MappageRole;
@@ -20,26 +19,43 @@ import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.random.RandomGenerator;
 
 /**
- * Les deux SSO — Entra ID (OIDC) et SAML 2.0 — côté fournisseur de services : les demandes en
- * cours (state → PKCE, {@code InResponseTo}), l'obtention des revendications, et le
- * provisionnement : trouver ou créer le compte par courriel, rôle par mappage, jeton de session.
- * L'état est celui du processus, comme côté Node ; en multi-instance, un cache partagé.
+ * Les deux SSO d'instance — Entra ID (OIDC) et SAML 2.0 — côté fournisseur de services : les demandes en
+ * cours (state → PKCE, {@code InResponseTo}), l'obtention des revendications vérifiées, puis la résolution de
+ * l'identité par {@code (émetteur, sujet)} (ADR 0093) : compte relié, provisionné si l'instance l'autorise
+ * ({@code SSO_PROVISIONNEMENT_JAT}, ou démonstration et mode simulé, qui n'authentifient personne de réel), ou
+ * liaison à prouver. L'état est celui du processus ; en multi-instance, un cache partagé.
  */
 public class ServiceSso {
 
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<Map<String, Object>> CARTE = new TypeReference<>() { };
+    /** Le provisionnement juste-à-temps du fournisseur d'instance : désactivé sauf demande explicite. */
+    public static final String VARIABLE_JAT = "SSO_PROVISIONNEMENT_JAT";
+    private static final Set<String> VRAI = Set.of("1", "true");
+    private static final String ROLE_PAR_DEFAUT = "employee";
 
     /** L'échange du code contre les revendications vérifiées (réel et démonstration) : un port, pour que les essais le remplacent. */
     public interface EchangeurOidc {
         Map<String, Object> echanger(String code, Oidc.Configuration cfg, Oidc.Demande demande);
     }
 
-    public record Session(String token, String userId, String role, String email, boolean provisioned, String tenantId) {
+    /** L'issue d'une connexion par le SSO d'instance : une session, ou une liaison à prouver. */
+    public sealed interface Issue permits Session, LiaisonRequise {
+    }
+
+    public record Session(String token, String userId, String role, String email, boolean provisioned, String tenantId) implements Issue {
+    }
+
+    public record LiaisonRequise(String jetonLiaison, String email) implements Issue {
+    }
+
+    /** Ce que le fournisseur a prouvé : sa clé, ses revendications, et s'il est réel (sinon, démonstration ou simulé). */
+    public record Verifiee(IdentitesExternes.Cle cle, Map<String, Object> revendications, boolean reel) {
     }
 
     public record DebutSaml(String url, String id) {
@@ -47,7 +63,7 @@ public class ServiceSso {
 
     private final Map<String, String> env;
     private final RegistreDemonstrations demonstrations;
-    private final DepotComptes comptes;
+    private final ServiceResolutionIdentite resolution;
     private final ServiceConnexion connexion;
     private final EchangeurOidc echangeur;
     private final Clock horloge;
@@ -55,10 +71,11 @@ public class ServiceSso {
     private final Map<String, Oidc.Demande> demandesEntra = new ConcurrentHashMap<>();
     private final Map<String, Long> demandesSaml = new ConcurrentHashMap<>();
 
-    public ServiceSso(Map<String, String> env, RegistreDemonstrations demonstrations, DepotComptes comptes, ServiceConnexion connexion, EchangeurOidc echangeur, Clock horloge, RandomGenerator alea) {
+    public ServiceSso(Map<String, String> env, RegistreDemonstrations demonstrations, ServiceResolutionIdentite resolution, ServiceConnexion connexion,
+                      EchangeurOidc echangeur, Clock horloge, RandomGenerator alea) {
         this.env = env;
         this.demonstrations = demonstrations;
-        this.comptes = comptes;
+        this.resolution = resolution;
         this.connexion = connexion;
         this.echangeur = echangeur;
         this.horloge = horloge;
@@ -76,29 +93,48 @@ public class ServiceSso {
         return Oidc.configuration(env, demo);
     }
 
+    /** La configuration d'un Entra ID offert ; sinon {@link Oidc.DesactiveException} (404 à la frontière). */
+    public Oidc.Configuration configurationEntraActive() {
+        Oidc.Configuration cfg = configurationEntra();
+        if (!cfg.actif()) {
+            throw new Oidc.DesactiveException();
+        }
+        return cfg;
+    }
+
     private void purgerEntra() {
         long maintenant = horloge.millis();
         demandesEntra.values().removeIf(d -> d.expiree(maintenant));
     }
 
     public Oidc.Debut debuterEntra() {
+        Oidc.Configuration cfg = configurationEntraActive();
         purgerEntra();
         Oidc.Demande d = Oidc.nouvelleDemande(alea, horloge.millis());
         demandesEntra.put(d.state(), d);
-        return Oidc.debuter(configurationEntra(), d);
+        return Oidc.debuter(cfg, d);
     }
 
-    /** Valide le state, obtient les revendications (simulé : décodage ; réel et démonstration : échange + JWKS). */
-    public Map<String, Object> completerEntra(String code, String state) {
+    /**
+     * Valide le state, obtient les revendications : décodées du code en mode simulé seulement ; échangées et vérifiées
+     * (JWKS, émetteur, audience, échéance, nonce) sinon. Un code simulé hors du mode simulé est refusé : ses
+     * revendications sont écrites par qui le présente.
+     */
+    public Verifiee completerEntra(String code, String state) {
+        Oidc.Configuration cfg = configurationEntraActive();
         purgerEntra();
         Oidc.Demande d = demandesEntra.remove(state);
         if (d == null) {
             throw new IllegalArgumentException("invalid or expired SSO state");
         }
-        Oidc.Configuration cfg = configurationEntra();
-        Map<String, Object> claims = cfg.mock() || Oidc.estCodeSimule(code) ? JSON.readValue(Oidc.jsonDuCodeSimule(code), CARTE) : echangeur.echanger(code, cfg, d);
+        if (!cfg.mock() && Oidc.estCodeSimule(code)) {
+            throw new Oidc.AuthentificationRefuseeException("code d'autorisation simulé refusé : le mode simulé n'est pas actif");
+        }
+        Map<String, Object> claims = cfg.mock() ? JSON.readValue(Oidc.jsonDuCodeSimule(code), CARTE) : echangeur.echanger(code, cfg, d);
         Oidc.courriel(claims);
-        return claims;
+        Object emetteur = cfg.mock() ? cfg.authority() : claims.get("iss");
+        Object sujet = claims.get("sub") == null ? claims.get("oid") : claims.get("sub");
+        return new Verifiee(IdentitesExternes.Cle.de(emetteur, sujet), claims, !cfg.mock() && !cfg.demonstration());
     }
 
     // ── SAML ────────────────────────────────────────────────────────────────
@@ -129,11 +165,13 @@ public class ServiceSso {
         return new DebutSaml(url, id);
     }
 
-    public Saml.AssertionValidee recevoirSaml(String samlResponseB64) {
+    /** Signature, émetteur, audience, validité et {@code InResponseTo} vérifiés ; la clé est (émetteur, NameID). */
+    public Verifiee recevoirSaml(String samlResponseB64) {
         purgerSaml();
-        Saml.AssertionValidee a = Saml.recevoirReponse(samlResponseB64, configurationSaml(), horloge.instant(), demandesSaml::containsKey);
+        Saml.Configuration cfg = configurationSaml();
+        Saml.AssertionValidee a = Saml.recevoirReponse(samlResponseB64, cfg, horloge.instant(), demandesSaml::containsKey);
         demandesSaml.remove(a.inResponseTo());
-        return a;
+        return new Verifiee(IdentitesExternes.Cle.de(cfg.idpIssuer(), a.claims().oid()), revendications(a.claims()), !cfg.demonstration());
     }
 
     public Map<String, Object> revendications(Saml.Revendications r) {
@@ -145,7 +183,7 @@ public class ServiceSso {
         return m;
     }
 
-    // ── Provisionnement ─────────────────────────────────────────────────────
+    // ── Résolution ──────────────────────────────────────────────────────────
 
     /** Le mappage des revendications ({@code roles}/{@code groups}) → rôle plateforme, surchargeable par {@code AZURE_ROLE_MAPPING} (JSON). */
     public MappageRole.Regle mappage() {
@@ -159,23 +197,23 @@ public class ServiceSso {
                 // JSON illisible : le défaut, comme côté Node
             }
         }
-        return new MappageRole.Regle("roles", Oidc.MAPPAGE_PAR_DEFAUT, "employee");
+        return new MappageRole.Regle("roles", Oidc.MAPPAGE_PAR_DEFAUT, ROLE_PAR_DEFAUT);
     }
 
-    /** Provisionne (ou retrouve) l'utilisateur SSO, applique le rôle mappé et émet un jeton de session. */
-    public Session provisionner(Map<String, Object> claims) {
-        String role = Optional.ofNullable(MappageRole.resoudre(claims, mappage())).orElse("employee");
-        String email = Oidc.courriel(claims);
-        Optional<Compte> existant = comptes.lister().stream()
-                .filter(u -> (u.email() != null && u.email().equalsIgnoreCase(email)) || u.username().equalsIgnoreCase(email)).findFirst();
-        boolean provisioned = existant.isEmpty();
-        Compte u = existant.orElseGet(() -> {
-            byte[] b = new byte[24];
-            alea.nextBytes(b);
-            // Mot de passe aléatoire : le compte SSO ne se connecte jamais par mot de passe.
-            return comptes.creer(new DepotComptes.Creation(email, Primitives.base64Url(b), role, null, null, false, false, email, false));
-        });
-        return new Session(connexion.emettre(u), u.id(), u.role(), email, provisioned, u.tenantId());
+    /**
+     * Résout l'identité vérifiée : session pour le compte relié (ou provisionné si l'instance l'autorise), sinon
+     * liaison à prouver. Le rôle mappé ne s'applique qu'au compte provisionné : un compte existant garde le sien.
+     */
+    public Issue provisionner(Verifiee v) {
+        String role = Optional.ofNullable(MappageRole.resoudre(v.revendications(), mappage())).orElse(ROLE_PAR_DEFAUT);
+        String email = Oidc.courriel(v.revendications());
+        boolean jat = !v.reel() || VRAI.contains(env.getOrDefault(VARIABLE_JAT, ""));
+        IdentitesExternes.IdentiteVerifiee identite = new IdentitesExternes.IdentiteVerifiee(v.cle(), email, IdentitesExternes.Provenance.instance());
+        return switch (resolution.resoudre(identite, new ServiceResolutionIdentite.Admission(Optional.of(role), false, jat))) {
+            case ServiceResolutionIdentite.Reconnue r ->
+                    new Session(connexion.emettre(r.compte()), r.compte().id(), r.compte().role(), email, r.cree(), r.compte().tenantId());
+            case ServiceResolutionIdentite.LiaisonRequise l -> new LiaisonRequise(l.jeton(), email);
+        };
     }
 
     /** Pour les essais : oublier les demandes en cours. */

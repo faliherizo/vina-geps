@@ -12,6 +12,7 @@ import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -96,6 +97,7 @@ test("proposer un échange entre périodes, l'accepter, le faire valider par le 
 
   // ── Julie propose ──────────────────────────────────────────────────────────────────────
   const julie = await employe(browser, comptes.julie, tenantId);
+  await raconter(julie.page, "Échanges de quarts. Julie Roy ouvre Mes échanges. Elle cède son quart et demande celui de Marc Dubé, dans une autre période, puis propose l'échange.");
   await julie.page.getByTestId("mec-cede").selectOption(ids.place_julie);
   await julie.page.getByTestId("mec-voulu").selectOption(ids.place_marc);
   await expectNoA11yViolations(julie.page);
@@ -106,6 +108,7 @@ test("proposer un échange entre périodes, l'accepter, le faire valider par le 
 
   // ── Marc accepte ───────────────────────────────────────────────────────────────────────
   const marc = await employe(browser, comptes.marc, tenantId);
+  await raconter(marc.page, "Marc Dubé se connecte et trouve la proposition de Julie. Comme l'échange relie deux périodes, l'écran le prévient : le chef devra valider. Marc accepte.");
   const accepter = marc.page.locator('[data-testid^="mec-"][data-testid$="-accepter"]');
   await expect(accepter).toHaveCount(1);
   await expect(marc.page.getByTestId("mec-table")).toContainText("échange entre deux périodes : le chef valide");
@@ -118,6 +121,7 @@ test("proposer un échange entre périodes, l'accepter, le faire valider par le 
   const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
+  await raconter(chef, "Le chef ouvre les échanges à trancher. Il lit les motifs, valide l'échange avec la mention Remplacement couvert, et les quarts de Julie et de Marc sont permutés.");
   await ouvrirNav(chef, "nav-usechanges");
   await chef.locator('[data-testid^="pla-ech-"][data-testid$="-trancher"]').click();
   await expect(chef.getByTestId("pla-ech-fiche-motifs")).toContainText("Pour Marc Dubé");
@@ -153,6 +157,7 @@ test("le planificateur crée un échange pour une personne ; la destinataire l'a
   const ctxChef = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const chef = await ctxChef.newPage();
   await selectTenant(chef, tenantId);
+  await raconter(chef, "Deuxième cas : c'est le planificateur qui crée l'échange pour Julie, qui n'a pas d'accès à l'écran. Il choisit Julie, le quart qu'elle cède, et celui de Marc qu'elle reçoit.");
   await ouvrirNav(chef, "nav-usechanges");
   await chef.getByTestId("pla-ech-pour-ouvrir").click();
   await expect(chef.getByTestId("pla-ech-pour-modal")).toBeVisible();
@@ -168,6 +173,7 @@ test("le planificateur crée un échange pour une personne ; la destinataire l'a
 
   // ── Marc l'accepte, comme s'il venait de Julie ─────────────────────────────────────────
   const marc = await employe(browser, comptes.marc, tenantId);
+  await raconter(marc.page, "Marc Dubé, le destinataire, accepte l'échange dans son espace.");
   const accepter = marc.page.locator('[data-testid^="mec-"][data-testid$="-accepter"]');
   await expect(accepter).toHaveCount(1);
   await accepter.click();
@@ -175,6 +181,7 @@ test("le planificateur crée un échange pour une personne ; la destinataire l'a
   await marc.ctx.close();
 
   // ── Le chef refuse, motif à l'appui ────────────────────────────────────────────────────
+  await raconter(chef, "Mais le chef le refuse, motif à l'appui : l'effectif minimal n'est pas garanti le lundi. Julie garde son quart.");
   await chef.reload();
   await chef.locator('[data-testid^="pla-ech-"][data-testid$="-trancher"]').click();
   await chef.getByTestId("pla-ech-motif").fill("Effectif minimal non garanti le lundi");

@@ -13,13 +13,15 @@ import java.util.OptionalDouble;
 
 /**
  * Les <strong>engagements de service</strong> d'un organisme : délais par niveau de priorité,
- * heures de soutien, objectif de disponibilité. Deux politiques, au catalogue fermé :
+ * heures de soutien, objectif de disponibilité. Trois politiques, au catalogue fermé :
  * <ul>
  *   <li><em>standard</em> — la plateforme : un seul délai, de résolution, depuis l'ouverture ;
  *       99,5 % de disponibilité ;</li>
  *   <li><em>service essentiel</em> — AO 26-015-DO, clauses 5.02 et 6.01 : un délai de réponse
  *       qui dépend de l'heure d'ouverture (heures de soutien de 5 h à 23 h, 7 j/7), puis un délai
  *       de résolution qui court depuis le retour d'appel ; 99,7 %, manquement majeur sous 99,0 %.</li>
+ *   <li><em>communications cliniques</em> — AO FX-AO-20260810, grille 98 et contrat 10.19.07 : une réponse en 4 h ou
+ *       moins, en tout temps (activité 24/7, addenda 2) ; la résolution de la politique standard ; 95 %.</li>
  * </ul>
  * Les délais sont des durées civiles : le contrat ne les suspend pas hors des heures de soutien.
  */
@@ -30,6 +32,10 @@ public final class EngagementsDeService {
     private static final LocalTime FIN_DU_SOUTIEN = LocalTime.of(23, 0);
     private static final double OBJECTIF_STANDARD = 99.5;
     private static final double OBJECTIF_SERVICE_ESSENTIEL = 99.7;
+    /** FX-AO-20260810, contrat 10.19.07 : taux d'efficacité de 95 % du temps prévu, entretien préventif exclu. */
+    private static final double OBJECTIF_COMMUNICATIONS_CLINIQUES = 95.0;
+    /** Grille 98 : « un temps de réponse inférieur ou égal à quatre (4) heures pour les demandes de soutien ». */
+    private static final java.time.Duration REPONSE_COMMUNICATIONS_CLINIQUES = java.time.Duration.ofHours(4);
     private static final double SEUIL_MAJEUR_SERVICE_ESSENTIEL = 99.0;
     private static final long SECONDES_PAR_MINUTE = 60;
 
@@ -56,7 +62,8 @@ public final class EngagementsDeService {
     /** La politique d'un organisme ; son code est ce que la base et l'API portent. */
     public enum Politique {
         STANDARD("standard", "Plateforme : délai de résolution compté depuis l'ouverture"),
-        SERVICE_ESSENTIEL("service-essentiel", "Service essentiel : réponse puis résolution, soutien de 5 h à 23 h, 7 j/7");
+        SERVICE_ESSENTIEL("service-essentiel", "Service essentiel : réponse puis résolution, soutien de 5 h à 23 h, 7 j/7"),
+        COMMUNICATIONS_CLINIQUES("communications-cliniques", "Communications cliniques : réponse en 4 h ou moins en tout temps, 95 % d'efficacité");
 
         private final String code;
         private final String libelle;
@@ -115,6 +122,7 @@ public final class EngagementsDeService {
         return switch (politique) {
             case STANDARD -> standard();
             case SERVICE_ESSENTIEL -> serviceEssentiel();
+            case COMMUNICATIONS_CLINIQUES -> communicationsCliniques();
         };
     }
 
@@ -125,6 +133,17 @@ public final class EngagementsDeService {
         c.put(Priorite.N3, new Clause("Anomalie avec solution de contournement", Optional.empty(), Duration.ofHours(4)));
         c.put(Priorite.N4, new Clause("Question, demande d'information ou d'amélioration", Optional.empty(), Duration.ofHours(24)));
         return new Engagement(Politique.STANDARD, Map.copyOf(c), Optional.empty(), OBJECTIF_STANDARD, OptionalDouble.empty());
+    }
+
+    /**
+     * FX-AO-20260810 (ST-H05, ADR 0085) : la réponse en 4 h de la grille 98 s'ajoute aux résolutions de la politique standard ;
+     * aucun seuil de manquement majeur, le contrat n'en définit pas — sous 95 %, une pénalité par jour (10.19.07 b).
+     */
+    private static Engagement communicationsCliniques() {
+        Reponse quatreHeures = new Reponse(REPONSE_COMMUNICATIONS_CLINIQUES, REPONSE_COMMUNICATIONS_CLINIQUES);
+        Map<Priorite, Clause> c = new EnumMap<>(Priorite.class);
+        standard().clauses().forEach((p, clause) -> c.put(p, new Clause(clause.description(), Optional.of(quatreHeures), clause.resolution())));
+        return new Engagement(Politique.COMMUNICATIONS_CLINIQUES, Map.copyOf(c), Optional.empty(), OBJECTIF_COMMUNICATIONS_CLINIQUES, OptionalDouble.empty());
     }
 
     /** Clause 5.02.01 (définitions), 5.02.02 (délais), 6.01 (disponibilité) du contrat 26-015-DO. */

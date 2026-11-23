@@ -11,6 +11,8 @@ import { superadminContext, uiLogin } from "./helpers/auth";
 import { createTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -55,15 +57,17 @@ test("déclarer soi-même une absence d'effectifs, la retrouver et l'annuler", a
   await sa.dispose();
   await amorcer(tenantId, identifiant);
 
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctx.newPage();
   await page.goto("/");
   await uiLogin(page, identifiant, MDP, tenantId);
   await ouvrirNav(page, "nav-mesabsences");
+  await raconter(page, "Mes absences. Julie Roy, paramédic, déclare elle-même une absence. Elle n'en a encore aucune.");
   await expect(page.getByTestId("mab-vide")).toBeVisible();
   await page.getByTestId("mab-declarer").click();
   // P-GH-1 : un code « jour même » ne se planifie pas d'avance — l'option le dit, le serveur le refuse en disant quoi faire.
   await expect(page.getByTestId("abs-eff-code").locator("option", { hasText: "Décès d'un proche (ponctuelle, jour même seulement)" })).toHaveCount(1);
+  await raconter(page, "Elle choisit le code Décès d'un proche, pour une date à venir. Ce code ne se planifie pas d'avance : la déclaration est refusée, et le message dit quoi faire à la place.");
   await page.getByTestId("abs-eff-code").selectOption("DEC");
   await expect(page.getByTestId("abs-eff-code-aide")).toContainText("ne se planifie pas d'avance");
   await page.getByTestId("abs-start").fill("2031-05-12");
@@ -75,6 +79,7 @@ test("déclarer soi-même une absence d'effectifs, la retrouver et l'annuler", a
   await page.mouse.move(0, 0);
   await page.waitForTimeout(400);
   await expectNoA11yViolations(page);
+  await raconter(page, "Elle choisit plutôt Formation, un code planifiable, et déclare les 12 et 13 mai. L'absence est acceptée.");
   await page.getByTestId("abs-eff-code").selectOption("FORM");
   await expectNoA11yViolations(page);
   await page.getByTestId("abs-submit").click();
@@ -82,6 +87,7 @@ test("déclarer soi-même une absence d'effectifs, la retrouver et l'annuler", a
   await expect(page.getByTestId("mab-table")).toContainText("Du 2031-05-12 au 2031-05-13");
   await expect(page.getByTestId("mab-table")).toContainText("Acceptée");
   await expectNoA11yViolations(page);
+  await raconter(page, "Enfin, elle annule cette absence : la ligne passe à Annulée.");
   await page.locator('[data-testid^="mab-"][data-testid$="-annuler"]').click();
   await expect(page.getByTestId("mab-info")).toContainText("Absence du 2031-05-12 au 2031-05-13 annulée.");
   await expect(page.getByTestId("mab-table")).toContainText("Annulée");

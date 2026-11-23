@@ -88,6 +88,10 @@ const SEUIL = { sante: "seuil_lecture", connexion: "seuil_ecriture", rapport: "s
  * effet tant que la colonne était la dernière.
  */
 const COLONNES = ["weekDate", "date", "id", "moisCourant",
+  // L'API d'échange (AD-06) : le client d'API de la campagne et l'employé transmis par elle.
+  // Le secret du client ne figure pas ici : `donnees/identifiants.csv` est versionné. Il passe en propriété
+  // (-JclientSecret, lue dans donnees/secret-client-<env>.txt, ignoré par git).
+  "clientId", "matricule",
   // Le module `effectifs` (AO 26-015-DO) : la plupart de ses routes portent un paramètre de chemin.
   // Sans ces colonnes, elles seraient balayées avec le jeton neutre « x » — donc mesurées en 404,
   // et un 404 répond toujours vite.
@@ -318,7 +322,10 @@ function operations() {
     const requete = J.requete(op.nom, op.methode, op.chemin, { corps: op.corps ?? null, enfants });
     const socleOperation = op.sansJeton
       ? [J.variablesEnvironnement(), J.defautsHttp(), J.enTetes(false), J.jeuCsv("Comptes (CSV)", "${comptes}", "username,password,tenantId,role")]
-      : socle();
+      : op.machine
+        // Une application de l'organisme (AD-06) : le jeton client_credentials remplace la connexion d'un compte.
+        ? [J.variablesEnvironnement(), J.defautsHttp(), J.enTetes(), J.jeuCsv("Identifiants (CSV)", "${identifiants}", COLONNES.join(",")), J.connexionMachine(COLONNES.join(","))]
+        : socle();
     const groupe = J.groupe(`Opération ${op.nom} — débit fixe`, [J.debitConstant(), requete], { unites: "${unites_operation}", montee: "1", duree: "${duree_operation}" });
     out[`${op.nom}.jmx`] = J.document(`Accord de niveau de service — ${op.nom}`, [...socleOperation, groupe]);
   }

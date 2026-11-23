@@ -23,9 +23,9 @@ async function charger(fichier) {
 /** Les rubriques du menu, dans l'ordre de la colonne (ADR 0073). */
 const RUBRIQUES = [
   ["Menu principal", ["dashboard", "monhoraire", "mesdisponibilites", "usdisponibilites", "mesabsences", "usabsences", "monagph", "usagph",
-    "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas", "monpointage", "uspresence", "matemps", "ustemps",
-    "mesechanges", "usechanges", "alnouvelle", "alsuivi", "mesalertes", "usmessages", "usappels", "usdiffusion", "rapports", "approvals"]],
-  ["Administration", ["alparametres", "usreferentiels", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal",
+    "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas", "monpointage", "uspresence", "matemps", "ustemps", "monequipe",
+    "mesechanges", "usechanges", "alnouvelle", "alsuivi", "mesalertes", "paietemps", "paiecycles", "paiedossiers", "paiedeclarations", "mesbulletins", "usmessages", "usappels", "usdiffusion", "rapports", "approvals"]],
+  ["Administration", ["alparametres", "paieparametres", "paieregles", "usreferentiels", "uscodesabsence", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal",
     "admin", "access", "notifications", "integrations", "apidocs", "superadmin"]],
   ["Aide et compte", ["account", "help", "soutien"]],
 ];
@@ -33,7 +33,9 @@ const RUBRIQUES = [
 const cellule = (t) => String(t).replace(/\|/g, "\\|");
 
 function fiche(page, f) {
-  const l = [`### ${f.titre}`, "", `*Adresse : \`/admin/${page}\` — ${f.qui}*`, "", f.objet, "", "**Comment faire**", ""];
+  const l = [`### ${f.titre}`, "", `*Adresse : \`/admin/${page}\` — ${f.qui}*`, "", f.objet, "", "**Avant de commencer**", ""];
+  f.prealables.forEach((p, i) => l.push(`${i + 1}. ${p.texte}${p.ecran ? ` (écran \`/admin/${p.ecran}\`)` : ""}`));
+  l.push("", "**Comment faire**", "");
   f.etapes.forEach((e, i) => l.push(`${i + 1}. ${e}`));
   l.push("", "**Exemple de remplissage**", "", "| Champ | Valeur saisie |", "|---|---|");
   for (const [champ, valeur] of f.exemple) l.push(`| ${cellule(champ)} | ${cellule(valeur)} |`);
@@ -48,7 +50,7 @@ const absentes = Object.keys(FICHES).filter((p) => !RUBRIQUES.some(([, pages]) =
 if (absentes.length) { console.error(`✗ écrans sans rubrique dans le générateur : ${absentes.join(", ")}`); process.exit(1); }
 
 const lignes = [
-  "# VINA GEPS : guide écran par écran",
+  "# VINA GePS : guide écran par écran",
   "",
   "> Écrit pour les utilisateurs et les formateurs d'Urgences-santé. Pour chaque écran : à quoi il",
   "> sert, qui l'ouvre, comment s'y prendre et un exemple de remplissage avec les libellés réels.",

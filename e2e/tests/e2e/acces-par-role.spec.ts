@@ -20,6 +20,7 @@
 import { test, expect, request as pwRequest, type Page } from "@playwright/test";
 import { superadminContext, GLOBAL_ACCOUNT } from "./helpers/auth";
 import { createTenant, setTenantModules, uniq, MODULES_SOCLE, TENANT_ADMIN_USER, TENANT_ADMIN_PASS, MODULES_TRANSVERSAUX } from "./helpers/organisme";
+import { menuPret } from "./helpers/nav";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 const MDP = "Passe!Test2026";
@@ -30,16 +31,22 @@ type Role = "superadmin" | "admin" | "rh" | "manager" | "director" | "employee" 
 
 /** Les écrans d'Urgences-santé ouverts à tout compte planifiable, puis ceux de l'encadrement (`urgencessante/menu.ts`). */
 const US_TOUS = ["monhoraire", "mesdisponibilites", "mesabsences", "monagph", "monpointage", "matemps", "mesechanges", "usmessages", "usappels", "usdiffusion"];
+/** « Mon équipe » : l'encadrement et les RH (`menu.ts` : ENCADREMENT + rh). */
+const US_EQUIPE = ["monequipe"];
 const US_ENCADREMENT = ["usdisponibilites", "usabsences", "usagph", "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas",
-  "uspresence", "ustemps", "usechanges", "usreferentiels", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal"];
+  "uspresence", "ustemps", "usechanges", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal"];
+
+/** Ce que seule l'administration configure (`effectifs.configure`) : les référentiels et les codes d'absence. */
+const US_CONFIGURATION = ["usreferentiels", "uscodesabsence"];
 
 /** Le menu attendu, par rôle — les groupes ne sont pas listés, seules les pages le sont. Relevé contre `PAGES` d'`App.tsx`. */
 const MENU: Record<Role, string[]> = {
   superadmin: ["superadmin"],
-  admin: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "access", "notifications", "admin", "apidocs", "integrations", ...US_TOUS, ...US_ENCADREMENT],
-  rh: ["dashboard", "help", "soutien", "notifications", ...US_TOUS],
-  manager: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "notifications", ...US_TOUS, ...US_ENCADREMENT],
-  director: ["dashboard", "help", "soutien", "approvals", "apidocs", ...US_TOUS, ...US_ENCADREMENT],
+  admin: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "access", "notifications", "admin", "apidocs", "integrations", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT,
+    ...US_CONFIGURATION],
+  rh: ["dashboard", "help", "soutien", "notifications", ...US_TOUS, ...US_EQUIPE],
+  manager: ["dashboard", "rapports", "account", "help", "soutien", "approvals", "notifications", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT],
+  director: ["dashboard", "help", "soutien", "approvals", "apidocs", ...US_TOUS, ...US_EQUIPE, ...US_ENCADREMENT],
   employee: ["dashboard", "account", "help", "soutien", ...US_TOUS],
   accountant: ["dashboard", "help", "soutien"],
 };
@@ -54,8 +61,8 @@ const INTERDITES: Record<Role, Array<[string, string]>> = {
   superadmin: [["admin", "admin-page"]],
   admin: [["superadmin", "superadmin-page"]],
   rh: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["uscomblement", "uscomblement-titre"]],
-  manager: [["superadmin", "superadmin-page"], ["admin", "admin-page"]],
-  director: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["notifications", "notifications-page"]],
+  manager: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["usreferentiels", "usreferentiels-titre"]],
+  director: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["notifications", "notifications-page"], ["usreferentiels", "usreferentiels-titre"]],
   employee: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["uscomblement", "uscomblement-titre"]],
   accountant: [["superadmin", "superadmin-page"], ["admin", "admin-page"], ["monhoraire", "mho-titre"]],
 };
@@ -71,6 +78,10 @@ const API_ATTENDU: Array<{ chemin: string; autorises: Role[]; libelle: string }>
   { chemin: "/api/exploitation/sauvegardes", autorises: [], libelle: "voir les sauvegardes" },
   { chemin: "/api/personnel/employes", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "répertoire du personnel" },
   { chemin: "/api/saas/my-modules", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "mes modules" },
+  // Balayage des accès du 22 novembre 2026 : le registre des référentiels et la carte des droits sont à l'administration.
+  { chemin: "/api/effectifs/referentiels", autorises: ["admin"], libelle: "registre des référentiels (administration)" },
+  { chemin: "/api/habilitations/octrois", autorises: ["admin"], libelle: "octrois de l'établissement (administration)" },
+  { chemin: "/api/effectifs/referentiels/unites", autorises: ["admin", "rh", "manager", "director", "employee", "accountant"], libelle: "valeurs en vigueur d'un référentiel (formulaires)" },
 ];
 
 async function seConnecter(page: Page, tenant: string, user: string, pass: string) {
@@ -83,6 +94,8 @@ async function seConnecter(page: Page, tenant: string, user: string, pass: strin
   await page.getByTestId("login-pass").fill(pass);
   await page.getByTestId("login-submit").click();
   await expect(page.getByTestId("logout")).toBeVisible({ timeout: 20_000 });
+  // Le menu complet, pas celui du chargement : il porte `aria-busy` tant que les modules ne sont pas connus.
+  await menuPret(page);
 }
 
 test.describe.serial("Accès par rôle — menu, URL directe, API", () => {

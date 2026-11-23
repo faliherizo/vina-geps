@@ -17,5 +17,24 @@
   <include file="db/changelog/0005-messagerie-noms-de-connexion.xml"/>
   <include file="db/changelog/0006-alertes.xml"/>
   <include file="db/changelog/0007-feuille-champs-et-taches.xml"/>
+  <include file="db/changelog/0008-annuaires-oidc.xml"/>
+  <include file="db/changelog/0009-alertes-r1-bis.xml"/>
+  <include file="db/changelog/0010-groupes-transverses.xml"/>
+  <include file="db/changelog/0011-feuilles-payees.xml"/>
+  <include file="db/changelog/0012-paie.xml"/>
+  <include file="db/changelog/0013-alertes-cascades.xml"/>
+  <include file="db/changelog/0014-alertes-textos-entrants.xml"/>
+  <include file="db/changelog/0015-alertes-appels.xml"/>
+  <include file="db/changelog/0016-historique-mots-de-passe.xml"/>
+  <include file="db/changelog/0017-alertes-notes.xml"/>
+  <include file="db/changelog/0018-paie-regles-et-validation.xml"/>
+  <include file="db/changelog/0019-soutien-nature-maintenance.xml"/>
+  <include file="db/changelog/0020-temps-seuils-periode-paie-et-conventions.xml"/>
+  <include file="db/changelog/0021-agph-traitement-delai-echu.xml"/>
+  <include file="db/changelog/0022-effectifs-soldes-banques.xml"/>
+  <include file="db/changelog/0023-effectifs-index-api-echanges.xml"/>
+  <include file="db/changelog/0024-offres-quart-tour-de-role.xml"/>
+  <include file="db/changelog/0025-auth-sessions-revoquees.xml"/>
+  <include file="db/changelog/0026-auth-identites-externes.xml"/>
 
 </databaseChangeLog>

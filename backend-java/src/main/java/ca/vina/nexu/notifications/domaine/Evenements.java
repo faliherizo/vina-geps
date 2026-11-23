@@ -75,7 +75,21 @@ public final class Evenements {
             new Evenement("quart.attribue", "Quart vacant attribué d'office", "effectifs", "la ressource prioritaire retenue", new Canaux(true, true, true), false),
             new Evenement("message.direct", "Message de l'encadrement", "notifications", "la personne visée", new Canaux(true, true, true), true),
             // Essentiel : une personne ne ferme pas tous ses canaux écrits à une alerte clinique (ADR 0074).
-            new Evenement("alerte.recue", "Alerte clinique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true));
+            new Evenement("alerte.recue", "Alerte clinique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true),
+            // ST-G07 : une alerte critique se pousse avec l'étiquette « critique » — canal Android à importance maximale,
+            // niveau d'interruption critique sur iOS si Apple l'accorde, interaction exigée dans le navigateur.
+            new Evenement(Evenements.ALERTE_CRITIQUE, "Alerte clinique critique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true));
+
+    /** L'événement d'une alerte de priorité critique. */
+    public static final String ALERTE_CRITIQUE = "alerte.critique";
+    /** L'étiquette d'une poussée ordinaire, et celle d'une poussée critique (ST-G07). */
+    public static final String ETIQUETTE_NOTIFICATION = "notification";
+    public static final String ETIQUETTE_CRITIQUE = "critique";
+
+    /** L'étiquette de poussée d'un événement : « critique » pour l'alerte critique, l'ordinaire pour tout le reste. */
+    public static String etiquetteDe(String evenement) {
+        return ALERTE_CRITIQUE.equals(evenement) ? ETIQUETTE_CRITIQUE : ETIQUETTE_NOTIFICATION;
+    }
 
     public static Optional<Evenement> parCode(String code) {
         return TOUS.stream().filter(e -> e.code().equals(code)).findFirst();

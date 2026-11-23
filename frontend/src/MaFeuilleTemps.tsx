@@ -19,10 +19,11 @@ import DetailFeuille from "./effectifs/temps/DetailFeuille";
 import { champsAffiches, COMPLEMENT_VIDE, complementAEnvoyer, SaisieChamps, useChampsFeuille, valeurDe, type Complement } from "./effectifs/temps/ChampsFeuille";
 import {
   duree, heureDe, hhmmDe, instantDe, origineEnMots, preuveEnMots, statutEnMots, TON_STATUT, type ChampFeuille, type Feuille, type FeuilleDetaillee, type Segment,
+  peutRappeler,
 } from "./effectifs/temps/types";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
-import { FormulaireModal } from "./Modal";
+import { ConfirmModal, FormulaireModal } from "./Modal";
 
 /** Les colonnes suivent les champs de l'organisme : une feuille de paramédic et une feuille administrative n'ont pas les mêmes. */
 const colonnes = (champs: ChampFeuille[]): ReadonlyArray<Colonne<Segment>> => [
@@ -58,6 +59,7 @@ export default function MaFeuilleTemps() {
   const [complement, setComplement] = useState<Complement>(COMPLEMENT_VIDE);
   const { champs } = useChampsFeuille();
   const [versions, setVersions] = useState<Segment[] | null>(null);
+  const [rappel, setRappel] = useState(false);
   const voirVersions = async (s: Segment) => { setVersions(liste<Segment>(await lire<Segment[]>(`/api/effectifs/temps/feuilles/${choisie}/segments/${s.id}/historique`))); };
 
   const chargerListe = useCallback(async () => {
@@ -122,7 +124,15 @@ export default function MaFeuilleTemps() {
 
   const soumettre = async () => {
     setInfo("");
-    await apres(await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${choisie}/soumettre`, {}), "Feuille soumise : elle est verrouillée jusqu'à la décision.");
+    await apres(await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${choisie}/soumettre`, {}),
+      "Feuille soumise : elle attend la décision. Avant la paie, vous pouvez la rappeler pour la corriger.");
+  };
+
+  /** Le rappel : avant la paie, la feuille revient au brouillon, et la personne qui l'attendait n'a plus rien à décider. */
+  const rappeler = async () => {
+    setRappel(false); setInfo("");
+    await apres(await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${choisie}/rappeler`, {}),
+      "Feuille rappelée : elle est revenue au brouillon. Corrigez-la, puis soumettez-la de nouveau.");
   };
 
   if (!feuilles) return erreur ? <Message variante="erreur" testId="mft-erreur">{erreur}</Message> : null;
@@ -139,7 +149,7 @@ export default function MaFeuilleTemps() {
 
       {/* Sans dossier d'effectif, l'écran dit ce qui manque — et n'offre aucun geste : le
           formulaire ne pouvait qu'échouer, sur un message écrit pour un planificateur. */}
-      {moi === null && <SansDossierEffectif testId="mft-sans-ressource" />}
+      {moi === null && <SansDossierEffectif testId="mft-sans-ressource" page="matemps" />}
 
       {/* Préparer **crée** une feuille : c'est un ajout, il vit donc dans un dialogue — la page
           reste la relecture de la feuille, et non un formulaire posé au-dessus d'elle. */}
@@ -172,7 +182,19 @@ export default function MaFeuilleTemps() {
       {f && (
         <div data-testid="mft-feuille-detail">
           <p><BadgeStatut statut={TON_STATUT[f.statut]} testId="mft-statut">{statutEnMots(f)}</BadgeStatut></p>
-          {f.decisions.filter((d) => d.decision === "RETOURNER").slice(-1).map((d) => <Message key={d.decideLe} variante="info" testId="mft-retour">Retournée : {d.motif}</Message>)}
+          {f.statut === "RETOURNEE" && f.decisions.filter((d) => d.decision === "RETOURNER" || d.decision === "ROUVRIR").slice(-1).map((d) => (
+            <Message key={d.decideLe} variante="info" testId="mft-retour">{d.decision === "ROUVRIR" ? "Rouverte par l'encadrement" : "Retournée"} : {d.motif}</Message>
+          ))}
+          {f.statut === "PAYEE" && <Message variante="info" testId="mft-payee">Cette feuille a été payée : elle ne se modifie plus. Une erreur se corrige à la paie suivante, avec votre gestionnaire.</Message>}
+          {peutRappeler(f.statut) && (
+            <div className="eff-actions">
+              <button type="button" className="secondary" data-testid="mft-rappeler" onClick={() => { setErreur(""); setRappel(true); }}>Rappeler ma feuille</button>
+            </div>
+          )}
+          <ConfirmModal open={rappel} title="Rappeler ma feuille" confirmLabel="Rappeler" testId="mft-rappel"
+            message={f.statut === "APPROUVEE" ? "Votre feuille est approuvée mais pas encore payée. La rappeler annule son approbation : il faudra la soumettre de nouveau."
+              : "Votre feuille revient au brouillon pour que vous la corrigiez ; la personne qui devait l'approuver n'a plus rien à décider."}
+            onConfirm={() => rappeler()} onCancel={() => setRappel(false)} />
           <p data-testid="mft-ressource">Ressource : <strong>{f.nom}</strong> (matricule {f.matricule}) — unité {f.uniteCode}</p>
           <DetailFeuille f={f} prefixe="mft" />
           <Tableau colonnes={colonnes(affiches)} lignes={f.segments} legende="Segments de temps de la feuille" testId="mft-segments"

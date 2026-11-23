@@ -14,18 +14,33 @@ public enum Priorite {
     URGENTE("urgente"),
     CRITIQUE("critique");
 
-    /** Les canaux d'avis, dans le vocabulaire du port d'avis : ceux qu'une alerte critique impose tous. */
+    /**
+     * Les canaux d'une alerte. Les trois premiers passent par le port d'avis, et une alerte critique les impose tous ;
+     * l'appel vocal (ST-G06) n'existe que dans une étape de cascade qui le nomme : il ne réveille personne d'office.
+     */
     public enum Canal {
-        COURRIEL("courriel"), TEXTO("texto"), POUSSEE("poussee");
+        COURRIEL("courriel", true), TEXTO("texto", true), POUSSEE("poussee", true), APPEL("appel", false);
 
         private final String code;
+        private final boolean parAvis;
 
-        Canal(String code) {
+        Canal(String code, boolean parAvis) {
             this.code = code;
+            this.parAvis = parAvis;
         }
 
         public String code() {
             return code;
+        }
+
+        /** Part-il par le port d'avis (courriel, texto, poussée), ou par un appel vocal ? */
+        public boolean parAvis() {
+            return parAvis;
+        }
+
+        public static Canal de(String code) {
+            return Arrays.stream(values()).filter(c -> c.code.equals(code)).findFirst()
+                    .orElseThrow(() -> RefusAlerte.invalide("« canaux » : courriel, texto, poussee ou appel"));
         }
     }
 
@@ -46,7 +61,7 @@ public enum Priorite {
     /** Les canaux imposés ; {@code null} laisse les préférences de chaque personne décider. */
     public List<String> canauxImposes() {
         return switch (this) {
-            case CRITIQUE -> Arrays.stream(Canal.values()).map(Canal::code).toList();
+            case CRITIQUE -> Arrays.stream(Canal.values()).filter(Canal::parAvis).map(Canal::code).toList();
             case INFORMATION, URGENTE -> null;
         };
     }

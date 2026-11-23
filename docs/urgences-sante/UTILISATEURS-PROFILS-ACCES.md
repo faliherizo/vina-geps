@@ -1,6 +1,6 @@
-# VINA GEPS : utilisateurs, profils, protocole d'authentification et gestion des accès
+# VINA GePS : utilisateurs, profils, protocole d'authentification et gestion des accès
 
-> Écrit pour l'équipe TI d'Urgences-santé, chargée de brancher VINA GEPS sur son annuaire, et
+> Écrit pour l'équipe TI d'Urgences-santé, chargée de brancher VINA GePS sur son annuaire, et
 > pour l'administration fonctionnelle, qui attribue les profils. Ce document décrit qui utilise
 > le produit, avec quel protocole on s'y connecte, et comment un profil devient un accès.
 
@@ -14,9 +14,10 @@ Entra Id »), et c'est le flux implanté et vérifié par les essais.
 |---|---|
 | Protocole | OIDC 1.0 sur OAuth 2.0, *Authorization Code* avec **PKCE** (S256), `state` et `nonce` |
 | Fournisseur d'identité | Le locataire Microsoft Entra ID d'Urgences-santé ; un locataire précis, **jamais** `common`, `organizations` ou `consumers` |
+| Autre fournisseur OIDC | Keycloak, Okta ou tout fournisseur OpenID Connect, déclaré par son émetteur (ADR 0075). Processus et essais : [OIDC-KEYCLOAK.md](OIDC-KEYCLOAK.md) |
 | Jeton lu | L'`id_token`, dont la signature est vérifiée par les clés publiques (JWKS) d'Entra, ainsi que l'émetteur, l'audience, l'expiration et le `nonce` |
-| Rôle dans VINA GEPS | Déduit des **groupes de sécurité** Entra (revendication `groups`) ou des **rôles d'application** (revendication `roles`) |
-| Second facteur | Celui de l'**accès conditionnel** d'Entra (MFA, appareil conforme, emplacement). VINA GEPS ne le redemande pas après Entra |
+| Rôle dans VINA GePS | Déduit des **groupes de sécurité** Entra (revendication `groups`) ou des **rôles d'application** (revendication `roles`) |
+| Second facteur | Celui de l'**accès conditionnel** d'Entra (MFA, appareil conforme, emplacement). VINA GePS ne le redemande pas après Entra |
 | Solution de rechange | **SAML 2.0** (`/api/auth/sso/saml/*`), si Urgences-santé ne peut pas émettre d'application OIDC |
 | Hors fédération | Un compte local d'urgence (« bris de glace ») par organisme, avec mot de passe fort, TOTP ou clé d'accès (passkey) |
 
@@ -27,7 +28,7 @@ Web et l'application mobile. SAML reste disponible pour un fournisseur tiers (AD
 contrainte d'Urgences-santé.
 
 **Pourquoi pas WS-Federation, LDAP direct ou Kerberos.** WS-Fed est un protocole hérité. Un LDAP
-direct obligerait VINA GEPS à voir passer les mots de passe et à joindre l'Active Directory sur
+direct obligerait VINA GePS à voir passer les mots de passe et à joindre l'Active Directory sur
 site depuis l'infonuagique. Kerberos ne traverse pas Internet. Aucun ne satisfait E-TN-2 aussi
 directement qu'OIDC.
 
@@ -35,7 +36,7 @@ directement qu'OIDC.
 
 ### 2.1 Inscrire l'application dans Entra ID
 
-1. *Entra ID › Inscriptions d'applications › Nouvelle inscription* : nom « VINA GEPS », comptes de
+1. *Entra ID › Inscriptions d'applications › Nouvelle inscription* : nom « VINA GePS », comptes de
    **ce répertoire seulement** (locataire unique).
 2. **URI de redirection** (plateforme Web) : `https://<hôte de l'organisme>/api/auth/sso/annuaires/callback`.
 3. *Certificats et secrets* : créer un **secret client**, d'une durée de 12 mois au plus, et le
@@ -59,7 +60,7 @@ et la **table groupe → profil** (2.2).
 Une table de correspondance suffit. Les noms de groupe ci-dessous sont **proposés** ; Urgences-santé
 garde ses propres conventions et ne fournit que les ID d'objet.
 
-| Groupe Entra (proposé) | Profil VINA GEPS | Rôle technique |
+| Groupe Entra (proposé) | Profil VINA GePS | Rôle technique |
 |---|---|---|
 | `GEPS-Administration` | Administration de l'organisme | `admin` |
 | `GEPS-Direction-Operations` | Directeur ou directrice des opérations | `director` |
@@ -98,7 +99,7 @@ invités B2B d'un locataire portent en effet le domaine de leur propre organisat
 
 Il y a quatre populations, que l'avis 26-015-DO décrit dans ses besoins.
 
-| Population | Effectif ordre de grandeur | Profil | Ce qu'elle fait dans VINA GEPS | Où |
+| Population | Effectif ordre de grandeur | Profil | Ce qu'elle fait dans VINA GePS | Où |
 |---|---|---|---|---|
 | Paramédics, répartiteurs médicaux d'urgence, personnel de soutien | La grande majorité | `employee` | Consulter son horaire, donner ses disponibilités, choisir à l'AGPH, pointer, valider sa feuille de temps, déclarer une absence, demander un échange, échanger des messages | Web et **mobile**, souvent hors du poste de travail |
 | Planificateurs, chefs d'équipe, superviseurs | Quelques dizaines | `manager` | Confectionner et publier les horaires, combler, approuver absences, échanges, pointages et feuilles, dans leur **périmètre** | Web, au poste |
@@ -156,7 +157,7 @@ Le reste se règle dans *Administration › Accès* :
 **Provisionnement à l'avance (SCIM).** Il n'est pas implanté. La création à la première connexion
 (*just-in-time*) suffit pour l'accès. Le lien avec le dossier d'effectif vient de l'intégration de
 paie et de RH (matricule), et non de l'annuaire. SCIM sera utile le jour où Urgences-santé voudra
-qu'un départ dans Entra désactive aussi le compte dans VINA GEPS **sans attendre** une tentative de
+qu'un départ dans Entra désactive aussi le compte dans VINA GePS **sans attendre** une tentative de
 connexion. C'est un lot à chiffrer.
 
 ## 5. Sessions et sécurité
@@ -175,4 +176,5 @@ connexion. C'est un lot à chiffrer.
 |---|---|---|
 | La route globale `/api/auth/sso/entra/*` (un seul locataire, configuré par `AZURE_*`) crée le compte **sans organisme** | En production multi-organisme, elle ne doit pas être utilisée : seule la route par annuaire (`/api/auth/sso/annuaires/*`) rattache le compte à son organisme | Réserver la route globale à la démonstration, ou la retirer une fois les annuaires déclarés |
 | Pas de SCIM | Un départ n'est constaté qu'à la tentative de connexion suivante, avec la même session au plus | Lot SCIM 2.0 (`/scim/v2/Users`, `/Groups`) |
-| Pas de déconnexion fédérée (*front-channel logout*) | Se déconnecter d'Entra ne ferme pas une session VINA GEPS déjà ouverte | Brancher `end_session_endpoint` et la déconnexion par canal frontal |
+| Un refus au retour du fournisseur s'affiche en JSON brut | Le motif est juste mais peu lisible | Rediriger vers la page de connexion avec le motif (voir OIDC-KEYCLOAK.md § 8) |
+| Pas de déconnexion fédérée (*front-channel logout*) | Se déconnecter d'Entra ne ferme pas une session VINA GePS déjà ouverte | Brancher `end_session_endpoint` et la déconnexion par canal frontal |

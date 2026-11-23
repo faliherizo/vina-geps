@@ -55,6 +55,18 @@ public final class Approbations {
 
         List<Map<String, Object>> delegations(String tenantId, String deUserId);
 
+        /** La délégation en vigueur aujourd'hui d'un approbateur, la plus récente d'abord ; vide s'il est présent. */
+        Optional<Delegation> delegationActive(String tenantId, String deUserId);
+
+        /** Retire une demande en attente et ses étapes en attente ; faux si elle n'était plus en attente. */
+        boolean retirer(String tenantId, String demandeId);
+
+        /** Les délégations en vigueur aujourd'hui que ce compte a reçues : il approuve pour le compte de leurs auteurs. */
+        List<Delegation> delegationsRecues(String tenantId, String versUserId);
+
+        /** Met fin à une délégation de son auteur (retour d'absence) ; faux si elle n'existe pas ou n'est pas la sienne. */
+        boolean revoquer(String tenantId, String id, String deUserId);
+
         Map<String, Object> decider(String tenantId, String etapeId, String decision, String acteurId, String role);
 
         /** Une demande dont l'appelant peut imposer les règles (un flux par défaut que personne n'a écrit en règle). */
@@ -255,7 +267,7 @@ public final class Approbations {
      * puis la séparation des tâches s'applique à tous, admin compris.
      */
     public static Signature autoriser(EtapeADecider etape, String acteurId, String role, String delegataireActif, String demandeur, List<EtapeDecidee> autresEtapes) {
-        if (!"pending".equals(etape.status())) {
+        if (!StatutDemande.EN_ATTENTE.est(etape.status())) {
             throw new IllegalStateException("step already decided");
         }
         boolean admin = "admin".equals(role);
@@ -268,7 +280,7 @@ public final class Approbations {
         if (demandeur != null && demandeur.equals(acteurId)) {
             throw new NonAutoriseException(Refus.DEMANDEUR, "segregation of duties: the requester cannot approve their own request");
         }
-        if (autresEtapes.stream().anyMatch(s -> !s.id().equals(etape.id()) && !"pending".equals(s.status()) && acteurId.equals(s.decidedBy()))) {
+        if (autresEtapes.stream().anyMatch(s -> !s.id().equals(etape.id()) && !StatutDemande.EN_ATTENTE.est(s.status()) && acteurId.equals(s.decidedBy()))) {
             throw new NonAutoriseException(Refus.PLUSIEURS_NIVEAUX, "segregation of duties: an approver cannot decide more than one level of the same request");
         }
         return new Signature(delegue && !nomme ? etape.approverId() : null);
@@ -276,10 +288,32 @@ public final class Approbations {
 
     /** Le statut de la demande après une décision : un rejet rejette ; toutes approuvées approuve ; sinon inchangé. */
     public static String statutApres(String decision, String statutActuel, List<String> statutsEtapes) {
-        if ("rejected".equals(decision)) {
-            return "rejected";
+        if (StatutDemande.REJETEE.est(decision)) {
+            return StatutDemande.REJETEE.code();
         }
-        return statutsEtapes.stream().allMatch("approved"::equals) ? "approved" : statutActuel;
+        return statutsEtapes.stream().allMatch(StatutDemande.APPROUVEE::est) ? StatutDemande.APPROUVEE.code() : statutActuel;
+    }
+
+    /**
+     * Le statut d'une demande ou d'une étape, avec le code que range la base. {@code RETIREE} : son auteur l'a
+     * rappelée avant la fin du circuit (une feuille de temps rappelée pour correction) — plus personne n'a à la décider.
+     */
+    public enum StatutDemande {
+        EN_ATTENTE("pending"), APPROUVEE("approved"), REJETEE("rejected"), RETIREE("withdrawn");
+
+        private final String code;
+
+        StatutDemande(String code) {
+            this.code = code;
+        }
+
+        public String code() {
+            return code;
+        }
+
+        public boolean est(Object brut) {
+            return code.equals(brut);
+        }
     }
 
     /** Pourquoi une décision est refusée : l'appelant qui traduit le refus dans ses mots les distingue par là. */

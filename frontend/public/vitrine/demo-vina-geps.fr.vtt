@@ -1,11 +1,946 @@
 WEBVTT
 
-00:00:00.000 --> 00:00:06.000
-Écrire dans les écrans : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux, quotas
+00:00:00.000 --> 00:00:05.550
+Chapitre 1 : VINA GePS — l'organisme de démonstration : menu, écrans, sites et personnes.
 
-00:01:35.840 --> 00:01:41.840
-Échanger un quart : proposer, accepter, valider ou refuser
+00:00:06.750 --> 00:00:21.332
+Premier cas : l'administrateur de l'organisme de démonstration se connecte. Le menu principal porte chacune des fonctionnalités : horaire, disponibilités, absences, confection annuelle, gestion des quarts, pointage, feuilles de temps et administration.
 
-00:02:18.160 --> 00:02:24.160
-Messagerie et appels entre deux personnes, et en groupe
+00:00:23.849 --> 00:00:30.652
+Toutes les entrées sont présentes. On ouvre maintenant chaque écran du menu, l'un après l'autre : chacun doit s'ouvrir avec son en-tête.
 
+00:00:35.363 --> 00:00:40.472
+Deuxième cas : les données de démonstration. Voici les sites, ou milieux, de l'organisme.
+
+00:00:42.328 --> 00:00:50.270
+Puis les ressources planifiables : chaque personne qui travaille sur le terrain a sa fiche. Les ressources humaines, qui ne font pas de quarts, n'y figurent pas.
+
+00:00:52.300 --> 00:01:00.567
+Troisième cas : le menu ne montre que ce que fait cet organisme. Les sections d'un autre métier, comme la comptabilité ou la facturation, sont masquées.
+
+00:01:01.917 --> 00:01:06.236
+Et une vue masquée ne s'ouvre pas non plus par son adresse directe : on revient au tableau de bord.
+
+00:01:08.284 --> 00:01:16.875
+Quatrième cas : Julie Roy, paramédic, ouvre la messagerie du personnel depuis le menu. Elle retrouve la conversation de son équipe, avec le nom de chacun.
+
+00:01:19.463 --> 00:01:26.754
+Dernier cas de ce chapitre : Julie ouvre Mon horaire. Elle voit ses propres quarts, par jour, avec le site, le poste et le statut.
+
+00:01:29.205 --> 00:01:35.079
+Chapitre 2 : Socle des effectifs : référentiels datés, unités, ressources, périmètres.
+
+00:01:36.279 --> 00:01:43.245
+Le module des effectifs est coupé pour ce nouvel organisme par le superadmin : l'entrée Administration des effectifs n'apparaît pas dans le menu.
+
+00:01:44.694 --> 00:01:50.778
+Le superadmin active maintenant le module. On recharge la page : l'entrée revient dans le menu, sans reconnexion.
+
+00:01:52.800 --> 00:01:56.190
+Le superadmin se connecte à la console globale et ouvre Modules et accès.
+
+00:01:57.770 --> 00:02:02.205
+Pour l'organisme choisi, la case du module figure dans la famille Gestion des effectifs.
+
+00:02:02.505 --> 00:02:08.031
+Paramétrage des référentiels : l'administrateur choisit le référentiel des types de milieu, encore vide.
+
+00:02:10.750 --> 00:02:16.973
+Il ajoute une valeur : le code CASERNE, libellé Caserne, en vigueur depuis le premier janvier 2026.
+
+00:02:20.320 --> 00:02:32.580
+Une valeur ne se modifie jamais en place : on la remplace à partir d'une date. Ici, l'administrateur tente un remplacement daté de 2020, avant le début de la valeur. Le serveur doit refuser cette modification rétroactive.
+
+00:02:35.556 --> 00:02:45.656
+Refus affiché, avec son motif. On passe aux milieux : l'administrateur crée la Caserne 12, rattachée à l'unité Opérations Est, avec ses coordonnées et un rayon de 150 mètres.
+
+00:02:47.430 --> 00:02:54.001
+Il choisit les preuves de présence acceptées à la caserne : le géorepérage, rendu obligatoire, et le code QR du lieu.
+
+00:02:57.255 --> 00:03:03.245
+Enfin, le journal des actions : filtré sur la création de milieu, il trace l'opération qui vient d'être faite.
+
+00:03:05.256 --> 00:03:10.921
+Chapitre 3 : Planification : périodes, postes, quarts ad hoc, attribution et règles.
+
+00:03:12.121 --> 00:03:18.275
+Planification. La planificatrice ouvre le comblement : un quart de la Caserne 12 est sous le minimum opérationnel.
+
+00:03:20.942 --> 00:03:28.257
+Elle passe aux équipages du jour et attribue les deux places du quart, à Julie Roy puis à Marc Dubé. Le quart doit devenir opérationnel, deux sur deux.
+
+00:03:30.880 --> 00:03:37.707
+Le quart est opérationnel. Elle crée ensuite un quart ad hoc, de 18 heures à 22 heures, pour un paramédic à la Caserne 12.
+
+00:03:41.185 --> 00:03:48.964
+Elle tente d'y placer une personne qui sort de son quart. La règle du repos minimal bloque l'attribution, et l'écran nomme le motif : il faut huit heures de repos.
+
+00:03:53.329 --> 00:04:00.202
+Faute d'autre paramédic disponible, elle force l'attribution en la justifiant. L'attribution forcée est marquée comme telle dans l'équipage.
+
+00:04:01.932 --> 00:04:05.856
+Quotas : la planificatrice fixe à deux le quota de l'unité Opérations Est.
+
+00:04:08.610 --> 00:04:15.437
+Puis elle tente une surcharge de quota qui commence hier. Une surcharge ne peut pas être rétroactive : l'écran la refuse et dit pourquoi.
+
+00:04:18.731 --> 00:04:22.772
+Postes : la planificatrice coche deux postes pour les modifier d'un seul geste.
+
+00:04:25.052 --> 00:04:32.320
+Sans changement choisi, l'enregistrement est refusé. Elle remplace le cycle par la plage de nuit : les deux postes et leurs quarts publiés sont déplacés.
+
+00:04:38.145 --> 00:04:46.876
+Dans la période publiée, elle ajuste un quart : début à 19 heures, minimum d'une personne, et une note qui explique le retard. Le changement est tracé au journal.
+
+00:04:50.967 --> 00:04:57.120
+Chapitre 4 : Disponibilités : collecte, dépôt, conformité, candidats d'une place.
+
+00:04:58.320 --> 00:05:07.237
+Disponibilités. Julie Roy, paramédic à temps partiel, ouvre Mes disponibilités : la période de la semaine 10 est en collecte, et elle n'a encore rien déposé.
+
+00:05:08.762 --> 00:05:15.612
+Elle offre un seul quart et dépose. La règle de l'organisme exige au moins deux quarts par semaine : le dépôt est refusé, avec ce motif.
+
+00:05:18.322 --> 00:05:27.424
+Elle ajoute une préférence, puis un samedi, et dépose à nouveau. Le dépôt est conforme, mais une fin de semaine offerte demande l'accord du chef : il attend son approbation.
+
+00:05:29.449 --> 00:05:38.365
+Côté gestion, le chef ouvre les disponibilités de l'équipe. Celles de Julie sont en attente d'approbation : tant qu'elles le sont, Julie est exclue des candidats d'une place.
+
+00:05:41.461 --> 00:05:49.471
+Il ouvre la fiche de Julie, lit le motif, la fin de semaine, et approuve. Julie devient conforme, et figure parmi les candidats admissibles.
+
+00:05:52.594 --> 00:05:59.722
+La période passe en confection : l'attribution automatique devient possible. Le chef la lance, et les deux places vacantes sont attribuées.
+
+00:06:02.071 --> 00:06:07.853
+Chapitre 5 : Absences : demande, refus motivé, dérogation, places rendues vacantes.
+
+00:06:09.053 --> 00:06:17.784
+Absences d'effectifs. Le gestionnaire déclare une absence pour Julie Roy : maladie, du 4 au 5 mars, pour une grippe. Les deux quarts de Julie sont déjà attribués.
+
+00:06:21.414 --> 00:06:29.866
+La règle de l'organisme refuse l'absence : le comblement tomberait à zéro pour cent. Le gestionnaire ouvre la demande refusée pour mesurer l'impact, quart par quart.
+
+00:06:33.691 --> 00:06:39.194
+Il peut accorder par dérogation, mais le motif doit être réel : un motif de moins de dix caractères est refusé.
+
+00:06:41.097 --> 00:06:48.667
+Avec un motif complet, l'hospitalisation confirmée par billet médical, l'absence est accordée. Les deux places de Julie sont rendues vacantes.
+
+00:06:51.031 --> 00:06:57.532
+Deuxième cas : après la dérogation, le comblement automatique prend le relais. Le gestionnaire accorde à nouveau l'absence de Julie.
+
+00:07:00.341 --> 00:07:08.027
+Le lundi est attribué d'office au prioritaire, Marc Gagnon, avisé par courriel. Le mardi est offert aux admissibles, avisés à leur tour.
+
+00:07:12.291 --> 00:07:15.333
+Le gestionnaire attribue lui-même le quart du mardi à Léa Tremblay.
+
+00:07:17.265 --> 00:07:25.995
+Dernier cas : Théo Paquin est en congé de longue durée. Son quart est réservé au remplacement long terme, que le gestionnaire ouvre sur le poste EST-1, lié à cette absence.
+
+00:07:30.129 --> 00:07:34.494
+Chapitre 6 : Mes absences : le personnel déclare, suit et annule.
+
+00:07:35.694 --> 00:07:41.197
+Mes absences. Julie Roy, paramédic, déclare elle-même une absence. Elle n'en a encore aucune.
+
+00:07:42.743 --> 00:07:51.381
+Elle choisit le code Décès d'un proche, pour une date à venir. Ce code ne se planifie pas d'avance : la déclaration est refusée, et le message dit quoi faire à la place.
+
+00:07:54.192 --> 00:08:00.044
+Elle choisit plutôt Formation, un code planifiable, et déclare les 12 et 13 mai. L'absence est acceptée.
+
+00:08:03.492 --> 00:08:06.650
+Enfin, elle annule cette absence : la ligne passe à Annulée.
+
+00:08:08.342 --> 00:08:14.170
+Chapitre 7 : Codes d'absence : l'administration les ajoute, les remplace, les ferme.
+
+00:08:15.370 --> 00:08:21.872
+Codes d'absence. L'administrateur de l'organisme ouvre la page des codes d'absence : Maladie et Congé sans solde y sont déjà.
+
+00:08:24.853 --> 00:08:30.611
+L'administration ajoute le code FORM, Formation, planifiable, en vigueur à partir d'aujourd'hui.
+
+00:08:32.452 --> 00:08:38.002
+L'administration ajoute le code VAC, Vacances, planifiable, en vigueur à partir d'aujourd'hui.
+
+00:08:39.970 --> 00:08:46.704
+Il remplace ensuite le code MAL à partir d'aujourd'hui : son nouveau libellé est Maladie ou blessure. L'ancienne version reste dans l'historique.
+
+00:08:49.906 --> 00:08:57.174
+Puis il ferme le Congé sans solde à partir d'aujourd'hui : le code disparaît de la liste en vigueur. L'historique du code Maladie montre ses deux versions.
+
+00:08:59.645 --> 00:09:10.303
+Julie Roy ouvre Mes absences. Elle ne voit pas la page d'administration des codes, et la liste qu'on lui offre ne porte que les codes en vigueur aujourd'hui, avec leur libellé du jour : jamais le congé sans solde fermé.
+
+00:09:13.137 --> 00:09:19.615
+Julie déclare une absence, code FORM, du 12 mai 2031 au 12 mai 2031. Elle doit être acceptée.
+
+00:09:21.230 --> 00:09:27.801
+Julie déclare une absence, code VAC, du 7 juillet 2031 au 11 juillet 2031. Elle doit être acceptée.
+
+00:09:29.718 --> 00:09:38.681
+Julie déclare une absence, code MAL, du 2 juin 2031 au 2 juin 2031. Ce code ne se planifie pas d'avance : la déclaration doit être refusée.
+
+00:09:40.366 --> 00:09:42.850
+Julie annule son absence du 12 mai 2031.
+
+00:09:44.653 --> 00:09:49.506
+Chapitre 8 : Échanger un quart : proposer, accepter, valider ou refuser.
+
+00:09:50.706 --> 00:09:58.345
+Échanges de quarts. Julie Roy ouvre Mes échanges. Elle cède son quart et demande celui de Marc Dubé, dans une autre période, puis propose l'échange.
+
+00:10:01.342 --> 00:10:09.608
+Marc Dubé se connecte et trouve la proposition de Julie. Comme l'échange relie deux périodes, l'écran le prévient : le chef devra valider. Marc accepte.
+
+00:10:12.402 --> 00:10:20.413
+Le chef ouvre les échanges à trancher. Il lit les motifs, valide l'échange avec la mention Remplacement couvert, et les quarts de Julie et de Marc sont permutés.
+
+00:10:23.918 --> 00:10:32.788
+Deuxième cas : c'est le planificateur qui crée l'échange pour Julie, qui n'a pas d'accès à l'écran. Il choisit Julie, le quart qu'elle cède, et celui de Marc qu'elle reçoit.
+
+00:10:37.826 --> 00:10:41.912
+Marc Dubé, le destinataire, accepte l'échange dans son espace.
+
+00:10:43.706 --> 00:10:49.860
+Mais le chef le refuse, motif à l'appui : l'effectif minimal n'est pas garanti le lundi. Julie garde son quart.
+
+00:10:52.966 --> 00:10:58.794
+Chapitre 9 : AGPH : processus annuel, choix par ancienneté, remplacements long terme.
+
+00:10:59.994 --> 00:11:10.467
+AGPH, le choix annuel des postes. Julie Roy ouvre Confection AGPH : elle a le plus d'ancienneté, son rang est le premier, et c'est son tour. Elle choisit le poste B à temps partiel régulier.
+
+00:11:13.844 --> 00:11:26.383
+Le planificateur ouvre la campagne : c'est au tour de Marc Dubé, qui n'a pas accès à l'écran. Le planificateur saisit pour lui le poste A à temps complet. Tous sont servis, et il clôt la campagne : chaque attribution dit qui l'a faite.
+
+00:11:30.984 --> 00:11:36.162
+Un remplacement long terme s'ouvre sur le poste C. Julie manifeste son intérêt, depuis son espace.
+
+00:11:38.679 --> 00:11:50.870
+Deuxième cas : avant le tour de rôle, chacun dépose sa semaine type. Julie n'offre qu'un quart : la règle en exige deux par semaine, le dépôt est refusé. Elle en ajoute un, et sa semaine devient conforme : 24 heures offertes.
+
+00:11:55.275 --> 00:12:01.916
+Le planificateur fixe le budget de l'unité à 20 heures : l'offre de Julie le dépasse, à 120 pour cent, et c'est signalé.
+
+00:12:04.227 --> 00:12:11.077
+Il saisit la semaine type de Marc : elle est acceptée, avec un avertissement de dépassement du budget. Puis il démarre le tour de rôle.
+
+00:12:16.208 --> 00:12:24.196
+Tous ont choisi. Le planificateur passe en révision et révise l'attribution de Marc, avec son motif : le poste A est réservé à une réorganisation.
+
+00:12:28.755 --> 00:12:32.911
+À la clôture, les postes restés vacants sont transférés à la gestion régulière.
+
+00:12:36.491 --> 00:12:43.085
+Un remplacement long terme est laissé non comblé, motif : budget de l'unité atteint. Ses trois quarts passent à la gestion régulière.
+
+00:12:47.325 --> 00:12:53.873
+Ils apparaissent aussitôt au comblement, sous le minimum, et dans les disponibilités, où Marc Dubé est candidat admissible.
+
+00:12:58.873 --> 00:13:03.656
+Chapitre 10 : Présence et pointage : pointer, anomalies, approbation.
+
+00:13:04.856 --> 00:13:16.373
+Présence et pointage. Julie Roy ouvre Mon pointage depuis la Caserne 12, où se trouve son quart. Sa position est fournie. Elle pointe son entrée : conforme, à zéro mètre du milieu. Puis elle commence sa pause.
+
+00:13:20.631 --> 00:13:30.128
+Marc Dubé pointe sans partager sa position, alors que le géorepérage est exigé à la caserne. Le pointage est enregistré, mais en écart : son gestionnaire devra l'approuver.
+
+00:13:32.781 --> 00:13:43.788
+Le chef ouvre la présence : le pointage de Marc est à trancher, la distance exigée n'a pas été fournie. Il l'approuve avec un motif : téléphone sans GPS, présence confirmée par le répartiteur.
+
+00:13:47.861 --> 00:13:53.643
+Le chef affiche enfin le code QR de la Caserne 12, à afficher sur place : il change toutes les cinq minutes.
+
+00:13:56.294 --> 00:14:01.124
+Chapitre 11 : Feuilles de temps : segments, heures supplémentaires, approbation à paliers.
+
+00:14:02.324 --> 00:14:11.356
+Feuilles de temps. Julie Roy ouvre Ma feuille de temps et prépare celle de la semaine du 13 janvier. La feuille se remplit depuis son horaire et ses pointages ; un quart non pointé est signalé comme anomalie.
+
+00:14:14.477 --> 00:14:23.068
+Elle corrige un segment : fin à 17 heures, avec le motif, départ plus tôt accordé par le chef. Le segment n'est pas écrasé : il passe à sa deuxième version.
+
+00:14:26.451 --> 00:14:33.788
+Elle soumet sa feuille, qui attend la décision. Puis elle la rappelle, pour la reprendre : la feuille revient au brouillon. Elle la soumet de nouveau.
+
+00:14:37.251 --> 00:14:42.174
+Le chef ouvre les feuilles de temps de la semaine, lit les totaux par code de paie, et approuve la feuille de Julie.
+
+00:14:45.627 --> 00:14:50.666
+Il produit le lot de paie : une feuille, avec son empreinte qui garantit que le lot n'a pas été modifié.
+
+00:14:53.724 --> 00:15:00.737
+Enfin, il rouvre la feuille approuvée, avec son motif : la formation du 17 est en heures régulières. La feuille retourne à Julie.
+
+00:15:04.042 --> 00:15:08.570
+Chapitre 12 : Moteur de règles : conditions, actions, motifs nommés.
+
+00:15:09.770 --> 00:15:15.134
+Moteur de règles. L'administrateur ouvre les règles du contexte des disponibilités, encore vide.
+
+00:15:17.142 --> 00:15:26.035
+Il construit une règle, sans programmer : si le nombre de quarts par semaine est inférieur à trois, alors bloquer, avec un message que la personne lira. Il publie la règle.
+
+00:15:30.288 --> 00:15:36.975
+Il la simule : avec deux quarts déclarés, la règle bloque et nomme son motif. Avec quatre quarts, aucune règle ne s'y oppose.
+
+00:15:40.539 --> 00:15:45.090
+Le registre des décisions garde la trace de chaque évaluation, simulations comprises.
+
+00:15:48.468 --> 00:15:52.230
+Chapitre 13 : Relevés et rapports : regroupés, exportés.
+
+00:15:53.430 --> 00:16:06.294
+Relevés et rapports. Le gestionnaire construit un relevé de comblement : source, les places des effectifs ; regroupé par unité ; le taux de places pourvues et le nombre d'équipages sous le minimum ; pour la semaine du 13 janvier, quarts réguliers seulement.
+
+00:16:09.733 --> 00:16:16.583
+Il produit le relevé : l'unité Opérations Est est pourvue à 66,67 pour cent, avec un équipage sous le minimum.
+
+00:16:19.747 --> 00:16:23.741
+Sans date de début, le relevé est refusé, et le message dit le format attendu.
+
+00:16:26.911 --> 00:16:29.697
+Il enregistre le relevé sous le nom Comblement hebdomadaire.
+
+00:16:32.833 --> 00:16:40.078
+Après rechargement, il le reproduit d'un clic : mêmes paramètres, même résultat. Puis il l'exporte, en Excel et en PDF.
+
+00:16:43.389 --> 00:16:46.942
+Il le renomme, Comblement par semaine, puis le retire de la liste.
+
+00:16:49.156 --> 00:16:54.149
+Chapitre 14 : Intégrations : lot de paie codé et signé, horodatages externes.
+
+00:16:55.349 --> 00:17:05.171
+Intégrations. L'administrateur ouvre les connecteurs : tous sont coupés. Il active le système d'aide à la répartition, le SAAV, puis le bus d'entreprise, en mode simulateur.
+
+00:17:09.072 --> 00:17:16.688
+Il publie les équipages du 15 janvier pour l'unité Opérations Est vers le SAAV, puis relaie le journal vers le bus. Les deux messages déposés sont listés.
+
+00:17:20.092 --> 00:17:29.194
+Il configure ensuite le lot de paie vers le système de paie externe. Une adresse en http est refusée : un protocole sécurisé est exigé. La clé saisie est mise en majuscules.
+
+00:17:32.609 --> 00:17:40.759
+En SFTP, l'empreinte de la clé d'hôte est exigée : sans elle, la configuration est refusée. Avec l'empreinte, le connecteur est enregistré.
+
+00:17:44.023 --> 00:17:46.508
+Chapitre 15 : Mon équipe et suppléance.
+
+00:17:47.708 --> 00:17:55.626
+Mon équipe. Marc Lavoie, gestionnaire, voit sa ligne hiérarchique : Julie Roy relève directement de lui. Il rattache Léa Morin à son équipe.
+
+00:17:59.140 --> 00:18:03.529
+Avant de s'absenter, il désigne Diane comme suppléante : la suppléance est en cours.
+
+00:18:06.993 --> 00:18:14.980
+Julie prépare et soumet sa feuille de temps de la semaine du 10 mars. L'écran dit qui la décidera : Marc, et en son absence, sa suppléante Diane.
+
+00:18:17.526 --> 00:18:23.447
+Diane, la suppléante, voit la feuille de Julie dans son équipe. Elle l'ouvre dans la console des feuilles de temps et l'approuve.
+
+00:18:27.748 --> 00:18:31.672
+Marc revient et met fin à la suppléance : les feuilles de son équipe lui reviennent.
+
+00:18:33.622 --> 00:18:41.912
+Chapitre 16 : Écrire dans les écrans : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux, quotas.
+
+00:18:43.112 --> 00:18:52.191
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée ajoute un temps à sa feuille, et le total le dit. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:18:56.273 --> 00:19:05.956
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée dépose une plage, après avoir lu la règle qui la juge. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:19:09.033 --> 00:19:17.624
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée change de semaine, et l'horaire suit. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:19:21.021 --> 00:19:30.054
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée se manifeste pour un remplacement long terme. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:19:33.430 --> 00:19:44.343
+Julie Roy écrit dans l'écran. Le cas éprouvé : l'employée déclare après coup un quart qu'elle n'a pas pu pointer, dans le dialogue prévu pour cela. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:19:48.791 --> 00:19:57.498
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : la planificatrice crée une campagne annuelle. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:20:00.964 --> 00:20:11.320
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : la planificatrice comble un quart sous son minimum, depuis le tableau du matin. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:20:15.233 --> 00:20:26.170
+L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration crée une unité datée, puis la ferme à une date future. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:20:29.921 --> 00:20:40.858
+L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration crée un type d'heure avec son comportement et son code de paie. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:20:44.269 --> 00:20:55.670
+L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration ajoute un milieu avec ses coordonnées et règle ses preuves de présence. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:20:59.615 --> 00:21:09.600
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur définit un quota, distinct par unité et nature. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:21:12.895 --> 00:21:22.067
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur crée un quart ad hoc à deux corps d'emploi. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:21:25.358 --> 00:21:35.087
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur ouvre un remplacement long terme avec sa date limite. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:21:38.230 --> 00:21:49.283
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur pose un profil de pointage : pauses admises et présence préalable payée. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:21:52.681 --> 00:22:02.851
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur filtre les pointages par site et lit l'audit des localisations. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:22:06.807 --> 00:22:17.720
+L'administration de l'organisme écrit dans l'écran. Le cas éprouvé : l'administration règle les seuils d'heures supplémentaires, puis lit le relevé. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:22:20.199 --> 00:22:24.216
+Chapitre 17 : Messagerie et appels entre deux personnes, et en groupe.
+
+00:22:25.416 --> 00:22:34.866
+Messagerie. Julie Roy et Marc Dubé, deux paramédics, ouvrent chacun la messagerie du personnel. Julie choisit Marc dans la liste et lui écrit : peux-tu prendre mon quart de jeudi ?
+
+00:22:36.784 --> 00:22:39.245
+Chez Marc, le message arrive dans leur fil à deux.
+
+00:22:43.111 --> 00:22:57.600
+Julie appelle maintenant Marc depuis le fil. Chez elle, le bandeau dit que ça sonne. Chez Marc, où qu'il soit dans l'application, l'appel entrant s'affiche : il décroche, ils sont en communication, puis Julie raccroche. L'appel reçu figure à l'historique de Marc.
+
+00:23:02.600 --> 00:23:08.080
+Deuxième cas : Julie appelle Marc, et Marc refuse l'appel. La sonnerie doit s'arrêter chez Julie aussi.
+
+00:23:13.080 --> 00:23:22.368
+Troisième cas : Julie ouvre un fil de groupe, Garde de nuit, avec Marc, puis lance un appel de groupe. Marc reçoit l'invitation, rejoint l'appel, puis le quitte.
+
+00:23:27.228 --> 00:23:32.150
+Chapitre 18 : Avis d'événements : préférences par événement, canaux obligatoires.
+
+00:23:33.350 --> 00:23:42.453
+Avis d'événements. Léa Tremblay ouvre Mon compte, onglet des notifications : pour chaque événement, elle choisit ses canaux, courriel, texto ou notification poussée.
+
+00:23:44.002 --> 00:23:53.685
+Elle tente de couper le courriel et le texto pour les messages de l'encadrement. Cet événement est essentiel : l'organisme exige au moins un canal, et l'enregistrement est refusé avec le nom de l'événement.
+
+00:23:56.760 --> 00:24:05.305
+Elle garde le courriel pour les messages de l'encadrement, coupe la notification poussée des quarts offerts, et enregistre : cette fois, ses préférences sont acceptées.
+
+00:24:07.121 --> 00:24:20.055
+L'administration avise Léa par son nom : réunion d'équipe jeudi, avec un message personnalisé par son prénom. Le résultat respecte ses préférences : courriel envoyé, texto désactivé par la personne. Le courriel reçu le prouve.
+
+00:24:22.764 --> 00:24:29.405
+Chapitre 19 : Paie québécoise : dossier, cycle préparé et traité, remises, bulletin lu par l'employée.
+
+00:24:30.605 --> 00:24:40.102
+Paie québécoise. L'administrateur ouvre les dossiers de rémunération : une personne n'a pas encore de dossier. Il ouvre celui de Julie Roy et fixe son taux horaire à 32 dollars 50.
+
+00:24:43.427 --> 00:24:51.299
+Il tente de préparer un cycle de paie en 2031. Aucun barème fiscal n'est publié pour cette année : la préparation est refusée, et le message nomme l'année.
+
+00:24:53.212 --> 00:24:57.670
+Les paramètres de la paie montrent le barème en vigueur, dont le taux du Fonds des services de santé.
+
+00:25:02.042 --> 00:25:06.594
+Julie Roy ouvre Mes bulletins : elle n'en a encore aucun, et elle n'a pas accès aux cycles de paie.
+
+00:25:08.949 --> 00:25:20.397
+Deuxième cas, la chaîne complète. La feuille de temps de Julie, 24 heures, est approuvée. L'administrateur prépare le cycle de la semaine : le bulletin de Julie paraît, avec 816 dollars de salaire brut.
+
+00:25:24.704 --> 00:25:33.574
+Il traite le cycle. Les retenues sont calculées : impôts fédéral et du Québec, RRQ, assurance-emploi et RQAP. Les remises du mois et le relevé de Julie sont prêts.
+
+00:25:35.764 --> 00:25:41.105
+Julie ouvre son bulletin dans son espace : salaire brut de 816 dollars, et son salaire net.
+
+00:25:43.700 --> 00:25:50.388
+Chapitre 20 : Paie : la RH configure les règles variables, le comptable valide les temps et produit la paie, fiches PDF.
+
+00:25:51.588 --> 00:25:59.390
+Produire la paie d'un personnel de la santé. La responsable des ressources humaines se connecte : elle a les six écrans de la paie, dont les règles de paie variables.
+
+00:26:01.375 --> 00:26:06.646
+Dans les paramètres, elle exige la validation des temps avant toute paie : une feuille non validée ne sera pas payée.
+
+00:26:08.189 --> 00:26:13.622
+Elle ouvre les règles de paie variables. L'échelle salariale est vide : elle la construit, puis ajoute les primes.
+
+00:26:16.378 --> 00:26:23.646
+Elle ajoute la règle Infirmière, échelon 3 : taux de base de 34 dollars de l'heure, pour le titre d'emploi INF, échelon 3.
+
+00:26:25.355 --> 00:26:31.810
+Elle ajoute la règle Préposé, échelon 1 : taux de base de 24 dollars de l'heure, pour le titre d'emploi PAB, échelon 1.
+
+00:26:33.657 --> 00:26:38.812
+Elle ajoute la règle Prime de soins critiques : 2 dollars de plus par heure, pour le titre d'emploi INF.
+
+00:26:40.575 --> 00:26:43.524
+Elle ajoute la règle Prime de soir : 10 pour cent de plus.
+
+00:26:45.721 --> 00:26:50.667
+Elle ajoute la règle Allocation de rétention : 100 dollars par paie, pour le titre d'emploi INF.
+
+00:26:54.207 --> 00:27:03.402
+Dans les dossiers de rémunération, elle place chaque personne à son échelon : Julie Roy et Léa Côté à l'échelon 3, Marc Dubé à l'échelon 2, qui n'existe pas encore dans l'échelle.
+
+00:27:06.363 --> 00:27:15.349
+Le comptable se connecte. Il ne voit ni les règles, ni les dossiers, ni les paramètres : la séparation des tâches est respectée. Il ouvre la validation des temps de la semaine.
+
+00:27:18.366 --> 00:27:28.629
+Le contrôle signale une anomalie : Marc Dubé n'a pas de taux, son échelon manque dans l'échelle. Le comptable retourne la feuille de Léa Côté avec son motif : le quart du lundi doit être codé en formation.
+
+00:27:31.751 --> 00:27:37.811
+Il valide d'un geste toutes les feuilles sans anomalie, puis celle de Marc, une à une. Chaque validation est signée de son nom.
+
+00:27:39.547 --> 00:27:53.293
+Il prépare le cycle de paie. L'écran avertit que Marc Dubé n'a pas de taux : il n'est pas payé tant que la RH n'a pas complété l'échelle. Seule Julie a un bulletin : 816 dollars d'heures régulières, la prime de soins critiques, la prime de soir et l'allocation de rétention.
+
+00:27:56.776 --> 00:28:03.184
+Il télécharge le registre de paie en PDF, et la fiche de paie de Julie. Puis il traite le cycle : les relevés sont produits.
+
+00:28:05.623 --> 00:28:13.471
+Julie Roy ouvre Mes bulletins. Elle n'a pas accès à la validation des temps. Elle télécharge sa fiche de paie en PDF, et relit son allocation de rétention.
+
+00:28:16.298 --> 00:28:22.521
+Chapitre 21 : Tous les écrans, un à un : chaque fonctionnalité a ses commandes, chaque écran passe axe-core.
+
+00:28:23.721 --> 00:28:30.872
+Choisir la période, « Quart ad hoc », puis « Ajouter un corps d'emploi » : un quart reçoit une ou plusieurs places, chacune avec son corps d'emploi.
+
+00:28:34.498 --> 00:28:41.069
+Dans le tiroir du quart ad hoc, renseigner « Minimum opérationnel » : sous ce nombre, le comblement classe le quart en sous-minimum.
+
+00:28:42.744 --> 00:28:46.552
+« Quart ad hoc » : date, plage et milieu libres, hors cycle de poste.
+
+00:28:48.388 --> 00:28:53.844
+Champ « Mode d'attribution » du quart : automatisé ou manuel ; « Modifier en lot » le change pour plusieurs quarts.
+
+00:28:55.618 --> 00:29:01.237
+Ouvrir une absence refusée par l'automatisation, puis « Déroger » : un motif et un code d'absence sont exigés.
+
+00:29:04.090 --> 00:29:10.080
+Après la dérogation, l'onglet montre le comblement des places libérées : qui a été retenu, qui a été avisé.
+
+00:29:11.834 --> 00:29:17.755
+Choisir le type « Unités » : chaque unité est un groupe organisationnel, et postes, règles et quotas s'y rattachent.
+
+00:29:20.672 --> 00:29:26.686
+Choisir un compte, puis lui donner une unité, un niveau et une étendue : hors de son périmètre, le serveur refuse.
+
+00:29:29.822 --> 00:29:36.207
+Le journal : chaque action horodatée avec son auteur ou le mécanisme qui l'a posée ; filtrable par période et par origine.
+
+00:29:39.137 --> 00:29:45.383
+Filtrer le journal sur une période passée, puis « Exporter » : l'audit a posteriori se lit à l'écran et s'emporte en CSV.
+
+00:29:46.960 --> 00:29:52.974
+Attribuer une ressource qu'une règle écarte : l'écran liste les avertissements et exige une justification avant de forcer.
+
+00:29:56.319 --> 00:30:04.283
+Contexte « Disponibilités », « Nouvelle règle » : la portée (unité, corps, statut) et le fait choisis forment la règle de conformité.
+
+00:30:07.545 --> 00:30:10.285
+L'employé choisit la période et dépose ses plages par jour.
+
+00:30:12.995 --> 00:30:18.939
+Sur une place, « Bassin » : les candidats retenus et, à part, les exclus avec le motif de leur exclusion.
+
+00:30:21.788 --> 00:30:27.291
+Déposer une plage non conforme : le dépôt est refusé ou signalé selon le réglage de la règle, à la saisie.
+
+00:30:28.955 --> 00:30:34.411
+Le refus nomme la règle et ce qu'elle exige : l'employé lit le motif de son inadmissibilité, pas un code.
+
+00:30:36.111 --> 00:30:41.358
+« Ajouter un milieu » : type, unité, adresse et coordonnées ; le quart planifié s'y rattache.
+
+00:30:44.743 --> 00:30:50.873
+Campagne annuelle : ouvrir la collecte, fixer le budget d'heures, suivre les dépôts de disponibilités rang par rang.
+
+00:30:54.198 --> 00:30:58.145
+« Nouveau poste » : code, libellé, cycle de quarts et début de cycle.
+
+00:31:01.315 --> 00:31:07.143
+Sélectionner des postes, « Modifier en lot » : le cycle est remplacé pour tous, les conflits sont listés avant d'écrire.
+
+00:31:09.988 --> 00:31:14.492
+« Publier » : les postes passent de brouillon à publié, et leurs quarts entrent dans la planification.
+
+00:31:16.237 --> 00:31:22.599
+Fiche du poste : statut d'emploi, corps, milieu, nature et cycle — les paramètres fonctionnels du poste.
+
+00:31:24.576 --> 00:31:30.381
+Une absence accordée réserve ses places : l'onglet les montre comme vacantes, sans geste de planificateur.
+
+00:31:32.282 --> 00:31:36.833
+« Ouvrir un remplacement long terme » : poste, fenêtre et date limite pour se manifester.
+
+00:31:39.640 --> 00:31:43.192
+L'employé admissible voit le remplacement ouvert et se manifeste pour lui.
+
+00:32:01.173 --> 00:32:06.374
+Clore un remplacement « non comblé » avec son motif : l'état le dit, et il n'est pas forcé à un titulaire.
+
+00:32:08.196 --> 00:32:13.513
+Clore la campagne : les quarts restés sans titulaire apparaissent au tableau de comblement de la gestion régulière.
+
+00:32:16.455 --> 00:32:22.074
+Le tableau du matin, hors campagne annuelle : taux de comblement, quarts sous minimum, quotas manqués.
+
+00:32:23.898 --> 00:32:28.774
+Les quarts non couverts à la clôture de la campagne sont pris en charge ici, et non laissés dans l'AGPH.
+
+00:32:31.027 --> 00:32:36.599
+Ouvrir une demande d'absence de la liste : sa fiche calcule le taux de comblement qu'elle laisserait, avant toute décision.
+
+00:32:38.585 --> 00:32:43.554
+Les places libérées par l'absence accordée sont offertes d'elles-mêmes au comblement, sans les désigner une à une.
+
+00:32:45.512 --> 00:32:50.388
+Ajuster une journée : « Nouvelle période » et l'ajustement d'un quart existant portent les corrections du jour.
+
+00:32:53.391 --> 00:32:57.315
+« Quart ad hoc » crée et gère un quart hors cycle ; « Libérer » le retire avec son motif.
+
+00:32:59.352 --> 00:33:05.017
+Valider un échange : l'écran montre l'admissibilité et la contiguïté des deux quarts, et le motif d'un rejet.
+
+00:33:08.118 --> 00:33:13.760
+« Définir un quota » : clé (période, plage ou type de quart) et valeur, distincts les uns des autres.
+
+00:33:16.900 --> 00:33:22.612
+Surcharger un quota en cours de période : la surcharge est datée de « à partir de », donc sans effet rétroactif.
+
+00:33:25.767 --> 00:33:32.802
+Créer une période, ouvrir sa collecte avec sa date de fin, puis la clore : l'ouverture et la fermeture sont des gestes distincts et tracés.
+
+00:33:35.834 --> 00:33:43.310
+Tant que la collecte de la période est ouverte, l'employé dépose et ajuste ses disponibilités ; fermée, l'écran passe en lecture seule.
+
+00:33:45.064 --> 00:33:51.913
+Un échange entre deux périodes de planification est accepté, restreint ou refusé selon la règle en vigueur, qui est nommée dans le refus.
+
+00:33:53.453 --> 00:33:57.098
+Le quart ad hoc n'exige aucun poste : sa nature et sa plage suffisent.
+
+00:33:59.003 --> 00:34:04.668
+« Déclarer » : l'employé pointe son entrée et sa sortie en temps réel, selon le profil de pointage qui lui est posé.
+
+00:34:08.446 --> 00:34:15.040
+Profils de pointage : le profil dit quelles natures de temps non payé (pause, repas, repos) sont admises à la saisie.
+
+00:34:18.943 --> 00:34:25.119
+Une feuille soumise ou approuvée n'est plus modifiable par l'employé : la règle de modification restreint selon le statut et le délai.
+
+00:34:28.319 --> 00:34:32.939
+La fiche d'un pointage montre les motifs retenus par les règles du quart, et l'écart au planifié.
+
+00:34:35.092 --> 00:34:41.361
+Une anomalie est nommée sur la feuille au moment de la saisie, avec ce qu'il faut corriger ; une anomalie bloquante empêche la soumission.
+
+00:34:59.148 --> 00:35:04.279
+« Paramètres des feuilles » → flux d'approbation : paliers, approbateur et condition de routage se configurent.
+
+00:35:07.243 --> 00:35:12.908
+Filtrer les pointages par milieu : la déclaration de présence est rattachée au site, et plusieurs sites coexistent.
+
+00:35:14.499 --> 00:35:18.701
+Sur la feuille : le tableau « Planifié et déclaré, quart par quart » et son écart.
+
+00:35:20.289 --> 00:35:26.233
+Profil de pointage : « Présence préalable rémunérée (minutes) » — le temps exigé avant le quart, et payé.
+
+00:35:27.865 --> 00:35:31.812
+Coordonnées et rayon du milieu : un pointage hors du rayon est un écart d'emplacement.
+
+00:35:34.012 --> 00:35:40.908
+« Preuves » d'un milieu : code sur place, code QR, position ou plage réseau — un ou plusieurs mécanismes, par plage horaire.
+
+00:35:44.890 --> 00:35:49.626
+Les exigences de validation se règlent milieu par milieu et s'enregistrent — aucun code à toucher.
+
+00:35:51.609 --> 00:35:57.065
+Un écart entre le lieu déclaré et le milieu du quart déclenche l'action configurée : ignorer, signaler ou bloquer.
+
+00:35:59.194 --> 00:36:03.745
+« Audit des pointages » : la localisation consignée se lit à l'écran et s'exporte en CSV.
+
+00:36:05.975 --> 00:36:12.639
+Saisie a posteriori : date, entrée, sortie, activité et justification, sous le profil qui l'autorise.
+
+00:36:15.578 --> 00:36:20.059
+« Préparer les feuilles » : la feuille de la période est bâtie depuis les quarts attribués, sans saisie.
+
+00:36:21.785 --> 00:36:26.568
+« Ajouter » un temps : l'employé saisit ce que le pointage n'a pas rempli ; le reste vient des quarts.
+
+00:36:28.550 --> 00:36:33.240
+À l'enregistrement d'un segment, les anomalies et les totaux sont recalculés et réaffichés aussitôt.
+
+00:36:34.907 --> 00:36:38.738
+Ouvrir une feuille soumise et « Approuver le palier » — ou la retourner avec un motif.
+
+00:36:40.330 --> 00:36:46.738
+Les seuils d'heures supplémentaires (jour, semaine) se règlent dans « Paramètres des feuilles » ; le total est reclassé d'office.
+
+00:36:49.871 --> 00:36:55.838
+Type « Types d'heures » : chaque type porte son comportement et son code de paie ; les totaux de la feuille sont ventilés par type.
+
+00:36:57.456 --> 00:37:01.449
+« Relevés » : choisir le regroupement et afficher le relevé opérationnel de la période.
+
+00:37:03.357 --> 00:37:11.878
+Constructeur de rapports : choisir la source, les colonnes, le format (CSV, Excel, PDF, JSON) et exporter.
+
+00:37:15.423 --> 00:37:20.786
+Les anomalies de temps et de présence sont détectées par règle au contexte « Feuille de temps » ; la fiche de la feuille les liste.
+
+00:37:22.661 --> 00:37:27.653
+Contexte « Feuille de temps » : les règles de contrôle temporel se créent, se simulent et se publient datées.
+
+00:37:30.272 --> 00:37:35.682
+Les anomalies sont affichées en tête de feuille, nommées, et dites bloquantes en mots — jamais par la seule couleur.
+
+00:37:52.597 --> 00:37:58.587
+« Lot de paie » : produire le lot des feuilles approuvées, codé par type d'heure, avec son empreinte SHA-256.
+
+00:38:00.417 --> 00:38:06.152
+Paramètres : ce que la feuille fait d'un pointage qu'aucune source tierce ne confirme, et de deux sources en désaccord.
+
+00:38:07.778 --> 00:38:12.932
+Modifier une entrée déjà saisie : le motif est exigé et l'historique des versions du segment reste lisible.
+
+00:38:14.694 --> 00:38:20.220
+Sur un quart au mode automatisé, le comblement attribue d'office à la ressource prioritaire que les règles acceptent.
+
+00:38:21.960 --> 00:38:26.696
+Vue « Simulateur » : évaluer une situation d'absence et lire le verdict des règles avant d'agir.
+
+00:38:29.634 --> 00:38:34.904
+Déclarer une absence qui respecte toutes les règles : elle est accordée sans décision humaine, et l'écran le dit.
+
+00:38:37.764 --> 00:38:43.220
+Un code « jour même seulement » n'est pas proposé à l'avance ; déclaré d'avance, le refus dit quel code choisir.
+
+00:38:44.995 --> 00:38:51.426
+La déclaration est jugée à la saisie : préavis, absences simultanées et taux de comblement sont évalués sans geste d'encadrement.
+
+00:38:54.022 --> 00:39:00.453
+Une place offerte au comblement avise les ressources admissibles ; l'écran dit à qui, par quel canal, et ce que le canal a rendu.
+
+00:39:02.274 --> 00:39:08.822
+À la fin de la collecte, l'attribution depuis les disponibilités part d'elle-même ; avant la confection, l'écran dit qu'elle attend.
+
+00:39:11.242 --> 00:39:15.514
+À son tour de rôle, l'employé admissible voit les postes encore libres de sa campagne.
+
+00:39:17.045 --> 00:39:21.758
+Un seul poste se choisit, dans le délai du tour de rôle ; passé le délai, le tour avance.
+
+00:39:23.413 --> 00:39:27.244
+Un poste que les règles écartent n'est pas sélectionnable, et l'écran dit pourquoi.
+
+00:39:28.965 --> 00:39:33.400
+« Démarrer » la campagne : les postes s'attribuent d'office selon le tour de rôle, rang par rang.
+
+00:39:35.529 --> 00:39:40.614
+Un employé qui obtient un poste à temps complet prend le statut TC ; le tableau de la campagne le montre.
+
+00:39:42.343 --> 00:39:47.660
+Créer la campagne pour une unité et un corps d'emploi : le statut posé à la clôture suit le type du poste obtenu.
+
+00:39:51.103 --> 00:39:57.256
+« Clore et poser les statuts », une fois l'attribution faite : les employés sans poste gardent le temps partiel occasionnel.
+
+00:39:58.986 --> 00:40:03.421
+Une absence de moyen ou long terme réserve ses places et ouvre un remplacement long terme qui leur est lié.
+
+00:40:05.648 --> 00:40:10.570
+« Ouvrir un remplacement » puis, à la date limite, l'attribution aux intéressés selon les règles.
+
+00:40:12.363 --> 00:40:17.030
+« Déclarer un temps » : l'employé saisit après coup, dans la fenêtre que son profil autorise.
+
+00:40:18.858 --> 00:40:23.525
+Les heures saisies sont jugées par les règles du quart : la fiche du pointage liste les motifs retenus.
+
+00:40:25.443 --> 00:40:33.105
+Déclarer un temps avec une pause : la nature de la période non payée est exigée dès que la pause est bornée — un segment, puis un autre, sur le même quart.
+
+00:40:36.548 --> 00:40:41.238
+Sur la feuille : les totaux cumulent les saisies du même quart, et isolent les heures supplémentaires.
+
+00:40:43.170 --> 00:40:52.550
+Constructeur de rapports : la source, les colonnes, les filtres, les regroupements et le tri sont définis par l'organisation, puis enregistrés comme relevé réutilisable.
+
+00:40:55.193 --> 00:41:00.325
+Chapitre 22 : Un organisme ne voit que ce qu'on lui accorde : menu et aide réduits à ses écrans.
+
+00:41:01.525 --> 00:41:14.343
+Cet organisme n'a reçu que les alertes cliniques et la communication. L'administrateur se connecte. Chaque entrée de son menu doit être un écran accordé à l'organisme, et ses écrans de travail doivent y être : jamais l'horaire, la paie ni les intégrations.
+
+00:41:16.009 --> 00:41:21.791
+Le guide suit le menu : il ne montre l'aide que des écrans gardés. Pas de section sur la paie, mais bien celle des alertes.
+
+00:41:24.284 --> 00:41:39.354
+Cet organisme n'a reçu que les alertes cliniques et la communication. Sophie Lalonde, coordonnatrice des mesures d'urgence, se connecte. Chaque entrée de son menu doit être un écran accordé à l'organisme, et ses écrans de travail doivent y être : jamais l'horaire, la paie ni les intégrations.
+
+00:41:40.008 --> 00:41:45.790
+Le guide suit le menu : il ne montre l'aide que des écrans gardés. Pas de section sur la paie, mais bien celle des alertes.
+
+00:41:48.133 --> 00:42:01.763
+Cet organisme n'a reçu que les alertes cliniques et la communication. Julie Roy, infirmière, se connecte. Chaque entrée de son menu doit être un écran accordé à l'organisme, et ses écrans de travail doivent y être : jamais l'horaire, la paie ni les intégrations.
+
+00:42:02.466 --> 00:42:08.248
+Le guide suit le menu : il ne montre l'aide que des écrans gardés. Pas de section sur la paie, mais bien celle des alertes.
+
+00:42:10.540 --> 00:42:17.599
+Chapitre 23 : Alertes cliniques : paramétrer, envoyer, prendre en charge, suivre ; cascade et reprise.
+
+00:42:18.799 --> 00:42:26.043
+Communications cliniques. L'administration paramètre les alertes. Elle crée une réponse, J'arrive, qui vaut prise en charge.
+
+00:42:28.532 --> 00:42:35.707
+Puis un modèle d'alerte, Code bleu : chambre 512, cinquième étage, priorité urgente, avec la réponse J'arrive.
+
+00:42:39.556 --> 00:42:43.039
+Elle crée le groupe Garde de nuit, et y inscrit Julie Roy en cherchant son nom.
+
+00:42:46.626 --> 00:42:55.682
+La planificatrice ouvre Nouvelle alerte et choisit le modèle Code bleu. La priorité critique ne lui est pas permise : l'écran le dit. Elle vise tout le groupe Garde de nuit et envoie l'alerte.
+
+00:43:02.190 --> 00:43:06.857
+Julie Roy ouvre Mes alertes : le Code bleu est là, non lu. Elle le déplie et répond J'arrive.
+
+00:43:10.659 --> 00:43:19.506
+Au suivi des alertes, filtré sur les prises en charge, la planificatrice voit le Code bleu pris en charge, une personne sur une, par Julie, avec sa réponse.
+
+00:43:22.070 --> 00:43:30.035
+Deuxième cas, les relances. L'administration crée une politique de relance, Garde, relance, dont la première étape part après trente secondes.
+
+00:43:33.667 --> 00:43:39.100
+La planificatrice envoie une alerte de garde avec cette politique : la cascade de relances est armée dès l'envoi.
+
+00:43:42.494 --> 00:43:48.833
+Elle reprend la cascade à la main, et la reprise est tracée. L'ordonnanceur exécute l'étape, et toutes les étapes sont parties.
+
+00:43:53.773 --> 00:44:02.133
+Chapitre 24 : Alertes : copie par courriel, annuaire LDAPS, utilisateurs actifs, relances, note, export.
+
+00:44:03.333 --> 00:44:16.266
+Alertes, suite. L'administration coche la copie par courriel : chaque destinataire d'une alerte recevra aussi un courriel. Le réglage tient après rechargement. Plus bas, les utilisateurs actifs du mois : Julie Roy, comptée une fois.
+
+00:44:19.948 --> 00:44:30.838
+Elle déclare ensuite l'annuaire de l'établissement, son Active Directory. Une adresse ldap en clair est refusée : seul LDAPS, chiffré, est accepté. Avec l'adresse ldaps, l'annuaire est déclaré.
+
+00:44:34.522 --> 00:44:40.466
+La planificatrice ouvre le suivi des alertes et filtre sur les alertes relancées : le Code bleu a été relancé une fois.
+
+00:44:43.465 --> 00:44:52.776
+Dans le détail, la trace de la cascade nomme Julie. La planificatrice pose une note sur la destinataire, joindre sur le cellulaire de garde, visible des autres expéditeurs.
+
+00:44:56.945 --> 00:45:00.149
+Enfin, elle exporte le suivi des alertes en fichier CSV.
+
+00:45:02.824 --> 00:45:07.375
+Chapitre 25 : Les alertes cliniques, fonction par fonction, à l'écran.
+
+00:45:08.575 --> 00:45:16.563
+Console web d'envoi centralisée ; alerte par application mobile ou texto selon la préférence du destinataire. Ses commandes doivent être présentes à l'écran.
+
+00:45:19.658 --> 00:45:24.047
+Insertion d'une note au dossier des destinataires. Ses commandes doivent être présentes à l'écran.
+
+00:45:27.550 --> 00:45:32.055
+Recherche de destinataire par nom, prénom. Ses commandes doivent être présentes à l'écran.
+
+00:45:33.937 --> 00:45:40.485
+Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés. Ses commandes doivent être présentes à l'écran.
+
+00:45:43.251 --> 00:45:49.195
+Envoi à un utilisateur, plusieurs, ou un groupe configurable. Ses commandes doivent être présentes à l'écran.
+
+00:45:51.232 --> 00:45:55.597
+Messages prédéfinis pour les expéditeurs. Ses commandes doivent être présentes à l'écran.
+
+00:45:58.528 --> 00:46:02.220
+Diffusion d'alertes en temps réel. Ses commandes doivent être présentes à l'écran.
+
+00:46:03.988 --> 00:46:09.491
+Copie courriel d'un message, si configurée par l'organisme. Ses commandes doivent être présentes à l'écran.
+
+00:46:11.671 --> 00:46:18.358
+Confirmation de réception, lecture ou prise en charge, simple et automatisée. Ses commandes doivent être présentes à l'écran.
+
+00:46:21.865 --> 00:46:27.391
+Réponses prédéfinies, configurées par les administrateurs. Ses commandes doivent être présentes à l'écran.
+
+00:46:29.373 --> 00:46:36.687
+Statut d'envoi, réception, lecture, réponse et relance, vu par l'expéditeur. Ses commandes doivent être présentes à l'écran.
+
+00:46:38.613 --> 00:46:43.745
+Historique des échanges et statuts partagés entre expéditeurs. Ses commandes doivent être présentes à l'écran.
+
+00:46:45.420 --> 00:46:49.762
+Confirmer la réception d'un retour d'appel. Ses commandes doivent être présentes à l'écran.
+
+00:46:51.586 --> 00:46:57.647
+Appel téléphonique automatique en cas de non-réponse, délai programmable. Ses commandes doivent être présentes à l'écran.
+
+00:46:59.532 --> 00:47:03.689
+Relances automatisées configurables. Ses commandes doivent être présentes à l'écran.
+
+00:47:05.302 --> 00:47:10.132
+Cascades entre utilisateurs d'un groupe ou de groupes distincts. Ses commandes doivent être présentes à l'écran.
+
+00:47:12.001 --> 00:47:17.481
+Délais, séquences, règles d'arrêt et de reprise des cascades. Ses commandes doivent être présentes à l'écran.
+
+00:47:19.491 --> 00:47:24.530
+Alertes critiques, lorsque disponibles et permises. Ses commandes doivent être présentes à l'écran.
+
+00:47:41.311 --> 00:47:46.884
+Traces des relances, appels, réponses, escalades. Ses commandes doivent être présentes à l'écran.
+
+00:47:49.104 --> 00:47:54.282
+Accès mobile par navigateur, sans équipement dédié. Ses commandes doivent être présentes à l'écran.
+
+00:47:55.984 --> 00:48:01.069
+Application mobile iOS et Android, si proposée. Ses commandes doivent être présentes à l'écran.
+
+00:48:02.755 --> 00:48:09.489
+Préférences de communication par destinataire, sans contourner les règles obligatoires. Ses commandes doivent être présentes à l'écran.
+
+00:48:12.699 --> 00:48:17.831
+Interface intuitive, rapide en contexte clinique. Ses commandes doivent être présentes à l'écran.
+
+00:48:19.698 --> 00:48:24.574
+Historique de ses messages et confirmations selon ses droits. Ses commandes doivent être présentes à l'écran.
+
+00:48:26.483 --> 00:48:31.708
+Calendrier interne de disponibilité des destinataires. Ses commandes doivent être présentes à l'écran.
+
+00:48:34.945 --> 00:48:40.077
+Console de gestion centralisée pour les administrateurs. Ses commandes doivent être présentes à l'écran.
+
+00:48:43.546 --> 00:48:52.486
+Créer, modifier, désactiver utilisateurs et groupes (unité, service, spécialité, établissement). Ses commandes doivent être présentes à l'écran.
+
+00:48:54.546 --> 00:48:59.422
+Cloisonner les utilisateurs dans un ou plusieurs groupes. Ses commandes doivent être présentes à l'écran.
+
+00:49:01.268 --> 00:49:05.796
+Coordonnées des destinataires confidentielles. Ses commandes doivent être présentes à l'écran.
+
+00:49:08.734 --> 00:49:14.493
+Comptes utilisateur et administrateur, profils plus granulaires. Ses commandes doivent être présentes à l'écran.
+
+00:49:17.368 --> 00:49:22.012
+Écran de visionnement des messages envoyés et des statuts. Ses commandes doivent être présentes à l'écran.
+
+00:49:23.683 --> 00:49:32.437
+Configuration des messages et réponses prédéfinis, relances, groupes, cascades, droits, disponibilité. Ses commandes doivent être présentes à l'écran.

@@ -8,7 +8,7 @@
 # Les comptes et l'organisme de formation se sèment par l'API (docs/urgences-sante/COMPTES-DEMONSTRATION.md).
 #
 #   terraform init -backend-config="key=urgences-sante/26-015-do/essai.tfstate"
-#   terraform plan -var-file=urgences-sante-essai.tfvars -var registre_images=… -var version_images=<empreinte> -var certificat_arn=…
+#   terraform plan -var-file=urgences-sante-essai.tfvars -var registre_images=… -var version_images=<empreinte>
 
 client                     = "us"
 organisme                  = "Urgences-santé"

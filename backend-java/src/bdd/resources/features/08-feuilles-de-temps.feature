@@ -261,7 +261,7 @@ Fonctionnalité: Feuilles de temps — préparation, saisie en versions, approba
       """json
       { "date": "2030-03-07", "debut": "2030-03-07T13:00:00Z", "fin": "2030-03-07T14:00:00Z", "typeHeureCode": "REG" }
       """
-    Alors la réponse correspond à "feuille soumise : elle attend une décision, retournez-la pour la corriger"
+    Alors la réponse correspond à "feuille soumise : elle attend une décision ; rappelez-la ou faites-la retourner pour la corriger"
     Quand julie envoie POST /api/effectifs/temps/feuilles/{{fJulie}}/approuver
     Alors la réponse a le statut 403
     Quand chef envoie POST /api/effectifs/temps/feuilles/{{fJulie}}/approuver
@@ -449,3 +449,60 @@ Fonctionnalité: Feuilles de temps — préparation, saisie en versions, approba
       """
     Alors la réponse a le statut 200
     Et la réponse correspond à "Jour"
+
+  # AD-03 (addenda 7, Q15) : seuils quotidiens, hebdomadaires et par période de paie, paramétrables selon la convention.
+  @E-RF-5
+  Scénario: Une convention porte ses propres seuils, dont celui de la période de paie, et seule la feuille de ses personnes en suit le calcul
+    Quand admin envoie POST /api/effectifs/referentiels/conventions avec :
+      """json
+      { "effectifDepuis": "2026-01-01", "code": "SPCSN", "libelleFr": "SP-CSN paramédics" }
+      """
+    Alors la réponse a le statut 201
+    # Le chef gère les feuilles mais ne configure pas les seuils.
+    Quand chef envoie PUT /api/effectifs/temps/seuils-conventions/SPCSN avec :
+      """json
+      { "seuilJourHeures": 24 }
+      """
+    Alors la réponse a le statut 403
+    # Jour et semaine levés, période de paie à 20 h : pour Julie, 24 h travaillées = 4 h au-delà de la période.
+    Quand admin envoie PUT /api/effectifs/temps/seuils-conventions/SPCSN avec :
+      """json
+      { "seuilJourHeures": 24, "seuilSemaineHeures": 168, "seuilPeriodePaieHeures": 20 }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      [ { "conventionCode": "SPCSN", "seuilJourHeures": 24, "seuilSemaineHeures": 168, "seuilPeriodePaieHeures": 20 } ]
+      """
+    Quand admin envoie PUT /api/effectifs/planification/ressources/{{P1}} avec :
+      """json
+      { "nom": "Julie", "corpsEmploiCode": "PARA", "titreEmploiCode": "PSA", "uniteCode": "EST", "statutEmploiCode": "TPR", "anciennete": 3,
+        "utilisateurId": "{{u_julie}}", "conventionCode": "SPCSN" }
+      """
+    Alors la réponse a le statut 200
+    Quand julie envoie GET /api/effectifs/temps/feuilles/{{fJulie}}
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "heuresSupplementaires": { "parJour": { "2030-03-06": 240 }, "total": 240 } }
+      """
+    # Marc ne relève d'aucune convention : les seuils de l'organisme (8 h par jour) lui valent toujours.
+    Quand marc envoie GET /api/effectifs/temps/feuilles/{{fMarc}}
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "heuresSupplementaires": { "parJour": { "2030-03-05": 240 }, "total": 240 } }
+      """
+    # Le seuil de période de paie de l'organisme se règle aussi, et le fait est offert aux règles.
+    Quand admin envoie PUT /api/effectifs/temps/parametres avec :
+      """json
+      { "seuilPeriodePaieHeures": 80 }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse contient :
+      """json
+      { "seuilJourHeures": 8, "seuilSemaineHeures": 40, "seuilPeriodePaieHeures": 80 }
+      """
+    Quand admin envoie GET /api/effectifs/regles/faits
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "heuresPeriodePaie"

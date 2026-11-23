@@ -34,13 +34,15 @@ async function client(base, compte) {
   if (!r.ok) throw new Error(`connexion refusée (${r.status}) pour ${compte.username}`);
   const { token } = await r.json();
   if (!token) throw new Error("connexion sans jeton (choix d'établissement ou seconde étape exigés) : utilisez un compte de campagne sans MFA");
-  return async (methode, chemin, corps, tenant) => {
+  const appelant = async (methode, chemin, corps, tenant) => {
     const rep = await fetch(`${base}${chemin}`, { method: methode, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(tenant ? { "X-Tenant-Id": tenant } : {}) }, body: corps ? JSON.stringify(corps) : undefined });
     const texte = await rep.text();
     let json = null; try { json = JSON.parse(texte); } catch { json = null; }
     if (!rep.ok) throw new Error(`${methode} ${chemin} → ${rep.status} ${texte.slice(0, 200)}`);
     return json;
   };
+  // La base, pour les appels qui ne passent pas par la session (jeton machine).
+  return Object.assign(appelant, { base });
 }
 
 /** Un jeu d'identifiants : chaque entité créée par la route que les plans exercent ensuite. */
@@ -51,8 +53,125 @@ async function semer(appel, tenant, n) {
   const moisCourant = weekDate.slice(0, 7);
   const effectifs = await semerEffectifs(appel, tenant, n);
   const communication = await semerCommunication(appel, tenant, n);
-  return { weekDate, date: weekDate, id: effectifs.ressourceId, moisCourant, ...effectifs, ...communication };
+  const echanges = await semerApiEchanges(appel, tenant, effectifs, n);
+  return { weekDate, date: weekDate, id: effectifs.ressourceId, moisCourant, ...effectifs, ...communication, ...echanges };
 }
+
+/**
+ * **L'API d'échange de l'organisme** (26-015-DO, addenda 5 ; AD-06) : un client d'API (portées read et write), puis un
+ * employé transmis **par l'API elle-même**, avec le jeton client_credentials — la préparation éprouve l'écriture machine
+ * avant que la campagne ne la mesure. Le secret n'est écrit que dans le CSV local de la campagne (non versionné).
+ */
+async function semerApiEchanges(appel, tenant, effectifs, n) {
+  const client = await appel("POST", "/api/integrations/api-clients", { name: `Charge API ${n}`, scopes: ["read", "write"] }, tenant);
+  const jeton = await jetonMachine(appel.base, client.clientId, client.clientSecret);
+  const matricule = `API${Date.now().toString(36).toUpperCase().slice(-5)}${n}`;
+  const r = await fetch(`${appel.base}/api/echanges/v1/employes/${matricule}`, { method: "PUT",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${jeton}` },
+    body: JSON.stringify({ nom: `Employé transmis ${n}`, uniteCode: effectifs.uniteCode, corpsEmploiCode: effectifs.corpsEmploiCode, anciennete: 3 }) });
+  // Un serveur d'avant AD-06b n'a pas l'écriture des employés : la campagne de comparaison n'en mesure que les lectures.
+  if (r.status === 404 || r.status === 405) {
+    console.log(`⚠ écriture des employés absente de ce serveur (${r.status}) : TransmettreSoldesParApi ne se mesure pas ici`);
+    gardeSecret(client.clientSecret);
+    return { clientId: client.clientId, matricule: "" };
+  }
+  if (r.status !== 201) throw new Error(`PUT /api/echanges/v1/employes/${matricule} → ${r.status} ${(await r.text()).slice(0, 200)}`);
+  gardeSecret(client.clientSecret);
+  return { clientId: client.clientId, matricule };
+}
+
+/**
+ * Le secret du client d'API ne va jamais dans `donnees/identifiants.csv`, qui est versionné : il est écrit à part, dans un
+ * fichier que git ignore, et la campagne le passe à JMeter par `-JclientSecret`.
+ */
+function gardeSecret(secret) {
+  const env = process.argv.includes("--env") ? process.argv[process.argv.indexOf("--env") + 1] : "local";
+  fs.writeFileSync(path.join(ICI, "donnees", `secret-client-${env}.txt`), `${secret}\n`, { mode: 0o600 });
+}
+
+/**
+ * Le jeton d'une application : POST /api/oauth/token en formulaire, comme le veut la RFC 6749 (§ 4.4). Un serveur
+ * d'avant l'ADR 0088 ne connaît que le JSON (415) : la préparation s'y replie, pour qu'une campagne de comparaison
+ * puisse viser l'ancienne version.
+ */
+async function jetonMachine(base, clientId, clientSecret) {
+  const champs = { grant_type: "client_credentials", client_id: clientId, client_secret: clientSecret };
+  let r = await fetch(`${base}/api/oauth/token`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(champs) });
+  if (r.status === 415) r = await fetch(`${base}/api/oauth/token`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(champs) });
+  if (!r.ok) throw new Error(`POST /api/oauth/token → ${r.status} ${(await r.text()).slice(0, 200)}`);
+  return (await r.json()).access_token;
+}
+
+/**
+ * **Le volume des correctifs** (`--quarts S`) : S semaines de plus, générées puis publiées, et chaque place attribuée —
+ * des centaines d'entrées au journal des quarts. Sans elles, la lecture des correctifs mesure une page de trois lignes
+ * et ne dirait rien de son coût par entrée.
+ */
+async function semerVolumeQuarts(appel, tenant, ligne, semaines) {
+  const debut = new Date(`${ligne.dateFuture}T12:00:00Z`);
+  let entrees = 0;
+  let releves = 0;
+  const motifs = new Set();
+  // La séparation des tâches refuse qu'on approuve ce qu'on a soumis : une directrice de l'organisme approuve.
+  const approbatrice = await approbatriceDeCampagne(appel, tenant, ligne.uniteCode);
+  for (let k = 1; k <= semaines; k++) {
+    const jour = (d) => { const x = new Date(debut); x.setUTCDate(x.getUTCDate() + 7 * (k + 4) + d); return x.toISOString().slice(0, 10); };
+    const periode = await appel("POST", "/api/effectifs/planification/periodes", { nom: `Volume ${k}`, uniteCode: ligne.uniteCode, debut: jour(0), fin: jour(6) }, tenant).catch(() => null);
+    if (!periode) continue;
+    await appel("POST", `/api/effectifs/planification/periodes/${periode.id}/etat`, { etat: "CONFECTION" }, tenant);
+    await appel("POST", `/api/effectifs/planification/periodes/${periode.id}/generer`, {}, tenant);
+    const equipages = await appel("GET", `/api/effectifs/planification/periodes/${periode.id}/equipages`, null, tenant).catch(() => []);
+    for (const e of Array.isArray(equipages) ? equipages : []) {
+      entrees += 1;
+      for (const p of e.places ?? []) {
+        const ok = await appel("POST", `/api/effectifs/planification/places/${p.id}/attribuer`, { ressourceId: ligne.ressourceId }, tenant).then(() => true).catch(() => false);
+        if (ok) entrees += 1;
+      }
+    }
+    await appel("POST", `/api/effectifs/planification/periodes/${periode.id}/etat`, { etat: "PUBLIEE" }, tenant);
+    releves += await approuverFeuilles({ soumettre: appel, approuver: approbatrice }, tenant, { uniteCode: ligne.uniteCode, debut: jour(0), fin: jour(6) }, motifs);
+  }
+  for (const m of motifs) console.log(`⚠ feuilles non approuvées : ${m}`);
+  return { entrees, releves };
+}
+
+/**
+ * Les feuilles de la semaine, préparées, soumises puis approuvées jusqu'au dernier palier : ce sont elles que l'API rend
+ * comme relevés validés. Sans elles, la lecture des relevés serait mesurée sur une page vide.
+ */
+async function approuverFeuilles({ soumettre: appel, approuver }, tenant, { uniteCode, debut, fin }, motifs = new Set()) {
+  // Un refus n'est pas avalé : son motif est gardé, et la préparation le dit — un semis qui n'approuve rien
+  // ferait mesurer la lecture des relevés sur une page vide.
+  const noter = (e) => { motifs.add(e.message.slice(0, 160)); return null; };
+  const feuilles = await appel("POST", "/api/effectifs/temps/feuilles/preparer", { uniteCode, debut, fin }, tenant).catch(noter);
+  let approuvees = 0;
+  for (const id of [...(feuilles?.creees ?? []), ...(feuilles?.existantes ?? [])]) {
+    await appel("POST", `/api/effectifs/temps/feuilles/${id}/soumettre`, {}, tenant).catch(noter);
+    for (let palier = 0; palier < PALIERS_MAX; palier++) {
+      const f = await approuver("POST", `/api/effectifs/temps/feuilles/${id}/approuver`, {}, tenant).catch(noter);
+      if (!f || f.statut === "APPROUVEE") { approuvees += f ? 1 : 0; break; }
+    }
+  }
+  return approuvees;
+}
+
+/**
+ * Une directrice de l'organisme, créée par l'administration, sans le mur de première connexion (comme les essais e2e),
+ * avec un périmètre de gestion sur l'unité ; son mot de passe est tiré au hasard et ne quitte pas ce processus.
+ */
+async function approbatriceDeCampagne(appel, tenant, uniteCode) {
+  const username = `approbatrice-${Date.now().toString(36)}`;
+  const password = `Ap-${require("crypto").randomBytes(12).toString("base64url")}9!`;
+  const cree = await appel("POST", "/api/auth/users", { username, password, role: "director", mustChangePassword: false }, tenant);
+  await appel("PATCH", `/api/auth/users/${cree.id}`, { securitySetupRequired: false }, tenant);
+  // Sans périmètre sur l'unité, les feuilles lui sont invisibles (404) : elle gère l'unité et ses sous-unités.
+  await appel("POST", "/api/effectifs/perimetres",
+    { utilisateurId: cree.id, uniteCode, etendue: "SOUS_ARBRE", niveau: "GESTION", depuis: new Date().toISOString().slice(0, 10) }, tenant);
+  return client(appel.base, { username, password, tenantId: tenant });
+}
+
+/** Les paliers d'approbation d'une feuille vont de 1 à 3 (paramètres du temps) : au-delà, la boucle s'arrête. */
+const PALIERS_MAX = 3;
 
 /**
  * **Une conversation et une liste de diffusion** : sans elles, les routes de la communication qui
@@ -385,6 +504,11 @@ async function main() {
   // colonne de plus au mauvais endroit décale toutes les suivantes, sans erreur et sans bruit.
   const { COLONNES } = require("./generer-plans.cjs");
   completerLesVides(lignes);
+  const semaines = Number(option("quarts", "0"));
+  if (semaines > 0) {
+    const v = await semerVolumeQuarts(appel, tenant, lignes[0], semaines);
+    console.log(`volume de l'API d'échange : ${v.entrees} entrées de quarts, ${v.releves} relevés approuvés (${semaines} semaines)`);
+  }
   const inattendues = Object.keys(lignes[0]).filter((c) => !COLONNES.includes(c));
   if (inattendues.length > 0) throw new Error(`colonne(s) semée(s) mais non déclarée(s) dans COLONNES de generer-plans.cjs : ${inattendues.join(", ")} — le CSV décalerait les variables du plan`);
   const colonnes = COLONNES.filter((c) => c in lignes[0]);
@@ -405,4 +529,4 @@ async function main() {
 }
 
 if (require.main === module) main().catch((e) => { console.error(`✗ ${e.message}`); process.exit(1); });
-module.exports = { proprietes, lireCsv, semer, semerEffectifs, semerCommunication, semerJournauxDAvis, etablissementDeCampagne, completerLesVides };
+module.exports = { proprietes, lireCsv, semer, semerEffectifs, semerCommunication, semerJournauxDAvis, etablissementDeCampagne, completerLesVides, semerApiEchanges, jetonMachine, semerVolumeQuarts };

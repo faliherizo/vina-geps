@@ -16,6 +16,7 @@ import {
   depotOuvert, instant, LIBELLE_CAMPAGNE, LIBELLE_RANG, LIBELLE_REMPLACEMENT, type Campagne, type DepotCampagne, type PlageType, type PostesDisponibles, type Remplacement,
 } from "./effectifs/agph/types";
 import SemaineType from "./effectifs/agph/SemaineType";
+import { FormulaireModal } from "./Modal";
 import { objet } from "./formeRecue";
 import "./effectifs/effectifs.css";
 import PageMaquette from "./composants/PageMaquette";
@@ -47,6 +48,15 @@ export default function MonAgph() {
     setInfo("");
     if (await envoyer(`/api/effectifs/agph/campagnes/${campagneId}/choix`, { posteId })) { setInfo(`Poste ${code} choisi. Votre choix est définitif pour cette campagne.`); await charger(); }
   };
+  // AD-05 (addenda 7, Q12) : à son tour, renoncer à tout poste ; la clôture donnera le temps partiel occasionnel.
+  const renoncer = async (c: Campagne, fermer: () => void) => {
+    setInfo("");
+    if (await envoyer(`/api/effectifs/agph/campagnes/${c.id}/renoncer`, {})) {
+      fermer();
+      setInfo(`Vous avez renoncé à tout poste dans la campagne ${c.nom}. À la clôture, votre statut sera le temps partiel occasionnel.`);
+      await charger();
+    }
+  };
   const manifester = async (r: Remplacement, retirer: boolean) => {
     setInfo(""); setErreur("");
     const rep = await apiFetch(`/api/effectifs/agph/remplacements/${r.id}/interet`, { method: retirer ? "DELETE" : "POST" });
@@ -75,7 +85,7 @@ export default function MonAgph() {
       {erreur && <Message variante="erreur" testId="agm-erreur">{erreur}</Message>}
       {info && <Message variante="succes" testId="agm-info">{info}</Message>}
 
-      {moi === null && <SansDossierEffectif testId="agm-sans-ressource" />}
+      {moi === null && <SansDossierEffectif testId="agm-sans-ressource" page="monagph" />}
 
       <h2>Campagnes</h2>
       {/* L'attente n'est pas la même chose que l'absence de dossier : promettre un avis
@@ -102,6 +112,19 @@ export default function MonAgph() {
               </section>
             )}
             {v.peutChoisir && <Message variante="info" testId={`agm-tour-${c.id}`}>C'est votre tour : choisissez un seul poste avant la fin de votre délai, sinon le choix se fera pour vous selon l'ordre des postes.</Message>}
+            {v.peutChoisir && (
+              <div className="eff-actions">
+                <FormulaireModal libelle="Je ne prends aucun poste" titre={`Renoncer à tout poste — ${c.nom}`} testId={`agm-renoncer-${c.id}`} size="sm" icone="✕" className="secondary">
+                  {(fermer) => (
+                    <form onSubmit={(e) => { e.preventDefault(); void renoncer(c, fermer); }}>
+                      <p>Vous ne choisirez aucun des postes offerts. Le tour passe au rang suivant, et à la clôture de la campagne votre statut d'emploi deviendra le temps partiel occasionnel. Ce geste est définitif pour cette campagne.</p>
+                      {erreur && <Message variante="erreur" testId={`agm-renoncer-${c.id}-erreur`}>{erreur}</Message>}
+                      <p className="eff-actions"><button type="submit" data-testid={`agm-renoncer-${c.id}-confirmer`}>Confirmer : je ne prends aucun poste</button></p>
+                    </form>
+                  )}
+                </FormulaireModal>
+              </div>
+            )}
             <ul className="eff-places" aria-label={`Postes encore offerts — ${c.nom}`}>
               {v.postes.map((p) => (
                 <li key={p.id} data-testid={`agm-poste-${p.code}`}>

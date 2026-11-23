@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Groupes transverses** (FX-AO-20260810, ST-G09, 14 novembre 2026) : spécialité, garde, comité,
+    hors des unités, pour la messagerie, les listes et les alertes. L'appartenance est datée ; le nom de la
+    personne est figé à l'inscription, comme les remises d'une alerte.
+  -->
+  <changeSet id="0010-groupes-transverses" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'users'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'msg_groupes_transverses'</sqlCheck>
+    </preConditions>
+    <comment>Groupes transverses et appartenances datées.</comment>
+    <sql>
+      CREATE TABLE msg_groupes_transverses (
+        id TEXT NOT NULL,
+        tenantId TEXT NOT NULL,
+        nom TEXT NOT NULL,
+        nature TEXT NOT NULL,
+        actif INTEGER NOT NULL DEFAULT 1,
+        PRIMARY KEY (tenantId, id)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE msg_groupe_membres (
+        tenantId TEXT NOT NULL,
+        groupeId TEXT NOT NULL,
+        personId TEXT NOT NULL,
+        nom TEXT NOT NULL,
+        depuis TEXT,
+        jusqua TEXT,
+        moderateur INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (tenantId, groupeId, personId)
+      )
+    </sql>
+  </changeSet>
+</databaseChangeLog>

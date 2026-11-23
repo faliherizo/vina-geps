@@ -122,11 +122,22 @@ variable "pare_feu_actif" {
 variable "domaine" {
   type        = string
   description = "Nom d'hôte servi, par exemple cssdc.nexu.ca ou essai-cssdc.nexu.ca."
+
+  validation {
+    condition     = !strcontains(var.domaine, "*")
+    error_message = "Critère 84 : un nom d'hôte précis, jamais un nom générique (*.domaine)."
+  }
 }
 
-variable "certificat_arn" {
-  type        = string
-  description = "ARN du certificat ACM pour ce domaine, dans la même région."
+variable "hotes_supplementaires" {
+  type        = list(string)
+  default     = []
+  description = "Autres noms d'hôte du certificat, un par organisme résolu par sous-domaine (p. ex. [\"stj.geps.exemple.ca\"]). Jamais d'astérisque."
+
+  validation {
+    condition     = alltrue([for h in var.hotes_supplementaires : !strcontains(h, "*")])
+    error_message = "Critère 84 : chaque hôte supplémentaire est nommé ; un nom générique (*.domaine) est refusé."
+  }
 }
 
 variable "registre_images" {

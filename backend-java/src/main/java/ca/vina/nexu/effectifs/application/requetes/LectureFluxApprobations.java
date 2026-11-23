@@ -62,12 +62,18 @@ public class LectureFluxApprobations {
     }
 
     public Optional<Flux> fluxDe(String tenantId, ObjetFlux objet, String documentId) {
-        return moteur.demandeDuDocument(tenantId, objet, documentId).map(d -> DemandesFlux.vue(d, this::nomDuCompte));
+        return moteur.demandeDuDocument(tenantId, objet, documentId)
+                .map(d -> DemandesFlux.avecSuppleance(DemandesFlux.vue(d, this::nomDuCompte), id -> moteur.suppleanceDe(tenantId, id), this::nomDuCompte));
     }
 
     public boolean porte(Contexte ctx, FluxApprobation.Approbateur a, String uniteCode) {
+        return porte(ctx, a, uniteCode, moteur.suppleePour(ctx.tenantId(), ctx.acteurId()));
+    }
+
+    /** Une suppléance lue une fois pour toute une liste : sinon une requête par demande en cours. */
+    private boolean porte(Contexte ctx, FluxApprobation.Approbateur a, String uniteCode, Set<String> suppleePour) {
         return DemandesFlux.porte(a, new DemandesFlux.Acteur(ctx.acteurId(), ctx.role(), ctx.estAdministrateur(),
-                n -> perimetres.unitesVisibles(ctx, n).contains(uniteCode)));
+                n -> perimetres.unitesVisibles(ctx, n).contains(uniteCode), suppleePour));
     }
 
     /** L'acteur porte-t-il l'étape courante de ce flux ? (délégation comprise, jugée par le moteur générique) */
@@ -77,13 +83,14 @@ public class LectureFluxApprobations {
 
     /**
      * Les documents en attente dont l'acteur porte l'étape courante <strong>par son rôle ou nommément</strong> : une personne
-     * désignée hors du périmètre de l'unité doit trouver ce qu'elle a à décider. Le niveau de périmètre, lui, se voit déjà par
+     * désignée hors du périmètre de l'unité doit trouver ce qu'elle a à décider, et son suppléant pendant son absence. Le niveau de périmètre, lui, se voit déjà par
      * les unités visibles.
      */
     public Set<String> enAttenteDe(Contexte ctx, ObjetFlux objet) {
+        Set<String> suppleePour = moteur.suppleePour(ctx.tenantId(), ctx.acteurId());
         return moteur.enCours(ctx.tenantId(), objet).stream()
                 .filter(d -> DemandesFlux.vue(d, this::nomDuCompte).etapeCourante()
-                        .filter(e -> e.approbateur().type() != TypeApprobateur.PERIMETRE && porte(ctx, e.approbateur(), "")).isPresent())
+                        .filter(e -> e.approbateur().type() != TypeApprobateur.PERIMETRE && porte(ctx, e.approbateur(), "", suppleePour)).isPresent())
                 .map(DemandesFlux.DemandeApprobation::documentId).collect(Collectors.toSet());
     }
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHauteurBarre } from "./hauteurBarre";
 import { objet } from "./formeRecue";
 import { Icone } from "./composants";
@@ -8,12 +8,20 @@ import NouvelleAlerte from "./alertes/NouvelleAlerte";
 import SuiviAlertes from "./alertes/SuiviAlertes";
 import MesAlertes from "./alertes/MesAlertes";
 import ParametresAlertes from "./alertes/ParametresAlertes";
+import CyclesPaie from "./paie/CyclesPaie";
+import DeclarationsPaie from "./paie/DeclarationsPaie";
+import DossiersPaie from "./paie/DossiersPaie";
+import MesBulletins from "./paie/MesBulletins";
+import ParametresPaie from "./paie/ParametresPaie";
+import ReglesPaie from "./paie/ReglesPaie";
+import ValidationTemps from "./paie/ValidationTemps";
 import ApiDocs from "./ApiDocs";
 import MaintenanceBanner from "./MaintenanceBanner";
 import { EmpruntBandeau } from "./admin/EmpruntIdentite";
 import Approvals from "./Approvals";
 import Admin from "./Admin";
 import InvitationActivation from "./InvitationActivation";
+import RelierCompte from "./RelierCompte";
 import { useCurrentTenant } from "./organismeCourant";
 import { MenuProfil } from "./ProfilUtilisateur";
 import BarreAvis from "./BarreAvis";
@@ -44,7 +52,7 @@ import { I18nProvider, useT, LANGUAGES, Lang } from "./i18n";
  * (AO 2027-005) : elles sont déclarées par `santequebec/menu.ts` et rendues par son registre.
  * L'union tient sur une seule ligne — un garde-fou du dépôt la lit ainsi.
  */
-export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres";
+export type Page = "dashboard" | "rapports" | "apidocs" | "integrations" | "help" | "soutien" | "approvals" | "admin" | "notifications" | "access" | "superadmin" | "account" | "uscomblement" | "usequipages" | "usdisponibilites" | "usabsences" | "usechanges" | "usagph" | "uspresence" | "ustemps" | "uspostes" | "usperiodes" | "usressources" | "usquotas" | "usreferentiels" | "uscodesabsence" | "usregles" | "usmilieux" | "usperimetres" | "usintegrations" | "usretention" | "usjournal" | "usmessages" | "usappels" | "usdiffusion" | "monhoraire" | "mesdisponibilites" | "mesechanges" | "monagph" | "monpointage" | "matemps" | "mesabsences" | "monequipe" | "alnouvelle" | "alsuivi" | "mesalertes" | "alparametres" | "paiecycles" | "paiedossiers" | "paiedeclarations" | "mesbulletins" | "paieparametres" | "paieregles" | "paietemps";
 type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant" | "director";
 
 /**
@@ -57,7 +65,12 @@ type Role = "superadmin" | "admin" | "manager" | "employee" | "rh" | "accountant
  * L'intérêt n'est pas cosmétique : depuis que les établissements définissent leurs propres
  * rôles, une liste de rôles écrite ici ne peut plus être exhaustive.
  */
-const PAGE_CAPABILITIES: Partial<Record<Page, string[]>> = {};
+const PAGE_CAPABILITIES: Partial<Record<Page, string[]>> = {
+  // Communications cliniques (ADR 0085) : suivre la preuve de livraison ne suppose pas d'envoyer — un rôle propre à
+  // l'organisme (« expéditeur ») ou un gestionnaire privé d'envoi voit la page qui correspond à son droit.
+  alnouvelle: ["alertes.envoyer"],
+  alsuivi: ["alertes.suivre"],
+};
 
 /**
  * **Pages dont le serveur calcule le droit en entier.**
@@ -74,18 +87,27 @@ const PAGE_DROIT_SERVEUR: Partial<Record<Page, "peutApprouver">> = {
 };
 
 /** Le nom du produit : VINA Gestion des Personnels de la Santé. L'organisme client se nomme à côté. */
-export const MARQUE = "VINA GEPS";
+export const MARQUE = "VINA GePS";
 
 const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // Les pages d'Urgences-santé sont déclarées par `urgencessante/menu.ts` : ajouter un écran
   // là-bas ne demande pas de modifier l'ossature de l'application.
   ...ENTREES_US.map((e) => ({ key: e.cle as Page, i18nKey: `nav.${e.cle}`, icon: e.icone, roles: e.roles as Role[] })),
   { key: "dashboard", i18nKey: "nav.dashboard", icon: "📊", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
-  // Communications cliniques (ADR 0074) : envoyer et suivre exigent la capacité au serveur ; recevoir est à tous.
+  // Communications cliniques (ADR 0074, 0085) : envoyer et suivre exigent chacun leur capacité ; recevoir est à tous.
   { key: "alnouvelle", i18nKey: "nav.alnouvelle", icon: "🚨", roles: ["admin", "manager", "director"] },
   { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
   { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
   { key: "alparametres", i18nKey: "nav.alparametres", icon: "⚙️", roles: ["admin"] },
+  // Paie (ADR 0076, 0084) : produire la paie exige « paie.gerer » au serveur (administration, RH, comptable) ; tenir
+  // les règles, les dossiers et les réglages, « paie.configurer » (administration, RH). Chacun lit ses propres bulletins.
+  { key: "paietemps", i18nKey: "nav.paietemps", icon: "🕵️", roles: ["admin", "rh", "accountant"] },
+  { key: "paiecycles", i18nKey: "nav.paiecycles", icon: "💵", roles: ["admin", "rh", "accountant"] },
+  { key: "paiedossiers", i18nKey: "nav.paiedossiers", icon: "🗂️", roles: ["admin", "rh"] },
+  { key: "paiedeclarations", i18nKey: "nav.paiedeclarations", icon: "🧾", roles: ["admin", "rh", "accountant"] },
+  { key: "mesbulletins", i18nKey: "nav.mesbulletins", icon: "📄", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "paieparametres", i18nKey: "nav.paieparametres", icon: "⚙️", roles: ["admin", "rh"] },
+  { key: "paieregles", i18nKey: "nav.paieregles", icon: "📐", roles: ["admin", "rh"] },
   { key: "rapports", i18nKey: "nav.rapports", icon: "📑", roles: ["admin", "manager"] },
   { key: "account", i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee"] },
   { key: "help", i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
@@ -181,6 +203,12 @@ function AppShell() {
   // chargé ou utilisateur global (superadmin) → aucun gating par module.
   const [enabledModules, setEnabledModules] = useState<Set<string> | null>(null);
   /**
+   * **La première réponse de `my-modules` est-elle arrivée ?** Avant elle, `null` voulait dire « tout permis » : le
+   * menu affichait chaque module, puis se repliait une seconde plus tard — une infirmière voyait passer la paie et
+   * la confection AGPH. Tant qu'elle n'est pas arrivée, seuls les menus du cœur paraissent.
+   */
+  const [modulesCharges, setModulesCharges] = useState(false);
+  /**
    * Les vues de menu **masquées** pour cet établissement (Superadmin › Modules et accès).
    *
    * ⚠️ Ce n'est pas un contrôle d'accès : les routes d'API de la page restent ouvertes. C'est un
@@ -189,7 +217,7 @@ function AppShell() {
    */
   const [vuesMasquees, setVuesMasquees] = useState<Set<string>>(new Set());
   const refreshModules = useCallback(async () => {
-    if (!user) { setEnabledModules(null); setVuesMasquees(new Set()); return; }
+    if (!user) { setEnabledModules(null); setVuesMasquees(new Set()); setModulesCharges(false); return; }
     try {
       // `no-store` : on ne veut jamais une copie mise en cache — une désactivation par le
       // superadmin doit se refléter dès le prochain chargement/retour d'onglet.
@@ -212,6 +240,7 @@ function AppShell() {
       // entrée doit la voir disparaître au prochain chargement, pas le lendemain.
       setVuesMasquees(new Set<string>(Array.isArray(j?.vuesMasquees) ? j.vuesMasquees : []));
     } catch { setEnabledModules(null); setVuesMasquees(new Set()); }
+    setModulesCharges(true);
   }, [user, apiFetch]);
   useEffect(() => { refreshModules(); }, [refreshModules]);
   // Rafraîchit les modules quand l'onglet reprend le focus (le superadmin a pu en désactiver
@@ -224,7 +253,11 @@ function AppShell() {
   }, [refreshModules]);
 
   /** Un code de module est autorisé s'il n'est pas géré, si aucun gating (utilisateur global), ou s'il est activé. */
-  const moduleCodeAllowed = (mod?: string): boolean => !mod || enabledModules === null || enabledModules.has(mod);
+  const moduleCodeAllowed = (mod?: string): boolean => {
+    if (!mod) return true;
+    if (enabledModules !== null) return enabledModules.has(mod);
+    return !user || modulesCharges;
+  };
   /** Un module est autorisé si non géré (menu cœur) ou présent dans les modules activés du tenant. */
   const moduleAllowed = (key: Page): boolean => moduleCodeAllowed(PAGE_MODULE[key]);
   /** La clé d'une vue au catalogue du serveur : `page` pour une page, `page:onglet` pour un onglet. */
@@ -313,9 +346,10 @@ function AppShell() {
   // s'ouvre pas non plus par son URL. Le serveur refuse déjà les données (403) ; sans cette garde,
   // l'écran s'affichait quand même, vide ou en erreur — ce que l'essai « accès par rôle » a montré.
   useEffect(() => {
-    if (!user) return;
+    // Avant la réponse des modules, la page demandée par l'URL n'est pas encore « visible » : la garder.
+    if (!user || !modulesCharges) return;
     if (!visible.some((p) => p.key === page)) setPage(repli);
-  }, [page, user, visible.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [page, user, visible.length, modulesCharges]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Garde du **masquage** : une page dont le menu ne propose plus aucune vue ne s'ouvre pas par
@@ -340,6 +374,15 @@ function AppShell() {
     if (!user || !demande.onglet) return;
     if (vueMasquee({ page, onglet: demande.onglet })) setDemande((d) => ({ onglet: null, jeton: d.jeton + 1 }));
   }, [page, demande.onglet, user, vuesMasquees]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /**
+   * Les pages que le superadmin a retirées du menu de l'établissement (toutes leurs vues masquées) : la même règle que
+   * la garde ci-dessus, partagée avec l'aide, qui ne décrit pas un écran que l'organisme n'a pas.
+   */
+  const pagesMasquees = useMemo(() => new Set<string>(PAGES.map((p) => p.key).filter((cle) => {
+    const sesVues = toutesLesVuesDuMenu.filter((v) => v.page === cle);
+    return sesVues.length > 0 && sesVues.every((v) => vuesMasquees.has(cleDeVue(v)));
+  })), [vuesMasquees]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Déplace le focus sur <main> à chaque changement de page (sauf au tout premier rendu).
   useEffect(() => {
@@ -378,11 +421,12 @@ function AppShell() {
     return () => window.removeEventListener("popstate", onPop);
   }, []);
   useEffect(() => {
-    if (user && !visible.some((p) => p.key === page)) {
+    // Même règle que la garde par rôle : on ne juge la page qu'une fois les modules connus.
+    if (user && modulesCharges && !visible.some((p) => p.key === page)) {
       setPage(visible[0]?.key || "time");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, modulesCharges]);
 
   // Les onglets de la page courante que le menu propose : sans correspondance exacte, c'est
   // l'entrée principale de la page qui est marquée courante (arrivée par URL ou depuis la recherche).
@@ -554,7 +598,8 @@ function AppShell() {
       {/* Décoratif : la barre latérale se referme aussi par navigation ou par le bouton de menu. */}
       {open && <div className="backdrop" aria-hidden="true" onClick={() => setOpen(false)} />}
       <aside className={`sidebar ${open ? "open" : ""}`} data-testid="sidebar">
-        <nav aria-label={t("common.menu")} className="nav-groups">
+        {/* Occupé tant que les modules ne sont pas connus : les entrées de module n'y sont pas encore. */}
+        <nav aria-label={t("common.menu")} className="nav-groups" aria-busy={!!user && !modulesCharges}>
           {NAVIGATION.map((g) => {
             // Une notion sans vue visible n'apparaît pas ; une rubrique sans entrée non plus.
             const rendu = g.entrees.map((e) => {
@@ -629,7 +674,7 @@ function AppShell() {
 
       <OngletContext.Provider value={{ page, onglet: demande.onglet, jeton: demande.jeton, notion: emplacement ? cleDeNotion(emplacement.groupe, emplacement.concept) : null }}>
       <main className="main" id="main-content" tabIndex={-1} ref={mainRef} aria-label={t("common.mainContent")}>
-        <ModuleAccessProvider value={enabledModules}>
+        <ModuleAccessProvider value={enabledModules} pagesMasquees={pagesMasquees}>
         <EmpruntBandeau />
         {/*
           **Un appel se voit où qu'on soit.** La bannière est au-dessus du contenu, dans le flux,
@@ -647,6 +692,13 @@ function AppShell() {
         {page === "alsuivi" && <SuiviAlertes />}
         {page === "mesalertes" && <MesAlertes />}
         {page === "alparametres" && <ParametresAlertes />}
+        {page === "paiecycles" && <CyclesPaie />}
+        {page === "paiedossiers" && <DossiersPaie />}
+        {page === "paiedeclarations" && <DeclarationsPaie />}
+        {page === "mesbulletins" && <MesBulletins />}
+        {page === "paieparametres" && <ParametresPaie />}
+        {page === "paieregles" && <ReglesPaie />}
+        {page === "paietemps" && <ValidationTemps />}
         {page === "apidocs" && <ApiDocs />}
         {page === "integrations" && <Integrations />}
         {page === "notifications" && <Notifications />}
@@ -654,7 +706,8 @@ function AppShell() {
         {page === "superadmin" && <Superadmin />}
         {page === "account" && <Account />}
         {CLES_US.includes(page) && <PageUrgencesSante cle={page} />}
-        {page === "help" && <Help section={sectionAide} />}
+        {/* L'aide attend les modules et le menu de l'établissement : avant eux, « aucun filtrage » montrerait tout le guide. */}
+        {page === "help" && modulesCharges && <Help section={sectionAide} />}
         {page === "soutien" && <Soutien />}
         {page === "approvals" && <Approvals />}
         {page === "admin" && <Admin />}
@@ -806,6 +859,15 @@ export default function App() {
     return (
       <I18nProvider>
         <InvitationActivation jeton={invitMatch[1]} />
+      </I18nProvider>
+    );
+  }
+  // Page **publique** « Relier mon compte » (ADR 0093) : l'annuaire a authentifié la personne, mais son
+  // identité n'est reliée à aucun compte ; elle prouve ici la possession du sien. Aucune session encore.
+  if (typeof window !== "undefined" && /\/connexion\/relier\/?$/.test(window.location.pathname)) {
+    return (
+      <I18nProvider>
+        <RelierCompte />
       </I18nProvider>
     );
   }

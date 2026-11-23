@@ -1,7 +1,7 @@
 # FX-AO-20260810 : validation du dossier d'analyse et de conception
 
 > Écrit pour l'équipe qui prépare la soumission à Santé Québec Laurentides (« Solution logicielle de
-> gestion et de distribution des communications cliniques ») et pour l'architecte de VINA GEPS. Le
+> gestion et de distribution des communications cliniques ») et pour l'architecte de VINA GePS. Le
 > document relit chaque pièce du dossier existant contre les deux sources (devis et bordereau), dit
 > ce qui tient, ce qui doit être corrigé, et ce qui manque.
 
@@ -18,7 +18,7 @@ questions au client (GAP-01 à GAP-18) sont pertinentes.
 Il a cependant trois faiblesses de fond :
 
 1. **Il conçoit une plateforme neuve** (« Java 21, PostgreSQL, RabbitMQ », phases P1 à P3 de
-   fondations) sans tenir compte de ce qui existe déjà. Sur les 32 critères fonctionnels, VINA GEPS en sert déjà
+   fondations) sans tenir compte de ce qui existe déjà. Sur les 32 critères fonctionnels, VINA GePS en sert déjà
    **13 entièrement et 12 en partie**, en s'appuyant sur :
    - messagerie bidirectionnelle avec statuts envoyé, reçu et lu ;
    - groupes et listes de diffusion ;
@@ -44,7 +44,7 @@ Il a cependant trois faiblesses de fond :
 | `01_analyse/03_exigences_fournisseur.md` | Couvre le soutien et la gestion de projet. | Ajouter le critère 94 (cinq ans en milieu hospitalier ou démonstration équivalente), qui est **éliminatoire en pratique**. Préparer la preuve : Urgences-santé et Santé Québec, AO 2027-005. |
 | `01_analyse/04_exigences_non_fonctionnelles.md` | Correct sur la sécurité. | Chiffrer ce que la grille ne chiffre pas (GAP-05 et GAP-06) avec **nos** engagements : 99,7 % (repris de 26-015-DO), RPO de 24 h, RTO de 4 h. |
 | `01_analyse/05_matrice_tracabilite_et_ecarts.md` | GAP-01 à GAP-18 pertinents. | GAP-04 : ajouter que le critère 95 (2 000 utilisateurs) est démontrable par notre campagne JMeter. GAP-17 : la règle de facturation demande un **compteur dédupliqué par mois** (story ST-G08). |
-| `02_architecture/01_architecture_solution.md` | Découpage logique sain. | La remplacer par l'architecture réelle (VINA GEPS, un contexte « alertes » de plus). Voir [04_architecture_solution.md](04_architecture_solution.md). |
+| `02_architecture/01_architecture_solution.md` | Découpage logique sain. | La remplacer par l'architecture réelle (VINA GePS, un contexte « alertes » de plus). Voir [04_architecture_solution.md](04_architecture_solution.md). |
 | `02_architecture/02_diagrammes_C1_C4.md` | Génériques. | Les redessiner sur les conteneurs réels : nginx, Java, base de données, volume, fournisseurs SMS, voix et courriel. |
 | `02_architecture/03_BPMN_2_0_processus.md` | Les processus d'envoi, de relance et de cascade sont bons. | À garder : ils deviennent les machines à états du contexte `alertes`. |
 | `02_architecture/04_MCD_modele_donnees_dynamique.md` | Bon (snapshot des destinataires, versions de politiques). | Fusionner avec le schéma existant : `msg_*` pour les fils, et des tables `alr_*` nouvelles pour les alertes. |
@@ -68,6 +68,6 @@ Il a cependant trois faiblesses de fond :
 
 ## 4. Recommandation
 
-Répondre avec **VINA GEPS et un module « Communications cliniques » activable par organisme**,
+Répondre avec **VINA GePS et un module « Communications cliniques » activable par organisme**,
 plutôt qu'avec un nouveau produit. Les motifs, les options écartées et les conséquences sont dans
 [04_architecture_solution.md](04_architecture_solution.md) (ADR 0074, proposé).

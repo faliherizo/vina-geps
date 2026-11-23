@@ -11,6 +11,8 @@ import { expectNoA11yViolations } from "./helpers/a11y";
 import { ouvrirNav } from "./helpers/nav";
 import { createTenant, selectTenant, setTenantModules, uniq, MODULES_SOCLE } from "./helpers/organisme";
 import { choisirPersonne } from "./helpers/personne";
+import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 const API = `http://localhost:${process.env.E2E_API_PORT ?? "4000"}`;
 
@@ -31,19 +33,22 @@ test("l'employée règle ses notifications ; l'administration l'avise par son no
   await systeme.patch(`${API}/api/auth/users/${compte.id}`, { headers: t, data: { mustChangePassword: false, securitySetupRequired: false } });
 
   // 1) Mon compte › Mes notifications : la matrice, un refus nommé, puis un réglage enregistré.
-  const ctxLea = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxLea = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const lea = await ctxLea.newPage();
   await lea.goto("/");
   await uiLogin(lea, `lea-${suffixe}`, "pass1234", tenantId);
   await ouvrirNav(lea, "nav-account");
+  await raconter(lea, "Avis d'événements. Léa Tremblay ouvre Mon compte, onglet des notifications : pour chaque événement, elle choisit ses canaux, courriel, texto ou notification poussée.");
   await lea.getByTestId("account-tab-notifications").click();
   await expect(lea.getByTestId("account-canaux-matrice")).toBeVisible();
   await expect(lea.getByTestId("account-avis-message.direct-essentiel")).toBeVisible();
+  await raconter(lea, "Elle tente de couper le courriel et le texto pour les messages de l'encadrement. Cet événement est essentiel : l'organisme exige au moins un canal, et l'enregistrement est refusé avec le nom de l'événement.");
   await lea.getByTestId("account-avis-message.direct-courriel").uncheck();
   await lea.getByTestId("account-avis-message.direct-texto").uncheck();
   await lea.getByTestId("account-canaux-save").click();
   await expect(lea.getByTestId("account-canaux-refus")).toContainText("Message de l'encadrement");
   await expectNoA11yViolations(lea);
+  await raconter(lea, "Elle garde le courriel pour les messages de l'encadrement, coupe la notification poussée des quarts offerts, et enregistre : cette fois, ses préférences sont acceptées.");
   await lea.getByTestId("account-avis-message.direct-courriel").check();
   await lea.getByTestId("account-avis-quart.offert-poussee").uncheck();
   await lea.getByTestId("account-canaux-save").click();
@@ -55,10 +60,11 @@ test("l'employée règle ses notifications ; l'administration l'avise par son no
   await ctxLea.close();
 
   // 2) Notifications › Notifier une personne (l'administration de l'établissement) : par le nom, tous les canaux demandés — le texto est « désactivé ».
-  const ctxAdmin = await browser.newContext({ storageState: { cookies: [], origins: [] } });
+  const ctxAdmin = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] } }));
   const page = await ctxAdmin.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-notifications");
+  await raconter(page, "L'administration avise Léa par son nom : réunion d'équipe jeudi, avec un message personnalisé par son prénom. Le résultat respecte ses préférences : courriel envoyé, texto désactivé par la personne. Le courriel reçu le prouve.");
   await expect(page.getByTestId("notif-personne")).toBeVisible();
   await choisirPersonne(page, "notif-personne-cible", `Tremblay${suffixe}`);
   await page.getByTestId("notif-personne-sujet").fill("Réunion d'équipe jeudi");

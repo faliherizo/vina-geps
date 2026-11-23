@@ -1,0 +1,1048 @@
+{
+ "_lecture": "Les 115 critères de la grille FX-AO-20260810. « page » et « preuve » : l'écran et ses commandes, constatés par fx-ao-exigences.spec.ts ; « scenarios » : les scénarios par l'API de comportements.json ; « essaiProfond » : les essais Java ; « documents » : infrastructure ou exploitation. Statut repris de 02_conformite_115_criteres.md.",
+ "exigences": [
+  {
+   "id": "1",
+   "intitule": "Console web d'envoi centralisée ; alerte par application mobile ou texto selon la préférence du destinataire",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-formulaire",
+    "aln-destinataires",
+    "aln-envoyer"
+   ],
+   "scenarios": [
+    "FX-04"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurAlertesHttpTest.java"
+   ]
+  },
+  {
+   "id": "2",
+   "intitule": "Insertion d'une note au dossier des destinataires",
+   "statut": "🟡",
+   "bloc": "fonctionnel",
+   "page": "alsuivi",
+   "preuve": [
+    "als-ecran",
+    "als-table|als-vide"
+   ],
+   "scenarios": [
+    "FX-09"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurNotesHttpTest.java"
+   ]
+  },
+  {
+   "id": "3",
+   "intitule": "Recherche de destinataire par nom, prénom",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-groupe-personnes"
+   ],
+   "scenarios": [
+    "FX-04"
+   ]
+  },
+  {
+   "id": "4",
+   "intitule": "Messages texte bidirectionnels entre équipes, médecins, utilisateurs autorisés",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "usmessages",
+   "preuve": [
+    "sq-msg-ouvrir|sq-msg-directe"
+   ],
+   "scenarios": [
+    "FX-05"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurWebhooksAlertesHttpTest.java"
+   ]
+  },
+  {
+   "id": "5",
+   "intitule": "Envoi à un utilisateur, plusieurs, ou un groupe configurable",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-destinataires",
+    "aln-groupe-personnes"
+   ],
+   "scenarios": [
+    "FX-04"
+   ]
+  },
+  {
+   "id": "6",
+   "intitule": "Messages prédéfinis pour les expéditeurs",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-modeles|alp-modeles-vide",
+    "alp-modele-ouvrir"
+   ],
+   "scenarios": [
+    "FX-02"
+   ]
+  },
+  {
+   "id": "7",
+   "intitule": "Diffusion d'alertes en temps réel",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-envoyer"
+   ],
+   "scenarios": [
+    "FX-04"
+   ]
+  },
+  {
+   "id": "8",
+   "intitule": "Copie courriel d'un message, si configurée par l'organisme",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-copie"
+   ],
+   "scenarios": [
+    "FX-07"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurAlertesHttpTest.java"
+   ]
+  },
+  {
+   "id": "9",
+   "intitule": "Confirmation de réception, lecture ou prise en charge, simple et automatisée",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesalertes",
+   "preuve": [
+    "mal-titre"
+   ],
+   "scenarios": [
+    "FX-05"
+   ]
+  },
+  {
+   "id": "10",
+   "intitule": "Réponses prédéfinies, configurées par les administrateurs",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-reponses|alp-reponses-vide",
+    "alp-reponse-ouvrir"
+   ],
+   "scenarios": [
+    "FX-01"
+   ]
+  },
+  {
+   "id": "11",
+   "intitule": "Statut d'envoi, réception, lecture, réponse et relance, vu par l'expéditeur",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alsuivi",
+   "preuve": [
+    "als-filtres",
+    "als-etat"
+   ],
+   "scenarios": [
+    "FX-06"
+   ]
+  },
+  {
+   "id": "12",
+   "intitule": "Historique des échanges et statuts partagés entre expéditeurs",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alsuivi",
+   "preuve": [
+    "als-expediteur",
+    "prefixe:als-export"
+   ],
+   "scenarios": [
+    "FX-06"
+   ]
+  },
+  {
+   "id": "13",
+   "intitule": "Confirmer la réception d'un retour d'appel",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesalertes",
+   "preuve": [
+    "mal-titre"
+   ],
+   "scenarios": [
+    "FX-05"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/domaine/AppelsAlertesTest.java"
+   ]
+  },
+  {
+   "id": "14",
+   "intitule": "Appel téléphonique automatique en cas de non-réponse, délai programmable",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-politiques",
+    "alp-politique-ouvrir"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/domaine/AppelsAlertesTest.java"
+   ]
+  },
+  {
+   "id": "15",
+   "intitule": "Relances automatisées configurables",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-politiques"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurCascadesHttpTest.java"
+   ]
+  },
+  {
+   "id": "16",
+   "intitule": "Cascades entre utilisateurs d'un groupe ou de groupes distincts",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-politiques",
+    "prefixe:alp-gt"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurCascadesHttpTest.java"
+   ]
+  },
+  {
+   "id": "17",
+   "intitule": "Délais, séquences, règles d'arrêt et de reprise des cascades",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-politiques"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurCascadesHttpTest.java"
+   ]
+  },
+  {
+   "id": "18",
+   "intitule": "Alertes critiques, lorsque disponibles et permises",
+   "statut": "🟡",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-critique-refusee|aln-p-critique"
+   ],
+   "scenarios": [
+    "FX-04"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/notifications/infrastructure/NotificationsEtPousseeTest.java"
+   ]
+  },
+  {
+   "id": "19",
+   "intitule": "Traces des relances, appels, réponses, escalades",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alsuivi",
+   "preuve": [
+    "als-table|als-vide"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurCascadesHttpTest.java"
+   ]
+  },
+  {
+   "id": "20",
+   "intitule": "Accès mobile par navigateur, sans équipement dédié",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesalertes",
+   "preuve": [
+    "mal-titre"
+   ],
+   "scenarios": []
+  },
+  {
+   "id": "21",
+   "intitule": "Application mobile iOS et Android, si proposée",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesalertes",
+   "preuve": [
+    "mal-titre"
+   ],
+   "scenarios": []
+  },
+  {
+   "id": "22",
+   "intitule": "Préférences de communication par destinataire, sans contourner les règles obligatoires",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "account",
+   "preuve": [
+    "account-tab-profile"
+   ],
+   "scenarios": []
+  },
+  {
+   "id": "23",
+   "intitule": "Interface intuitive, rapide en contexte clinique",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alnouvelle",
+   "preuve": [
+    "aln-formulaire"
+   ],
+   "scenarios": [
+    "FX-04"
+   ]
+  },
+  {
+   "id": "24",
+   "intitule": "Historique de ses messages et confirmations selon ses droits",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesalertes",
+   "preuve": [
+    "mal-titre"
+   ],
+   "scenarios": [
+    "FX-05"
+   ]
+  },
+  {
+   "id": "25",
+   "intitule": "Calendrier interne de disponibilité des destinataires",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "mesdisponibilites",
+   "preuve": [
+    "mdi-titre"
+   ],
+   "scenarios": [
+    "FX-08"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/alertes/infrastructure/web/ControleurCascadesHttpTest.java"
+   ]
+  },
+  {
+   "id": "26",
+   "intitule": "Console de gestion centralisée pour les administrateurs",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "admin/admin",
+   "preuve": [
+    "admin-page",
+    "admin-users-list"
+   ],
+   "scenarios": []
+  },
+  {
+   "id": "27",
+   "intitule": "Créer, modifier, désactiver utilisateurs et groupes (unité, service, spécialité, établissement)",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "admin/admin",
+   "preuve": [
+    "admin-create",
+    "admin-role"
+   ],
+   "scenarios": [
+    "FX-13"
+   ]
+  },
+  {
+   "id": "28",
+   "intitule": "Cloisonner les utilisateurs dans un ou plusieurs groupes",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "prefixe:alp-gt"
+   ],
+   "scenarios": [
+    "FX-04"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/communication/infrastructure/web/ControleurGroupesTransversesHttpTest.java"
+   ]
+  },
+  {
+   "id": "29",
+   "intitule": "Coordonnées des destinataires confidentielles",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "usappels",
+   "preuve": [
+    "prefixe:sq-appels"
+   ],
+   "scenarios": []
+  },
+  {
+   "id": "30",
+   "intitule": "Comptes utilisateur et administrateur, profils plus granulaires",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "access",
+   "preuve": [
+    "access-tabs"
+   ],
+   "scenarios": [
+    "FX-03"
+   ]
+  },
+  {
+   "id": "31",
+   "intitule": "Écran de visionnement des messages envoyés et des statuts",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alsuivi",
+   "preuve": [
+    "als-table|als-vide"
+   ],
+   "scenarios": [
+    "FX-06"
+   ]
+  },
+  {
+   "id": "32",
+   "intitule": "Configuration des messages et réponses prédéfinis, relances, groupes, cascades, droits, disponibilité",
+   "statut": "✅",
+   "bloc": "fonctionnel",
+   "page": "alparametres",
+   "preuve": [
+    "alp-ecran",
+    "alp-politiques",
+    "alp-reglages"
+   ],
+   "scenarios": [
+    "FX-01",
+    "FX-02",
+    "FX-07",
+    "FX-08"
+   ]
+  },
+  {
+   "id": "33",
+   "intitule": "Fonctionne sur les postes standards de l'établissement",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "34",
+   "intitule": "Compatible Windows 11",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "35",
+   "intitule": "Impression par le service Windows ou les paramètres locaux",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "36",
+   "intitule": "Standards de nomenclature de l'établissement",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "37",
+   "intitule": "Pilotes universels d'imprimantes HP, Ricoh, Xerox",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "38",
+   "intitule": "Compatible Microsoft Office",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-06"
+   ]
+  },
+  {
+   "id": "39",
+   "intitule": "PDF/A lors de l'extraction en PDF",
+   "statut": "🟡",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-06"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/partage/pdf/PdfAConformiteTest.java"
+   ]
+  },
+  {
+   "id": "40",
+   "intitule": "Courriel Microsoft Outlook 365",
+   "statut": "✅",
+   "bloc": "technique",
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/partage/courrier/infrastructure/CourrierGraphTest.java"
+   ]
+  },
+  {
+   "id": "41",
+   "intitule": "Fonctionnelle sur réseaux étendus (WAN)",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "42",
+   "intitule": "Normes réseau Ethernet, TCP/IP",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "43",
+   "intitule": "Adressage privé 10.x",
+   "statut": "🏢",
+   "bloc": "technique"
+  },
+  {
+   "id": "44",
+   "intitule": "Aucun « broadcasting »",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "45",
+   "intitule": "WPA2",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "46",
+   "intitule": "802.11 a/b/g/n/ac/ax",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "47",
+   "intitule": "Résolution DNS",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "48",
+   "intitule": "802.1x (EAP-TLS, PEAP)",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "49",
+   "intitule": "Filtrage Web et mandataire",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "50",
+   "intitule": "SaaS, nuage privé ou installation locale",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "51",
+   "intitule": "Windows Server 2019+ sur VMware vSphere",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "docs/FX-AO-20260810_Dossier/07_validation_vina_geps/09_exploitation_chez_l_etablissement.md"
+   ]
+  },
+  {
+   "id": "52",
+   "intitule": "Accessible dans Citrix",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "53",
+   "intitule": "Données hébergées au Canada",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "infra/terraform/aws/versions.tf"
+   ]
+  },
+  {
+   "id": "54",
+   "intitule": "Systèmes, navigateurs, versions et dépendances documentés",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "55",
+   "intitule": "Architecture technologique décrite",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "56",
+   "intitule": "Infrastructures gérées par l'établissement",
+   "statut": "🏢",
+   "bloc": "technique"
+  },
+  {
+   "id": "57",
+   "intitule": "Infrastructures acquises par l'établissement",
+   "statut": "🏢",
+   "bloc": "technique"
+  },
+  {
+   "id": "58",
+   "intitule": "Système d'exploitation installé par l'établissement",
+   "statut": "🏢",
+   "bloc": "technique"
+  },
+  {
+   "id": "59",
+   "intitule": "Nombre de VM, vCPU et mémoire",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "60",
+   "intitule": "Volumes de stockage par VM",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "61",
+   "intitule": "Virtualisable sur vSphere 8+",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "docs/FX-AO-20260810_Dossier/07_validation_vina_geps/09_exploitation_chez_l_etablissement.md"
+   ]
+  },
+  {
+   "id": "62",
+   "intitule": "Heure NTP de l'établissement",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "63",
+   "intitule": "Correctifs de sécurité dès leur disponibilité",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "64",
+   "intitule": "Compatible avec l'agent de sauvegarde",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "65",
+   "intitule": "Procédure de sauvegarde de tous les environnements",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "66",
+   "intitule": "Procédure d'archivage",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "docs/FX-AO-20260810_Dossier/07_validation_vina_geps/09_exploitation_chez_l_etablissement.md"
+   ]
+  },
+  {
+   "id": "67",
+   "intitule": "Destruction permanente des données",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "68",
+   "intitule": "Tests de restauration périodiques accompagnés",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "69",
+   "intitule": "Compatible Microsoft Defender EDR",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "70",
+   "intitule": "Surveillance Zabbix acceptée",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "71",
+   "intitule": "Lois et politiques (Loi 25)",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "72",
+   "intitule": "Confidentialité, intégrité, disponibilité",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "73",
+   "intitule": "Chiffrement en transit",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "74",
+   "intitule": "Chiffrement au repos, sauvegardes comprises",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "infra/terraform/aws/sauvegardes-hors-region.tf"
+   ]
+  },
+  {
+   "id": "75",
+   "intitule": "Surveillance et gestion des incidents de sécurité",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "76",
+   "intitule": "Avis sans délai d'un incident",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "77",
+   "intitule": "Accès fondé sur les rôles et permissions",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-01",
+    "FX-03"
+   ]
+  },
+  {
+   "id": "78",
+   "intitule": "Privilège minimal",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-03"
+   ]
+  },
+  {
+   "id": "79",
+   "intitule": "Aucun compte générique",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "80",
+   "intitule": "Révocation rapide d'un accès",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-13"
+   ]
+  },
+  {
+   "id": "81",
+   "intitule": "Intégration aux mécanismes d'identité",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-12"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/auth/infrastructure/web/ControleurAnnuairesHttpTest.java"
+   ]
+  },
+  {
+   "id": "82",
+   "intitule": "LDAPS pour les échanges LDAP",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-12"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/auth/infrastructure/persistance/LiaisonLdapsTest.java",
+    "backend-java/src/test/java/ca/vina/nexu/auth/domaine/AnnuairesTest.java"
+   ]
+  },
+  {
+   "id": "83",
+   "intitule": "Information GIA remise au pilote",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "84",
+   "intitule": "Aucun certificat wildcard",
+   "statut": "✅",
+   "bloc": "technique",
+   "documents": [
+    "infra/terraform/aws/certificat.tf",
+    "infra/terraform/aws/tests/certificat-nominatif.tftest.hcl"
+   ]
+  },
+  {
+   "id": "85",
+   "intitule": "Mot de passe : 8 caractères, 4 classes",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-11"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/auth/domaine/PolitiqueMotDePasseTest.java"
+   ]
+  },
+  {
+   "id": "86",
+   "intitule": "10 derniers mots de passe refusés pendant 6 mois",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-11"
+   ],
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/auth/infrastructure/persistance/HistoriqueMotsDePasseTest.java"
+   ]
+  },
+  {
+   "id": "87",
+   "intitule": "Aucun privilège d'administration à l'exécution",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "88",
+   "intitule": "Service F pour l'accès à distance",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "89",
+   "intitule": "Traçabilité complète des communications",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-06",
+    "FX-08"
+   ]
+  },
+  {
+   "id": "90",
+   "intitule": "Journaux protégés, accès autorisé seulement",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-13"
+   ]
+  },
+  {
+   "id": "91",
+   "intitule": "Conservation et exportation des journaux documentées",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "92",
+   "intitule": "Audit sans préavis accepté",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "93",
+   "intitule": "Journaux extraits en format exploitable",
+   "statut": "✅",
+   "bloc": "technique",
+   "scenarios": [
+    "FX-06",
+    "FX-13"
+   ]
+  },
+  {
+   "id": "94",
+   "intitule": "Maturité hospitalière de 5 ans ou équivalent",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "95",
+   "intitule": "2 000 utilisateurs au moins",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "96",
+   "intitule": "Déploiement multi-sites",
+   "statut": "✅",
+   "bloc": "technique"
+  },
+  {
+   "id": "97",
+   "intitule": "Engagements de niveau de service",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "98",
+   "intitule": "Réponse au soutien en 4 h ou moins",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "99",
+   "intitule": "Préavis de 30 jours ouvrables d'un rehaussement",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "100",
+   "intitule": "Retour à la version précédente",
+   "statut": "✅",
+   "bloc": "technique",
+   "essaiProfond": [
+    "backend-java/src/test/java/ca/vina/nexu/RetourArriereSchemaTest.java"
+   ],
+   "documents": [
+    "backend-java/src/main/resources/db/retour"
+   ]
+  },
+  {
+   "id": "101",
+   "intitule": "Assistance 24/7 en français",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "102",
+   "intitule": "Méthodologie d'implantation",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "103",
+   "intitule": "Chargé de projet",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "104",
+   "intitule": "Suivi, comptes rendus, registres",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "105",
+   "intitule": "Reprise à ses frais d'un livrable",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "106",
+   "intitule": "Plan de formation",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "107",
+   "intitule": "Formation en français",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "108",
+   "intitule": "Soutien complet",
+   "statut": "✅ / 📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "109",
+   "intitule": "Soutien en français par canaux identifiés",
+   "statut": "✅ / 📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "110",
+   "intitule": "Registre des incidents",
+   "statut": "✅ / 📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "111",
+   "intitule": "Rapports périodiques",
+   "statut": "✅ / 📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "112",
+   "intitule": "Maintenance incluse",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "113",
+   "intitule": "Maintenance annoncée",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "114",
+   "intitule": "Configuration personnalisée",
+   "statut": "📄",
+   "bloc": "technique"
+  },
+  {
+   "id": "115",
+   "intitule": "Continuité et reprise documentées",
+   "statut": "📄",
+   "bloc": "technique"
+  }
+ ]
+}

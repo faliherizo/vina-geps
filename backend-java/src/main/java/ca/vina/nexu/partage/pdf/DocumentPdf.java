@@ -1,6 +1,13 @@
 package ca.vina.nexu.partage.pdf;
 
+import org.apache.pdfbox.cos.COSArray;
+import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.cos.COSString;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentCatalog;
+import org.apache.pdfbox.pdmodel.common.PDMetadata;
+import org.apache.pdfbox.pdmodel.font.PDType0Font;
+import org.apache.pdfbox.pdmodel.graphics.color.PDOutputIntent;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
@@ -10,18 +17,29 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 
 import java.awt.Color;
+import java.awt.color.ColorSpace;
+import java.awt.color.ICC_Profile;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /**
- * Un document PDF écrit de haut en bas, comme PDFKit le fait côté Node : une police standard
- * (Helvetica), une marge, un curseur vertical, le passage à la page suivante quand le bas est
+ * Un document PDF écrit de haut en bas, comme PDFKit le fait côté Node : une police, une marge, un curseur vertical, le passage à la page suivante quand le bas est
  * atteint, le retour à la ligne des textes trop longs, des placements absolus pour les tableaux.
  * Les glyphes hors WinAnsi (flèches, « ≥ », points de suspension typographiques) sont remplacés :
  * une police standard ne les a pas, et un PDF qui refuse de s'écrire pour un caractère ne sert à rien.
+ *
+ * <p><strong>PDF/A-2b</strong> (FX-AO-20260810, ST-G10, critère 39) : un PDF d'archive ne dépend de rien d'extérieur.
+ * Les polices sont donc <em>incorporées</em> — Liberation Sans, métriquement compatible avec Helvetica, sous licence
+ * libre avec exception pour l'incorporation (voir {@code polices/LICENCE-LIBERATION.txt}) ; {@link #NORMAL} et
+ * {@link #GRAS} ne sont que des repères, remplacés dans chaque document. S'y ajoutent le profil de couleur sRGB, les
+ * métadonnées XMP qui déclarent la conformité, et l'identifiant du fichier.
  */
 public final class DocumentPdf implements AutoCloseable {
 
@@ -29,15 +47,29 @@ public final class DocumentPdf implements AutoCloseable {
     public static final PDFont GRAS = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
     private static final Map<String, String> REMPLACEMENTS = Map.of("→", "->", "≥", ">=", "≤", "<=", "…", "...", "•", "-", "·", "-", "—", "-", "–", "-", "«", "\"", "»", "\"");
 
+    private static final String POLICE_NORMALE = "/polices/LiberationSans-Regular.ttf";
+    private static final String POLICE_GRASSE = "/polices/LiberationSans-Bold.ttf";
+    private static final String PRODUCTEUR = "VINA GePS";
+    private static final String SRGB = "sRGB IEC61966-2.1";
+    /** Les métadonnées d'un PDF/A-2b : partie 2, conformité B, et le producteur. */
+    static final String XMP = "<?xpacket begin=\"\uFEFF\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?>"
+            + "<x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\">"
+            + "<rdf:Description rdf:about=\"\" xmlns:pdfaid=\"http://www.aiim.org/pdfa/ns/id/\" xmlns:pdf=\"http://ns.adobe.com/pdf/1.3/\">"
+            + "<pdfaid:part>2</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance><pdf:Producer>" + PRODUCTEUR + "</pdf:Producer>"
+            + "</rdf:Description></rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>";
+
     private final PDDocument document = new PDDocument();
+    private final PDFont normale = incorporer(POLICE_NORMALE);
+    private final PDFont grasse = incorporer(POLICE_GRASSE);
     private final PDRectangle format;
     private final float marge;
     private PDPage page;
     private PDPageContentStream flux;
     private float y;
     private float taille = 11;
-    private PDFont police = NORMAL;
+    private PDFont police = normale;
     private Color couleur = Color.BLACK;
+    private boolean conforme;
 
     public DocumentPdf(boolean paysage, float marge) {
         this(paysage ? new PDRectangle(PDRectangle.A4.getHeight(), PDRectangle.A4.getWidth()) : PDRectangle.A4, marge);
@@ -86,6 +118,21 @@ public final class DocumentPdf implements AutoCloseable {
         T faire() throws IOException;
     }
 
+    /** Une police incorporée (sous-ensemble) dans ce document : PDF/A interdit de compter sur celles du lecteur. */
+    private PDFont incorporer(String ressource) {
+        return surement(() -> charger(document, ressource));
+    }
+
+    /** La police d'une ressource, incorporée dans ce document ; absente, l'erreur la nomme. */
+    static PDFont charger(PDDocument doc, String ressource) throws IOException {
+        try (InputStream flux = DocumentPdf.class.getResourceAsStream(ressource)) {
+            if (flux == null) {
+                throw new IOException("police absente du classpath : " + ressource);
+            }
+            return PDType0Font.load(doc, flux);
+        }
+    }
+
     private void nouvellePage() {
         surement(() -> {
             if (flux != null) {
@@ -108,7 +155,7 @@ public final class DocumentPdf implements AutoCloseable {
     }
 
     public DocumentPdf police(PDFont p, float t) {
-        this.police = p;
+        this.police = p == NORMAL ? normale : p == GRAS ? grasse : p;
         this.taille = t;
         return this;
     }
@@ -259,10 +306,38 @@ public final class DocumentPdf implements AutoCloseable {
                 flux.close();
                 flux = null;
             }
+            conformer();
             ByteArrayOutputStream sortie = new ByteArrayOutputStream();
             document.save(sortie);
             return sortie.toByteArray();
         });
+    }
+
+    /**
+     * PDF/A-2b, une fois : le XMP qui déclare la conformité (et le même producteur que le dictionnaire d'information,
+     * que les validateurs comparent), le profil sRGB des couleurs, l'identifiant du fichier.
+     */
+    private void conformer() throws IOException {
+        if (conforme) {
+            return;
+        }
+        conforme = true;
+        PDDocumentCatalog catalogue = document.getDocumentCatalog();
+        PDMetadata metadonnees = new PDMetadata(document);
+        metadonnees.importXMPMetadata(XMP.getBytes(StandardCharsets.UTF_8));
+        catalogue.setMetadata(metadonnees);
+        document.getDocumentInformation().setProducer(PRODUCTEUR);
+        PDOutputIntent intention = new PDOutputIntent(document, new ByteArrayInputStream(ICC_Profile.getInstance(ColorSpace.CS_sRGB).getData()));
+        intention.setInfo(SRGB);
+        intention.setOutputCondition(SRGB);
+        intention.setOutputConditionIdentifier(SRGB);
+        intention.setRegistryName("http://www.color.org");
+        catalogue.addOutputIntent(intention);
+        byte[] id = UUID.randomUUID().toString().getBytes(StandardCharsets.US_ASCII);
+        COSArray identifiant = new COSArray();
+        identifiant.add(new COSString(id));
+        identifiant.add(new COSString(id));
+        document.getDocument().getTrailer().setItem(COSName.ID, identifiant);
     }
 
     @Override

@@ -267,7 +267,7 @@ public class Demonstrations implements RegistreDemonstrations {
         }
         ClientApi verifie = donnees.clients().verifier(c.client().clientId(), c.clientSecret()).orElseThrow();
         String jeton = donnees.jetons().emettre(verifie.clientId(), verifie.tenantId(), verifie.scopes());
-        JetonClient.Revendications revendications = donnees.jetons().lire(jeton);
+        JetonClient.Revendications revendications = donnees.jetons().lireRevendications(jeton);
         boolean ok = revendications != null && tenantId.equals(revendications.tenantId());
         return new Essai(ok, "jeton client_credentials obtenu pour " + verifie.clientId() + " (portées " + String.join(" ", verifie.scopes()) + "), vérifié : locataire " + (revendications == null ? null : revendications.tenantId()));
     }

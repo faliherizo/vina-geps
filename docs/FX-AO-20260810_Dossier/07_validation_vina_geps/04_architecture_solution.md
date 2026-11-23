@@ -1,11 +1,11 @@
-# FX-AO-20260810 : solution logicielle et architecture — un module de VINA GEPS, pas un nouveau projet
+# FX-AO-20260810 : solution logicielle et architecture — un module de VINA GePS, pas un nouveau projet
 
 > Écrit pour l'architecte et l'équipe produit. Ce document tranche « module ou nouveau projet » et
 > décrit le contexte « Communications cliniques » à ajouter, ses ports, ses modules activables par
 > organisme et ce qu'il réutilise. Il prend la forme d'un ADR proposé (0074), à accepter avant
 > toute implantation.
 
-## ADR 0074 (proposé) : les communications cliniques sont un contexte de VINA GEPS, activable par organisme
+## ADR 0074 (proposé) : les communications cliniques sont un contexte de VINA GePS, activable par organisme
 
 - **Statut** : **accepté pour le socle (R1)** le 14 novembre 2026 — voir `docs/adr/0074-communications-cliniques-contexte-alertes.md`. Les phases R2 et suivantes attendent les réponses Q-TEL, Q-ALC et Q-DOS.
 - **Date** : 14 novembre 2026.
@@ -14,7 +14,7 @@
 
 L'appel d'offres FX-AO-20260810 (Santé Québec Laurentides, environ 1 500 à 2 000 utilisateurs, six
 sites) demande une plateforme de **distribution de communications cliniques** : alertes ciblées,
-confirmations, relances, cascades, appel automatique, suivi et audit. VINA GEPS, issu du projet
+confirmations, relances, cascades, appel automatique, suivi et audit. VINA GePS, issu du projet
 Urgences-santé, sert déjà le personnel de la santé avec la messagerie, les avis multi-canaux,
 l'identité, les groupes, les disponibilités et l'audit. Le dossier d'analyse proposait de bâtir une
 plateforme neuve.
@@ -75,7 +75,7 @@ plateforme neuve.
 
 ### Conséquences
 
-- Le dépôt garde son nom produit (VINA GEPS) ; Urgences-santé et Santé Québec Laurentides sont deux
+- Le dépôt garde son nom produit (VINA GePS) ; Urgences-santé et Santé Québec Laurentides sont deux
   organismes avec des modules différents.
 - `ArchitectureTest` doit refuser toute dépendance de `alertes` vers les entités `effectifs`,
   `communication` ou `notifications` : seulement les ports de `partage`.
@@ -87,7 +87,7 @@ plateforme neuve.
 ## Vue des conteneurs (C2)
 
 ```
- Navigateur / PWA / app mobile ──HTTPS──► nginx ──► Java (VINA GEPS)
+ Navigateur / PWA / app mobile ──HTTPS──► nginx ──► Java (VINA GePS)
                                                     ├─ communication   (fils, appels, listes)
                                                     ├─ notifications   (poussée, texto, courriel, appel sortant)
                                                     ├─ alertes  ◄─ NOUVEAU (console, suivi, relances, cascades)

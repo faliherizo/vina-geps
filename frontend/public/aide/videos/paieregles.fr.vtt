@@ -1,0 +1,46 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.415
+Règles de paie variable. Avant de commencer.
+
+00:00:02.865 --> 00:00:05.953
+4 préalables doivent être en place, dans cet ordre :
+
+00:00:06.403 --> 00:00:08.447
+Module accordé à l'organisme : paie.
+
+00:00:08.897 --> 00:00:11.172
+Le compte de la personne, avec son rôle.
+
+00:00:11.622 --> 00:00:12.598
+Référentiels.
+
+00:00:13.048 --> 00:00:14.371
+Dossiers de rémunération.
+
+00:00:14.821 --> 00:00:17.886
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:18.960 --> 00:00:23.906
+Règles de paie variable. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:25.106 --> 00:00:30.377
+Dans les paramètres, elle exige la validation des temps avant toute paie : une feuille non validée ne sera pas payée.
+
+00:00:31.920 --> 00:00:39.188
+Elle ajoute la règle Infirmière, échelon 3 : taux de base de 34 dollars de l'heure, pour le titre d'emploi INF, échelon 3.
+
+00:00:40.897 --> 00:00:47.352
+Elle ajoute la règle Préposé, échelon 1 : taux de base de 24 dollars de l'heure, pour le titre d'emploi PAB, échelon 1.
+
+00:00:49.199 --> 00:00:54.354
+Elle ajoute la règle Prime de soins critiques : 2 dollars de plus par heure, pour le titre d'emploi INF.
+
+00:00:56.117 --> 00:00:59.066
+Elle ajoute la règle Prime de soir : 10 pour cent de plus.
+
+00:01:01.263 --> 00:01:06.209
+Elle ajoute la règle Allocation de rétention : 100 dollars par paie, pour le titre d'emploi INF.
+
+00:01:09.749 --> 00:01:18.944
+Dans les dossiers de rémunération, elle place chaque personne à son échelon : Julie Roy et Léa Côté à l'échelon 3, Marc Dubé à l'échelon 2, qui n'existe pas encore dans l'échelle.

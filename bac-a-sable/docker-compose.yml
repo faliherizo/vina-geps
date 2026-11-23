@@ -1,0 +1,56 @@
+# Bacs à sable de FX-AO-20260810 — déployables sur un serveur comme en poste local.
+#   docker compose -f bac-a-sable/docker-compose.yml up -d --build
+# Guide : bac-a-sable/README.md. Le serveur Java s'y branche par ses variables ordinaires, sans code d'essai :
+#   EXPO_PUSH_URL=http://<hôte>:18499/--/api/v2/push/send     (critère 18 — alertes critiques)
+# et les PDF/A qu'il produit se valident contre veraPDF :      (critère 39 — rapports PDF/A-2b)
+#   POST http://<hôte>:18492/api/validate/2b
+#
+# Les ports sont liés à 127.0.0.1 par défaut : sur un serveur, les exposer derrière le mandataire TLS
+# (BAC_ADRESSE=0.0.0.0 seulement sur un réseau privé) et régler BAC_JETON_CONTROLE.
+name: urgences-sante-bac-a-sable
+
+services:
+  # veraPDF officiel (Open Preservation Foundation) : le validateur de référence PDF/A, pas une imitation.
+  verapdf:
+    image: verapdf/rest:${VERAPDF_VERSION:-latest}
+    container_name: us-bac-verapdf
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:18492:8080"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+
+  # Keycloak officiel : un vrai fournisseur OpenID Connect, pour la liaison des comptes (ADR 0093) et les annuaires OIDC
+  # (ADR 0075). Il importe les royaumes versionnés d'e2e/donnees/keycloak — `vina-geps-liaison` (Jean, dont le courriel
+  # correspond à un compte existant, et un inconnu) et `vina-geps` (les profils de rôles). Les mots de passe et le secret
+  # client de ces royaumes sont des valeurs de bac à sable, jamais à reprendre ailleurs. Mode développement (HTTP) :
+  # réservé au poste et au réseau privé, comme le reste de ce fichier.
+  keycloak:
+    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION:-26.3}
+    container_name: us-bac-keycloak
+    command: ["start-dev", "--import-realm", "--hostname", "http://localhost:${BAC_KEYCLOAK_PORT:-18180}"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${BAC_KEYCLOAK_ADMIN:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${BAC_KEYCLOAK_ADMIN_MDP:-admin}
+    volumes:
+      - ../e2e/donnees/keycloak/realm-vina-geps-liaison.json:/opt/keycloak/data/import/realm-vina-geps-liaison.json:ro
+      - ../e2e/donnees/keycloak/realm-vina-geps.json:/opt/keycloak/data/import/realm-vina-geps.json:ro
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:${BAC_KEYCLOAK_PORT:-18180}:8080"]
+    restart: unless-stopped
+    security_opt: ["no-new-privileges:true"]
+
+  # Service de poussée au contrat d'Expo, traduction APNs/FCM et téléphones simulés (iOS, Android).
+  poussee:
+    build: ./poussee
+    image: urgences-sante/bac-poussee:1
+    container_name: us-bac-poussee
+    environment:
+      PORT: "8080"
+      # Sécurité renforcée d'Expo : si réglé, le serveur doit envoyer EXPO_ACCESS_TOKEN identique.
+      EXPO_JETON_ACCES: ${EXPO_JETON_ACCES:-}
+      # Protège la lecture de ce que les téléphones ont reçu (routes /bac-a-sable et console).
+      BAC_JETON_CONTROLE: ${BAC_JETON_CONTROLE:-}
+    ports: ["${BAC_ADRESSE:-127.0.0.1}:18499:8080"]
+    restart: unless-stopped
+    read_only: true
+    security_opt: ["no-new-privileges:true"]

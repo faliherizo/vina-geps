@@ -85,7 +85,8 @@ public class NotifierEvenement implements PublicationAvis {
             if (pousser) {
                 boolean ouvert = preferences.canalOuvert(avis.tenantId(), employeeId, Canal.POUSSEE, e.code());
                 if (ouvert && effectifs.isEmpty()) {
-                    poussee.pousserPourNotification(avis.tenantId(), TypeDestinataire.EMPLOYEE.code(), employeeId, sujet, corps, url);
+                    poussee.pousserPourNotification(avis.tenantId(), new DepotAbonnementsPoussee.Poussee(TypeDestinataire.EMPLOYEE.code(), employeeId, sujet, corps, url,
+                            Evenements.etiquetteDe(e.code())));
                 }
                 envois.add(new Envoi(employeeId, Canal.POUSSEE.code(), (ouvert ? StatutEnvoi.SENT : StatutEnvoi.DESACTIVE).code(), ouvert ? null : "poussée fermée par le destinataire"));
             }

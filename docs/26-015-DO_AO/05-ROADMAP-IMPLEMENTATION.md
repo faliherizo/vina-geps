@@ -4,7 +4,9 @@
 > par lot, **et où on en est**. Ce document est mis à jour à chaque lot livré ; l'état fait foi
 > seulement s'il cite des essais qui passent.
 >
-> Dernière mise à jour : **1er novembre 2026, après revérification des jugements contre le code**.
+> Dernière mise à jour : **20 novembre 2026, réponses d'Urgences-santé (addenda 1 à 7)** — cinq écarts réels
+> trouvés contre le code, lot **R14** (stories AD-01 à AD-08) : voir [12-reponses-addenda](12-reponses-addenda/03_planificateur.md).
+> Mise à jour précédente : 1er novembre 2026, après revérification des jugements contre le code.
 > La matrice donne **78 essentiels acquis sur 100**, 17 partiels, **0 à bâtir** — et les 17
 > partiels sont **tous du lot U0** (SaaS, haute disponibilité, Entra ID, DDoS, formation), c'est-
 > à-dire des engagements d'exploitation et de contrat. **Il ne reste aucun écart de code.**
@@ -69,6 +71,7 @@ Chemin critique : **R1 → R2 → R3 → (R4, R5, R6, R7, R8) → R9 → R10**. 
 | **R11** | `ia`, options d'organisme | — | IA désactivée par défaut par établissement, charte graphique, alertes par courriel, pays autorisés, politique de rétention, niveaux de service par contrat, infrastructure multi-AZ | E-TN-9 (partie code) | P-TN-9, 10, 11 |
 | **R12** | *(liaison)* | — | Unités ↔ structure `organisation`, absences d'effectifs ↔ façade `/api/absences` | — | — |
 | **R13** | *(parité)* | — | Jumeau Java des routes R1 à R11 | — | — |
+| **R14** | *(réponses)* | R3 à R9 | Réponses des addenda 1 à 7 : heures sur 24 h (AD-01), seuil par code d'absence (AD-02), heures supplémentaires par période de paie et par convention (AD-03), optimisation du budget AGPH (AD-04), renonciation et délai échu (AD-05) ; puis API d'échange (AD-06), offre en cascade (AD-07), démonstration SP-CSN (AD-08) | E-GR-7 ; E-CH-1, 6, 7 ; E-RF-5 ; E-TN-7 | P-CH-2, 4, 7, 8 ; P-GH-3 ; P-TN-17 |
 
 ## 4. État d'avancement
 
@@ -300,3 +303,19 @@ La porte `endpoints-orphelins.cjs --strict` en relevait 13. **Douze ont reçu le
 - **Méthode** : sept revues par famille, une exigence à la fois ; « ✅ Acquis » seulement si la fonction existe **et** qu'un essai automatisé la prouve (cité dans la matrice), toute l'exigence et non une partie. Six « acquis » fragiles ramenés à « partiel » (E-CH-9, E-CH-10, E-GR-2, E-GR-5, E-GN-9, P-TN-6/P-TN-8 par la revue).
 - **Résultat** (`MATRICE-COUVERTURE.md`, régénérée) : essentiels **61 ✅ · 34 🟡 · 0 ⛔ · 5 🔒** (étaient 13 · 60 · 22 · 5) ; préférentiels 19 · 14 · 0 · 11 ; total 80 ✅ / 144 — **plus aucune exigence « à bâtir »**.
 - **Constats bloquants pour la soumission** : E-TN-9 — la base PostgreSQL Multi-AZ du Terraform n'est lue par aucun code (Node et Java tournent sur SQLite) : la haute disponibilité ne protège aucune donnée et deux tâches ECS divergeraient ; E-TN-19 — `exploitation/securite.ts` classe ca-central-1 (Montréal) hors Québec et la résidence par défaut est `canadacentral` (Ontario) ; E-TN-17 — aucun plan JMeter ne couvre les modules d'effectifs.
+
+### R14 — Réponses d'Urgences-santé (addenda 1 à 7) · 20 novembre 2026
+
+- **Sources** : sept addenda et la grille v2 convertis (`questions/convertir-reponses.py`) ; l'ancien `addenda-01.md`
+  était l'addenda 6 (vérifié mot pour mot, renommé). Grille v2 : seuls E-TN-9, E-TN-11, E-TN-19 changent ; leur texte est
+  désormais repris mot pour mot.
+- **Écarts réels**, vérifiés dans le code : E-GR-7 (heures sur 24 h, addenda 7 Q8), E-CH-6/E-CH-7/P-CH-8 (seuil par code
+  d'absence, Q7), E-RF-5 (seuil de période de paie et par convention, Q15), E-CH-1 (optimisation proposée, Q11),
+  P-CH-2/P-CH-4/P-CH-7 (renoncer, délai échu configurable, Q12), E-TN-7 (API pour les applications de l'Organisme,
+  addenda 5 : jetons `client_credentials` émis mais acceptés par aucune route métier ; aucun solde de banque).
+- **Conformes** après vérification : Q1 à Q6, Q9, Q10, Q13, Q14, Q16.
+- **Décisions** : [ADR 0087](../adr/0087-reponses-26-015-do-faits-seuils-et-optimisation.md). **État** : tenu dans
+  [12-reponses-addenda/03_planificateur.md](12-reponses-addenda/03_planificateur.md).
+- **Livré le 20 novembre** (develop b90afe3) : AD-01 à AD-05, changesets 0020 et 0021 ; `mvn -o verify` vert
+  (1 411 essais, JaCoCo par classe respecté, BDD 72/72). Restent AD-06 (API d'échange de l'addenda 5), AD-07 (offre en
+  cascade) et AD-08 (démonstration de la convention).

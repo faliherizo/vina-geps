@@ -45,7 +45,9 @@ public class SchemaAgph {
             new ColonneAjoutee("eff_agph_campagnes", "reviseeLe", "TEXT"),
             new ColonneAjoutee("eff_remplacements", "transfereLe", "TEXT"),
             new ColonneAjoutee("eff_remplacements", "quartsTransferes", "INTEGER NOT NULL DEFAULT 0"),
-            new ColonneAjoutee("eff_remplacements", "motifNonComble", "TEXT"));
+            new ColonneAjoutee("eff_remplacements", "motifNonComble", "TEXT"),
+            // Le traitement du délai échu (changeset 0021, AD-05).
+            new ColonneAjoutee("eff_agph_campagnes", "traitementDelaiEchu", "TEXT NOT NULL DEFAULT 'ATTRIBUER'"));
 
     public SchemaAgph(JdbcClient jdbc) {
         DDL.forEach(d -> jdbc.sql(d).update());

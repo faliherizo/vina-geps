@@ -58,6 +58,12 @@
       <artifactId>poi-ooxml</artifactId>
       <version>5.4.1</version>
     </dependency>
+    <!-- Annuaire LDAP joint en LDAPS (ADR 0083, FX-AO-20260810 critère 82) ; sert aussi le serveur LDAPS en mémoire des essais. -->
+    <dependency>
+      <groupId>com.unboundid</groupId>
+      <artifactId>unboundid-ldapsdk</artifactId>
+      <version>7.0.5</version>
+    </dependency>
     <dependency>
       <groupId>org.apache.pdfbox</groupId>
       <artifactId>pdfbox</artifactId>
@@ -232,7 +238,6 @@
             <exclude>ca/vina/nexu/partage/web/ControleurRoutes.class</exclude>                        <!-- inventaire des routes, diff de contrat -->
             <exclude>ca/vina/nexu/comptabilite/infrastructure/web/ControleurComptabilite.class</exclude>  <!-- idem -->
             <exclude>ca/vina/nexu/integrations/infrastructure/web/ControleurIntegrations.class</exclude>  <!-- idem -->
-            <exclude>ca/vina/nexu/integrations/infrastructure/web/ControleurOAuth.class</exclude>         <!-- idem -->
           </excludes>
         </configuration>
         <executions>

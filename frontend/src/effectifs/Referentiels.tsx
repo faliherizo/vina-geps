@@ -28,10 +28,14 @@ export interface Valeur {
 
 type Mode = { nature: "creer" } | { nature: "remplacer"; valeur: Valeur } | { nature: "fermer"; valeur: Valeur } | { nature: "historique"; valeur: Valeur; versions: Valeur[] | null };
 
-export default function Referentiels() {
+/**
+ * `typeFixe` : un seul référentiel, sans le choix du type — une page à son nom, comme « Codes d'absence », pour qu'un
+ * administrateur trouve la liste qu'il cherche sans savoir qu'elle est un référentiel.
+ */
+export default function Referentiels({ typeFixe }: { typeFixe?: string } = {}) {
   const { lire, envoyer, erreur, setErreur, succes, setSucces } = useApiEffectifs();
   const [descripteurs, setDescripteurs] = useState<Descripteur[]>([]);
-  const [type, setType] = useState("");
+  const [type, setType] = useState(typeFixe ?? "");
   const [date, setDate] = useState(aujourdhui());
   const [valeurs, setValeurs] = useState<Valeur[]>([]);
   const [mode, setMode] = useState<Mode | null>(null);
@@ -72,12 +76,14 @@ export default function Referentiels() {
   return (
     <div data-testid="ref-ecran">
       <div className="eff-barre">
-        <p>
-          <label htmlFor="ref-type">Référentiel</label>
-          <select id="ref-type" data-testid="ref-type" value={type} onChange={(e) => { setType(e.target.value); setSucces(""); }}>
-            {descripteurs.map((d) => <option key={d.type} value={d.type}>{d.libelle}</option>)}
-          </select>
-        </p>
+        {!typeFixe && (
+          <p>
+            <label htmlFor="ref-type">Référentiel</label>
+            <select id="ref-type" data-testid="ref-type" value={type} onChange={(e) => { setType(e.target.value); setSucces(""); }}>
+              {descripteurs.map((d) => <option key={d.type} value={d.type}>{d.libelle}</option>)}
+            </select>
+          </p>
+        )}
         <p>
           <label htmlFor="ref-date">En vigueur le</label>
           <input id="ref-date" type="date" data-testid="ref-filtre-vigueur" value={date} onChange={(e) => setDate(e.target.value)} />
@@ -86,7 +92,7 @@ export default function Referentiels() {
           Ajouter une valeur
         </button>
         {type === "unites" && <AlignementOrganigramme onAligne={(m) => { setSucces(m); void charger(); }} />}
-        <PromotionConfiguration onApplique={(m) => { setSucces(m); void charger(); }} />
+        {!typeFixe && <PromotionConfiguration onApplique={(m) => { setSucces(m); void charger(); }} />}
       </div>
 
       {erreur && !mode && <Message variante="erreur" testId="ref-erreur">{erreur}</Message>}

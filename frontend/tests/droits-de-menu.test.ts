@@ -71,4 +71,27 @@ describe("droit de voir une entrée de menu", () => {
       expect(droitDeVoir({ roles: ["admin"], capacitesRequises: [] }, { role: "employee" })).toBe(false);
     });
   });
+
+  describe("communications cliniques : suivre sans envoyer (ADR 0085, FX-AO-20260810 addenda 2 Q31)", () => {
+    const nouvelle = { roles: ["admin", "manager", "director"], capacitesRequises: ["alertes.envoyer"] };
+    const suivi = { roles: ["admin", "manager", "director"], capacitesRequises: ["alertes.suivre"] };
+
+    it("un rôle propre « expéditeur » voit les deux pages, même absent de la liste des rôles", () => {
+      const expediteur = { role: "expediteur", capabilities: ["alertes.envoyer", "alertes.suivre"] };
+      expect(droitDeVoir(nouvelle, expediteur)).toBe(true);
+      expect(droitDeVoir(suivi, expediteur)).toBe(true);
+    });
+
+    it("un gestionnaire privé d'envoi garde le suivi, sans la page d'envoi", () => {
+      const gestionnaire = { role: "manager", capabilities: ["alertes.suivre", "horaire.rapporter"] };
+      expect(droitDeVoir(suivi, gestionnaire)).toBe(true);
+      expect(droitDeVoir(nouvelle, gestionnaire)).toBe(false);
+    });
+
+    it("un destinataire ne voit ni l'une ni l'autre", () => {
+      const destinataire = { role: "employee", capabilities: ["profile.read"] };
+      expect(droitDeVoir(suivi, destinataire)).toBe(false);
+      expect(droitDeVoir(nouvelle, destinataire)).toBe(false);
+    });
+  });
 });

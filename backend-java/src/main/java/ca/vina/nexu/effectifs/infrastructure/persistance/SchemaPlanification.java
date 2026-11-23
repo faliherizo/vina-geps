@@ -29,6 +29,8 @@ public class SchemaPlanification {
                     + "debut INTEGER NOT NULL, fin INTEGER NOT NULL, natureCode TEXT NOT NULL, plageCode TEXT, milieuId TEXT NOT NULL, modeAttribution TEXT NOT NULL, "
                     + "minimumOperationnel INTEGER NOT NULL, note TEXT, creeLe TEXT NOT NULL)",
             "CREATE INDEX IF NOT EXISTS idx_eff_equipages_periode ON eff_equipages (tenantId, periodeId, date)",
+            // API d'échange (changeset 0023) : la fenêtre de quarts ne connaît pas la période.
+            "CREATE INDEX IF NOT EXISTS idx_eff_equipages_date ON eff_equipages (tenantId, date)",
             "CREATE TABLE IF NOT EXISTS eff_places (id TEXT PRIMARY KEY, tenantId TEXT NOT NULL, equipageId TEXT NOT NULL, rang INTEGER NOT NULL, "
                     + "corpsEmploiCode TEXT NOT NULL, posteId TEXT, ressourceId TEXT, attribueePar TEXT, justificationForcage TEXT, attribueeLe TEXT)",
             "CREATE INDEX IF NOT EXISTS idx_eff_places_equipage ON eff_places (tenantId, equipageId)",

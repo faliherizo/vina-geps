@@ -1,16 +1,20 @@
 # FX-AO-20260810 : feuille de route et stories du module « Communications cliniques »
 
 > Écrit pour l'équipe de réalisation et pour la soumission (plan d'implantation, critère 102). La
-> feuille de route part de VINA GEPS tel qu'il est ; elle remplace les phases P1 et P2 du dossier
+> feuille de route part de VINA GePS tel qu'il est ; elle remplace les phases P1 et P2 du dossier
 > d'origine, qui supposaient tout à construire. Ce n'est **pas** un plan d'implantation à engager
 > tant que l'ADR 0074 n'est pas accepté.
+>
+> **Mise à jour du 14 novembre 2026.** Le socle de R1 est livré (ADR 0074 accepté pour R1). Le plan
+> d'exécution à jour, phase par phase, à partir de l'état réel du code, est
+> [08_plan_implantation.md](08_plan_implantation.md) : environ 19 semaines jusqu'au pilote.
 
 ## 1. Feuille de route
 
 | Phase | Durée | Contenu | Sortie |
 |---|---|---|---|
 | R0 — Cadrage | 2 sem. | Réponses Q-TEL, Q-ALC, Q-DOS ; choix du profil d'hébergement (A ou B) ; ADR 0074 accepté ; fournisseur voix et texto | Décisions consignées |
-| R1 — Socle d'alerte | 4 sem. | ST-G09 groupes transverses, ST-G02 modèles et réponses, ST-G01 console d'alerte, ST-G03 suivi | Une alerte part, se suit, se confirme (démo interne) |
+| R1 — Socle d'alerte (**livré** ; reste R1-bis, 2 sem.) | 4 sem. | ST-G09 groupes transverses, ST-G02 modèles et réponses, ST-G01 console d'alerte, ST-G03 suivi | Une alerte part, se suit, se confirme (démo interne) |
 | R2 — Relances et cascades | 5 sem. | ST-G04 politiques et orchestration, ST-G05 réponse par texto | Cascade de 3 étapes arrêtée par une prise en charge, rejouable après panne |
 | R3 — Voix et critique | 3 sem. | ST-G06 appel automatique et DTMF, ST-G07 alerte critique mobile | Escalade jusqu'à l'appel, confirmée au clavier |
 | R4 — Conformité | 2 sem. | ST-G08 utilisateurs actifs, ST-G10 PDF/A et historique des mots de passe, ST-G11 Graph et LDAPS, ST-G12 note | Grille fonctionnelle à 31/32, puis 32/32 selon Q-DOS |

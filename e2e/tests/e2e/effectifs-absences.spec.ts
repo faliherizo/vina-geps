@@ -12,6 +12,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -61,6 +62,7 @@ test("déclarer une absence d'effectifs, voir le refus motivé, mesurer l'impact
   await selectTenant(page, tenantId);
 
   // ── Absences et comblement › Déclarer pour une ressource du périmètre ───────────────────
+  await raconter(page, "Absences d'effectifs. Le gestionnaire déclare une absence pour Julie Roy : maladie, du 4 au 5 mars, pour une grippe. Les deux quarts de Julie sont déjà attribués.");
   await ouvrirNav(page, "nav-usabsences");
   await page.getByTestId("pla-abs-declarer").click();
   await expect(page.getByTestId("abs-hours")).toHaveCount(0);
@@ -75,15 +77,18 @@ test("déclarer une absence d'effectifs, voir le refus motivé, mesurer l'impact
   await expect(page.getByTestId("pla-abs-bilan")).toContainText("dérogation motivée");
 
   // ── Absences et comblement : impact, puis dérogation ─────────────────────────────────────
+  await raconter(page, "La règle de l'organisme refuse l'absence : le comblement tomberait à zéro pour cent. Le gestionnaire ouvre la demande refusée pour mesurer l'impact, quart par quart.");
   await page.getByTestId("pla-abs-filtre").selectOption("REFUSEE_AUTO");
   const ligne = page.locator('[data-testid^="pla-abs-"][data-testid$="-ouvrir"]').first();
   await ligne.click();
   await expect(page.getByTestId("pla-abs-impact-taux")).toContainText("100 % avant, 0 % après");
   await expect(page.getByTestId("pla-abs-impact")).toContainText("2030-03-04 · 06:00–18:00");
   await expectNoA11yViolations(page);
+  await raconter(page, "Il peut accorder par dérogation, mais le motif doit être réel : un motif de moins de dix caractères est refusé.");
   await page.getByTestId("pla-abs-motif").fill("court");
   await page.getByTestId("pla-abs-deroger").click();
   await expect(page.getByTestId("pla-abs-fiche-erreur")).toContainText("10 caractères");
+  await raconter(page, "Avec un motif complet, l'hospitalisation confirmée par billet médical, l'absence est accordée. Les deux places de Julie sont rendues vacantes.");
   await page.getByTestId("pla-abs-motif").fill("Hospitalisation confirmée par billet médical");
   await page.getByTestId("pla-abs-deroger").click();
   await expect(page.getByTestId("pla-abs-bilan")).toContainText("Julie Roy : absence acceptée — 2 place(s) rendue(s) vacante(s)");
@@ -167,6 +172,7 @@ test("après la dérogation, le comblement attribue au prioritaire, offre et avi
   await amorcerComblement(tenantId);
   await selectTenant(page, tenantId);
 
+  await raconter(page, "Deuxième cas : après la dérogation, le comblement automatique prend le relais. Le gestionnaire accorde à nouveau l'absence de Julie.");
   await ouvrirNav(page, "nav-usabsences");
   await page.getByTestId("pla-abs-filtre").selectOption("REFUSEE_AUTO");
   await page.locator('[data-testid^="pla-abs-"][data-testid$="-ouvrir"]').first().click();
@@ -176,6 +182,7 @@ test("après la dérogation, le comblement attribue au prioritaire, offre et avi
     "Julie Roy : absence acceptée — 2 place(s) rendue(s) vacante(s) ; comblement automatique : 1 attribuée(s) d'office au prioritaire, 1 offerte(s) aux admissibles avisés.");
 
   // La fiche de l'absence accordée montre ce que le mécanisme a fait, et les avis envoyés.
+  await raconter(page, "Le lundi est attribué d'office au prioritaire, Marc Gagnon, avisé par courriel. Le mardi est offert aux admissibles, avisés à leur tour.");
   await page.getByTestId("pla-abs-filtre").selectOption("ACCEPTEE");
   await page.getByRole("button", { name: /Impact et décision — Julie Roy/ }).click();
   const lundi = page.getByTestId("pla-abs-comblement-2030-03-04");
@@ -190,6 +197,7 @@ test("après la dérogation, le comblement attribue au prioritaire, offre et avi
   await expect(page.getByTestId("pla-abs-avis-2030-03-05")).not.toContainText("Julie Roy");
   await expect(page.getByTestId("pla-abs-remplacement-raison")).toContainText("le code « MAL » est ponctuel");
   await expectNoA11yViolations(page);
+  await raconter(page, "Le gestionnaire attribue lui-même le quart du mardi à Léa Tremblay.");
   await page.getByTestId("pla-abs-choix-2030-03-05").selectOption({ label: "Léa Tremblay" });
   await page.getByTestId("pla-abs-attribuer-2030-03-05").click();
   await expect(page.getByTestId("pla-abs-comblement-info")).toContainText("Quart du 2030-03-05 attribué.");
@@ -197,6 +205,7 @@ test("après la dérogation, le comblement attribue au prioritaire, offre et avi
   await page.getByTestId("pla-abs-fiche-close").click();
 
   // L'absence de long terme de Théo : ses quarts sont réservés ; le remplacement s'ouvre d'ici, lié à elle.
+  await raconter(page, "Dernier cas : Théo Paquin est en congé de longue durée. Son quart est réservé au remplacement long terme, que le gestionnaire ouvre sur le poste EST-1, lié à cette absence.");
   await page.getByRole("button", { name: /Impact et décision — Théo Paquin/ }).click();
   await expect(page.getByTestId("pla-abs-comblement-2030-03-06")).toContainText("Réservée au remplacement long terme");
   await expect(page.getByTestId("pla-abs-remplacement-poste")).toHaveValue(/.+/);

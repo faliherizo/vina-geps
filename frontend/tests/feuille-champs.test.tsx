@@ -6,7 +6,7 @@
 import { act, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { enAttenteDe, valeurEnMots, type ChampFeuille, type FeuilleDetaillee } from "../src/effectifs/temps/types";
+import { decisionEnMots, enAttenteDe, peutRappeler, valeurEnMots, type ChampFeuille, type FeuilleDetaillee } from "../src/effectifs/temps/types";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -65,6 +65,12 @@ beforeEach(() => {
 afterEach(() => { act(() => racine.unmount()); conteneur.remove(); });
 
 describe("les fonctions pures", () => {
+  it("avant la paie, soumise ou approuvée se rappelle ; les décisions hors circuit se disent", () => {
+    expect((["BROUILLON", "SOUMISE", "RETOURNEE", "APPROUVEE", "PAYEE"] as const).map(peutRappeler)).toEqual([false, true, false, true, false]);
+    expect(["APPROUVER", "RETOURNER", "RAPPELER", "ROUVRIR", "AUTRE"].map(decisionEnMots))
+      .toEqual(["approuvé", "retourné", "rappelée par la personne", "rouverte par l'encadrement", "AUTRE"]);
+  });
+
   it("une valeur en mots : jamais « true » ; vide en tiret", () => {
     expect([valeurEnMots(true), valeurEnMots(false), valeurEnMots(42), valeurEnMots("A-12"), valeurEnMots(""), valeurEnMots(undefined)])
       .toEqual(["Oui", "Non", "42", "A-12", "—", "—"]);

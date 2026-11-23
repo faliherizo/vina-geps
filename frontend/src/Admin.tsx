@@ -13,7 +13,7 @@ import { useAuth } from "./AuthContext";
 import RolesPanel from "./admin/RolesPanel";
 import EmpruntIdentitePanel from "./admin/EmpruntIdentite";
 import OptionsOrganisme from "./admin/OptionsOrganisme";
-import AnnuairesOrganisme from "./admin/AnnuairesOrganisme";
+import AnnuairesOrganisme, { DemandesLiaisonOrganisme } from "./admin/AnnuairesOrganisme";
 import CopiesOrganisme from "./admin/CopiesOrganisme";
 import { useConfirm } from "./Modal";
 import Pagination, { usePagination } from "./Pagination";
@@ -27,6 +27,12 @@ interface Emp {
   email?: string; phone?: string; address?: string; dateOfBirth?: string;
   managerId?: string | null;
 }
+
+/** Si la liste du serveur ne se lit pas, la création propose au moins les rôles de base. */
+const ROLES_DE_BASE: ReadonlyArray<{ role: string; label: string }> = [
+  { role: "employee", label: "Employé" }, { role: "manager", label: "Gestionnaire" },
+  { role: "rh", label: "Ressources humaines (RH)" }, { role: "admin", label: "Administrateur" },
+];
 
 export default function Admin() {
   const { apiFetch, user } = useAuth();
@@ -190,11 +196,10 @@ export default function Admin() {
             <small className="muted" style={{ fontSize: 11, display: "block" }}>Provisoire (≥ 8). L'utilisateur définira un mot de passe fort + MFA + 3 questions au 1er accès.</small>
           </div>
           <div><label htmlFor="f-admin-role">Rôle</label>
+            {/* La même liste que pour changer le rôle d'un compte : celle du serveur, rôles personnalisés compris.
+                Écrite ici en dur, elle omettait le comptable, le directeur et tout rôle créé dans « Rôles ». */}
             <select id="f-admin-role" data-testid="admin-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value as any })}>
-              <option value="employee">Employé</option>
-              <option value="manager">Gestionnaire</option>
-              <option value="rh">Ressources humaines (RH)</option>
-              <option value="admin">Administrateur</option>
+              {(rolesAttribuables.length > 0 ? rolesAttribuables : ROLES_DE_BASE).map((r) => <option key={r.role} value={r.role}>{r.label}</option>)}
             </select>
           </div>
           <div><label htmlFor="f-Admin-10">Lié à l'employé (optionnel)</label>
@@ -332,6 +337,7 @@ export default function Admin() {
       {section === "taches" && isAdmin && <OrdonnanceurPanel apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <OptionsOrganisme apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <AnnuairesOrganisme apiFetch={apiFetch} />}
+      {section === "organisme" && isAdmin && user?.tenantId && <DemandesLiaisonOrganisme apiFetch={apiFetch} />}
       {section === "organisme" && isAdmin && user?.tenantId && <CopiesOrganisme apiFetch={apiFetch} />}
       {section === "audit" && isAdmin && (
       <div className="card" data-testid="siem-console" style={{ marginTop: 12 }}>

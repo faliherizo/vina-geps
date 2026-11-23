@@ -1,5 +1,7 @@
 package ca.vina.nexu.effectifs.application.commandes;
 
+import ca.vina.nexu.effectifs.domaine.SoldesBanquesPort;
+import ca.vina.nexu.effectifs.domaine.SoldesBanques;
 import ca.vina.nexu.effectifs.application.requetes.LectureAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
 import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
@@ -60,7 +62,9 @@ public class GestionnaireAbsencesEffectifs {
     }
 
     /** Les lectures dont les gestes ont besoin. */
-    public record Lectures(LectureAbsencesEffectifs absences, LectureRessources ressources, LectureReferentiels referentiels, LecturePerimetres perimetres) { }
+    /** {@code soldes} : les soldes des banques reçus de l'organisme (AD-06b), lus pour les faits de la demande. */
+    public record Lectures(LectureAbsencesEffectifs absences, LectureRessources ressources, LectureReferentiels referentiels, LecturePerimetres perimetres,
+                           SoldesBanquesPort soldes) { }
 
     /** Les ports d'écriture : les absences, les places qu'une absence libère, et le mécanisme qui les comble (lot U5). */
     public record Ports(DepotAbsencesEffectifsPort absences, PlanningAbsencesEffectifsPort planning, DepotEquipagesPort equipages,
@@ -82,25 +86,59 @@ public class GestionnaireAbsencesEffectifs {
 
     public Resultat declarer(Contexte ctx, Declaration entree) {
         Ressource r = entree.ressourceId() instanceof String id && !id.isEmpty() ? lire.ressources().exiger(ctx, id) : lire.ressources().exigerDeLActeur(ctx);
+        return enregistrer(ctx, r, entree, AbsencesEffectifs.Origine.DEMANDE).resultat();
+    }
+
+    /** Une absence constatée, et si elle est nouvelle ou déjà tenue (un renvoi à l'identique). */
+    public record Constat(Resultat resultat, boolean nouvelle) { }
+
+    /**
+     * AD-06c (addenda 5 d) : l'absence que les opérations constatent sur un quart réel. Acceptée d'office, elle rend les
+     * places vacantes et lance le comblement comme toute absence accordée ; voir {@link AbsencesEffectifs.Origine}.
+     */
+    public Constat constater(Contexte ctx, Declaration entree) {
+        Ressource r = lire.ressources().exiger(ctx, String.valueOf(entree.ressourceId()));
+        return enregistrer(ctx, r, entree, AbsencesEffectifs.Origine.OPERATIONS);
+    }
+
+    /** Une absence active couvre-t-elle ce jour ? Ses places, rendues vacantes, ne sont alors plus tenues par la personne. */
+    public boolean estAbsentLe(Contexte ctx, String ressourceId, String date) {
+        return ports.absences().deLaRessource(ctx.tenantId(), ressourceId).stream()
+                .anyMatch(a -> a.statut().estActive() && AbsencesEffectifs.chevauche(a, date, date));
+    }
+
+    private Constat enregistrer(Contexte ctx, Ressource r, Declaration entree, AbsencesEffectifs.Origine origine) {
         lire.ressources().exigerDroitSur(ctx, r, Perimetres.Niveau.PLANIFICATION);
         String du = Referentiels.dateValide(entree.du(), "du");
         String au = Referentiels.dateValide(entree.au() == null ? entree.du() : entree.au(), "au");
         AbsencesEffectifs.bornesValides(du, au);
         ValeurReferentiel code = codeAdmis(ctx, r, entree.codeAbsence(), du);
-        AbsencesEffectifs.verifierPlanifiable(code.code(), code.attributs().get("planifiable"), AbsencesEffectifs.joursPreavis(ctx.aujourdhui(), du), du);
-        refuserChevauchement(ctx, r, du, au);
+        if (origine.exigeUnCodePlanifiable()) {
+            AbsencesEffectifs.verifierPlanifiable(code.code(), code.attributs().get("planifiable"), AbsencesEffectifs.joursPreavis(ctx.aujourdhui(), du), du);
+        }
+        Bornes b = new Bornes(code.code(), du, au);
+        Optional<AbsenceEffectifs> meme = memeOuConflit(ctx, r, b, origine);
+        if (meme.isPresent()) {
+            return new Constat(new Resultat(meme.get(), 0, AbsencesEffectifs.BilanComblement.de(List.of())), false);
+        }
+        return new Constat(inserer(ctx, r, code, b, entree.motif(), origine), true);
+    }
+
+    private record Bornes(String code, String du, String au) { }
+
+    private Resultat inserer(Contexte ctx, Ressource r, ValeurReferentiel code, Bornes b, Object motif, AbsencesEffectifs.Origine origine) {
         String id = sequence.suivant("eabs");
-        Regles.Verdict verdict = regles.evaluerDossier(ctx, dossier(ctx, r, code, id, du, au));
-        AbsencesEffectifs.Statut statut = AbsencesEffectifs.statutDepuisAction(verdict.action());
-        ports.absences().inserer(ctx.tenantId(), new AbsenceEffectifs(id, r.id(), null, r.uniteCode(), code.code(), du, au,
-                AbsencesEffectifs.motifLibre(entree.motif()), statut, verdict.action(), verdict.motifs(),
+        Regles.Verdict verdict = regles.evaluerDossier(ctx, dossier(ctx, r, code, id, b.du(), b.au()));
+        AbsencesEffectifs.Statut statut = origine.statut(verdict.action());
+        ports.absences().inserer(ctx.tenantId(), new AbsenceEffectifs(id, r.id(), null, r.uniteCode(), code.code(), b.du(), b.au(),
+                AbsencesEffectifs.motifLibre(motif), statut, verdict.action(), verdict.motifs(),
                 new AbsenceEffectifs.Trace(ctx.maintenant(), ctx.acteurId(), null, null, null, null, null)));
         Map<String, Object> apres = new LinkedHashMap<>();
         apres.put("codeAbsence", code.code());
-        apres.put("du", du);
-        apres.put("au", au);
+        apres.put("du", b.du());
+        apres.put("au", b.au());
         apres.put("statut", statut.code());
-        journal.ecrire(ctx, JournalEffectifs.Consignation.de("absence.declaree", OBJET, id, r.uniteCode(), null, apres));
+        journal.ecrire(ctx, JournalEffectifs.Consignation.de(origine.actionJournal(), OBJET, id, r.uniteCode(), null, apres));
         return apresGeste(ctx, id, statut == AbsencesEffectifs.Statut.ACCEPTEE);
     }
 
@@ -114,12 +152,33 @@ public class GestionnaireAbsencesEffectifs {
         return code;
     }
 
-    private void refuserChevauchement(Contexte ctx, Ressource r, String du, String au) {
-        ports.absences().deLaRessource(ctx.tenantId(), r.id()).stream()
-                .filter(a -> a.statut().estActive() && AbsencesEffectifs.chevauche(a, du, au)).findFirst()
-                .ifPresent(a -> {
-                    throw new ConflitException("une absence couvre déjà une partie de ces dates (" + a.id() + ") : annulez-la ou modifiez-la");
-                });
+    /**
+     * Un chevauchement est un conflit, sauf, aux opérations, la même absence renvoyée : elle est alors rendue telle
+     * quelle, pour qu'un renvoi après une coupure soit sans effet.
+     */
+    private Optional<AbsenceEffectifs> memeOuConflit(Contexte ctx, Ressource r, Bornes b, AbsencesEffectifs.Origine origine) {
+        Optional<AbsenceEffectifs> chevauchante = ports.absences().deLaRessource(ctx.tenantId(), r.id()).stream()
+                .filter(a -> a.statut().estActive() && AbsencesEffectifs.chevauche(a, b.du(), b.au())).findFirst();
+        if (chevauchante.isEmpty()) {
+            return Optional.empty();
+        }
+        AbsenceEffectifs a = chevauchante.get();
+        if (origine == AbsencesEffectifs.Origine.OPERATIONS && AbsencesEffectifs.estLaMeme(a, b.code(), b.du(), b.au())) {
+            return chevauchante;
+        }
+        throw new ConflitException("une absence couvre déjà une partie de ces dates (" + a.id() + ") : annulez-la ou modifiez-la");
+    }
+
+    /** Les faits du solde de la banque que nomme le code (AD-06b) : toujours présents, faux et zéro sans solde reçu. */
+    private Map<String, Object> faitsDuSolde(Contexte ctx, Ressource r, ValeurReferentiel code, int joursDemandes) {
+        Optional<SoldesBanques.Solde> solde = SoldesBanques.FaitsSolde.banqueDe(code.attributs()).flatMap(b -> lire.soldes().solde(ctx.tenantId(), r.id(), b));
+        SoldesBanques.FaitsSolde f = SoldesBanques.FaitsSolde.de(solde, joursDemandes, SoldesBanques.FaitsSolde.heuresParJourDe(code.attributs()));
+        Map<String, Object> faits = new LinkedHashMap<>();
+        faits.put("soldeBanqueConnu", f.connu());
+        faits.put("soldeBanqueHeures", f.soldeHeures());
+        faits.put("heuresDemandees", f.heuresDemandees());
+        faits.put("soldeBanqueApresHeures", f.soldeApresHeures());
+        return faits;
     }
 
     /** La demande résumée en faits, pour les règles {@code ABSENCE} : ce que le moteur juge, sans lire aucune table. */
@@ -136,6 +195,7 @@ public class GestionnaireAbsencesEffectifs {
         faits.put("premierJour", du);
         faits.put("planifiable", AbsencesEffectifs.codePlanifiable(code.attributs().get("planifiable")));
         faits.put("absencePlanifiee", AbsencesEffectifs.estPlanifiee(preavis));
+        faitsDuSolde(ctx, r, code, AbsencesEffectifs.joursDemandes(du, au)).forEach(faits::put);
         Map<String, String> portees = new HashMap<>();
         portees.put(PorteesDuDossier.CONVENTION, r.conventionCode());
         portees.put(PorteesDuDossier.STATUT_EMPLOI, r.statutEmploiCode());

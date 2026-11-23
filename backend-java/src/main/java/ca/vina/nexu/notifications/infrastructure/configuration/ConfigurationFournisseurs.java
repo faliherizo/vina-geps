@@ -1,6 +1,7 @@
 package ca.vina.nexu.notifications.infrastructure.configuration;
 
 import ca.vina.nexu.notifications.infrastructure.persistance.AppelHttp;
+import ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux;
 import ca.vina.nexu.notifications.infrastructure.persistance.ClientFournisseur;
 import ca.vina.nexu.notifications.infrastructure.persistance.PousseeExpoHttp;
 import ca.vina.nexu.notifications.infrastructure.persistance.PousseeHttp;
@@ -125,6 +126,20 @@ public class ConfigurationFournisseurs {
                 return commutateur.courant().statut(appelId);
             }
         };
+    }
+
+    /**
+     * L'appel vocal automatique des alertes (ST-G06) : par Twilio si c'est le fournisseur d'appel choisi — la saisie
+     * d'une touche est du TwiML —, sinon simulé.
+     */
+    @Bean
+    public ca.vina.nexu.partage.telephonie.AppelsVocauxPort appelsVocaux(Environment env, ClientFournisseur client) {
+        return appelsVocaux(lire(env), client);
+    }
+
+    public static ca.vina.nexu.partage.telephonie.AppelsVocauxPort appelsVocaux(Map<String, String> env, ClientFournisseur client) {
+        Fournisseurs.Choix choix = Fournisseurs.exigerChoix(env, "APPEL_FOURNISSEUR");
+        return choix != null && Twilio.NOM.equals(choix.fournisseur()) ? new AppelsVocaux.ParTwilio(client, twilio(env)) : new AppelsVocaux.Simule();
     }
 
     public static Appels.PorteurAppelSortant porteurAppel(Map<String, String> env, ClientFournisseur client, Supplier<String> horloge) {

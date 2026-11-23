@@ -1,0 +1,105 @@
+{
+  "$commentaire": "Les chapitres du film de la vitrine, dans l'ordre : chacun est un essai e2e joué contre le Java, qui affirme ce qu'il montre. Le titre est affiché sur le carton et annoncé ; la narration de chaque geste est dite par l'essai lui-même (raconter, e2e/tests/e2e/helpers/recit.ts). Le film présente les fonctionnalités de VINA GePS (VINA IT Solution) : aucun titre ne nomme un appel d'offres ni un client. Lu par scripts/monter-video-vitrine.sh et scripts/monter-recit.mjs.",
+  "chapitres": [
+    {
+      "fichier": "tests/e2e/urgences-sante-demonstration.spec.ts",
+      "titre": "VINA GePS — l'organisme de démonstration : menu, écrans, sites et personnes"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-socle.spec.ts",
+      "titre": "Socle des effectifs : référentiels datés, unités, ressources, périmètres"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-planification.spec.ts",
+      "titre": "Planification : périodes, postes, quarts ad hoc, attribution et règles"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-disponibilites.spec.ts",
+      "titre": "Disponibilités : collecte, dépôt, conformité, candidats d'une place"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-absences.spec.ts",
+      "titre": "Absences : demande, refus motivé, dérogation, places rendues vacantes"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-mes-absences.spec.ts",
+      "titre": "Mes absences : le personnel déclare, suit et annule"
+    },
+    {
+      "fichier": "tests/e2e/absences-codes.spec.ts",
+      "titre": "Codes d'absence : l'administration les ajoute, les remplace, les ferme"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-echanges.spec.ts",
+      "titre": "Échanger un quart : proposer, accepter, valider ou refuser"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-agph.spec.ts",
+      "titre": "AGPH : processus annuel, choix par ancienneté, remplacements long terme"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-presence.spec.ts",
+      "titre": "Présence et pointage : pointer, anomalies, approbation"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-temps.spec.ts",
+      "titre": "Feuilles de temps : segments, heures supplémentaires, approbation à paliers"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-regles.spec.ts",
+      "titre": "Moteur de règles : conditions, actions, motifs nommés"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-releves.spec.ts",
+      "titre": "Relevés et rapports : regroupés, exportés"
+    },
+    {
+      "fichier": "tests/e2e/effectifs-integrations.spec.ts",
+      "titre": "Intégrations : lot de paie codé et signé, horodatages externes"
+    },
+    {
+      "fichier": "tests/e2e/mon-equipe-suppleance.spec.ts",
+      "titre": "Mon équipe et suppléance"
+    },
+    {
+      "fichier": "tests/e2e/urgences-sante-saisies.spec.ts",
+      "titre": "Écrire dans les écrans : feuille de temps, disponibilités, AGPH, pointage, référentiels, milieux, quotas"
+    },
+    {
+      "fichier": "tests/e2e/urgences-sante-messagerie.spec.ts",
+      "titre": "Messagerie et appels entre deux personnes, et en groupe"
+    },
+    {
+      "fichier": "tests/e2e/notifications-evenements.spec.ts",
+      "titre": "Avis d'événements : préférences par événement, canaux obligatoires"
+    },
+    {
+      "fichier": "tests/e2e/paie.spec.ts",
+      "titre": "Paie québécoise : dossier, cycle préparé et traité, remises, bulletin lu par l'employée"
+    },
+    {
+      "fichier": "tests/e2e/paie-production.spec.ts",
+      "titre": "Paie : la RH configure les règles variables, le comptable valide les temps et produit la paie, fiches PDF"
+    },
+    {
+      "fichier": "tests/e2e/urgences-sante-exigences.spec.ts",
+      "titre": "Tous les écrans, un à un : chaque fonctionnalité a ses commandes, chaque écran passe axe-core"
+    },
+    {
+      "fichier": "tests/e2e/fx-ao-menu.spec.ts",
+      "titre": "Un organisme ne voit que ce qu'on lui accorde : menu et aide réduits à ses écrans"
+    },
+    {
+      "fichier": "tests/e2e/urgences-sante-alertes.spec.ts",
+      "titre": "Alertes cliniques : paramétrer, envoyer, prendre en charge, suivre ; cascade et reprise"
+    },
+    {
+      "fichier": "tests/e2e/fx-ao-parcours.spec.ts",
+      "titre": "Alertes : copie par courriel, annuaire LDAPS, utilisateurs actifs, relances, note, export"
+    },
+    {
+      "fichier": "tests/e2e/fx-ao-exigences.spec.ts",
+      "titre": "Les alertes cliniques, fonction par fonction, à l'écran"
+    }
+  ]
+}

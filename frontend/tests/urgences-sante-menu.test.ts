@@ -17,8 +17,8 @@ describe("Urgences-santé — le menu et ses pages", () => {
   it("chaque entrée a sa page, et chaque page son entrée", () => {
     expect(ENTREES_US.filter((e) => !PAGES_US[e.cle]).map((e) => e.cle)).toEqual([]);
     expect(Object.keys(PAGES_US).filter((c) => !CLES_US.includes(c))).toEqual([]);
-    // Vingt-neuf : dix-neuf écrans de pilotage, sept personnels, trois de communication.
-    expect(CLES_US).toHaveLength(29);
+    // Trente et un : vingt écrans de pilotage (codes d'absence compris), huit personnels (Mon équipe comprise), trois de communication.
+    expect(CLES_US).toHaveLength(31);
   });
 
   it("aucune clé en double : une page ne s'atteint que par une entrée", () => {
@@ -48,8 +48,10 @@ describe("Urgences-santé — le menu et ses pages", () => {
 
   it("une notion regroupe au moins deux pages — un intertitre d'un seul élément n'est pas une structure", () => {
     expect(NOTIONS_US.filter((n) => n.cle && n.entrees.length < 2).map((n) => n.cle)).toEqual([]);
-    // Et l'entrée sans notion est un lien direct : elle n'en porte qu'une.
-    expect(NOTIONS_US.filter((n) => n.cle === null).flatMap((n) => n.entrees)).toHaveLength(1);
+    // Et une entrée sans notion est un lien direct : chacune n'en porte qu'une (Mon horaire, Mon équipe).
+    const directes = NOTIONS_US.filter((n) => n.cle === null);
+    expect(directes.map((n) => n.entrees.length)).toEqual(directes.map(() => 1));
+    expect(directes.flatMap((n) => n.entrees.map((e) => e.cle))).toEqual(["monhoraire", "monequipe"]);
   });
 
   it("les écrans personnels sont ouverts à tous, les consoles à l'encadrement seul", () => {

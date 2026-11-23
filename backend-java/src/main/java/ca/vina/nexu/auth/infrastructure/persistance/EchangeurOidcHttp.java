@@ -2,6 +2,7 @@ package ca.vina.nexu.auth.infrastructure.persistance;
 
 import ca.vina.nexu.auth.infrastructure.services.ServiceSso;
 
+import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.domaine.Oidc;
 import io.jsonwebtoken.Jwts;
 import tools.jackson.core.type.TypeReference;
@@ -25,7 +26,7 @@ import java.util.Map;
  * {@code token}, puis vérifie l'{@code id_token} comme le prescrit Microsoft — signature RS256 par
  * une clé du JWKS publié, {@code aud} = notre client, émetteur et nonce attendus.
  */
-public class EchangeurOidcHttp implements ServiceSso.EchangeurOidc {
+public class EchangeurOidcHttp implements ServiceSso.EchangeurOidc, Annuaires.Decouverte {
 
     private static final ObjectMapper JSON = JsonMapper.builder().build();
     private static final TypeReference<Map<String, Object>> CARTE = new TypeReference<>() { };
@@ -75,6 +76,21 @@ public class EchangeurOidcHttp implements ServiceSso.EchangeurOidc {
         return Oidc.normaliser(verifierIdToken(idToken, cfg, demande.nonce()));
     }
 
+    /** Les adresses publiées par un fournisseur OIDC ; un document sans elles est refusé. */
+    @Override
+    public Annuaires.Decouverte.Points points(String emetteur) {
+        Map<String, Object> d;
+        try {
+            d = lire(emetteur + Oidc.CHEMIN_DECOUVERTE);
+        } catch (tools.jackson.core.JacksonException e) {
+            throw new IllegalStateException("document de découverte illisible", e);
+        }
+        if (!(d.get("authorization_endpoint") instanceof String autorisation) || !(d.get("token_endpoint") instanceof String jeton)) {
+            throw new IllegalStateException("document de découverte sans authorization_endpoint ni token_endpoint");
+        }
+        return new Annuaires.Decouverte.Points(autorisation, jeton);
+    }
+
     /** L'en-tête d'un JWT, pour son {@code kid}. */
     public static Map<String, Object> enTete(String jwt) {
         return json(new String(Base64.getUrlDecoder().decode(jwt.split("\\.")[0]), StandardCharsets.UTF_8));
@@ -87,11 +103,15 @@ public class EchangeurOidcHttp implements ServiceSso.EchangeurOidc {
         var cle = Oidc.clePubliqueDuJwks(jwks, kid == null ? null : String.valueOf(kid));
         Map<String, Object> claims;
         try {
-            claims = new java.util.LinkedHashMap<>(Jwts.parser().clock(() -> Date.from(horloge.instant())).verifyWith(cle).requireAudience(cfg.clientId()).build().parseSignedClaims(idToken).getPayload());
+            claims = new java.util.LinkedHashMap<>(Jwts.parser().clock(() -> Date.from(horloge.instant())).clockSkewSeconds(Oidc.TOLERANCE_HORLOGE_S)
+                    .verifyWith(cle).requireAudience(cfg.clientId()).build().parseSignedClaims(idToken).getPayload());
         } catch (io.jsonwebtoken.JwtException e) {
             throw new IllegalStateException("Entra : " + e.getMessage(), e);
         }
-        Oidc.verifierEmetteurEtNonce(claims, String.valueOf(decouverte.getOrDefault("issuer", "")), nonce);
+        String emetteur = String.valueOf(decouverte.getOrDefault("issuer", ""));
+        Oidc.verifierEmetteurPublie(cfg, emetteur);
+        Oidc.verifierEmetteurEtNonce(claims, emetteur, nonce);
+        Oidc.verifierRevendicationsExigees(claims, cfg.clientId());
         return claims;
     }
 }

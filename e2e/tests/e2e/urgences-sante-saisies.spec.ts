@@ -30,6 +30,7 @@ import {
 } from "./helpers/urgences-sante";
 import profils from "../../donnees/urgences-sante/profils.json";
 import jeu from "../../donnees/urgences-sante/saisies.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -64,7 +65,7 @@ test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouv
   test.beforeAll(async () => {
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("US-SAIS"));
+      tenantId = await createTenant(sa, uniq("Demo-Saisies"));
       await setTenantModules(sa, tenantId, modulesDeLOrganisme);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId, { avecTempsEtCollecte: true, profils: PROFILS });
@@ -91,6 +92,7 @@ test.describe("26-015-DO — les saisies : écrire dans les écrans, et le prouv
 
       // Gestes et attendus passent par le **même** verbe : un attendu de contenu est un constat,
       // et le distinguer par un second mécanisme aurait fait deux copies à corriger.
+      await raconter(page, `${profil!.cle === "administration" ? "L'administration de l'organisme" : profil!.nom} écrit dans l'écran. Le cas éprouvé : ${s.titre}. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.`);
       for (const g of [...s.gestes, ...s.attendu]) {
         try { await poser(page, { ...g, valeur: valeurRendue(g.valeur) }); }
         catch (e) {

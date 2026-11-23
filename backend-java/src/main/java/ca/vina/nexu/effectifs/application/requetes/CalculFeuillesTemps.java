@@ -80,7 +80,8 @@ public class CalculFeuillesTemps {
                       List<TempsEffectifs.QuartPlanifie> quarts, List<CorroborationTemps.HorodatageExterne> externes) { }
 
     private Lu lire(Contexte ctx, FeuilleTemps f) {
-        return new Lu(f, lecture.segmentsActifs(ctx, f.id(), lecture.typesHeure(ctx, f.debut())), lecture.parametres(ctx.tenantId()),
+        TempsEffectifs.Parametres parametres = lecture.parametresPour(ctx.tenantId(), lecture.ressources().exiger(ctx, f.ressourceId()).conventionCode());
+        return new Lu(f, lecture.segmentsActifs(ctx, f.id(), lecture.typesHeure(ctx, f.debut())), parametres,
                 sources.quartsPlanifies(ctx.tenantId(), f.ressourceId(), f.debut(), f.fin()), sources.externes(ctx.tenantId(), f.ressourceId(), f.debut(), f.fin()));
     }
 

@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Communications cliniques — compléments du socle (R1-bis)**, 14 novembre 2026
+    (docs/FX-AO-20260810_Dossier/07_validation_vina_geps/08_plan_implantation.md).
+
+    - Modèles versionnés (ST-G02) : chaque modification range une version datée et signée ; une alerte
+      retient le modèle et la version dont elle est partie. Les modèles existants sont repris en version 1.
+    - Périmètre d'un modèle : les groupes dont les expéditeurs le voient, rangés en table (jamais en JSON).
+    - Réglages de l'organisme : la copie par courriel (critère 8).
+    Les colonnes se constatent par `pragma_table_info` (voir 0004).
+  -->
+  <changeSet id="0009-alertes-r1-bis" author="communications-cliniques">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'alr_alertes'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('alr_alertes') WHERE name = 'modeleId'</sqlCheck>
+    </preConditions>
+    <comment>Versions et périmètre des modèles, modèle d'origine d'une alerte, réglages d'organisme.</comment>
+    <sql>ALTER TABLE alr_modeles ADD COLUMN version INTEGER NOT NULL DEFAULT 1</sql>
+    <sql>ALTER TABLE alr_alertes ADD COLUMN modeleId TEXT</sql>
+    <sql>ALTER TABLE alr_alertes ADD COLUMN modeleVersion INTEGER</sql>
+    <sql>
+      CREATE TABLE alr_modele_versions (
+        tenantId TEXT NOT NULL,
+        modeleId TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        titre TEXT NOT NULL,
+        corps TEXT NOT NULL,
+        priorite TEXT NOT NULL,
+        creeLe TEXT NOT NULL,
+        creePar TEXT NOT NULL,
+        PRIMARY KEY (tenantId, modeleId, version)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_modele_version_reponses (
+        tenantId TEXT NOT NULL,
+        modeleId TEXT NOT NULL,
+        version INTEGER NOT NULL,
+        rang INTEGER NOT NULL,
+        reponseId TEXT NOT NULL,
+        PRIMARY KEY (tenantId, modeleId, version, rang)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_modele_groupes (
+        tenantId TEXT NOT NULL,
+        modeleId TEXT NOT NULL,
+        groupeId TEXT NOT NULL,
+        PRIMARY KEY (tenantId, modeleId, groupeId)
+      )
+    </sql>
+    <sql>
+      CREATE TABLE alr_reglages (
+        tenantId TEXT NOT NULL PRIMARY KEY,
+        copieCourriel INTEGER NOT NULL DEFAULT 0
+      )
+    </sql>
+    <sql>INSERT INTO alr_modele_versions (tenantId, modeleId, version, titre, corps, priorite, creeLe, creePar)
+         SELECT tenantId, id, 1, titre, corps, priorite, 'reprise', 'reprise' FROM alr_modeles</sql>
+    <sql>INSERT INTO alr_modele_version_reponses (tenantId, modeleId, version, rang, reponseId)
+         SELECT tenantId, modeleId, 1, rang, reponseId FROM alr_modele_reponses</sql>
+  </changeSet>
+</databaseChangeLog>

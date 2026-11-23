@@ -35,16 +35,25 @@ public class FiltreSession extends OncePerRequestFilter {
     private final JetonDeSession jetons;
     private final HoteEtablissement hote;
     private final SessionsEmpruntees emprunts;
+    private final SessionsRevoquees revoquees;
+
+    /** L'identité du jeton de la requête ({@link JetonDeSession.Identite}), que la déconnexion révoque (PT-02). */
+    public static final String ATTRIBUT_IDENTITE = "ca.vina.nexu.session.identite";
 
     public FiltreSession(String secret, HoteEtablissement hote) {
-        this(secret, hote, SessionsEmpruntees.AUCUNE);
+        this(secret, hote, SessionsEmpruntees.AUCUNE, SessionsRevoquees.AUCUNE);
+    }
+
+    public FiltreSession(String secret, HoteEtablissement hote, SessionsEmpruntees emprunts) {
+        this(secret, hote, emprunts, SessionsRevoquees.AUCUNE);
     }
 
     @org.springframework.beans.factory.annotation.Autowired
-    public FiltreSession(@Value("${nexu.jwt.secret}") String secret, HoteEtablissement hote, SessionsEmpruntees emprunts) {
+    public FiltreSession(@Value("${nexu.jwt.secret}") String secret, HoteEtablissement hote, SessionsEmpruntees emprunts, SessionsRevoquees revoquees) {
         this.jetons = new JetonDeSession(secret);
         this.hote = hote;
         this.emprunts = emprunts;
+        this.revoquees = revoquees;
     }
 
     @Override
@@ -52,8 +61,11 @@ public class FiltreSession extends OncePerRequestFilter {
             throws ServletException, IOException {
         String jeton = jetonDe(requete);
         if (jeton != null) {
-            JetonDeSession.Revendications r = jetons.lire(jeton);
+            JetonDeSession.Lecture l = jetons.lireAvecIdentite(jeton);
+            // Une session fermée par la déconnexion ne vaut plus rien : la requête continue, anonyme (PT-02).
+            JetonDeSession.Revendications r = l == null || estRevoquee(l.identite()) ? null : l.revendications();
             if (r != null) {
+                requete.setAttribute(ATTRIBUT_IDENTITE, l.identite());
                 requete.setAttribute(ContexteRequete.ATTRIBUT, new ContexteRequete(
                         r.sub(), r.username(), r.role(), r.employeeId(), r.tenantId(), r.emprunteur(), r.empruntId()));
                 // En sous-domaine (ADR 0033), un jeton d'établissement ne vaut que sur l'hôte de cet
@@ -74,6 +86,10 @@ public class FiltreSession extends OncePerRequestFilter {
             }
         }
         suite.doFilter(requete, reponse);
+    }
+
+    private boolean estRevoquee(JetonDeSession.Identite identite) {
+        return identite.id() != null && revoquees.revoquee(identite.id());
     }
 
     private static void refuser(HttpServletResponse reponse, int code, String corps) throws IOException {

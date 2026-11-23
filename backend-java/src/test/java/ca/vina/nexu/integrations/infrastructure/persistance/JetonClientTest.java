@@ -30,7 +30,7 @@ class JetonClientTest {
     void allerRetour() {
         String jeton = jetons.emettre("cid_abc", "t-001", List.of("read", "write"));
 
-        JetonClient.Revendications r = jetons.lire(jeton);
+        JetonClient.Revendications r = jetons.lireRevendications(jeton);
         assertThat(r).isNotNull();
         assertThat(r.sub()).isEqualTo("cid_abc");
         assertThat(r.tenantId()).isEqualTo("t-001");
@@ -40,9 +40,9 @@ class JetonClientTest {
     @Test
     @DisplayName("une seule portée, ou aucune, se relit sans surprise")
     void porteesDegenerees() {
-        assertThat(jetons.lire(jetons.emettre("cid", "t", List.of("read"))).scopes())
+        assertThat(jetons.lireRevendications(jetons.emettre("cid", "t", List.of("read"))).scopes())
                 .containsExactly("read");
-        assertThat(jetons.lire(jetons.emettre("cid", "t", List.of())).scopes()).isEmpty();
+        assertThat(jetons.lireRevendications(jetons.emettre("cid", "t", List.of())).scopes()).isEmpty();
     }
 
     @Test
@@ -54,7 +54,30 @@ class JetonClientTest {
         String session = new JetonDeSession(SECRET).emettre(new JetonDeSession.Revendications(
                 "usr-1", "admin@@t-001", "admin", null, "t-001"));
 
-        assertThat(jetons.lire(session)).isNull();
+        assertThat(jetons.lireRevendications(session)).isNull();
+    }
+
+    @Test
+    @DisplayName("le port machine : organisme et portées converties, portée inconnue ignorée ; session ou jeton illisible : vide")
+    void portMachine() {
+        var a = jetons.lire(jetons.emettre("cli-rao", "t-1", List.of("read", "admin", "write"))).orElseThrow();
+        assertThat(a.clientId()).isEqualTo("cli-rao");
+        assertThat(a.tenantId()).isEqualTo("t-1");
+        assertThat(a.portees()).containsExactlyInAnyOrder(ca.vina.nexu.partage.securite.JetonsMachine.Portee.LECTURE,
+                ca.vina.nexu.partage.securite.JetonsMachine.Portee.ECRITURE);
+        assertThat(a.peut(ca.vina.nexu.partage.securite.JetonsMachine.Portee.LECTURE)).isTrue();
+        assertThat(jetons.lire(jetons.emettre("c", "t", List.of())).orElseThrow().peut(ca.vina.nexu.partage.securite.JetonsMachine.Portee.ECRITURE)).isFalse();
+        String session = new JetonDeSession(SECRET).emettre(new JetonDeSession.Revendications("u", "julie", "admin", null, "t-1"));
+        assertThat(jetons.lire(session)).isEmpty();
+        assertThat(jetons.lire("pas-un-jeton")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("un jeton machine n'ouvre pas de session : même clé, mais typ « client » refusé par la lecture de session (AD-06)")
+    void unJetonMachineNestPasUneSession() {
+        String machine = jetons.emettre("cli-rao", "t-1", List.of("read", "write"));
+        assertThat(jetons.lireRevendications(machine)).isNotNull();
+        assertThat(new JetonDeSession(SECRET).lire(machine)).isNull();
     }
 
     @Test
@@ -67,10 +90,10 @@ class JetonClientTest {
                 charge.replace("\"scope\":\"read\"", "\"scope\":\"write\"")
                         .getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-        assertThat(jetons.lire(parties[0] + "." + falsifiee + "." + parties[2]))
+        assertThat(jetons.lireRevendications(parties[0] + "." + falsifiee + "." + parties[2]))
                 .as("une élévation de portée par réécriture doit être refusée").isNull();
-        assertThat(new JetonClient("un-tout-autre-secret-lui-aussi-assez-long-1234567").lire(bon)).isNull();
-        assertThat(jetons.lire("pas-un-jeton")).isNull();
+        assertThat(new JetonClient("un-tout-autre-secret-lui-aussi-assez-long-1234567").lireRevendications(bon)).isNull();
+        assertThat(jetons.lireRevendications("pas-un-jeton")).isNull();
     }
 
     @Test

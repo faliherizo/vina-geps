@@ -1,6 +1,6 @@
 # Étude : une feuille de temps qui s'adapte à n'importe quel type d'emploi
 
-> Écrit pour l'équipe produit de VINA GEPS et pour l'administration d'un organisme client. Ce
+> Écrit pour l'équipe produit de VINA GePS et pour l'administration d'un organisme client. Ce
 > document étudie comment la feuille de temps peut servir un paramédic, une répartitrice, un
 > technicien de garde ou une adjointe administrative sans changer de code. Il dit ce qui est livré
 > le 14 novembre 2026, et ce qui reste à décider.
@@ -57,6 +57,8 @@ libre (500 caractères au plus), et non un champ à définir.
 | Soumettre au **supérieur hiérarchique** | Flux d'approbation : approbateur « Supérieur hiérarchique », résolu à la soumission depuis l'organigramme (`employees.managerId`). Sans supérieur connu, la feuille va au périmètre de gestion, et l'écran le dit |
 | Désigner le supérieur | Console des feuilles › « Supérieurs hiérarchiques » (`PUT /api/personnel/employes/{id}/superieur`, capacité `employee.update`). Rien n'écrivait l'organigramme avant : sans cet écran, la règle retombait toujours sur le niveau GESTION. Soi-même, un inconnu et un cycle sont refusés |
 | Le gestionnaire approuve | Console des feuilles : les feuilles qui lui sont désignées, même hors de son périmètre (existant), avec « En attente de … » |
+| **Mon équipe** (comme dans Nexu VINA) | Menu principal › « Mon équipe » : les personnes qui relèvent du gestionnaire, directement ou non (`GET /api/personnel/equipe`). Il y rattache une personne sans supérieur, change le supérieur d'un membre (lui-même ou un autre membre), détache un subordonné direct (`PUT /api/personnel/equipe/{id}/superieur`, `employee.update`). Le cloisonnement est au serveur : rien hors de sa chaîne |
+| **Suppléance pendant une absence** | « Mon équipe » › « Désigner un suppléant » (délégation datée du moteur d'approbation, `DELETE /api/approvals/delegations/{id}` pour y mettre fin). Pendant la période, les feuilles qui reviennent au gestionnaire parviennent **aussi** au suppléant, même sans périmètre sur l'unité ; l'employé lit « en son absence : … (jusqu'au …) » ; la décision est tracée « pour le compte de ». La délégation existait dans le moteur, mais la console des feuilles l'ignorait : le suppléant ne voyait rien |
 
 ### Où c'est vérifié
 
@@ -64,8 +66,10 @@ libre (500 caractères au plus), et non un champ à définir.
 |---|---|
 | Domaine | `ChampsFeuilleTest`, `FluxApprobationDomaineTest.superieurHierarchique`, `ControleurHierarchieHttpTest.domaine` |
 | HTTP | `ControleurTempsEffectifsHttpTest.champsEtTaches`, `ControleurTempsFluxEffectifsHttpTest.superieurHierarchique`, `ControleurHierarchieHttpTest` |
-| Interface | `frontend/tests/feuille-champs.test.tsx` ; audit `audit-wcag22` (fiche ouverte, flux « supérieur », champs, supérieurs) |
-| Bout en bout contre le Java | `e2e/tests/e2e/effectifs-temps-superieur.spec.ts` |
+| Domaine (équipe, suppléance) | `FluxApprobationDomaineTest.suppleance` ; `ControleurEquipeHttpTest` (règles de cloisonnement) |
+| HTTP (suppléance) | `ControleurTempsFluxEffectifsHttpTest.suppleance` ; `ControleurApprobationsHttpTest` (délégations reçues, révocation) |
+| Interface | `frontend/tests/feuille-champs.test.tsx`, `frontend/tests/mon-equipe.test.tsx` ; audit `audit-wcag22` (fiche ouverte, flux « supérieur », champs, supérieurs, Mon équipe et ses dialogues) |
+| Bout en bout contre le Java | `e2e/tests/e2e/effectifs-temps-superieur.spec.ts`, `e2e/tests/e2e/mon-equipe-suppleance.spec.ts` |
 
 ## 5. Ce qui reste à décider (prochains lots)
 

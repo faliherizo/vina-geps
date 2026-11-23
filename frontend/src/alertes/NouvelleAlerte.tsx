@@ -1,23 +1,30 @@
 /**
  * **Nouvelle alerte** — la console d'envoi (CU-3 ; FX-AO-20260810, critères 1, 3, 5, 6, 7, 18).
  *
- * Un modèle remplit d'un geste le titre, le texte, la priorité et les réponses ; tout reste modifiable.
- * Les destinataires sont des groupes entiers ou des personnes choisies dans un groupe, par leur nom ;
- * le serveur les résout et les fige à l'envoi. Une alerte critique part sur tous les canaux : l'écran le
- * dit avant l'envoi, pas après.
+ * Un modèle remplit d'un geste le titre, le texte, la priorité et les réponses ; tout reste modifiable, et
+ * l'alerte retient la version du modèle dont elle part. Les destinataires sont des groupes entiers (unités et
+ * groupes transverses), des listes de distribution, ou des personnes choisies dans un groupe, par leur nom ;
+ * le serveur les résout et les fige à l'envoi. Une alerte critique part sur tous les canaux, et se réserve à
+ * qui en a le droit (ST-G01) : l'écran le dit avant l'envoi, pas après.
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { EnTeteEcran, Message } from "../composants";
 import { useApiEffectifs as useApi } from "../effectifs/api";
 import { liste } from "../formeRecue";
 import { lienVersPage } from "../navigation";
-import { PRIORITES, libelleSemantique, type AlerteSuivie, type Groupe, type Modele, type Personne, type Priorite, type Reponse } from "./types";
+import { PRIORITES, libelleSemantique, type AlerteSuivie, type Droits, type Groupe, type Liste, type Modele, type Personne, type Priorite, type Reponse, type Politique } from "./types";
 
 export default function NouvelleAlerte() {
   const { lire, envoyer, erreur, setErreur } = useApi();
   const [modeles, setModeles] = useState<Modele[]>([]);
   const [reponses, setReponses] = useState<Reponse[]>([]);
   const [groupes, setGroupes] = useState<Groupe[]>([]);
+  const [listes, setListes] = useState<Liste[]>([]);
+  const [politiques, setPolitiques] = useState<Politique[]>([]);
+  const [politiqueId, setPolitiqueId] = useState("");
+  const [droits, setDroits] = useState<Droits | null>(null);
+  const [modeleId, setModeleId] = useState("");
+  const [listesChoisies, setListesChoisies] = useState<string[]>([]);
   const [titre, setTitre] = useState("");
   const [corps, setCorps] = useState("");
   const [priorite, setPriorite] = useState<Priorite>("urgente");
@@ -31,10 +38,14 @@ export default function NouvelleAlerte() {
       setModeles(liste<Modele>(await lire<Modele[]>("/api/alertes/modeles")).filter((m) => m.actif));
       setReponses(liste<Reponse>(await lire<Reponse[]>("/api/alertes/reponses")).filter((r) => r.active));
       setGroupes(liste<Groupe>(await lire<Groupe[]>("/api/alertes/groupes")));
+      setListes(liste<Liste>(await lire<Liste[]>("/api/alertes/listes")));
+      setPolitiques(liste<Politique>(await lire<Politique[]>("/api/alertes/politiques")).filter((p) => p.actif));
+      setDroits(await lire<Droits>("/api/alertes/droits"));
     })();
   }, [lire]);
 
   const appliquerModele = (id: string) => {
+    setModeleId(id);
     const m = modeles.find((x) => x.id === id);
     if (!m) return;
     setTitre(m.titre); setCorps(m.corps); setPriorite(m.priorite); setReponseIds(m.reponseIds.filter((r) => reponses.some((x) => x.id === r)));
@@ -45,10 +56,14 @@ export default function NouvelleAlerte() {
     e.preventDefault();
     setErreur(""); setEnvoyee(null);
     const a = await envoyer<AlerteSuivie>("/api/alertes", {
-      titre, corps, priorite, reponseIds, groupes: groupesChoisis, personnes: personnes.map((p) => p.personId),
+      titre, corps, priorite, reponseIds, groupes: groupesChoisis, listes: listesChoisies, personnes: personnes.map((p) => p.personId),
+      modeleId: modeleId || undefined, politiqueId: politiqueId || undefined,
     });
-    if (a) { setEnvoyee(a); setTitre(""); setCorps(""); setGroupesChoisis([]); setPersonnes([]); }
+    if (a) { setEnvoyee(a); setTitre(""); setCorps(""); setGroupesChoisis([]); setListesChoisies([]); setPersonnes([]); }
   };
+
+  // Un modèle critique est inutilisable sans le droit du critique : on ne le propose pas, plutôt que d'échouer à l'envoi.
+  const utilisables = modeles.filter((m) => m.priorite !== "critique" || droits?.critique !== false);
 
   return (
     <div data-testid="aln-ecran">
@@ -62,29 +77,61 @@ export default function NouvelleAlerte() {
       )}
       {/* La console est le formulaire de l'écran : composer et envoyer, comme un message. */}
       <form className="card" onSubmit={(e) => void envoyerAlerte(e)} aria-label="Composer une alerte" data-formulaire="en-place" data-testid="aln-formulaire">
-        {modeles.length > 0 && (
+        {utilisables.length > 0 && (
           <p><label htmlFor="aln-modele">Modèle (facultatif)</label>
             <select id="aln-modele" data-testid="aln-modele" defaultValue="" onChange={(e) => appliquerModele(e.target.value)}>
               <option value="">— Aucun —</option>
-              {modeles.map((m) => <option key={m.id} value={m.id}>{m.titre}</option>)}
+              {utilisables.map((m) => <option key={m.id} value={m.id}>{m.titre}</option>)}
             </select></p>
         )}
         <p><label htmlFor="aln-titre-champ">Titre</label>
           <input id="aln-titre-champ" data-testid="aln-titre-champ" required maxLength={120} value={titre} onChange={(e) => setTitre(e.target.value)} /></p>
         <p><label htmlFor="aln-corps">Message</label>
-          <textarea id="aln-corps" data-testid="aln-corps" required maxLength={2000} rows={4} value={corps} onChange={(e) => setCorps(e.target.value)} /></p>
+          <textarea id="aln-corps" data-testid="aln-corps" required maxLength={2000} rows={4} value={corps} onChange={(e) => setCorps(e.target.value)}
+                    aria-describedby="aln-corps-aide" />
+          {/* ST-H04 (ADR 0085) : l'alerte signale une personne, elle ne transporte pas de dossier ; le serveur refuse un NAM. */}
+          <span id="aln-corps-aide" className="muted" data-testid="aln-corps-aide">
+            N'inscrivez aucun renseignement de santé : ni nom de patient, ni numéro d'assurance maladie, ni diagnostic. Indiquez le lieu et l'action attendue.
+          </span></p>
         <fieldset>
           <legend>Priorité</legend>
-          {PRIORITES.map((p) => (
-            <p key={p.code} className="checkbox-line">
-              <input type="radio" name="aln-priorite" id={`aln-p-${p.code}`} data-testid={`aln-p-${p.code}`} checked={priorite === p.code} onChange={() => setPriorite(p.code)} />
-              <label htmlFor={`aln-p-${p.code}`}>{p.libelle}</label>
-            </p>
-          ))}
+          {PRIORITES.map((p) => {
+            // Sans le droit, la priorité critique reste visible mais inactive, et l'écran dit pourquoi.
+            const refusee = p.code === "critique" && droits !== null && !droits.critique;
+            return (
+              <p key={p.code} className="checkbox-line">
+                <input type="radio" name="aln-priorite" id={`aln-p-${p.code}`} data-testid={`aln-p-${p.code}`} checked={priorite === p.code} disabled={refusee}
+                  aria-describedby={refusee ? "aln-critique-refusee" : undefined} onChange={() => setPriorite(p.code)} />
+                <label htmlFor={`aln-p-${p.code}`}>{p.libelle}</label>
+              </p>
+            );
+          })}
+          {droits !== null && !droits.critique && (
+            <p className="muted" id="aln-critique-refusee" data-testid="aln-critique-refusee">La priorité critique est réservée aux personnes qui en ont le droit (direction, administration, ou un droit accordé par l'organisme).</p>
+          )}
           {priorite === "critique" && <p className="muted" data-testid="aln-critique">Une alerte critique part sur tous les canaux — poussée, texto et courriel — quelles que soient les préférences.</p>}
         </fieldset>
         <Destinataires groupes={groupes} groupesChoisis={groupesChoisis} basculerGroupe={(g) => setGroupesChoisis((l) => basculer(l, g))}
           personnes={personnes} changerPersonnes={setPersonnes} />
+        {listes.length > 0 && (
+          <fieldset data-testid="aln-listes">
+            <legend>Listes de distribution</legend>
+            {listes.map((l) => (
+              <p key={l.id} className="checkbox-line">
+                <input type="checkbox" id={`aln-l-${l.id}`} data-testid={`aln-l-${l.id}`} checked={listesChoisies.includes(l.id)} onChange={() => setListesChoisies((x) => basculer(x, l.id))} />
+                <label htmlFor={`aln-l-${l.id}`}>La liste {l.nom}</label>
+              </p>
+            ))}
+          </fieldset>
+        )}
+        {politiques.length > 0 && (
+          <p><label htmlFor="aln-politique">Relances (facultatif)</label>
+            <select id="aln-politique" data-testid="aln-politique" value={politiqueId} onChange={(e) => setPolitiqueId(e.target.value)} aria-describedby="aln-politique-aide">
+              <option value="">Aucune relance</option>
+              {politiques.map((p) => <option key={p.id} value={p.id}>{p.nom}</option>)}
+            </select>
+            <span id="aln-politique-aide" className="muted"> Sans réaction, l'alerte est relancée puis escaladée selon la politique, jusqu'à son critère d'arrêt.</span></p>
+        )}
         <fieldset>
           <legend>Réponses proposées</legend>
           {reponses.length === 0 && <p className="muted">Aucune réponse prédéfinie : l'alerte sera lue, sans réponse proposée.</p>}
@@ -96,7 +143,7 @@ export default function NouvelleAlerte() {
           ))}
         </fieldset>
         <p className="tdb-action-principale">
-          <button type="submit" className="primary" data-testid="aln-envoyer" disabled={groupesChoisis.length === 0 && personnes.length === 0}>Envoyer l'alerte</button>
+          <button type="submit" className="primary" data-testid="aln-envoyer" disabled={groupesChoisis.length === 0 && listesChoisies.length === 0 && personnes.length === 0}>Envoyer l'alerte</button>
         </p>
       </form>
     </div>

@@ -54,7 +54,7 @@ describe("nginx — fichiers de l'application à la racine du site", () => {
   it("la racine sert la vitrine, qui mène à l'application ; ces locations précèdent le repli `location /`", () => {
     const racine = conf.indexOf("location / {");
     for (const l of ["= /sw.js", "= /manifest.webmanifest", "/icones/", "/vitrine/"]) expect(conf.indexOf(`location ${l} {`)).toBeLessThan(racine);
-    // La vitrine de VINA GEPS (14 novembre 2026) : une page statique, et non une redirection vers /admin.
+    // La vitrine de VINA GePS (14 novembre 2026) : une page statique, et non une redirection vers /admin.
     expect(bloc("= /")).toContain("try_files /vitrine/index.html =404;");
     expect(bloc("= /")).not.toContain("return 302");
     expect(bloc("/vitrine/")).toContain("try_files $uri =404;");
@@ -71,5 +71,61 @@ describe("nginx — fichiers de l'application à la racine du site", () => {
     }
     // Un seul serveur pour tous les hôtes : aucun `server_name` qui exclurait un sous-domaine d'établissement.
     expect(conf.match(/server_name\s+([^;]+);/)?.[1].trim()).toBe("_");
+  });
+});
+
+/** Le bloc entier d'une location : jusqu'à son accolade fermante (indentée de deux espaces), au-delà de `${…}` et `types { … }`. */
+const blocEntier = (location: string) => {
+  const debut = conf.indexOf(`location ${location} {`);
+  expect(debut, `location ${location}`).toBeGreaterThan(-1);
+  return conf.slice(debut, conf.indexOf("\n  }", debut));
+};
+
+describe("nginx — durcissement issu des tests d'intrusion du 22 novembre 2026", () => {
+  it("PT-04 : chaque page HTML porte la politique de sécurité du contenu, sans script en ligne", () => {
+    const politique = conf.slice(conf.indexOf("map $request_method $politique_contenu"), conf.indexOf("server {"));
+    expect(politique).toContain("script-src 'self';");
+    expect(politique).not.toMatch(/script-src[^;]*unsafe-(inline|eval)/);
+    expect(politique).toContain("object-src 'none'");
+    expect(politique).toContain("frame-ancestors 'self'");
+    for (const location of ["@spa_index", "= /", "/vitrine/"]) {
+      expect(blocEntier(location), location).toContain("add_header Content-Security-Policy $politique_contenu always;");
+    }
+    // ZAP (10063) : la vitrine, à la racine, redéclare ses en-têtes ; la politique des permissions n'y manque plus.
+    for (const location of ["@spa_index", "= /"]) {
+      expect(blocEntier(location), location).toContain("add_header Permissions-Policy");
+    }
+    const index = readFileSync(join(RACINE, "index.html"), "utf8");
+    expect(index.match(/<script(?![^>]*(src=|application\/ld\+json))[^>]*>/g) ?? []).toEqual([]);
+    expect(existsSync(join(RACINE, "public", "avertissement-ie.js"))).toBe(true);
+  });
+
+  it("PT-05 : l'API garde ses propres en-têtes ; nginx n'y ajoute que HSTS, une seule fois", () => {
+    for (const location of ["/api/", "/public/"]) {
+      const b = blocEntier(location);
+      expect(b, location).toContain("proxy_hide_header Strict-Transport-Security;");
+      expect(b.match(/^\s*add_header /gm), location).toHaveLength(1);
+    }
+  });
+});
+
+describe("nginx — durcissements IN-01 et IN-05", () => {
+  const dockerfile = readFileSync(join(RACINE, "Dockerfile"), "utf8");
+
+  it("IN-01 : l'image tourne sans privilège et écoute sur un port non privilégié", () => {
+    expect(dockerfile).toMatch(/^FROM nginxinc\/nginx-unprivileged:[\d.]+-alpine AS runtime$/m);
+    expect(dockerfile).toContain("EXPOSE 8080");
+    expect(conf).toMatch(/^\s*listen 8080;$/m);
+    expect(conf).not.toMatch(/^\s*listen 80;$/m);
+  });
+
+  it("IN-05 : X-Forwarded-For n'est cru que des mandataires déclarés, puis réécrit vers l'API", () => {
+    expect(conf).toContain("set_real_ip_from ${API_PROXIES_CONFIANCE};");
+    expect(conf).toContain("real_ip_recursive on;");
+    expect(conf).not.toContain("$proxy_add_x_forwarded_for");
+    for (const location of ["/api/", "/public/"]) {
+      expect(blocEntier(location), location).toContain("proxy_set_header X-Forwarded-For $remote_addr;");
+    }
+    expect(dockerfile).toContain("API_PROXIES_CONFIANCE=127.0.0.1/32");
   });
 });

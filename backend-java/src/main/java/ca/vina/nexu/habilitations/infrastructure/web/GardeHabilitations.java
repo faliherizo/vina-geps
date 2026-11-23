@@ -2,6 +2,7 @@ package ca.vina.nexu.habilitations.infrastructure.web;
 
 import ca.vina.nexu.habilitations.domaine.DepotHabilitationsPort;
 import ca.vina.nexu.habilitations.domaine.Habilitations;
+import ca.vina.nexu.partage.securite.ContexteRequete;
 import ca.vina.nexu.partage.web.GardeAcces;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +41,15 @@ public class GardeHabilitations {
 
     public GardeAcces.Verdict administrer(HttpServletRequest requete) {
         return garde.exigerRole(requete, ADMINISTRATION);
+    }
+
+    /**
+     * Ses propres droits se lisent ; ceux d'autrui relèvent de l'administration. Le balayage des accès du 22 novembre 2026
+     * a trouvé qu'un employé lisait les octrois, les profils et la fiche de tout l'établissement.
+     */
+    public GardeAcces.Verdict soiOuAdministrer(HttpServletRequest requete, String utilisateurId) {
+        ContexteRequete ctx = GardeAcces.contexte(requete);
+        return ctx != null && ctx.userId().equals(utilisateurId) ? base(requete) : administrer(requete);
     }
 
     /**

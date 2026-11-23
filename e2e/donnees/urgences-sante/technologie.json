@@ -1,0 +1,386 @@
+{
+ "pourquoi": "Les exigences technologiques de l'avis 26-015-DO qu'un comportement logiciel prouve, jouées par l'API contre le Java (urgences-sante-technologie.spec.ts). Les autres (hébergement, soutien, engagements) se prouvent par les essais Java, l'infrastructure ou la documentation.",
+ "acteurs": {
+  "julie": {
+   "role": "employee"
+  },
+  "chef": {
+   "role": "manager"
+  }
+ },
+ "amorce": [],
+ "scenarios": [
+  {
+   "id": "T-01",
+   "titre": "Des profils distincts : l'administration lit les comptes, un employé et une gestionnaire non",
+   "exigences": [
+    "E-TN-5"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/auth/users",
+     "attendu": {
+      "statut": 200,
+      "texte": "julie-{{suffixe}}"
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/auth/users",
+     "attendu": {
+      "statut": 403
+     }
+    },
+    {
+     "acteur": "chef",
+     "methode": "GET",
+     "chemin": "/api/alertes/droits",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "envoyer": true,
+       "configurer": false
+      }
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/alertes/droits",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "envoyer": false
+      }
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-02",
+   "titre": "L'interface de communication est décrite en OpenAPI 3, et réservée aux comptes authentifiés",
+   "exigences": [
+    "E-TN-20"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/integrations/openapi.json",
+     "attendu": {
+      "statut": 200,
+      "texte": "\"openapi\"\\s*:\\s*\"3\\."
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-03",
+   "titre": "Les refus parlent français et disent quoi corriger",
+   "exigences": [
+    "E-TN-21"
+   ],
+   "etapes": [
+    {
+     "methode": "PUT",
+     "chemin": "/api/organisme/charte",
+     "attendu": {
+      "statut": 422,
+      "texte": "« nomAffiche » : de 1 à 60 caractères"
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/organisme/alertes",
+     "corps": {
+      "evenement": "TOUT",
+      "destinataires": [
+       "a@b.ca"
+      ]
+     },
+     "attendu": {
+      "statut": 422
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-04",
+   "titre": "L'organisme personnalise l'apparence : nom affiché et couleurs",
+   "exigences": [
+    "P-TN-9"
+   ],
+   "etapes": [
+    {
+     "methode": "PUT",
+     "chemin": "/api/organisme/charte",
+     "corps": {
+      "nomAffiche": "Urgences-santé",
+      "couleurPrincipale": "#005a9c",
+      "couleurLaterale": "#001a2e"
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/organisme/charte",
+     "attendu": {
+      "statut": 200,
+      "corps": {
+       "nomAffiche": "Urgences-santé",
+       "couleurPrincipale": "#005a9c"
+      }
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "PUT",
+     "chemin": "/api/organisme/charte",
+     "corps": {
+      "nomAffiche": "X",
+      "couleurPrincipale": "#000000",
+      "couleurLaterale": "#000000"
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-05",
+   "titre": "Une règle d'alerte par courriel se pose sur une opération sensible ; une adresse invalide est refusée",
+   "exigences": [
+    "P-TN-10"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/organisme/alertes",
+     "corps": {
+      "evenement": "EXPORT_TELECHARGE",
+      "destinataires": [
+       "securite@urgences-sante.ca"
+      ]
+     },
+     "attendu": {
+      "statut": 201
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/organisme/alertes",
+     "corps": {
+      "evenement": "EXPORT_TELECHARGE",
+      "destinataires": [
+       "pas-une-adresse"
+      ]
+     },
+     "attendu": {
+      "statut": 422
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/organisme/alertes",
+     "attendu": {
+      "statut": 200,
+      "texte": "securite@urgences-sante.ca"
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-06",
+   "titre": "Les résultats s'exportent en CSV, Excel, PDF et JSON",
+   "exigences": [
+    "P-TN-8"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=csv",
+     "attendu": {
+      "statut": 200,
+      "texte": "Suivi des communications"
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=xlsx",
+     "attendu": {
+      "statut": 200,
+      "texte": "^PK"
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=pdf",
+     "attendu": {
+      "statut": 200,
+      "texte": "^%PDF-"
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=json",
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/alertes/envoyees/export?format=doc",
+     "attendu": {
+      "statut": 400
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-07",
+   "titre": "Plusieurs annuaires actifs par organisme : un fournisseur OIDC et un Active Directory en LDAPS",
+   "exigences": [
+    "P-TN-2"
+   ],
+   "etapes": [
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/annuaires",
+     "corps": {
+      "nom": "Keycloak",
+      "fournisseur": "oidc",
+      "emetteur": "https://sso.urgences-sante.qc.ca/realms/geps",
+      "clientId": "vina-geps",
+      "variableSecret": "ANNUAIRE_KEYCLOAK",
+      "domaines": [
+       "urgences-sante.qc.ca"
+      ],
+      "roleParDefaut": "employee"
+     },
+     "attendu": {
+      "statut": 201
+     }
+    },
+    {
+     "methode": "POST",
+     "chemin": "/api/auth/annuaires",
+     "corps": {
+      "nom": "AD du siège",
+      "fournisseur": "ldaps",
+      "emetteur": "ldaps://ad.urgences-sante.local:636/OU=Personnel,DC=us,DC=local",
+      "clientId": "CN=svc-geps,DC=us,DC=local",
+      "variableSecret": "ANNUAIRE_AD",
+      "domaines": [
+       "urgences-sante.qc.ca"
+      ],
+      "roleParDefaut": "employee"
+     },
+     "attendu": {
+      "statut": 201
+     }
+    },
+    {
+     "methode": "GET",
+     "chemin": "/api/auth/annuaires",
+     "attendu": {
+      "statut": 200,
+      "texte": "AD du siège"
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/auth/annuaires",
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-08",
+   "titre": "L'authentification Microsoft Entra ID est offerte par la page de connexion",
+   "exigences": [
+    "E-TN-2"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/auth/sso/entra/status",
+     "attendu": {
+      "statut": 200,
+      "texte": "Entra"
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-09",
+   "titre": "Les fonctionnalités activées pour l'organisme se lisent au serveur, qui les garde en refus par défaut",
+   "exigences": [
+    "E-TN-4"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/saas/my-modules",
+     "attendu": {
+      "statut": 200,
+      "texte": "effectifs_planification"
+     }
+    },
+    {
+     "pourquoi": "La paie n'est pas activée pour cet organisme : sa route est fermée",
+     "acteur": "julie",
+     "methode": "GET",
+     "chemin": "/api/paie/mes-bulletins",
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  },
+  {
+   "id": "T-10",
+   "titre": "La restriction des connexions par pays se lit et se règle par l'administration",
+   "exigences": [
+    "P-TN-11"
+   ],
+   "etapes": [
+    {
+     "methode": "GET",
+     "chemin": "/api/organisme/pays",
+     "attendu": {
+      "statut": 200,
+      "texte": "enteteConfiguree"
+     }
+    },
+    {
+     "methode": "PUT",
+     "chemin": "/api/organisme/pays",
+     "corps": {
+      "pays": []
+     },
+     "attendu": {
+      "statut": 200
+     }
+    },
+    {
+     "acteur": "julie",
+     "methode": "PUT",
+     "chemin": "/api/organisme/pays",
+     "corps": {
+      "pays": []
+     },
+     "attendu": {
+      "statut": 403
+     }
+    }
+   ]
+  }
+ ]
+}

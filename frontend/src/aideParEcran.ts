@@ -19,7 +19,7 @@ import { PAGE_MODULE } from "./modulesParPage";
 
 /** Les sections du guide, dans l'ordre où elles paraissent (le sommaire en découle). */
 export const SECTIONS_AIDE = [
-  { id: "demarrage", titre: "Premiers pas : par où commencer ?" },
+  { id: "demarrage", titre: "Premiers pas : la mise en route" },
   { id: "notions", titre: "Notions clés (statuts, rôles, périmètres)" },
   { id: "mon-espace", titre: "Mon espace : horaire, disponibilités, échanges, temps" },
   { id: "organisation", titre: "Organisation : accès et rôles" },
@@ -27,6 +27,7 @@ export const SECTIONS_AIDE = [
   { id: "effectifs-planification", titre: "Effectifs : horaires, quarts, disponibilités" },
   { id: "communication", titre: "Communication : messages, appels, listes de diffusion" },
   { id: "alertes", titre: "Communications cliniques : alertes, réponses, suivi" },
+  { id: "paie", titre: "Paie : cycles, dossiers, remises, relevés, bulletins" },
   { id: "exploitation", titre: "Exploitation : administration, sauvegardes, journal" },
   { id: "accessibilite", titre: "Accessibilité & navigation clavier" },
   { id: "notifications", titre: "Notifications sur le téléphone (application installable)" },
@@ -52,17 +53,18 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
   // Mon espace
   dashboard: "mon-espace", account: "mon-espace", rapports: "exploitation",
   monhoraire: "mon-espace", mesdisponibilites: "mon-espace", mesechanges: "mon-espace", monagph: "mon-espace",
-  monpointage: "mon-espace", matemps: "mon-espace", mesabsences: "mon-espace",
+  monpointage: "mon-espace", matemps: "mon-espace", mesabsences: "mon-espace", monequipe: "effectifs-planification",
 
   // Urgences-santé : une page par entrée de menu, et une seule section d'aide — le module se
   // lit d'un bloc, et dix-neuf pages d'aide répéteraient dix-neuf fois le même propos.
   uscomblement: "effectifs-planification", usequipages: "effectifs-planification", usdisponibilites: "effectifs-planification", usabsences: "effectifs-planification",
   usechanges: "effectifs-planification", usagph: "effectifs-planification", uspresence: "effectifs-planification", ustemps: "effectifs-planification",
   uspostes: "effectifs-planification", usperiodes: "effectifs-planification", usressources: "effectifs-planification", usquotas: "effectifs-planification",
-  usreferentiels: "effectifs-planification", usregles: "effectifs-planification", usmilieux: "effectifs-planification", usperimetres: "effectifs-planification",
+  usreferentiels: "effectifs-planification", uscodesabsence: "effectifs-planification", usregles: "effectifs-planification", usmilieux: "effectifs-planification", usperimetres: "effectifs-planification",
   usintegrations: "effectifs-planification", usretention: "effectifs-planification", usjournal: "effectifs-planification",
   usmessages: "communication", usappels: "communication", usdiffusion: "communication",
   alnouvelle: "alertes", alsuivi: "alertes", mesalertes: "alertes", alparametres: "alertes",
+  paiecycles: "paie", paiedossiers: "paie", paiedeclarations: "paie", mesbulletins: "paie", paieparametres: "paie", paieregles: "paie", paietemps: "paie",
 
   // Encadrement et exploitation
   approvals: "approbations", access: "organisation",
@@ -89,17 +91,29 @@ export const AIDE_PAR_PAGE: Record<Page, SectionAide> = {
  *   « tous » : les six écrans de l'approvisionnement partagent une section, et en fermer un
  *   n'efface pas l'aide des cinq autres.
  *
+ * `masquee` dit qu'un écran a été retiré du menu de l'établissement (toutes ses vues masquées par le superadmin) :
+ * il ne compte pas plus qu'un écran de module coupé.
+ *
  * `ouvert` est le prédicat de `useModuleAllowed` : sans filtrage (compte global, modules pas
  * encore lus) il rend `true`, et le guide reste entier — on ne cache jamais plus que ce que le
  * superadmin a décidé.
  */
-export function sectionsVisibles(ouvert: (code?: string) => boolean): typeof SECTIONS_AIDE[number][] {
+export function sectionsVisibles(ouvert: (code?: string) => boolean, masquee: (page: string) => boolean = () => false): typeof SECTIONS_AIDE[number][] {
   const ouvertes = new Set<string>();
   for (const [page, section] of Object.entries(AIDE_PAR_PAGE)) {
-    if (ouvert(PAGE_MODULE[page as Page])) ouvertes.add(section);
+    if (pageOuverte(page as Page, ouvert, masquee)) ouvertes.add(section);
   }
   const visees = new Set<string>(Object.values(AIDE_PAR_PAGE));
   return SECTIONS_AIDE.filter((s) => !visees.has(s.id) || ouvertes.has(s.id));
+}
+
+/**
+ * **L'aide d'un écran suit l'accès de l'établissement à cet écran** : son module activé, et au moins une de ses vues
+ * laissée au menu par le superadmin. Une fiche sur un écran que l'organisme n'a pas ne lui sert à rien — et lui fait
+ * chercher au menu une entrée qui n'existe pas chez lui.
+ */
+export function pageOuverte(page: Page, ouvert: (code?: string) => boolean, masquee: (page: string) => boolean): boolean {
+  return ouvert(PAGE_MODULE[page]) && !masquee(page);
 }
 
 /**

@@ -2,8 +2,9 @@
  * **Annuaires de l'organisme** — AO 26-015-DO P-TN-2 (« l'intégration à plusieurs annuaires actifs,
  * tel que : Active Directories »).
  *
- * L'administrateur déclare chaque locataire Microsoft Entra ID dont les comptes peuvent entrer, les
- * domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
+ * L'administrateur déclare chaque fournisseur d'identité dont les comptes peuvent entrer — un
+ * locataire Microsoft Entra ID, ou tout fournisseur OpenID Connect (Keycloak…) désigné par son
+ * émetteur (ADR 0075), ou un annuaire LDAP joint en LDAPS (ADR 0083) —, les domaines de courriel admis, et quels groupes donnent quel rôle. Le secret client ne transite pas
  * par l'écran : seul le nom de la variable d'environnement qui le porte, et si elle est déployée.
  */
 import { useCallback, useEffect, useState, type FormEvent } from "react";
@@ -14,10 +15,13 @@ import { ConfirmModal, FormulaireModal } from "../Modal";
 type Appel = (chemin: string, init?: RequestInit) => Promise<Response>;
 interface Correspondance { groupe: string; role: string }
 export interface Annuaire {
-  id: string; nom: string; locataireEntra: string; clientId: string; variableSecret: string; secretDeploye: boolean;
+  id: string; nom: string; fournisseur?: Fournisseur; locataireEntra: string; emetteur?: string | null; clientId: string; variableSecret: string; secretDeploye: boolean;
   domaines: string[]; revendication: "groups" | "roles"; correspondances: Correspondance[]; roleParDefaut: string | null; actif: boolean;
+  provisionnementJat?: boolean;
 }
 interface Role { role: string; label: string }
+type Fournisseur = "entra" | "oidc" | "ldaps";
+const FOURNISSEURS: Record<Fournisseur, string> = { entra: "Microsoft Entra ID", oidc: "OpenID Connect (Keycloak, Okta…)", ldaps: "Annuaire LDAP (Active Directory), en LDAPS" };
 
 /** « groupe = rôle », une règle par ligne : la première qui correspond l'emporte, comme au serveur. */
 export function lireRegles(texte: string): Correspondance[] {
@@ -35,9 +39,11 @@ function corpsDe(f: HTMLFormElement): Record<string, unknown> {
   const d = new FormData(f);
   const texte = (n: string) => String(d.get(n) ?? "");
   return {
-    nom: texte("nom"), locataireEntra: texte("locataireEntra"), clientId: texte("clientId"), variableSecret: texte("variableSecret"),
+    nom: texte("nom"), fournisseur: texte("fournisseur") || "entra", locataireEntra: texte("locataireEntra"), emetteur: texte("emetteur"),
+    clientId: texte("clientId"), variableSecret: texte("variableSecret"),
     domaines: texte("domaines").split(/[\s,]+/).filter(Boolean), revendication: texte("revendication"),
     correspondances: lireRegles(texte("correspondances")), roleParDefaut: texte("roleParDefaut") || null, actif: d.get("actif") === "on",
+    provisionnementJat: d.get("provisionnementJat") === "on",
   };
 }
 
@@ -45,6 +51,7 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
   prefixe: string; initial: Annuaire | null; roles: Role[]; onEnvoyer: (corps: Record<string, unknown>) => Promise<boolean>;
 }) {
   const [erreurs, setErreurs] = useState<string[]>([]);
+  const [fournisseur, setFournisseur] = useState<Fournisseur>(initial?.fournisseur ?? "entra");
   const id = (n: string) => `${prefixe}-${n}`;
   async function soumettre(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,13 +69,40 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
       )}
       <label className="field" htmlFor={id("nom")}><span>Nom <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("nom")} name="nom" required maxLength={80} defaultValue={initial?.nom} data-testid={id("nom")} /></label>
-      <label className="field" htmlFor={id("locataire")}><span>Locataire Entra (GUID ou domaine) <span className="req-star" aria-hidden="true">*</span></span>
-        <input id={id("locataire")} name="locataireEntra" required defaultValue={initial?.locataireEntra} data-testid={id("locataire")}
-          aria-describedby={id("locataire-aide")} /></label>
-      <p id={id("locataire-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
-        Jamais « common » ni « organizations » : ces autorités laissent entrer n'importe quel compte Microsoft.
-      </p>
-      <label className="field" htmlFor={id("client")}><span>Identifiant d'application (client) <span className="req-star" aria-hidden="true">*</span></span>
+      <label className="field" htmlFor={id("fournisseur")}><span>Fournisseur d'identité</span>
+        <select id={id("fournisseur")} name="fournisseur" value={fournisseur} onChange={(e) => setFournisseur(e.target.value as Fournisseur)} data-testid={id("fournisseur")}>
+          {(Object.keys(FOURNISSEURS) as Fournisseur[]).map((f) => <option key={f} value={f}>{FOURNISSEURS[f]}</option>)}
+        </select></label>
+      {fournisseur === "entra" ? (
+        <>
+          <label className="field" htmlFor={id("locataire")}><span>Locataire Entra (GUID ou domaine) <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("locataire")} name="locataireEntra" required defaultValue={initial?.locataireEntra} data-testid={id("locataire")}
+              aria-describedby={id("locataire-aide")} /></label>
+          <p id={id("locataire-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            Jamais « common » ni « organizations » : ces autorités laissent entrer n'importe quel compte Microsoft.
+          </p>
+        </>
+      ) : fournisseur === "oidc" ? (
+        <>
+          <label className="field" htmlFor={id("emetteur")}><span>Émetteur OIDC (issuer) <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("emetteur")} name="emetteur" type="url" required defaultValue={initial?.emetteur ?? ""} data-testid={id("emetteur")}
+              aria-describedby={id("emetteur-aide")} /></label>
+          <p id={id("emetteur-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            L'adresse exacte de la revendication « iss », p. ex. https://sso.organisme.ca/realms/vina-geps. HTTPS obligatoire, sauf sur localhost.
+          </p>
+        </>
+      ) : (
+        <>
+          <label className="field" htmlFor={id("ldaps")}><span>Adresse LDAPS et base de recherche <span className="req-star" aria-hidden="true">*</span></span>
+            <input id={id("ldaps")} name="emetteur" required defaultValue={initial?.emetteur ?? "ldaps://"} data-testid={id("emetteur")}
+              aria-describedby={id("ldaps-aide")} /></label>
+          <p id={id("ldaps-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+            P. ex. ldaps://ad.etablissement.local:636/OU=Personnel,DC=etablissement,DC=local. ldap:// en clair est refusé ; le certificat
+            de l'annuaire doit être reconnu par le serveur et porter ce nom d'hôte.
+          </p>
+        </>
+      )}
+      <label className="field" htmlFor={id("client")}><span>{fournisseur === "ldaps" ? "DN du compte de service" : "Identifiant du client"} <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("client")} name="clientId" required defaultValue={initial?.clientId} data-testid={id("client")} /></label>
       <label className="field" htmlFor={id("variable")}><span>Variable du secret (ANNUAIRE_…) <span className="req-star" aria-hidden="true">*</span></span>
         <input id={id("variable")} name="variableSecret" required pattern="ANNUAIRE_[A-Z0-9_]+" defaultValue={initial?.variableSecret ?? "ANNUAIRE_"}
@@ -96,8 +130,82 @@ function Formulaire({ prefixe, initial, roles, onEnvoyer }: {
       <label className="field field-check" htmlFor={id("actif")}>
         <input id={id("actif")} name="actif" type="checkbox" defaultChecked={initial?.actif ?? true} data-testid={id("actif")} />
         <span>Proposé à la connexion</span></label>
+      <label className="field field-check" htmlFor={id("jat")} style={{ gridColumn: "1 / -1" }}>
+        <input id={id("jat")} name="provisionnementJat" type="checkbox" defaultChecked={initial?.provisionnementJat ?? false} data-testid={id("jat")}
+          aria-describedby={id("jat-aide")} />
+        <span>Créer le compte à la première connexion (provisionnement juste-à-temps)</span></label>
+      <p id={id("jat-aide")} className="muted" style={{ gridColumn: "1 / -1", margin: 0 }}>
+        Désactivé par défaut : une identité inconnue doit alors relier un compte existant (mot de passe, invitation ou votre approbation).
+        Même activé, un courriel déjà porté par un compte exige cette preuve : aucun second compte n'est créé.
+      </p>
       <div className="field field-actions"><button type="submit" className="primary" data-testid={id("enregistrer")}>Enregistrer</button></div>
     </form>
+  );
+}
+
+export interface DemandeLiaison { id: string; courriel: string; emetteur: string; annuaireId: string | null; compteId: string; statut: string; creeLe: string }
+
+/**
+ * **Demandes de liaison** (ADR 0093) : une personne que son annuaire a authentifiée demande que son identité soit
+ * reliée au compte qui porte son courriel. L'administrateur approuve (l'identité est reliée) ou refuse (rien ne l'est).
+ */
+export function DemandesLiaisonOrganisme({ apiFetch }: { apiFetch: Appel }) {
+  const [demandes, setDemandes] = useState<DemandeLiaison[]>([]);
+  const [info, setInfo] = useState("");
+  const [erreur, setErreur] = useState("");
+
+  const charger = useCallback(async () => {
+    const r = await apiFetch("/api/auth/liaisons");
+    setDemandes(liste<DemandeLiaison>(objet<{ demandes: DemandeLiaison[] }>(r.ok ? await r.json() : null)?.demandes));
+  }, [apiFetch]);
+  useEffect(() => { charger().catch(() => setErreur("Les demandes de liaison n'ont pas pu être lues.")); }, [charger]);
+
+  async function decider(d: DemandeLiaison, decision: "approuver" | "refuser") {
+    setInfo(""); setErreur("");
+    const r = await apiFetch(`/api/auth/liaisons/${encodeURIComponent(d.id)}/${decision}`, { method: "POST" });
+    if (r.ok) setInfo(decision === "approuver" ? `Identité de ${d.courriel} reliée à son compte.` : `Demande de ${d.courriel} refusée.`);
+    else {
+      const j = await r.json().catch(() => null);
+      setErreur(Array.isArray(j?.errors) ? j.errors.join(" · ") : `La décision a échoué (erreur ${r.status}).`);
+    }
+    await charger();
+  }
+
+  return (
+    <section className="card" aria-labelledby="liaisons-titre" data-testid="liaisons">
+      <h3 id="liaisons-titre">Demandes de liaison d'identité</h3>
+      <p className="muted">
+        Une personne authentifiée par un annuaire, sans identité reliée, demande à être reliée au compte qui porte son courriel.
+        Vérifiez qu'il s'agit bien d'elle avant d'approuver.
+      </p>
+      {info && <Message variante="succes" testId="liaisons-info">{info}</Message>}
+      {erreur && <Message variante="erreur" testId="liaisons-erreur">{erreur}</Message>}
+      {demandes.length === 0 ? <EtatVide testId="liaisons-vide" titre="Aucune demande en attente" /> : (
+        <div className="table-wrap" tabIndex={0} role="region" aria-label="Demandes de liaison (zone défilable au clavier)">
+          <table data-testid="liaisons-table">
+            <caption className="sr-only">Demandes de liaison en attente</caption>
+            <thead><tr><th scope="col">Courriel</th><th scope="col">Fournisseur (émetteur)</th><th scope="col">Reçue le</th><th scope="col">Décision</th></tr></thead>
+            <tbody>
+              {demandes.map((d) => (
+                <tr key={d.id} data-testid={`liaison-${d.id}`}>
+                  <th scope="row">{d.courriel}</th>
+                  <td>{d.emetteur}</td>
+                  <td>{d.creeLe.slice(0, 16).replace("T", " ")}</td>
+                  <td>
+                    <span style={{ display: "inline-flex", gap: 8, flexWrap: "wrap" }}>
+                      <button type="button" className="primary" data-testid={`liaison-${d.id}-approuver`} onClick={() => void decider(d, "approuver")}
+                        aria-label={`Approuver la liaison de ${d.courriel}`}>Approuver</button>
+                      <button type="button" className="danger" data-testid={`liaison-${d.id}-refuser`} onClick={() => void decider(d, "refuser")}
+                        aria-label={`Refuser la liaison de ${d.courriel}`}>Refuser</button>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -142,7 +250,7 @@ export default function AnnuairesOrganisme({ apiFetch }: { apiFetch: Appel }) {
     <section className="card" aria-labelledby="annuaires-titre" data-testid="annuaires">
       <h3 id="annuaires-titre">Annuaires de l'organisme</h3>
       <p className="muted">
-        Chaque annuaire Microsoft Entra ID déclaré ici apparaît sur la page de connexion. Adresse de retour à inscrire dans son
+        Chaque annuaire déclaré ici (Microsoft Entra ID ou OpenID Connect) apparaît sur la page de connexion. Adresse de retour à inscrire dans son
         inscription d'application : <code data-testid="annuaires-rappel">{rappel || "adresse publique non déclarée"}</code>
       </p>
       {info && <Message variante="succes" testId="annuaires-info">{info}</Message>}
@@ -156,12 +264,13 @@ export default function AnnuairesOrganisme({ apiFetch }: { apiFetch: Appel }) {
           <table data-testid="annuaires-table">
             <caption className="sr-only">Annuaires de l'organisme</caption>
             <thead><tr>
-              <th scope="col">Nom</th><th scope="col">Domaines</th><th scope="col">Règles</th><th scope="col">Secret</th><th scope="col">État</th><th scope="col">Actions</th>
+              <th scope="col">Nom</th><th scope="col">Fournisseur</th><th scope="col">Domaines</th><th scope="col">Règles</th><th scope="col">Secret</th><th scope="col">État</th><th scope="col">Actions</th>
             </tr></thead>
             <tbody>
               {annuaires.map((a) => (
                 <tr key={a.id} data-testid={`annuaire-${a.id}`}>
                   <th scope="row">{a.nom}</th>
+                  <td>{FOURNISSEURS[a.fournisseur ?? "entra"]}{a.fournisseur !== "entra" && a.emetteur ? ` — ${a.emetteur}` : ""}</td>
                   <td>{a.domaines.join(", ")}</td>
                   <td>{a.correspondances.length} règle(s){a.roleParDefaut ? `, défaut : ${a.roleParDefaut}` : ", sans défaut"}</td>
                   <td>{a.secretDeploye ? "✓ déployé" : `✗ ${a.variableSecret} absente`}</td>

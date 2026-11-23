@@ -190,6 +190,19 @@ class ControleurSoutienHttpTest {
     }
 
     @Test
+    @org.junit.jupiter.api.DisplayName("ST-H02 : un correctif s'annonce 3 jours ouvrables à l'avance, un rehaussement 21 ; la nature est rendue")
+    void maintenanceSelonSaNature() throws Exception {
+        // L'horloge de l'essai est au samedi 12 septembre 2026 : un correctif peut commencer le jeudi 17 à 0 h, à Montréal.
+        http.post("/api/soutien/maintenances", SA, "{\"debut\":\"2026-09-17T06:00:00Z\",\"fin\":\"2026-09-17T07:00:00Z\",\"description\":\"Version 5 du tableau de bord\",\"nature\":\"rehaussement\"}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.containsString("premier début admis : 2026-10-14")));
+        http.post("/api/soutien/maintenances", SA, "{\"debut\":\"2026-09-17T06:00:00Z\",\"fin\":\"2026-09-17T07:00:00Z\",\"description\":\"Correctif de sécurité TLS\",\"nature\":\"inconnue\"}")
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value(org.hamcrest.Matchers.startsWith("nature : « inconnue » inconnue")));
+        http.post("/api/soutien/maintenances", SA, "{\"debut\":\"2026-09-17T06:00:00Z\",\"fin\":\"2026-09-17T07:00:00Z\",\"description\":\"Correctif de sécurité TLS\",\"nature\":\"correctif\"}")
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.nature").value("correctif"));
+        http.get("/api/soutien/maintenances", SA).andExpect(status().isOk()).andExpect(jsonPath("$[0].nature").value("correctif"));
+    }
+
+    @Test
     void maintenancesA72hEtDisponibiliteMesuree() throws Exception {
         http.post("/api/soutien/maintenances", SA, "{\"debut\":\"2026-09-13T02:00:00.000Z\",\"fin\":\"2026-09-13T04:00:00.000Z\",\"description\":\"Migration de la base de données\"}")
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors[0]").value("préavis insuffisant : 72 h au moins avant le début (il en reste 16)"));

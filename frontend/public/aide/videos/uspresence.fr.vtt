@@ -1,0 +1,61 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:03.228
+Pointage et présence (console). Avant de commencer.
+
+00:00:03.678 --> 00:00:06.650
+5 préalables doivent être en place, dans cet ordre :
+
+00:00:07.100 --> 00:00:11.024
+Modules accordés à l'organisme : effectifs, effectifs presence.
+
+00:00:11.474 --> 00:00:13.750
+Le compte de la personne, avec son rôle.
+
+00:00:14.200 --> 00:00:14.850
+Périmètres.
+
+00:00:15.300 --> 00:00:16.182
+Milieux physiques.
+
+00:00:16.632 --> 00:00:17.375
+Ressources.
+
+00:00:17.825 --> 00:00:20.890
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:21.960 --> 00:00:27.719
+Pointage et présence (console). Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:28.919 --> 00:00:39.925
+Le chef ouvre la présence : le pointage de Marc est à trancher, la distance exigée n'a pas été fournie. Il l'approuve avec un motif : téléphone sans GPS, présence confirmée par le répartiteur.
+
+00:00:43.999 --> 00:00:49.780
+Le chef affiche enfin le code QR de la Caserne 12, à afficher sur place : il change toutes les cinq minutes.
+
+00:00:52.431 --> 00:01:03.484
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur pose un profil de pointage : pauses admises et présence préalable payée. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:01:06.882 --> 00:01:17.053
+Claire Nadeau écrit dans l'écran. Le cas éprouvé : le planificateur filtre les pointages par site et lit l'audit des localisations. La saisie doit s'enregistrer, puis se relire à l'écran par son contenu.
+
+00:01:21.008 --> 00:01:27.603
+Profils de pointage : le profil dit quelles natures de temps non payé (pause, repas, repos) sont admises à la saisie.
+
+00:01:31.505 --> 00:01:36.126
+La fiche d'un pointage montre les motifs retenus par les règles du quart, et l'écart au planifié.
+
+00:01:38.278 --> 00:01:43.944
+Filtrer les pointages par milieu : la déclaration de présence est rattachée au site, et plusieurs sites coexistent.
+
+00:01:45.534 --> 00:01:51.479
+Profil de pointage : « Présence préalable rémunérée (minutes) » — le temps exigé avant le quart, et payé.
+
+00:01:53.110 --> 00:01:58.567
+Un écart entre le lieu déclaré et le milieu du quart déclenche l'action configurée : ignorer, signaler ou bloquer.
+
+00:02:00.695 --> 00:02:05.247
+« Audit des pointages » : la localisation consignée se lit à l'écran et s'exporte en CSV.
+
+00:02:07.476 --> 00:02:12.144
+Les heures saisies sont jugées par les règles du quart : la fiche du pointage liste les motifs retenus.

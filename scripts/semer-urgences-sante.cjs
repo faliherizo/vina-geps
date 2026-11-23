@@ -20,11 +20,7 @@
  * deux démonstrations.
  */
 const donnees = require("../e2e/donnees/urgences-sante/demonstration.json");
-
-const arg = (nom, defaut) => {
-  const i = process.argv.indexOf(`--${nom}`);
-  return i > 0 && process.argv[i + 1] ? process.argv[i + 1] : defaut;
-};
+const { clientApi, argument: arg, jour } = require("./lib/api-semis.cjs");
 
 const API = arg("api", process.env.API_URL || "http://localhost:4000");
 const MDP = arg("mdp", process.env.DEMO_PASSWORD || "Passe!Demo2026");
@@ -42,6 +38,8 @@ const MODULES = [
    * (`/api/communication`) ; il ne requiert que le socle du module.
    */
   "effectifs_communication",
+  /** **La paie** (ADR 0076) : payée sur les seules feuilles approuvées — la démonstration en traite une semaine. */
+  "paie",
 ];
 
 /**
@@ -65,35 +63,13 @@ const MODULES = [
  */
 const SECTIONS_GARDEES = ["pilotage", "space", "admin", "urgencessante"];
 
-/** Un jour en avant ou en arrière d'aujourd'hui, au format `AAAA-MM-JJ`. */
-const jour = (decalage) => {
-  const d = new Date();
-  d.setDate(d.getDate() + decalage);
-  return d.toISOString().slice(0, 10);
-};
-
-async function appeler(chemin, { methode = "GET", corps, jeton, tenantId } = {}) {
-  const entetes = { "Content-Type": "application/json" };
-  if (jeton) entetes.Authorization = `Bearer ${jeton}`;
-  if (tenantId) entetes["X-Tenant-Id"] = tenantId;
-  const r = await fetch(`${API}${chemin}`, {
-    method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined,
-  });
-  const texte = await r.text();
-  if (!r.ok) throw new Error(`${methode} ${chemin} → ${r.status} ${texte.slice(0, 300)}`);
-  return texte ? JSON.parse(texte) : null;
-}
-
-async function connecter(identifiants) {
-  const r = await appeler("/api/auth/login", { methode: "POST", corps: identifiants });
-  if (!r?.token) throw new Error(`connexion refusée pour ${identifiants.username}`);
-  return r.token;
-}
+const { appeler, connecter } = clientApi(API);
 
 async function semer() {
   const jetonSa = await connecter(SUPERADMIN);
   const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ");
-  const nom = `${donnees.organisme.nom} (${horodatage})`;
+  // `SEMIS_NOM_ORGANISME` : le tournage du film nomme l'organisme sans client ni appel d'offres (monter-video-vitrine.sh).
+  const nom = `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`;
 
   /**
    * **`/api/superadmin/tenants`, et non `/api/saas/tenants`.**
@@ -208,6 +184,22 @@ async function semer() {
     })).id);
   }
   await poser("/api/effectifs/planification/postes/publier", { ids: postes });
+  await semerAgph(postes).catch((e) => console.warn(`  AGPH non semée : ${e.message.slice(0, 200)}`));
+
+  /**
+   * **Une campagne AGPH en cours**, pour que « Mon AGPH » ait quelque chose à montrer : l'année suivante, l'unité et le
+   * corps d'emploi de la démonstration, ouverte puis démarrée — le tour de rôle suit l'ancienneté, et la première
+   * personne peut choisir son poste. Un remplacement long terme est ouvert aux manifestations d'intérêt.
+   */
+  async function semerAgph(ids) {
+    const annee = Number(jour(0).slice(0, 4)) + 1;
+    const campagne = await poser("/api/effectifs/agph/campagnes",
+      { uniteCode: donnees.unite.code, corpsEmploiCode: donnees.corpsEmploi.code, annee, delaiChoixMinutes: 2880 });
+    await poser(`/api/effectifs/agph/campagnes/${campagne.id}/ouvrir`, {});
+    await poser(`/api/effectifs/agph/campagnes/${campagne.id}/demarrer`, {});
+    await poser("/api/effectifs/agph/remplacements",
+      { posteId: ids[ids.length - 1], origine: "POSTE_VACANT", debut: jour(30), fin: jour(60), finManifestation: jour(14) });
+  }
 
   // ── Une période publiée, et les trois quarts du jour (planche s01) ───────
   /**
@@ -293,7 +285,46 @@ async function semer() {
   await poser("/api/effectifs/temps/feuilles/preparer",
     { uniteCode: donnees.unite.code, debut: jour(-6), fin: jour(0) });
 
+  await semerPaie(ctx, tenant.id, comptes)
+    .catch((e) => console.warn(`  paie non semée : ${e.message.slice(0, 200)}`));
+
   return { tenant, comptes, quarts, periode };
+}
+
+/**
+ * **Une semaine payée**, pour que « Mes bulletins » montre un vrai bulletin (ADR 0076, 0084).
+ *
+ * La paie est d'abord **configurée** comme le ferait la RH : la validation des temps est exigée, l'échelle salariale et
+ * les primes sont posées (`demonstration.json`, rubrique `paie`). Chaque personne planifiable déclare trois jours de
+ * huit heures, la soumet, l'administration l'approuve ; son dossier porte son **échelon**, pas un taux saisi. La paie
+ * valide les feuilles sans anomalie, prépare le cycle et le traite — les feuilles deviennent « payées ».
+ */
+async function semerPaie(ctx, tenantId, comptes) {
+  const reglages = await appeler("/api/paie/reglages", ctx);
+  await appeler("/api/paie/reglages", { ...ctx, methode: "PUT", corps: { tauxFss: String(reglages.tauxFss), tauxCnesst: String(reglages.tauxCnesst),
+    majorationSupplementaire: String(reglages.majorationSupplementaire), validationTempsExigee: donnees.paie.validationTempsExigee } });
+  for (const r of donnees.paie.regles) await appeler("/api/paie/regles", { ...ctx, methode: "POST", corps: r });
+  const ressources = await appeler("/api/effectifs/planification/ressources", ctx);
+  const payables = comptes.filter((c) => ressources.some((r) => r.utilisateurId === c.compteId));
+  for (const [i, c] of payables.entries()) {
+    const jeton = await connecter({ username: c.username, password: MDP, tenantId });
+    const moi = { jeton, tenantId };
+    const feuille = (await appeler("/api/effectifs/temps/moi", moi)).find((f) => f.debut === jour(-6)) ?? null;
+    if (!feuille) throw new Error(`aucune feuille de la semaine pour ${c.username}`);
+    for (const d of [-6, -5, -4]) {
+      await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/segments`, { ...moi, methode: "POST",
+        corps: { date: jour(d), debut: `${jour(d)}T12:00:00Z`, fin: `${jour(d)}T20:00:00Z`, typeHeureCode: "REG" } });
+    }
+    await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/soumettre`, { ...moi, methode: "POST" });
+    await appeler(`/api/effectifs/temps/feuilles/${feuille.id}/approuver`, { ...ctx, methode: "POST" });
+    const ressource = ressources.find((r) => r.utilisateurId === c.compteId);
+    const echelon = donnees.paie.echelons[c.username];
+    await appeler(`/api/paie/dossiers/${ressource.id}`, { ...ctx, methode: "PUT",
+      corps: echelon ? { mode: "horaire", frequence: "hebdomadaire", echelon } : { mode: "horaire", frequence: "hebdomadaire", tauxHoraire: String(34 + i * 2.5) } });
+  }
+  await appeler("/api/paie/temps/valider-sans-anomalie", { ...ctx, methode: "POST", corps: { debut: jour(-6), fin: jour(0) } });
+  const cycle = await appeler("/api/paie/cycles", { ...ctx, methode: "POST", corps: { debut: jour(-6), fin: jour(0), datePaie: jour(4) } });
+  await appeler(`/api/paie/cycles/${cycle.cycle.id}/traiter`, { ...ctx, methode: "POST" });
 }
 
 semer().then(({ tenant, comptes, quarts }) => {

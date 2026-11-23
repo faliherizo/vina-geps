@@ -182,9 +182,6 @@
         "backend-java/src/test/java/ca/vina/nexu/effectifs/domaine/SocleEffectifsDomaineTest.java",
         "backend-java/src/test/java/ca/vina/nexu/effectifs/infrastructure/web/ControleurIntegrationsEffectifsHttpTest.java",
         "backend-java/src/test/java/ca/vina/nexu/effectifs/infrastructure/web/ControleurPresenceEffectifsHttpTest.java",
-        "backend-java/src/test/java/ca/vina/nexu/horaires/domaine/ActionTest.java",
-        "backend-java/src/test/java/ca/vina/nexu/horaires/infrastructure/persistance/DepotRecherchesTest.java",
-        "backend-java/src/test/java/ca/vina/nexu/horaires/infrastructure/web/ControleurHeuresSupplementairesHttpTest.java",
         "e2e/donnees/urgences-sante/comportements.json",
         "e2e/tests/e2e/effectifs-planification.spec.ts",
         "e2e/tests/e2e/effectifs-regles.spec.ts",
@@ -451,7 +448,7 @@
       "geste": "L'employé admissible voit le remplacement ouvert et se manifeste pour lui.",
       "preuve": [
         "agm-titre",
-        "agm-info|agm-sans-remplacement"
+        "agm-info|agm-sans-remplacement|prefixe:agm-rlt-"
       ],
       "essaiProfond": [
         "backend-java/src/test/java/ca/vina/nexu/effectifs/infrastructure/web/ControleurAgphEffectifsHttpTest.java",

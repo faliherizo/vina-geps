@@ -1,0 +1,37 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.415
+API (OpenAPI). Avant de commencer.
+
+00:00:02.865 --> 00:00:05.698
+2 préalables doivent être en place, dans cet ordre :
+
+00:00:06.148 --> 00:00:08.423
+Le compte de la personne, avec son rôle.
+
+00:00:08.873 --> 00:00:12.287
+Les routes essayées répondent selon vos droits et les modules accordés à l'organisme.
+
+00:00:12.737 --> 00:00:15.802
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:16.840 --> 00:00:18.094
+API (OpenAPI).
+
+00:00:18.544 --> 00:00:22.515
+Lire la description OpenAPI de toutes les routes et les essayer avec son propre compte.
+
+00:00:22.965 --> 00:00:27.051
+Qui s'en sert : Administration, direction, intégrateurs.
+
+00:00:27.501 --> 00:00:28.361
+Comment faire :
+
+00:00:28.811 --> 00:00:31.574
+Ouvrir une route, lire ses paramètres et ses réponses.
+
+00:00:32.024 --> 00:00:34.671
+Essayer : l'appel part avec vos droits, pas plus.
+
+00:00:35.121 --> 00:00:38.952
+Résultat : La réponse réelle s'affiche ; un refus dit quel droit manque.

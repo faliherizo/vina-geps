@@ -1,0 +1,73 @@
+WEBVTT
+
+00:00:00.000 --> 00:00:02.067
+Tableau de bord. Avant de commencer.
+
+00:00:02.517 --> 00:00:05.489
+5 préalables doivent être en place, dans cet ordre :
+
+00:00:05.939 --> 00:00:08.214
+Le compte de la personne, avec son rôle.
+
+00:00:08.664 --> 00:00:11.590
+Les tuiles lisent les modules des effectifs accordés à l'organisme.
+
+00:00:12.040 --> 00:00:12.690
+Périmètres.
+
+00:00:13.140 --> 00:00:15.811
+La ressource de la personne, reliée à son compte.
+
+00:00:16.261 --> 00:00:16.841
+Périodes.
+
+00:00:17.291 --> 00:00:20.356
+Chacun est montré dans la vidéo Mise en route, en tête du guide.
+
+00:00:21.400 --> 00:00:25.974
+Tableau de bord. Voici comment s'en servir, sur des cas réels joués dans l'application.
+
+00:00:27.174 --> 00:00:33.978
+Toutes les entrées sont présentes. On ouvre maintenant chaque écran du menu, l'un après l'autre : chacun doit s'ouvrir avec son en-tête.
+
+00:00:38.689 --> 00:00:43.798
+Deuxième cas : les données de démonstration. Voici les sites, ou milieux, de l'organisme.
+
+00:00:45.654 --> 00:00:53.920
+Troisième cas : le menu ne montre que ce que fait cet organisme. Les sections d'un autre métier, comme la comptabilité ou la facturation, sont masquées.
+
+00:00:55.271 --> 00:00:59.590
+Et une vue masquée ne s'ouvre pas non plus par son adresse directe : on revient au tableau de bord.
+
+00:01:01.638 --> 00:01:10.229
+Quatrième cas : Julie Roy, paramédic, ouvre la messagerie du personnel depuis le menu. Elle retrouve la conversation de son équipe, avec le nom de chacun.
+
+00:01:12.817 --> 00:01:20.108
+Dernier cas de ce chapitre : Julie ouvre Mon horaire. Elle voit ses propres quarts, par jour, avec le site, le poste et le statut.
+
+00:01:22.558 --> 00:01:29.524
+Le module des effectifs est coupé pour ce nouvel organisme par le superadmin : l'entrée Administration des effectifs n'apparaît pas dans le menu.
+
+00:01:30.973 --> 00:01:37.057
+Le superadmin active maintenant le module. On recharge la page : l'entrée revient dans le menu, sans reconnexion.
+
+00:01:39.079 --> 00:01:43.003
+Quotas : la planificatrice fixe à deux le quota de l'unité Opérations Est.
+
+00:01:45.757 --> 00:01:54.673
+Côté gestion, le chef ouvre les disponibilités de l'équipe. Celles de Julie sont en attente d'approbation : tant qu'elles le sont, Julie est exclue des candidats d'une place.
+
+00:01:57.769 --> 00:02:06.499
+Absences d'effectifs. Le gestionnaire déclare une absence pour Julie Roy : maladie, du 4 au 5 mars, pour une grippe. Les deux quarts de Julie sont déjà attribués.
+
+00:02:10.130 --> 00:02:16.631
+Deuxième cas : après la dérogation, le comblement automatique prend le relais. Le gestionnaire accorde à nouveau l'absence de Julie.
+
+00:02:19.440 --> 00:02:27.451
+Le chef ouvre les échanges à trancher. Il lit les motifs, valide l'échange avec la mention Remplacement couvert, et les quarts de Julie et de Marc sont permutés.
+
+00:02:30.955 --> 00:02:39.825
+Deuxième cas : c'est le planificateur qui crée l'échange pour Julie, qui n'a pas d'accès à l'écran. Il choisit Julie, le quart qu'elle cède, et celui de Marc qu'elle reçoit.
+
+00:02:44.863 --> 00:02:52.781
+Mon équipe. Marc Lavoie, gestionnaire, voit sa ligne hiérarchique : Julie Roy relève directement de lui. Il rattache Léa Morin à son équipe.

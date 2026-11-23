@@ -13,6 +13,8 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, TENANT_ADMIN_PASS, TENANT_ADMIN_USER, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { optionsFilmees } from "./helpers/film";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -69,13 +71,14 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await sa.dispose();
   await amorcer(tenantId);
 
-  const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] }, acceptDownloads: true });
+  const ctx = await browser.newContext(optionsFilmees({ storageState: { cookies: [], origins: [] }, acceptDownloads: true }));
   const page = await ctx.newPage();
   await selectTenant(page, tenantId);
   await ouvrirNav(page, "nav-rapports");
   await expect(page.getByTestId("rap-enr-vide")).toBeVisible();
 
   // ── Définir : source, regroupements, colonnes, indicateurs, période, filtre ──────────────────
+  await raconter(page, "Relevés et rapports. Le gestionnaire construit un relevé de comblement : source, les places des effectifs ; regroupé par unité ; le taux de places pourvues et le nombre d'équipages sous le minimum ; pour la semaine du 13 janvier, quarts réguliers seulement.");
   await page.getByTestId("rap-source").selectOption("effectifs_places");
   await expect(page.getByTestId("rap-periode")).toBeVisible();
   for (const axe of ["uniteNiveau1", "unite"]) {
@@ -95,6 +98,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await expectNoA11yViolations(page);
 
   // ── Produire ─────────────────────────────────────────────────────────────────────────────
+  await raconter(page, "Il produit le relevé : l'unité Opérations Est est pourvue à 66,67 pour cent, avec un équipage sous le minimum.");
   await page.getByTestId("rap-executer").click();
   await expect(page.getByTestId("rap-resume")).toContainText("1 ligne(s).");
   await expect(page.getByTestId("rap-resultat")).toContainText("Places pourvues / Places (%)");
@@ -103,6 +107,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await expectNoA11yViolations(page);
 
   // Une période oubliée est refusée nommément, sans exécuter.
+  await raconter(page, "Sans date de début, le relevé est refusé, et le message dit le format attendu.");
   await page.getByTestId("rap-periode-du").fill("");
   await page.getByTestId("rap-executer").click();
   await expect(page.getByTestId("rap-erreur")).toContainText("deux dates AAAA-MM-JJ");
@@ -110,6 +115,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await page.getByTestId("rap-periode-du").fill("2031-01-13");
 
   // ── Enregistrer pour l'organisme ─────────────────────────────────────────────────────────
+  await raconter(page, "Il enregistre le relevé sous le nom Comblement hebdomadaire.");
   await page.getByTestId("rap-enr-nom").fill("Comblement hebdomadaire");
   await page.getByTestId("rap-enr-description").fill("Taux de places pourvues et équipages sous le minimum");
   await page.getByTestId("rap-enr-creer").click();
@@ -118,6 +124,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   await expectNoA11yViolations(page);
 
   // ── Reproduire depuis la liste, après être reparti de zéro ───────────────────────────────
+  await raconter(page, "Après rechargement, il le reproduit d'un clic : mêmes paramètres, même résultat. Puis il l'exporte, en Excel et en PDF.");
   await page.reload();
   await ouvrirNav(page, "nav-rapports");
   await page.getByTestId("rap-enr-produire-0").click();
@@ -136,6 +143,7 @@ test("définir, produire, enregistrer, reproduire et exporter un relevé de comb
   }
 
   // ── Modifier puis retirer ───────────────────────────────────────────────────────────────
+  await raconter(page, "Il le renomme, Comblement par semaine, puis le retire de la liste.");
   await page.getByTestId("rap-enr-nom").fill("Comblement par semaine");
   await page.getByTestId("rap-enr-maj").click();
   await expect(page.getByTestId("rap-annonce")).toHaveText("Rapport « Comblement par semaine » mis à jour.");

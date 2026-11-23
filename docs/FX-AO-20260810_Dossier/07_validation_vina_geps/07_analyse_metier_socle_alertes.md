@@ -12,7 +12,7 @@ dépendre d'une chaîne de courriels ou d'appels un à un.
 
 ## 2. Acteurs
 
-| Acteur | Rôle VINA GEPS | Ce qu'il fait dans le socle |
+| Acteur | Rôle VINA GePS | Ce qu'il fait dans le socle |
 |---|---|---|
 | Administration de l'organisme | `admin` (capacité `alertes.configure`) | Tient les **réponses prédéfinies** et les **modèles d'alerte** |
 | Expéditeur autorisé | `admin`, `director`, `manager` (capacité `alertes.envoyer`) | Envoie une alerte, suit les remises, lit le suivi de toutes les alertes de l'organisme |

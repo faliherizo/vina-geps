@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Feuille payée** (14 novembre 2026) : une feuille approuvée prise dans une paie traitée passe PAYEE ; elle ne
+    se corrige, ne se rappelle et ne se rouvre plus. La paie et l'instant sont notés sur la feuille.
+  -->
+  <changeSet id="0011-feuilles-payees" author="feuilles-de-temps">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="1">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_feuilles'</sqlCheck>
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM pragma_table_info('eff_feuilles') WHERE name = 'payeeLe'</sqlCheck>
+    </preConditions>
+    <comment>La paie qui a pris la feuille, et quand.</comment>
+    <sql>ALTER TABLE eff_feuilles ADD COLUMN payeeLe TEXT</sql>
+    <sql>ALTER TABLE eff_feuilles ADD COLUMN paieId TEXT</sql>
+  </changeSet>
+</databaseChangeLog>

@@ -21,6 +21,7 @@ import { auditA11y } from "./helpers/a11y";
 import { optionsFilmees } from "./helpers/film";
 import { amorcerOrganisme, identifiantDe, modulesDeLOrganisme, seConnecterProfil, type Profil } from "./helpers/urgences-sante";
 import jeu from "../../donnees/urgences-sante/profils.json";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -59,7 +60,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
   test.beforeAll(async () => {
     const sa = await superadminContext();
     try {
-      tenantId = await createTenant(sa, uniq("US-MSG"));
+      tenantId = await createTenant(sa, uniq("Demo-Messagerie"));
       await setTenantModules(sa, tenantId, modulesDeLOrganisme);
     } finally { await sa.dispose(); }
     await amorcerOrganisme(tenantId, { profils: PROFILS });
@@ -72,6 +73,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
     const idMarc = identifiantDe(MARC, tenantId);
 
     // ── Écrire : Marc est choisi dans la liste, par son nom ────────────────────────────────
+    await raconter(julie, "Messagerie. Julie Roy et Marc Dubé, deux paramédics, ouvrent chacun la messagerie du personnel. Julie choisit Marc dans la liste et lui écrit : peux-tu prendre mon quart de jeudi ?");
     const personne = julie.getByTestId("sq-msg-directe-personne");
     await expect(personne.locator("option").filter({ hasText: MARC.nom })).toHaveCount(1, { timeout: 30_000 });
     // La valeur de l'option est le nom de connexion — jamais la clé technique « login@@organisme ».
@@ -85,6 +87,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
     await julie.getByTestId("sq-msg-envoyer").click();
     await expect(julie.locator("main").getByText(texte).first()).toBeVisible({ timeout: 30_000 });
 
+    await raconter(marc, "Chez Marc, le message arrive dans leur fil à deux.");
     await marc.reload();
     await choisirFil(marc, FIL_A_DEUX);
     // Le texte paraît deux fois : dans le fil, et en aperçu dans la liste des conversations.
@@ -92,6 +95,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
     await sansViolation(marc, "fil à deux, message reçu");
 
     // ── Appeler depuis le fil ──────────────────────────────────────────────────────────────
+    await raconter(julie, "Julie appelle maintenant Marc depuis le fil. Chez elle, le bandeau dit que ça sonne. Chez Marc, où qu'il soit dans l'application, l'appel entrant s'affiche : il décroche, ils sont en communication, puis Julie raccroche. L'appel reçu figure à l'historique de Marc.");
     await julie.getByTestId("sq-msg-appeler").scrollIntoViewIfNeeded();
     await expect(julie.getByTestId("sq-msg-appeler")).toContainText(MARC.nom);
     await julie.getByTestId("sq-msg-appeler").click();
@@ -128,6 +132,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
     test.setTimeout(180_000);
     const julie = await ouvrirMessagerie(browser, tenantId, JULIE);
     const marc = await ouvrirMessagerie(browser, tenantId, MARC);
+    await raconter(julie, "Deuxième cas : Julie appelle Marc, et Marc refuse l'appel. La sonnerie doit s'arrêter chez Julie aussi.");
     await choisirFil(julie, FIL_A_DEUX);
     await julie.getByTestId("sq-msg-appeler").click();
     await expect(julie.getByTestId("sq-appels-bandeau")).toContainText("ça sonne", { timeout: 5_000 });
@@ -146,6 +151,7 @@ test.describe("26-015-DO — messagerie et appels entre deux personnes", () => {
     const marc = await ouvrirMessagerie(browser, tenantId, MARC);
     const sujet = `Garde de nuit ${Date.now()}`;
 
+    await raconter(julie, "Troisième cas : Julie ouvre un fil de groupe, Garde de nuit, avec Marc, puis lance un appel de groupe. Marc reçoit l'invitation, rejoint l'appel, puis le quitte.");
     await julie.getByTestId("sq-msg-sujet").fill(sujet);
     const premier = julie.getByTestId("sq-msg-participant");
     await expect(premier.locator("option").filter({ hasText: MARC.nom })).toHaveCount(1, { timeout: 30_000 });

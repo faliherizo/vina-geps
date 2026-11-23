@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.jdbc.datasource.SimpleDriverDataSource;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
@@ -27,22 +29,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @TestPropertySource(properties = {
-        "spring.datasource.url=jdbc:sqlite:${java.io.tmpdir}/nexu-demarrage-essai.db",
         "spring.liquibase.enabled=false",
         "nexu.jwt.secret=secret-d-essai-de-trente-deux-octets-au-moins",
 })
 @DisplayName("Démarrage — le contexte Spring se construit avec tous ses beans")
 class DemarrageTest {
 
+    /**
+     * Une base par exécution : un nom fixe dans le dossier temporaire était partagé par tous les {@code mvn verify} lancés en
+     * même temps depuis des worktrees différents, et l'un effaçait la base que l'autre lisait (SQLITE_IOERR_SHORT_READ).
+     */
+    private static final Path BASE = Path.of(System.getProperty("java.io.tmpdir"),
+            "nexu-demarrage-essai-" + ProcessHandle.current().pid() + "-" + System.nanoTime() + ".db");
+
     @Autowired
     private ApplicationContext contexte;
+
+    @DynamicPropertySource
+    static void base(DynamicPropertyRegistry proprietes) {
+        proprietes.add("spring.datasource.url", () -> "jdbc:sqlite:" + BASE);
+    }
 
     /** La base du démarrage porte le schéma des essais : le provisionnement des comptes et le premier tic de l'ordonnanceur s'y exécutent pour de vrai. */
     @BeforeAll
     static void preparerLaBase() throws IOException {
-        Path base = Path.of(System.getProperty("java.io.tmpdir"), "nexu-demarrage-essai.db");
-        Files.deleteIfExists(base);
-        SchemaEssai.base(new SimpleDriverDataSource(new org.sqlite.JDBC(), "jdbc:sqlite:" + base));
+        Files.deleteIfExists(BASE);
+        BASE.toFile().deleteOnExit();
+        SchemaEssai.base(new SimpleDriverDataSource(new org.sqlite.JDBC(), "jdbc:sqlite:" + BASE));
     }
 
     @Test

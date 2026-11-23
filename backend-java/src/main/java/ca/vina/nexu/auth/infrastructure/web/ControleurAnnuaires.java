@@ -4,12 +4,14 @@ import ca.vina.nexu.auth.application.ServiceAnnuaires;
 import ca.vina.nexu.auth.domaine.Annuaires;
 import ca.vina.nexu.auth.domaine.EcritureAnnuaires;
 import ca.vina.nexu.auth.domaine.RegistreAnnuaires;
-import ca.vina.nexu.auth.infrastructure.persistance.AdaptateurComptesAnnuaire;
+import ca.vina.nexu.auth.application.ServiceResolutionIdentite;
+import ca.vina.nexu.auth.domaine.IdentitesExternes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotAnnuaires;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotComptes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotQuestionsSecretes;
 import ca.vina.nexu.auth.infrastructure.persistance.DepotRolesEtablissement;
 import ca.vina.nexu.auth.infrastructure.persistance.EchangeurOidcHttp;
+import ca.vina.nexu.auth.infrastructure.persistance.LiaisonLdaps;
 import ca.vina.nexu.auth.infrastructure.services.ServiceConnexion;
 import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.identifiants.domaine.Sequence;
@@ -17,6 +19,7 @@ import ca.vina.nexu.partage.securite.AdressePublique;
 import ca.vina.nexu.partage.securite.HoteEtablissement;
 import ca.vina.nexu.partage.securite.JetonDeSession;
 import ca.vina.nexu.partage.web.GardeAcces;
+import ca.vina.nexu.securite.domaine.PareFeu;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.net.ssl.SSLSocketFactory;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.security.SecureRandom;
@@ -41,6 +45,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -50,7 +55,8 @@ import java.util.function.Supplier;
  * <ul>
  *   <li>Connexion, sans session : la liste des annuaires actifs de l'organisme (de l'hôte, ADR 0033,
  *       sinon du paramètre {@code tenantId} de la page de connexion), le départ vers l'annuaire choisi,
- *       et le retour, qui pose la session comme la connexion par mot de passe.</li>
+ *       et le retour, qui pose la session comme la connexion par mot de passe. Un annuaire LDAPS reçoit
+ *       l'identifiant et le mot de passe en JSON (ADR 0083) et pose la même session.</li>
  *   <li>Administration, par l'administrateur de l'organisme : lire, déclarer, modifier, retirer.
  *       Le secret n'est jamais lu ni rendu : seul le nom de sa variable, et s'il est déployé.</li>
  * </ul>
@@ -67,19 +73,22 @@ public class ControleurAnnuaires {
     /** Ce que le contrôleur emploie, regroupé : la construction en essai les fournit en une fois. */
     public record Dependances(ServiceAnnuaires service, RegistreAnnuaires registre, EcritureAnnuaires ecriture, DepotRolesEtablissement roles,
                               GardeAcces garde, HoteEtablissement hote, AdressePublique adresse, JournalAudit audit, Sequence sequence,
-                              Map<String, String> env, boolean cookieSecurise) {
+                              Map<String, String> env, boolean cookieSecurise, PareFeu pareFeu) {
     }
 
     private final Dependances d;
 
     @Autowired
-    public ControleurAnnuaires(DepotAnnuaires annuaires, DepotComptes comptes, DepotQuestionsSecretes questions, DepotRolesEtablissement roles,
-                               GardeAcces garde, HoteEtablissement hote, AdressePublique adresse, JournalAudit audit, Sequence sequence, Clock horloge,
-                               @Value("${nexu.jwt.secret}") String secret, @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
-        this(new Dependances(new ServiceAnnuaires(new ServiceAnnuaires.Ports(annuaires, new AdaptateurComptesAnnuaire(comptes, ALEA),
+    public ControleurAnnuaires(DepotAnnuaires annuaires, ServiceResolutionIdentite resolution, DepotComptes comptes, DepotQuestionsSecretes questions,
+                               DepotRolesEtablissement roles, GardeAcces garde, HoteEtablissement hote, AdressePublique adresse, JournalAudit audit,
+                               Sequence sequence, Clock horloge, PareFeu pareFeu, @Value("${nexu.jwt.secret}") String secret,
+                               @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
+        this(new Dependances(new ServiceAnnuaires(new ServiceAnnuaires.Ports(annuaires, resolution,
                 new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge)::emettre,
-                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)::echanger), System.getenv(), horloge, ALEA),
-                annuaires, annuaires, roles, garde, hote, adresse, audit, sequence, System.getenv(), cookieSecurise));
+                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge)::echanger,
+                new EchangeurOidcHttp(HttpClient.newHttpClient(), DELAI_ANNUAIRE, horloge),
+                new LiaisonLdaps((SSLSocketFactory) SSLSocketFactory.getDefault(), DELAI_ANNUAIRE)), System.getenv(), horloge, ALEA),
+                annuaires, annuaires, roles, garde, hote, adresse, audit, sequence, System.getenv(), cookieSecurise, pareFeu));
     }
 
     public ControleurAnnuaires(Dependances d) {
@@ -96,7 +105,7 @@ public class ControleurAnnuaires {
             return geste.get();
         } catch (Annuaires.AnnuaireInvalideException e) {
             return erreur(400, e.motifs());
-        } catch (Annuaires.ConnexionRefuseeException e) {
+        } catch (Annuaires.ConnexionRefuseeException | IdentitesExternes.LiaisonRefuseeException e) {
             return erreur(403, List.of(e.getMessage()));
         } catch (ServiceAnnuaires.IntrouvableException e) {
             return erreur(404, List.of(e.getMessage()));
@@ -117,7 +126,8 @@ public class ControleurAnnuaires {
     public ResponseEntity<Object> annuairesDeConnexion(HttpServletRequest requete, @RequestParam(name = "tenantId", required = false) String tenantId) {
         String organisme = organismeDeConnexion(requete, tenantId);
         List<Map<String, Object>> liste = organisme == null || organisme.isBlank() ? List.of()
-                : d.service().actifs(organisme).stream().map(a -> Map.<String, Object>of("id", a.id(), "nom", a.nom())).toList();
+                : d.service().actifs(organisme).stream().map(a -> Map.<String, Object>of("id", a.id(), "nom", a.nom(), "fournisseur", a.fournisseur().code()))
+                .toList();
         return ResponseEntity.ok(Map.of("annuaires", liste));
     }
 
@@ -154,7 +164,68 @@ public class ControleurAnnuaires {
         return r;
     }
 
-    private ResponseEntity<Object> ouvrir(ServiceAnnuaires.Ouverture o) {
+    /**
+     * La connexion par un annuaire LDAPS : identifiant et mot de passe, vérifiés par liaison. La session se pose comme
+     * au retour d'un annuaire OIDC ; la réponse dit où aller. Tout refus est consigné, sans le mot de passe ; le verrou
+     * du pare-feu s'applique comme à la connexion par mot de passe, pour qu'une rafale ne verrouille pas le compte AD.
+     */
+    @PostMapping("/sso/annuaires/{id}/connexion")
+    public ResponseEntity<Object> connexionParLiaison(HttpServletRequest requete, @PathVariable String id,
+                                                      @RequestBody(required = false) Map<String, Object> corps) {
+        Object identifiant = corps == null ? null : corps.get("identifiant");
+        Object motDePasse = corps == null ? null : corps.get("motDePasse");
+        if (!(identifiant instanceof String i) || i.isBlank() || !(motDePasse instanceof String m) || m.isEmpty()) {
+            return erreur(400, List.of("« identifiant » et « motDePasse » sont requis"));
+        }
+        String ip = requete.getRemoteAddr();
+        Optional<PareFeu.Refus> verrou = d.pareFeu().gardeConnexion(ip, i.trim());
+        if (verrou.isPresent()) {
+            return erreur(verrou.get().code(), List.of(verrou.get().message()));
+        }
+        ResponseEntity<Object> r = tenter(() -> ouvrirEnJson(d.service().ouvrirParLiaison(id, i.trim(), m)));
+        if (r.getStatusCode().isError()) {
+            d.pareFeu().echecConnexion(ip, i.trim());
+            d.audit().consigner("anonymous", i.trim(), "auth.sso.annuaire.refus", null, Map.of("motif", String.valueOf(r.getBody())));
+        } else {
+            d.pareFeu().connexionReussie(ip, i.trim());
+        }
+        return r;
+    }
+
+    private ResponseEntity<Object> ouvrirEnJson(ServiceAnnuaires.Issue issue) {
+        return switch (issue) {
+            case ServiceAnnuaires.Ouverture o -> {
+                String retour = d.adresse().pour(o.compte().tenantId());
+                yield ResponseEntity.ok().headers(h -> h.put(HttpHeaders.SET_COOKIE, session(o)))
+                        .body(Map.of("retour", retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour, "role", o.compte().role()));
+            }
+            case ServiceAnnuaires.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(d.audit(), l.courriel(), "annuaire");
+                yield ControleurLiaisonIdentite.versRelierJson(l.jetonLiaison(), d.cookieSecurise());
+            }
+        };
+    }
+
+    /** Le retour d'un annuaire OIDC : la session, ou la page « Relier mon compte » si l'identité n'est reliée à aucun compte. */
+    private ResponseEntity<Object> ouvrir(ServiceAnnuaires.Issue issue) {
+        return switch (issue) {
+            case ServiceAnnuaires.Ouverture o -> ouvrirSession(o);
+            case ServiceAnnuaires.LiaisonRequise l -> {
+                ControleurLiaisonIdentite.consignerLiaisonRequise(d.audit(), l.courriel(), "annuaire");
+                yield ControleurLiaisonIdentite.versRelier(l.jetonLiaison(), d.cookieSecurise());
+            }
+        };
+    }
+
+    private ResponseEntity<Object> ouvrirSession(ServiceAnnuaires.Ouverture o) {
+        List<String> cookies = session(o);
+        String retour = d.adresse().pour(o.compte().tenantId());
+        return ResponseEntity.status(302).location(URI.create(retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour))
+                .headers(h -> h.put(HttpHeaders.SET_COOKIE, cookies)).build();
+    }
+
+    /** Les cookies de session et de CSRF, comme la connexion par mot de passe les pose ; la connexion est consignée. */
+    private List<String> session(ServiceAnnuaires.Ouverture o) {
         byte[] b = new byte[OCTETS_CSRF];
         ALEA.nextBytes(b);
         String csrf = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(b);
@@ -163,12 +234,9 @@ public class ControleurAnnuaires {
         details.put("provisioned", o.cree());
         details.put("protocole", "annuaire");
         d.audit().consigner(o.compte().id(), o.courriel(), "auth.sso.login.ok", null, details);
-        List<String> cookies = List.of(
+        return List.of(
                 ControleurAuth.cookie(ControleurAuth.COOKIE_SESSION, o.jeton(), true, ControleurAuth.DUREE_SESSION, d.cookieSecurise()).toString(),
                 ControleurAuth.cookie(ControleurAuth.COOKIE_CSRF, csrf, false, ControleurAuth.DUREE_SESSION, d.cookieSecurise()).toString());
-        String retour = d.adresse().pour(o.compte().tenantId());
-        return ResponseEntity.status(302).location(URI.create(retour.isEmpty() ? RETOUR_PAR_DEFAUT : retour))
-                .headers(h -> h.put(HttpHeaders.SET_COOKIE, cookies)).build();
     }
 
     // ── Administration ──────────────────────────────────────────────────────
@@ -177,7 +245,9 @@ public class ControleurAnnuaires {
         Map<String, Object> v = new LinkedHashMap<>();
         v.put("id", a.id());
         v.put("nom", a.nom());
+        v.put("fournisseur", a.fournisseur().code());
         v.put("locataireEntra", a.locataireEntra());
+        v.put("emetteur", a.emetteur());
         v.put("clientId", a.clientId());
         v.put("variableSecret", a.variableSecret());
         v.put("secretDeploye", !d.env().getOrDefault(a.variableSecret(), "").isEmpty());
@@ -186,6 +256,7 @@ public class ControleurAnnuaires {
         v.put("correspondances", a.correspondances().stream().map(c -> Map.of("groupe", c.groupe(), "role", c.role())).toList());
         v.put("roleParDefaut", a.roleParDefaut().orElse(null));
         v.put("actif", a.actif());
+        v.put("provisionnementJat", a.provisionnementJat());
         return v;
     }
 

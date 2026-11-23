@@ -16,8 +16,9 @@ import { useReferentiels } from "../planification/useReferentiels";
 import DetailFeuille from "./DetailFeuille";
 import FluxApprobation from "./FluxApprobation";
 import SuperieursHierarchiques from "./SuperieursHierarchiques";
+import SeuilsConventions from "./SeuilsConventions";
 import { champsAffiches, ParametresChamps, useChampsFeuille } from "./ChampsFeuille";
-import { duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
+import { decisionEnMots, duree, LIBELLE_STATUT, statutEnMots, TON_STATUT, type Feuille, type FeuilleDetaillee, type StatutFeuille } from "./types";
 
 const COLONNES: ReadonlyArray<Colonne<Feuille>> = [
   { id: "nom", libelle: "Personne", tri: (f) => f.nom },
@@ -81,7 +82,7 @@ export default function TempsPlanification() {
     setFiche(await lire<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${f.id}`));
   };
 
-  const trancher = async (d: "approuver" | "retourner") => {
+  const trancher = async (d: "approuver" | "retourner" | "rouvrir") => {
     if (!fiche) return;
     const r = await envoyer<FeuilleDetaillee>(`/api/effectifs/temps/feuilles/${fiche.id}/${d}`, { motif: motif || undefined });
     if (!r) return;
@@ -158,8 +159,22 @@ export default function TempsPlanification() {
             <p>Du {fiche.debut} au {fiche.fin} — {statutEnMots(fiche)}.</p>
             <DetailFeuille f={fiche} prefixe="pla-tps-fiche" avecSegments champs={champsAffiches(champs, fiche.segments)} />
             {fiche.decisions.length > 0 && (
-              <ul aria-label="Décisions">{fiche.decisions.map((d, i) => <li key={i}>Palier {d.palier} : {d.decision === "APPROUVER" ? "approuvé" : "retourné"}{d.motif ? ` — ${d.motif}` : ""}</li>)}</ul>
+              <ul aria-label="Décisions">{fiche.decisions.map((d, i) => <li key={i}>{d.decision === "RAPPELER" || d.decision === "ROUVRIR" ? "Hors circuit" : `Palier ${d.palier}`} : {decisionEnMots(d.decision)}{d.motif ? ` — ${d.motif}` : ""}</li>)}</ul>
             )}
+            {fiche.statut === "APPROUVEE" && (
+              <>
+                <p>Approuvée et pas encore payée : vous pouvez la rouvrir pour qu'elle soit corrigée. Une feuille payée ne se rouvre plus.</p>
+                <p>
+                  <label htmlFor="pla-tps-motif-rouvrir">Motif (obligatoire : ce qu'il faut corriger)</label>
+                  <textarea id="pla-tps-motif-rouvrir" data-testid="pla-tps-motif-rouvrir" rows={2} maxLength={500} value={motif} onChange={(e) => setMotif(e.target.value)} />
+                </p>
+                {erreur && <Message variante="erreur" testId="pla-tps-fiche-erreur">{erreur}</Message>}
+                <p className="eff-actions">
+                  <button type="button" className="secondary" data-testid="pla-tps-rouvrir" onClick={() => void trancher("rouvrir")}>Rouvrir pour correction</button>
+                </p>
+              </>
+            )}
+            {fiche.statut === "PAYEE" && <p data-testid="pla-tps-fiche-payee">Payée : elle ne se modifie plus.</p>}
             {fiche.statut === "SOUMISE" && (
               <>
                 <p>
@@ -199,6 +214,8 @@ export default function TempsPlanification() {
           {(fermer) => (parametres ? (
                 <form onSubmit={(e) => void enregistrerParametres(e, fermer)}>
                   {([["seuilJourHeures", "Heures par jour avant les heures supplémentaires", 1, 24], ["seuilSemaineHeures", "Heures par semaine avant les heures supplémentaires", 1, 168],
+                    // Addenda 7, Q15 : un troisième seuil, sur la période de paie (une feuille = une période) ; 0 = aucun.
+                    ["seuilPeriodePaieHeures", "Heures par période de paie avant les heures supplémentaires (0 : aucun seuil)", 0, 744],
                     ["paliersApprobation", "Paliers d'approbation par défaut (1 à 3)", 1, 3], ["toleranceEcartMinutes", "Tolérance d'écart au planifié (minutes)", 0, 240],
                     ["toleranceCorroborationMinutes", "Tolérance de corroboration par une source tierce (minutes)", 0, 60]] as const).map(([cle, libelle, min, max]) => (
                     <p key={cle}>
@@ -223,6 +240,9 @@ export default function TempsPlanification() {
                   <p><button type="submit" data-testid="pla-tps-p-enregistrer">Enregistrer les paramètres</button></p>
                 </form>
           ) : <p role="status">Chargement des paramètres…</p>)}
+        </FormulaireModal>
+        <FormulaireModal libelle="Seuils par convention" titre="Seuils d'heures supplémentaires par convention" testId="feuilles-seuils-conventions" icone="⚙" className="secondary">
+          <SeuilsConventions />
         </FormulaireModal>
         <FormulaireModal libelle="Flux d'approbation" titre="Flux d'approbation des heures" testId="feuilles-approbations" icone="⚙" className="secondary">
           <FluxApprobation />

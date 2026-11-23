@@ -94,6 +94,11 @@ public class GestionnaireFluxApprobations {
                 demande.demandeurId(), regles)), lecture::nomDuCompte);
     }
 
+    /** Le circuit en attente d'un document est retiré : son auteur l'a rappelé ; un circuit déjà fini reste à l'historique. */
+    public boolean retirer(Contexte ctx, ObjetFlux objet, String documentId) {
+        return moteur().retirer(ctx.tenantId(), objet, documentId);
+    }
+
     /**
      * <strong>Décide l'étape courante.</strong> Les paliers se décident dans l'ordre : le moteur générique accepterait n'importe
      * quelle étape en attente, et un palier 2 décidé avant le 1 ferait de l'ordre une suggestion.

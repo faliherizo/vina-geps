@@ -5,11 +5,12 @@
  */
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { EnTeteEcran } from "./composants";
-import { sectionsVisibles } from "./aideParEcran";
-import { FICHES, idFiche } from "./aide/fichesEcrans";
-import { PAGE_MODULE } from "./modulesParPage";
+import { pageOuverte, sectionsVisibles } from "./aideParEcran";
+import { FICHES, idFiche, type Prealable } from "./aide/fichesEcrans";
+import { cheminEcran } from "./aide/liensAide";
+import PremiersPas from "./aide/PremiersPas";
 import type { Page } from "./App";
-import { useModuleAllowed } from "./moduleAccess";
+import { useModuleAllowed, usePageMasquee } from "./moduleAccess";
 
 export default function Help({ section }: { section?: string | null }) {
   const racine = useRef<HTMLDivElement>(null);
@@ -26,7 +27,9 @@ export default function Help({ section }: { section?: string | null }) {
    * protège rien. C'est la garde de module, au serveur, qui protège.
    */
   const ouvert = useModuleAllowed();
-  const sections = useMemo(() => sectionsVisibles(ouvert), [ouvert]);
+  // Et le menu de l'établissement : un écran que le superadmin en a retiré n'a pas d'aide non plus.
+  const masquee = usePageMasquee();
+  const sections = useMemo(() => sectionsVisibles(ouvert, masquee), [ouvert, masquee]);
   const visible = useCallback((id: string) => sections.some((x) => x.id === id), [sections]);
 
   /**
@@ -79,15 +82,8 @@ export default function Help({ section }: { section?: string | null }) {
 
 {visible("demarrage") && (
         <section id="demarrage" className="card" aria-labelledby="demarrage-h">
-          <h2 id="demarrage-h">Premiers pas : l'ordre logique</h2>
-          <p>Pour une première mise en place, suivez cet ordre — chaque étape prépare la suivante :</p>
-          <ol>
-            <li><strong>Référentiels</strong> : unités, corps d'emploi, statuts, natures de quart, types d'heures et codes d'absence.</li>
-            <li><strong>Périmètres</strong> : qui gère quelle unité. Sans périmètre, une console s'ouvre sur des listes vides.</li>
-            <li><strong>Ressources</strong> : les personnes planifiables, liées à leur compte.</li>
-            <li><strong>Postes et périodes</strong> : publier les postes, ouvrir la collecte des disponibilités, confectionner puis publier.</li>
-            <li><strong>Au quotidien</strong> : comblement, absences, échanges, pointage et feuilles de temps.</li>
-          </ol>
+          <h2 id="demarrage-h">Premiers pas : la mise en route, avant d'utiliser l'application</h2>
+          <PremiersPas ecranOuvert={(p) => pageOuverte(p, ouvert, masquee)} />
         </section>
       )}
 
@@ -214,6 +210,19 @@ export default function Help({ section }: { section?: string | null }) {
           <p className="muted">Les relances, les cascades et l'appel automatique viendront dans une phase suivante (ADR 0074).</p>
         </section>
       )}
+{visible("paie") && (
+        <section id="paie" className="card" aria-labelledby="paie-h">
+          <h2 id="paie-h">Paie : cycles, dossiers, remises, relevés, bulletins</h2>
+          <p>La paie se calcule à partir des <strong>seules feuilles de temps approuvées</strong>. Avant la paie, une feuille peut encore être retournée, rappelée ou rouverte ; une fois payée, elle ne se modifie plus.</p>
+          <ol>
+            <li><strong>Dossiers de rémunération</strong> — le taux horaire ou le salaire, la fréquence de paie et les montants personnels déclarés de chacun.</li>
+            <li><strong>Cycles de paie</strong> — préparer (période et date de paie), relire les bulletins, recalculer au besoin, puis traiter : les feuilles payées sont figées.</li>
+            <li><strong>Remises et relevés</strong> — ce qui se verse chaque mois à Revenu Québec et à l'ARC, et les cases des RL-1 et T4 de l'année.</li>
+            <li><strong>Mes bulletins de paie</strong> — chacun lit ses propres bulletins, du brut au net.</li>
+          </ol>
+          <p className="muted">Les taux de l'année viennent d'un barème publié avec le produit (ADR 0076) ; le FSS, la CNESST et la majoration des heures supplémentaires se règlent dans Paramètres de la paie.</p>
+        </section>
+      )}
 {visible("communication") && (
         <section id="communication" className="card" aria-labelledby="communication-h">
           <h2 id="communication-h">Communication : messages, appels, listes de diffusion</h2>
@@ -320,7 +329,7 @@ export default function Help({ section }: { section?: string | null }) {
           </ul>
         </section>
       )}
-      <FichesDesEcrans ouvert={ouvert} cible={section ?? null} />
+      <FichesDesEcrans ouvert={ouvert} masquee={masquee} cible={section ?? null} />
     </div>
   );
 }
@@ -333,24 +342,34 @@ export default function Help({ section }: { section?: string | null }) {
  * la même raison que les sections. Chacune est un `<details>` : le guide reste parcourable d'un
  * coup d'œil, et la fiche visée par « Aide sur cet écran » s'ouvre d'elle-même.
  */
-function FichesDesEcrans({ ouvert, cible }: { ouvert: (code?: string) => boolean; cible: string | null }) {
-  const pages = (Object.keys(FICHES) as Page[]).filter((p) => ouvert(PAGE_MODULE[p]));
+function FichesDesEcrans({ ouvert, masquee, cible }: { ouvert: (code?: string) => boolean; masquee: (page: string) => boolean; cible: string | null }) {
+  const ecranOuvert = (p: Page) => pageOuverte(p, ouvert, masquee);
+  const pages = (Object.keys(FICHES) as Page[]).filter(ecranOuvert);
   return (
     <section id="fiches" className="card" aria-labelledby="fiches-h">
       <h2 id="fiches-h">Écran par écran : aide et exemple de remplissage</h2>
       <p>Chaque fiche reprend les libellés de l'écran. Les exemples sont ceux de l'organisme de démonstration : on peut les rejouer tels quels.</p>
-      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} />)}
+      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} ecranOuvert={ecranOuvert} />)}
     </section>
   );
 }
 
-function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
+function FicheEcran({ page, ouverte, ecranOuvert }: { page: Page; ouverte: boolean; ecranOuvert: (p: Page) => boolean }) {
   const f = FICHES[page];
   return (
     <details id={idFiche(page)} className="fiche-ecran" open={ouverte || undefined} data-testid={`help-fiche-${page}`}>
       <summary><h3 className="fiche-ecran-titre">{f.titre}</h3></summary>
+      <VideoFiche page={page} titre={f.titre} />
       <p>{f.objet}</p>
       <p><strong>Qui :</strong> {f.qui}</p>
+      <h4>Avant de commencer</h4>
+      <ol className="fiche-prealables" data-testid={`aide-prealables-${page}`}>
+        {f.prealables.map((pr, i) => <PrealableFiche key={pr.texte} prealable={pr} testId={`aide-prealable-${page}-${i + 1}`} ecranOuvert={ecranOuvert} />)}
+      </ol>
+      <p>
+        Toute la configuration, dans l'ordre et en vidéo : <a href="#demarrage" data-testid={`aide-prealables-${page}-mise-en-route`}>Premiers
+        pas : la mise en route</a>.
+      </p>
       <h4>Comment faire</h4>
       <ol>{f.etapes.map((e) => <li key={e}>{e}</li>)}</ol>
       <h4>Exemple de remplissage</h4>
@@ -364,3 +383,44 @@ function FicheEcran({ page, ouverte }: { page: Page; ouverte: boolean }) {
     </details>
   );
 }
+
+/**
+ * **Un préalable**, et l'écran où il se fait quand cet écran est ouvert à l'organisme : un lien vers un
+ * écran dont le module est coupé mènerait à une page qui ne s'ouvre pas — le texte suffit alors, il dit
+ * déjà qui accorde le module.
+ */
+function PrealableFiche({ prealable, testId, ecranOuvert }: { prealable: Prealable; testId: string; ecranOuvert: (p: Page) => boolean }) {
+  const { texte, ecran } = prealable;
+  return (
+    <li>
+      {texte}
+      {ecran && ecranOuvert(ecran) && <> <a href={cheminEcran(ecran)} data-testid={`${testId}-lien`}>Ouvrir « {FICHES[ecran].titre} »</a></>}
+    </li>
+  );
+}
+
+/** Le chemin des vidéos d'aide : un fichier par écran dans `public/aide/videos`, monté depuis les essais (`scripts/monter-recit.mjs`) ou, à défaut, tourné par `scripts/tourner-aides.mjs`. */
+export const videoDeFiche = (page: string) => ({ video: `/aide/videos/${page}.webm`, sousTitres: `/aide/videos/${page}.fr.vtt` });
+
+/**
+ * **La démonstration commentée d'un écran** : les passages des essais e2e joués sur cet écran (`scripts/monter-recit.mjs`),
+ * chacun expliqué à voix haute — le menu qui y mène, puis l'ajout, la modification, le refus motivé ou l'envoi qu'on y fait. Les sous-titres français reprennent exactement la voix (WCAG 1.2.2) et le texte de la
+ * fiche qui suit en est la transcription (1.2.1). `preload="none"` : rien ne se télécharge avant qu'on la lance.
+ */
+function VideoFiche({ page, titre }: { page: Page; titre: string }) {
+  const { video, sousTitres } = videoDeFiche(page);
+  const description = `${idFiche(page)}-video`;
+  return (
+    <figure className="fiche-video">
+      <video controls preload="none" src={video} data-testid={`help-video-${page}`} aria-describedby={description}>
+        <track kind="captions" srcLang="fr" label="Français (facultatif)" src={sousTitres} />
+        <a href={video}>Télécharger la démonstration de l'écran {titre}</a>
+      </video>
+      <figcaption id={description} className="muted">
+        Démonstration commentée de l'écran « {titre} » : des cas réels joués dans l'application — ajout, modification, refus
+        motivé, envoi — chacun expliqué à voix haute. Sous-titres français facultatifs ; la fiche ci-dessous décrit les mêmes gestes.
+      </figcaption>
+    </figure>
+  );
+}
+

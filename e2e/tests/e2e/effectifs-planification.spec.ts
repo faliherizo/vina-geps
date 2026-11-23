@@ -12,6 +12,7 @@ import { superadminContext } from "./helpers/auth";
 import { createTenant, selectTenant, setTenantModules, uniq } from "./helpers/organisme";
 import { ouvrirNav } from "./helpers/nav";
 import { expectNoA11yViolations } from "./helpers/a11y";
+import { raconter } from "./helpers/recit";
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -69,10 +70,12 @@ test("combler un quart, forcer une attribution justifiée, créer un quart ad ho
   await expect(page.getByTestId("uscomblement-titre")).toBeVisible();
 
   // ── Le comblement signale le quart du lundi sous son minimum ───────────────────────────
+  await raconter(page, "Planification. La planificatrice ouvre le comblement : un quart de la Caserne 12 est sous le minimum opérationnel.");
   await expect(page.getByTestId("pla-tuile-sous-minimum")).toContainText("1 quart(s)");
   await expectNoA11yViolations(page);
 
   // ── Attribuer les deux places vacantes du lundi ────────────────────────────────────────
+  await raconter(page, "Elle passe aux équipages du jour et attribue les deux places du quart, à Julie Roy puis à Marc Dubé. Le quart doit devenir opérationnel, deux sur deux.");
   await ouvrirNav(page, "nav-usequipages");
   const quart = page.locator('[data-testid^="pla-eq-etat-"]').first();
   await expect(quart).toContainText(/Sous le minimum/);
@@ -85,6 +88,7 @@ test("combler un quart, forcer une attribution justifiée, créer un quart ad ho
   await expect(quart).toContainText(/Opérationnel \(2\/2\)/);
 
   // ── Un renfort de soirée collé au quart de jour : la règle de repos s'y oppose ─────────
+  await raconter(page, "Le quart est opérationnel. Elle crée ensuite un quart ad hoc, de 18 heures à 22 heures, pour un paramédic à la Caserne 12.");
   await page.getByTestId("pla-eq-adhoc").click();
   await page.getByTestId("pla-ah-date").fill(DEBUT);
   await page.getByTestId("pla-ah-debut").fill("18:00");
@@ -96,6 +100,7 @@ test("combler un quart, forcer une attribution justifiée, créer un quart ad ho
   await page.getByTestId("pla-ah-creer").click();
   await expect(page.getByTestId("pla-eq-succes")).toContainText("Quart ad hoc");
 
+  await raconter(page, "Elle tente d'y placer une personne qui sort de son quart. La règle du repos minimal bloque l'attribution, et l'écran nomme le motif : il faut huit heures de repos.");
   await page.locator('[data-testid^="pla-place-attribuer-"]').first().click();
   await page.getByTestId("pla-att-ressource").selectOption({ index: 1 });
   await page.getByTestId("pla-att-attribuer").click();
@@ -104,6 +109,7 @@ test("combler un quart, forcer une attribution justifiée, créer un quart ad ho
   await expectNoA11yViolations(page);
 
   // ── Forcer, avec justification (E-GN-11) ────────────────────────────────────────────────
+  await raconter(page, "Faute d'autre paramédic disponible, elle force l'attribution en la justifiant. L'attribution forcée est marquée comme telle dans l'équipage.");
   await page.getByTestId("pla-att-justification").fill("Aucun autre paramédic disponible, appel massif");
   await page.getByTestId("pla-att-forcer").click();
   await expect(page.getByTestId("pla-eq-succes")).toContainText("Attribution forcée");
@@ -114,6 +120,7 @@ test("une surcharge de quota datée d'hier est refusée, et l'écran dit pourquo
   const tenantId = await createTenant(page.request, uniq("EffQuota"));
   await amorcer(tenantId);
   await selectTenant(page, tenantId);
+  await raconter(page, "Quotas : la planificatrice fixe à deux le quota de l'unité Opérations Est.");
   await ouvrirNav(page, "nav-usquotas");
   await page.getByTestId("pla-quota-definir").click();
   await page.getByTestId("pla-quo-uniteCode").selectOption("EST");
@@ -121,6 +128,7 @@ test("une surcharge de quota datée d'hier est refusée, et l'écran dit pourquo
   await page.getByTestId("pla-quo-enregistrer").click();
   await expect(page.getByTestId("pla-quotas-succes")).toBeVisible();
 
+  await raconter(page, "Puis elle tente une surcharge de quota qui commence hier. Une surcharge ne peut pas être rétroactive : l'écran la refuse et dit pourquoi.");
   await page.getByTestId("pla-quota-surcharger-EST|*|*").click();
   const hier = new Date(Date.now() - 86_400_000).toISOString().slice(0, 16);
   const demain = new Date(Date.now() + 86_400_000).toISOString().slice(0, 16);
@@ -145,12 +153,14 @@ test("modifier deux postes d'un seul geste : leurs quarts publiés suivent ; pui
   await ouvrirNav(page, "nav-uspostes");
 
   // ── Sélection multiple : les deux postes, un seul tiroir, tout ou rien ──────────────────────
+  await raconter(page, "Postes : la planificatrice coche deux postes pour les modifier d'un seul geste.");
   await page.getByTestId("pla-poste-choix-3412-A").check();
   await page.getByTestId("pla-poste-choix-3412-B").check();
   await page.getByTestId("pla-postes-lot").click();
   await expect(page.getByTestId("pla-lot-fiche")).toBeVisible();
   await page.getByTestId("pla-lot-enregistrer").click();
   await expect(page.getByTestId("pla-lot-vide")).toContainText("Choisissez au moins un changement");
+  await raconter(page, "Sans changement choisi, l'enregistrement est refusé. Elle remplace le cycle par la plage de nuit : les deux postes et leurs quarts publiés sont déplacés.");
   await page.getByTestId("pla-lot-remplacer-cycle").check();
   await page.getByTestId("pla-lot-cycle-0").selectOption("N");
   await expectNoA11yViolations(page);
@@ -160,6 +170,7 @@ test("modifier deux postes d'un seul geste : leurs quarts publiés suivent ; pui
   await expectNoA11yViolations(page);
 
   // ── Le quart du lundi est devenu un quart de nuit ; on l'ajuste dans la période publiée ─────
+  await raconter(page, "Dans la période publiée, elle ajuste un quart : début à 19 heures, minimum d'une personne, et une note qui explique le retard. Le changement est tracé au journal.");
   await ouvrirNav(page, "nav-usequipages");
   const ajuster = page.locator('[data-testid^="pla-eq-ajuster-"]').first();
   await expect(page.getByTestId("pla-eq-tableau")).toContainText("18:00");

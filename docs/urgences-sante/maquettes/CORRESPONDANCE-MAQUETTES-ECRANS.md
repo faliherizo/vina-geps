@@ -43,7 +43,7 @@ trentième ne puisse pas s'en écarter par omission.
 ## Le menu, et l'organisme de démonstration
 
 > **Depuis le 13 novembre 2026 (ADR 0073)**, le chrome est celui de la planche s01 : barre marine
-> « VINA GEPS », colonne blanche à trois rubriques (« Menu principal », « Administration », « Aide
+> « VINA GePS », colonne blanche à trois rubriques (« Menu principal », « Administration », « Aide
 > et compte »). Le détail, par profil, est dans
 > [MAQUETTE-NAVIGATION-VINA-GEPS.md](MAQUETTE-NAVIGATION-VINA-GEPS.md). Le texte ci-dessous décrit
 > la révision du 1er novembre, dont le découpage en notions est conservé.

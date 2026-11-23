@@ -32,12 +32,14 @@ import Usperiodes from "./pages/usperiodes";
 import Usressources from "./pages/usressources";
 import Usquotas from "./pages/usquotas";
 import Usreferentiels from "./pages/usreferentiels";
+import Uscodesabsence from "./pages/uscodesabsence";
 import Usregles from "./pages/usregles";
 import Usmilieux from "./pages/usmilieux";
 import Usperimetres from "./pages/usperimetres";
 import Usintegrations from "./pages/usintegrations";
 import Usretention from "./pages/usretention";
 import Usjournal from "./pages/usjournal";
+import Monequipe from "./pages/monequipe";
 // La communication du personnel : les pages reprennent les sections du module Santé Québec.
 import { Usappels, Usdiffusion, Usmessages } from "./communication";
 
@@ -50,6 +52,7 @@ export const PAGES_US: Record<string, ComponentType> = {
   monpointage: Monpointage,
   matemps: Matemps,
   mesechanges: Mesechanges,
+  monequipe: Monequipe,
   uscomblement: Uscomblement,
   usequipages: Usequipages,
   usdisponibilites: Usdisponibilites,
@@ -63,6 +66,7 @@ export const PAGES_US: Record<string, ComponentType> = {
   usressources: Usressources,
   usquotas: Usquotas,
   usreferentiels: Usreferentiels,
+  uscodesabsence: Uscodesabsence,
   usregles: Usregles,
   usmilieux: Usmilieux,
   usperimetres: Usperimetres,
