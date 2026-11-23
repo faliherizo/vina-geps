@@ -152,6 +152,21 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
     for (const location of ["/api/", "/public/"]) expect(blocEntier(location), location).not.toContain("Cross-Origin-");
   });
 
+  it("SSO de démonstration : seules les pages de connexion des fournisseurs embarqués passent, vers l'API, avec l'hôte d'origine", () => {
+    const motif = conf.match(/location ~ (\^\/mock\/[^ ]+) \{/);
+    expect(motif, "location des pages de connexion /mock").not.toBeNull();
+    const re = new RegExp(motif![1]);
+    for (const ouvert of ["/mock/entra/d3d3d3d3-0000-4000-8000-c55dc55dc55d/oauth2/v2.0/authorize", "/mock/entra/t-1/login",
+      "/mock/entra/t-1/oauth2/v2.0/logout", "/mock/saml/sso"]) expect(ouvert, ouvert).toMatch(re);
+    // Le jeton, les clés, la découverte et les autres simulateurs restent internes.
+    for (const ferme of ["/mock/entra/t-1/oauth2/v2.0/token", "/mock/entra/t-1/discovery/v2.0/keys",
+      "/mock/entra/t-1/v2.0/.well-known/openid-configuration", "/mock/saml/metadata", "/mock/twilio/x", "/mock/webhooks/recepteur/journal.html",
+      "/mock/entra/../login"]) expect(ferme, ferme).not.toMatch(re);
+    const b = bloc(`~ ${motif![1]}`);
+    expect(b).toMatch(/set \$\w+ \$\{API_UPSTREAM\};/);
+    expect(b).toContain("proxy_set_header X-Forwarded-Host $host;");
+  });
+
   it("co-hébergement : /public/ vise le même amont configuré que /api/, jamais un nom d'hôte en dur", () => {
     for (const location of ["/api/", "/public/"]) {
       const b = blocEntier(location);

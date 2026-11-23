@@ -64,3 +64,37 @@ test("mode sélecteur (défaut) : la liste est demandée et l'établissement cho
   await expect(page.getByTestId("login-error")).toBeVisible();
   expect((corps[0] as Record<string, unknown>).tenantId).toBe("tnt-demo");
 });
+
+test("une réponse muette (502 d'un redéploiement) : l'écran attend et réessaie, puis verrouille l'organisme — jamais une liste vide", async ({ page, mock }) => {
+  let appels = 0;
+  await mock({
+    ...DECONNECTE,
+    "GET /api/auth/deploiement": () => (++appels < 3 ? { status: 502, body: "<html>502 Bad Gateway</html>" }
+      : { status: 200, body: { resolution: "sous_domaine", domaineRacine: RACINE, hote: "etablissement", etablissement: { id: "tnt-cssdc", nom: "CSS des Chics-Chocs", slug: "cssdc" } } }),
+  });
+  await page.goto("/");
+  await expect(page.getByTestId("login-hote-chargement")).toHaveAttribute("role", "status");
+  await expect(page.getByTestId("login-tenant")).toHaveCount(0);
+  await expect(page.getByTestId("login-tenant-locked").locator("input")).toHaveValue("CSS des Chics-Chocs", { timeout: 15_000 });
+  expect(appels, "deux réponses muettes, puis la bonne").toBeGreaterThanOrEqual(3);
+  await expectNoA11yViolations(page);
+});
+
+test("toujours muet : le service se dit indisponible, la connexion est inerte, « Réessayer » relit l'hôte", async ({ page, mock }) => {
+  let repond = false;
+  await mock({
+    ...DECONNECTE,
+    "GET /api/auth/deploiement": () => (repond
+      ? { status: 200, body: { resolution: "sous_domaine", domaineRacine: RACINE, hote: "etablissement", etablissement: { id: "tnt-cssdc", nom: "CSS des Chics-Chocs", slug: "cssdc" } } }
+      : { status: 503, body: "<html>503 Service Temporarily Unavailable</html>" }),
+  });
+  await page.goto("/");
+  await expect(page.getByTestId("login-service-indisponible")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("login-service-indisponible")).toHaveAttribute("role", "alert");
+  await expect(page.getByTestId("login-tenant")).toHaveCount(0);
+  await expect(page.getByTestId("login-submit")).toBeDisabled();
+  await expectNoA11yViolations(page);
+  repond = true;
+  await page.getByTestId("login-reessayer").click();
+  await expect(page.getByTestId("login-tenant-locked").locator("input")).toHaveValue("CSS des Chics-Chocs", { timeout: 15_000 });
+});

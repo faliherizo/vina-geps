@@ -29,6 +29,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import ca.vina.nexu.partage.securite.AdressePublique;
+import ca.vina.nexu.partage.securite.ResolutionHote;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.http.MediaType;
@@ -431,15 +432,15 @@ class ControleurSsoHttpTest {
         // Les demandes expirent : après dix minutes, le state n'existe plus.
         Clock plusTard = Clock.offset(HORLOGE, Duration.ofMinutes(11));
         ServiceSso tardif = service(env, (c, cfg, d) -> Map.of(), plusTard);
-        Oidc.Debut debut = sso.debuterEntra();
-        assertThatThrownBy(() -> tardif.completerEntra("mock.e30", debut.state())).hasMessage("invalid or expired SSO state");
+        Oidc.Debut debut = sso.debuterEntra(Optional.empty());
+        assertThatThrownBy(() -> tardif.completerEntra("mock.e30", debut.state(), Optional.empty())).hasMessage("invalid or expired SSO state");
         // L'échangeur injecté : le réel passe par lui ; la clé est (iss, sub), le sujet repli sur oid.
         ServiceSso reel = service(Map.of("AZURE_CLIENT_ID", "cid"), (c, cfg, d) -> Map.of("email", "reel@x.ca", "code", c, "iss", "https://idp", "oid", "o-1"), HORLOGE);
-        Oidc.Debut d2 = reel.debuterEntra();
-        ServiceSso.Verifiee v = reel.completerEntra("0.code", d2.state());
+        Oidc.Debut d2 = reel.debuterEntra(Optional.empty());
+        ServiceSso.Verifiee v = reel.completerEntra("0.code", d2.state(), Optional.empty());
         assertThat(v.revendications()).containsEntry("code", "0.code");
         assertThat(List.of(v.cle().emetteur().valeur(), v.cle().sujet().valeur(), String.valueOf(v.reel()))).containsExactly("https://idp", "o-1", "true");
-        assertThat(reel.configurationEntraActive().clientId()).isEqualTo("cid");
+        assertThat(reel.configurationEntraActive(Optional.empty()).clientId()).isEqualTo("cid");
     }
 
     private static ServiceSso.Verifiee verifiee(String sujet, boolean reel, Map<String, Object> revendications) {
@@ -461,5 +462,39 @@ class ControleurSsoHttpTest {
         assertThat(Saml.configuration(Map.of("SAML_IDP_SSO_URL", "https://idp/sso", "SAML_IDP_CERT", pem), Optional.empty()).enabled()).isFalse();
         assertThatThrownBy(() -> Saml.clePublique("-----BEGIN CERTIFICATE-----\nAAAA\n-----END CERTIFICATE-----")).isInstanceOf(IllegalStateException.class);
         assertThat(Saml.metadonneesSp(cfg)).contains("Location=\"https://sp/acs\"");
+    }
+
+    @Test
+    @DisplayName("SAML de démonstration déployé par sous-domaine : l'IdP et l'ACS passent par l'hôte de la requête, jamais par localhost")
+    void samlDemonstrationParHote() {
+        java.security.PublicKey cle = Primitives.rsa2048().getPublic();
+        Saml.Configuration publique = Saml.configuration(Map.of(), Optional.of(new Saml.Demo("urn:demo", cle, "http://localhost:4000",
+                Optional.of("http://localhost:5173"), Optional.of("https://clincom.geps.exemple"))));
+        assertThat(List.of(publique.idpSsoUrl(), publique.acsUrl()))
+                .containsExactly("https://clincom.geps.exemple/mock/saml/sso", "https://clincom.geps.exemple/api/auth/sso/saml/acs");
+        // Sans origine (développement, essais) : l'application apprise pour l'ACS, le serveur pour l'IdP — comme avant.
+        Saml.Configuration locale = Saml.configuration(Map.of(), Optional.of(new Saml.Demo("urn:demo", cle, "http://localhost:4000", Optional.of("http://localhost:5173"))));
+        assertThat(List.of(locale.idpSsoUrl(), locale.acsUrl())).containsExactly("http://localhost:4000/mock/saml/sso", "http://localhost:5173/api/auth/sso/saml/acs");
+    }
+
+    @Test
+    @DisplayName("déployé par sous-domaine, la connexion Entra envoie le navigateur sur l'hôte de la requête ; un hôte forgé hors du domaine n'est jamais repris")
+    void entraParHote() throws Exception {
+        registre.branchees.add("entra");
+        ResolutionHote.Configuration geps = ResolutionHote.Configuration.depuis("sous_domaine", "geps.exemple", null);
+        ClientHttpEssai h = new ClientHttpEssai(new ControleurSso(sso, audit, AdressePublique.fixe(""), false, geps));
+        String clincom = h.envoyer(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/sso/entra/login")
+                .header("X-Forwarded-Host", "clincom.geps.exemple"), null).andExpect(status().isFound()).andReturn().getResponse().getHeader("Location");
+        assertThat(clincom).startsWith("https://clincom.geps.exemple/mock/entra/" + DonneesDemo.ENTRA_TENANT + "/oauth2/v2.0/authorize?")
+                .contains("redirect_uri=" + java.net.URLEncoder.encode("https://clincom.geps.exemple/api/auth/sso/entra/callback", StandardCharsets.UTF_8));
+        // Un en-tête forgé hors du domaine retombe sur l'adresse interne : il ne devient jamais une redirection.
+        String forge = h.envoyer(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get("/api/auth/sso/entra/login")
+                .header("X-Forwarded-Host", "evil.example"), null).andExpect(status().isFound()).andReturn().getResponse().getHeader("Location");
+        assertThat(forge).startsWith(tiers.url()).doesNotContain("evil");
+        assertThat(geps.originePublique("clincom.geps.exemple")).contains("https://clincom.geps.exemple");
+        assertThat(geps.originePublique("geps.exemple")).contains("https://geps.exemple");
+        assertThat(geps.originePublique("evil.example")).isEmpty();
+        assertThat(geps.originePublique("a.b.geps.exemple")).isEmpty();
+        assertThat(ResolutionHote.Configuration.depuis(null, null, null).originePublique("clincom.geps.exemple")).isEmpty();
     }
 }

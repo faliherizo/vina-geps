@@ -90,7 +90,10 @@ public final class Saml {
     // ── Configuration ──────────────────────────────────────────────────────
 
     /** Ce que le registre des démonstrations fournit quand l'IdP SAML embarqué est branché. */
-    public record Demo(String issuer, PublicKey cle, String urlServeur, Optional<String> urlApplication) {
+    public record Demo(String issuer, PublicKey cle, String urlServeur, Optional<String> urlApplication, Optional<String> origine) {
+        public Demo(String issuer, PublicKey cle, String urlServeur, Optional<String> urlApplication) {
+            this(issuer, cle, urlServeur, urlApplication, Optional.empty());
+        }
     }
 
     private static String env(Map<String, String> env, String cle, String defaut) {
@@ -106,7 +109,9 @@ public final class Saml {
         String entityId = env(env, "SAML_SP_ENTITY_ID", "urn:nexu-vina:sp");
         if (demo.isPresent()) {
             Demo d = demo.get();
-            return new Configuration(true, true, entityId, d.urlApplication().orElse(d.urlServeur()) + "/api/auth/sso/saml/acs", d.urlServeur() + "/mock/saml/sso", d.issuer(), d.cle());
+            // L'IdP et l'ACS sont vus par le navigateur : en démonstration, sur l'origine de la requête s'il y en a une.
+            return new Configuration(true, true, entityId, d.origine().or(d::urlApplication).orElse(d.urlServeur()) + "/api/auth/sso/saml/acs",
+                    d.origine().orElse(d.urlServeur()) + "/mock/saml/sso", d.issuer(), d.cle());
         }
         String idpSsoUrl = env(env, "SAML_IDP_SSO_URL", "");
         String cert = env(env, "SAML_IDP_CERT", "").replace("\\n", "\n");
