@@ -186,6 +186,23 @@ class ControleurAuthHttpTest {
     }
 
     @Test
+    @DisplayName("le choix de la vitrine : organismes ouverts avec sous-domaine, nom et adresse de connexion seulement")
+    void leChoixDeLaVitrineNeDonneQueLesOrganismesJoignables() throws Exception {
+        http.get("/api/auth/organismes", null).andExpect(status().isNotFound());
+        jdbc.sql("INSERT INTO tenants (id, name, slug, country, status, createdAt) VALUES "
+                + "('T4', 'Agence sans adresse', NULL, 'CA', 'active', '2026-05-01T00:00:00.000Z'), "
+                + "('T5', 'Agence suspendue', 'suspendue', 'CA', 'suspended', '2026-05-01T00:00:00.000Z')").update();
+        MvcResult r = sur(surSousDomaine(), MockMvcRequestBuilders.get("/api/auth/organismes"), "nexus.example", null);
+        assertThat(r.getResponse().getStatus()).isEqualTo(200);
+        String corps = r.getResponse().getContentAsString();
+        // Triés par nom : « CSS à l'essai » avant « CSS des Chênes ».
+        assertThat(corps).contains("\"adresse\":\"https://chenes.nexus.example/admin/login\"").contains("\"nom\":\"CSS des Chênes\"")
+                .contains("\"slug\":\"essai\"").doesNotContain("resiliee").doesNotContain("suspendue").doesNotContain("sans adresse")
+                .doesNotContain("\"id\"").doesNotContain("status");
+        assertThat(corps.indexOf("essai")).isLessThan(corps.indexOf("chenes"));
+    }
+
+    @Test
     void enSousDomaineLHoteEstLaSeuleAutoriteDeLaConnexion() throws Exception {
         comptes.creer(new DepotComptes.Creation("s.tremblay", "Mot-de-passe-1", "employee", null, "T1", false, false, null, false));
         comptes.creer(new DepotComptes.Creation("s.tremblay", "Mot-de-passe-1", "employee", null, "T3", false, false, null, false));

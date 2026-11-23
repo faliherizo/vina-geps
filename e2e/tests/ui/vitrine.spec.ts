@@ -5,9 +5,35 @@
  * l'application (SGQRI 008 3.0, WCAG 2.2 AA), à quatre largeurs, sans débordement.
  */
 import AxeBuilder from "@axe-core/playwright";
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 const LARGEURS = [390, 768, 1280, 1920];
+
+const ORGANISMES = [
+  { nom: "Clincom", slug: "clincom", adresse: "https://clincom.geps.vinaitsolution.com/admin/login" },
+  { nom: "Urgences-santé", slug: "urgence-sante", adresse: "https://urgence-sante.geps.vinaitsolution.com/admin/login" },
+];
+
+/** La liste que le serveur rend (`GET /api/auth/organismes`) : la page n'a aucun organisme écrit en dur. */
+async function servirOrganismes(page: Page, organismes: typeof ORGANISMES) {
+  await page.route("**/api/auth/organismes", (r) => r.fulfill({ contentType: "application/json", body: JSON.stringify(organismes) }));
+}
+
+/** axe-core sans violation, aucun débordement, commandes ≥ 44 px, ni superposées ni à moins de 8 px. */
+async function auditer(page: Page, largeur: number) {
+  const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+  expect(debord, `${largeur} px : débordement horizontal`).toBeLessThanOrEqual(1);
+  const boites = (await Promise.all(["acceder-select", "acceder-aller", "acceder-exploitation"]
+    .map(async (id) => ({ id, b: await page.getByTestId(id).boundingBox() })))).filter((x) => x.b);
+  for (const { id, b } of boites) expect(b!.height, `${id} : hauteur`).toBeGreaterThanOrEqual(44);
+  for (let i = 0; i < boites.length; i++) for (let j = i + 1; j < boites.length; j++) {
+    const [a, c] = [boites[i].b!, boites[j].b!];
+    const ecart = Math.max(c.x - (a.x + a.width), a.x - (c.x + c.width), c.y - (a.y + a.height), a.y - (c.y + c.height));
+    expect(ecart, `${boites[i].id} / ${boites[j].id}`).toBeGreaterThanOrEqual(8);
+  }
+  const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+  expect(r.violations.map((v) => `${v.id} : ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`)).toEqual([]);
+}
 
 test.describe("Vitrine VINA GePS", () => {
   for (const largeur of LARGEURS) {
@@ -31,39 +57,69 @@ test.describe("Vitrine VINA GePS", () => {
   }
 
   for (const largeur of LARGEURS) {
-    test(`${largeur} px : le choix de l'organisme — axe-core sans violation, cibles ≥ 44 px, rien de collé ni de superposé`, async ({ page }) => {
+    test(`${largeur} px : le choix de l'organisme — liste de l'API, axe-core dans chaque état, cibles ≥ 44 px, rien de collé`, async ({ page }) => {
       await page.setViewportSize({ width: largeur, height: 900 });
+      await servirOrganismes(page, ORGANISMES);
       await page.goto("/vitrine/acceder.html");
       await expect(page.locator("h1")).toHaveCount(1);
       await expect(page.getByRole("heading", { level: 1 })).toHaveText("Accéder à l'application");
-      await expect(page.getByTestId("acceder-urgence-sante")).toHaveAttribute("href", "https://urgence-sante.geps.vinaitsolution.com/admin/login");
-      await expect(page.getByTestId("acceder-clincom")).toHaveAttribute("href", "https://clincom.geps.vinaitsolution.com/admin/login");
-      // La connexion de l'hôte commun n'ouvre que les comptes globaux : elle reste atteignable, mais nommée comme telle.
+      const liste = page.getByLabel("Organisme");
+      await expect(liste).toBeEnabled();
+      // L'invite, puis chaque organisme que l'API rend — rien d'écrit en dur dans la page.
+      await expect(liste.locator("option")).toHaveText(["— Choisir votre organisme —", "Clincom", "Urgences-santé"]);
+      await auditer(page, largeur);
+      await liste.selectOption({ label: "Clincom" });
+      await expect(page.getByTestId("acceder-adresse")).toHaveText("clincom.geps.vinaitsolution.com");
+      await page.getByTestId("acceder-aller").focus();
+      await auditer(page, largeur);
+      // La connexion de l'hôte commun n'ouvre que les comptes globaux : elle reste atteignable, nommée comme telle.
       await expect(page.getByTestId("acceder-exploitation")).toHaveAttribute("href", "/admin/login");
-      const debord = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(debord, "débordement horizontal").toBeLessThanOrEqual(1);
-      const commandes = ["acceder-urgence-sante", "acceder-clincom", "acceder-exploitation"];
-      const boites = await Promise.all(commandes.map(async (id) => ({ id, b: (await page.getByTestId(id).boundingBox())! })));
-      for (const { id, b } of boites) expect(b.height, `${id} : hauteur`).toBeGreaterThanOrEqual(44);
-      // Deux commandes voisines : ni superposées, ni à moins de 8 px (CLAUDE.md, « Aucun bouton collé »).
-      for (let i = 0; i < boites.length; i++) for (let j = i + 1; j < boites.length; j++) {
-        const [a, c] = [boites[i].b, boites[j].b];
-        const ecartX = Math.max(c.x - (a.x + a.width), a.x - (c.x + c.width));
-        const ecartY = Math.max(c.y - (a.y + a.height), a.y - (c.y + c.height));
-        expect(Math.max(ecartX, ecartY), `${boites[i].id} / ${boites[j].id}`).toBeGreaterThanOrEqual(8);
-      }
-      const r = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
-      expect(r.violations.map((v) => `${v.id} : ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(", ")}`)).toEqual([]);
     });
   }
 
-  test("le choix de l'organisme se parcourt au clavier : évitement, puis chaque organisme, puis l'exploitation", async ({ page }) => {
+  test("choisir un organisme mène à la connexion de son hôte", async ({ page }) => {
+    await servirOrganismes(page, ORGANISMES);
+    await page.route("https://clincom.geps.vinaitsolution.com/**", (r) => r.fulfill({ contentType: "text/html", body: "<!doctype html><title>clincom</title>" }));
     await page.goto("/vitrine/acceder.html");
+    await page.getByLabel("Organisme").selectOption({ label: "Clincom" });
+    await page.getByTestId("acceder-aller").click();
+    await expect(page).toHaveURL("https://clincom.geps.vinaitsolution.com/admin/login");
+  });
+
+  test("sans choix : un message dit quoi faire et le focus revient sur la liste", async ({ page }) => {
+    await servirOrganismes(page, ORGANISMES);
+    await page.goto("/vitrine/acceder.html");
+    await expect(page.getByLabel("Organisme")).toBeEnabled();
+    await page.getByTestId("acceder-aller").click();
+    await expect(page.getByRole("alert")).toContainText("Choisissez un organisme dans la liste");
+    await expect(page.getByLabel("Organisme")).toBeFocused();
+    await expect(page).toHaveURL(/\/vitrine\/acceder\.html$/);
+    await auditer(page, 1280);
+  });
+
+  test("aucun organisme ouvert, ou la liste indisponible : l'écran le dit, sans rien proposer", async ({ page }) => {
+    await servirOrganismes(page, []);
+    await page.goto("/vitrine/acceder.html");
+    await expect(page.getByTestId("acceder-etat")).toHaveText("Aucun organisme n'est ouvert pour le moment.");
+    await expect(page.getByLabel("Organisme")).toBeDisabled();
+    await auditer(page, 390);
+    await page.unrouteAll();
+    await page.route("**/api/auth/organismes", (r) => r.fulfill({ status: 404, contentType: "application/json", body: '{"errors":["aucun hôte par organisme"]}' }));
+    await page.reload();
+    await expect(page.getByTestId("acceder-etat")).toContainText("La liste des organismes n'est pas disponible");
+    await expect(page.getByLabel("Organisme")).toBeDisabled();
+    await auditer(page, 390);
+  });
+
+  test("le choix de l'organisme se parcourt au clavier : évitement, liste, bouton, exploitation", async ({ page }) => {
+    await servirOrganismes(page, ORGANISMES);
+    await page.goto("/vitrine/acceder.html");
+    await expect(page.getByLabel("Organisme")).toBeEnabled();
     await page.keyboard.press("Tab");
     await expect(page.getByTestId("acceder-skip-link")).toBeFocused();
     await page.keyboard.press("Enter");
     await expect(page.locator("#contenu")).toBeFocused();
-    for (const id of ["acceder-urgence-sante", "acceder-clincom", "acceder-exploitation"]) {
+    for (const id of ["acceder-select", "acceder-aller", "acceder-exploitation"]) {
       await page.keyboard.press("Tab");
       await expect(page.getByTestId(id)).toBeFocused();
     }

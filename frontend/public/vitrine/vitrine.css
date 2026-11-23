@@ -2,12 +2,12 @@
 /* Jetons : la palette de l'application (ADR 0073), contrastes calculés. */
 :root {
   --marine: #13294b; --fond: #f5f8fb; --surface: #ffffff; --texte: #18324b; --doux: #566a80;
-  --primaire: #0a66b5; --primaire-appui: #08528f; --trait: #d7e3ee; --sarcelle: #0f6b66; --sur-marine: #d5e0ef;
+  --primaire: #0a66b5; --primaire-appui: #08528f; --trait: #d7e3ee; --sarcelle: #0f6b66; --sur-marine: #d5e0ef; --erreur: #b3261e;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --fond: #0e1726; --surface: #16233a; --texte: #e6edf6; --doux: #b3c2d4; --trait: #2c3d57;
-    --primaire: #7cb8ff; --primaire-appui: #a8d0ff;
+    --primaire: #7cb8ff; --primaire-appui: #a8d0ff; --erreur: #ffb4ab;
   }
 }
 * { box-sizing: border-box; }
@@ -48,12 +48,15 @@ summary { cursor: pointer; min-height: 44px; display: flex; align-items: center;
 footer { background: var(--marine); color: var(--sur-marine); padding: 24px 0; margin-top: 24px; }
 footer a { color: #fff; }
 
-/* Choix de l'organisme (acceder.html) : une carte par organisme, son adresse lisible, un bouton qui mène à sa connexion. */
-.organismes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; padding: 0; margin: 0 0 32px; list-style: none; }
-.organisme { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--trait); border-top: 4px solid var(--sarcelle); border-radius: 12px; padding: 20px; }
-.organisme h2 { font-size: clamp(20px, 1rem + .6vw, 24px); margin: 0; }
-.organisme p { margin: 0; color: var(--doux); }
-.organisme .adresse { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; color: var(--texte); overflow-wrap: anywhere; }
-.organisme .bouton { align-self: flex-start; margin-top: auto; }
+/* Choix de l'organisme (acceder.html) : la liste des organismes que le superadmin gère, lue dans l'API (ADR 0094). */
+.choix { display: flex; flex-direction: column; gap: 8px; max-width: 34rem; background: var(--surface); border: 1px solid var(--trait); border-top: 4px solid var(--sarcelle); border-radius: 12px; padding: 20px; margin: 0 0 32px; }
+.choix label { font-weight: 700; }
+.choix select { min-height: 44px; padding: 8px 12px; font: inherit; color: var(--texte); background: var(--surface); border: 1px solid var(--doux); border-radius: 8px; }
+.choix select:disabled { opacity: 1; color: var(--doux); }
+.choix .adresse { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; margin: 0; overflow-wrap: anywhere; }
+.choix .adresse:empty, .choix [role="status"]:empty { display: none; }
+.choix [role="status"] { margin: 0; color: var(--texte); }
+.choix .erreur { color: var(--erreur); font-weight: 700; }
+.choix .bouton { align-self: flex-start; margin-top: 8px; border: 0; cursor: pointer; font: inherit; font-weight: 700; }
 .exploitation { border-top: 1px solid var(--trait); padding-top: 24px; }
 .exploitation h2 { font-size: 20px; }

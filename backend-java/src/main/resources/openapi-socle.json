@@ -11205,6 +11205,81 @@
       },
       "security": []
     },
+    "get /api/auth/organismes": {
+      "tags": [
+        "Auth"
+      ],
+      "summary": "Public — le choix de l'organisme de la vitrine (ADR 0094) : nom, sous-domaine et adresse de connexion des organismes ouverts qui ont un sous-domaine ; 404 en mode sélecteur",
+      "x-contrat": true,
+      "parameters": [],
+      "responses": {
+        "200": {
+          "description": "OK",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "nom",
+                    "slug",
+                    "adresse"
+                  ],
+                  "properties": {
+                    "nom": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "adresse": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://clincom.geps.vinaitsolution.com/admin/login"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "400": {
+          "description": "Requête invalide (chaque manque nommé)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Erreurs"
+              }
+            }
+          }
+        },
+        "401": {
+          "description": "Non authentifié"
+        },
+        "403": {
+          "description": "Rôle, droit, module ou périmètre insuffisant",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Erreurs"
+              }
+            }
+          }
+        },
+        "404": {
+          "description": "Établissement inconnu ou fermé, ou hôte hors de la racine (le corps porte quand même resolution, domaineRacine et hote)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Erreurs"
+              }
+            }
+          }
+        }
+      },
+      "security": []
+    },
     "post /api/auth/login": {
       "tags": [
         "Auth"

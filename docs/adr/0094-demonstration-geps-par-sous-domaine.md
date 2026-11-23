@@ -33,9 +33,11 @@ de choix et les outils qui se connectaient en passant l'organisme dans le corps 
 2. **Le sous-domaine est le slug de l'organisme.** `comptes-demo.json` le déclare (`sousDomaine`) ; le semis de la
    démonstration le pose. Il va à l'exemplaire le plus récent d'un organisme horodaté ; l'ancien le cède
    (`<slug>-<début de son id>`), car un slug est unique.
-3. **Le choix de l'organisme est une page statique** de la vitrine (`/acceder`), qui mène à
-   `https://<slug>.geps.vinaitsolution.com/admin/login`. Elle n'interroge pas le serveur : la liste des clients ne se
-   donne pas à un anonyme (ADR 0033), et les organismes montrés sont ceux de la démonstration, choisis par le produit.
+3. **Le choix de l'organisme est une liste déroulante** de la vitrine (`/acceder`), alimentée par la route publique
+   `GET /api/auth/organismes` (révision du 23 novembre, à la demande du responsable produit) : les organismes que le
+   superadmin crée et gère, **ouverts** (actifs ou à l'essai) et **pourvus d'un sous-domaine**. La route ne rend que le
+   nom, le slug et l'adresse de connexion — ni identifiant, ni statut, ni pays ; en mode sélecteur, elle répond 404.
+   La page ne suit qu'une adresse rendue par le serveur.
 4. **La racine d'un hôte d'organisme mène à sa connexion**, pas à la vitrine : `frontend/nginx.conf` compare l'hôte à
    `VITRINE_HOTE` (la racine du déploiement). `VITRINE_HOTE=*`, le défaut, garde la vitrine partout.
 5. **Un compte d'organisme se connecte sur l'hôte de son organisme, même dans un script.** Les clients de semis
@@ -50,13 +52,17 @@ de choix et les outils qui se connectaient en passant l'organisme dans le corps 
   aurait pu se connecter sur urgence-sante en posant `tenantId` dans le corps. Masquer n'est pas cloisonner.
 - **Un certificat générique `*.geps.vinaitsolution.com`.** Il exige le défi DNS, donc des clés de l'API OVH sur le
   serveur partagé. Le nombre d'organismes de la démonstration est petit et choisi : trois noms suffisent.
-- **Une page de choix lue dans l'API.** Elle rouvrirait au public la liste des clients, que le mode sous-domaine ferme.
+- **Une page de choix écrite en dur** (première version du 23 novembre). Chaque organisme ajouté par le superadmin
+  demandait une modification de la page et un déploiement. Le responsable produit a préféré la liste vivante, et
+  accepte que les **noms** des organismes ouverts soient publics ; la liste complète (`/api/auth/tenants`, avec
+  identifiants et statuts) reste fermée à l'anonyme.
 
 ## Conséquences
 
-- Un organisme sans slug n'est joignable par personne. Ajouter un organisme à la démonstration, c'est : une entrée
-  `sousDomaine` dans `comptes-demo.json`, un nom au certificat et au `server_name` du Nginx central, une carte dans
-  `acceder.html`.
+- Un organisme sans slug n'est joignable par personne, et n'apparaît pas dans la liste. Un organisme que le superadmin
+  crée avec un slug y apparaît aussitôt ; **son adresse ne répond en HTTPS qu'une fois son nom ajouté au certificat et
+  au `server_name` du Nginx central** (le certificat nomme chaque hôte). Un certificat générique `*.geps…` lèverait
+  cette étape, au prix de clés de l'API OVH sur le serveur (défi DNS).
 - La campagne de performance retrouve son organisme par la liste **authentifiée** du compte global. Le volume de quarts
   (`--quarts`) connecte une approbatrice d'organisme : sur la démonstration, il exigerait un slug à l'organisme de
   campagne ; le pipeline ne s'en sert pas.

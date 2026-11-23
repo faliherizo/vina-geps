@@ -22,7 +22,8 @@ Chaque organisme a **sa propre adresse** (ADR 0033, ADR 0094). L'adresse désign
 | Clincom — Santé Québec Laurentides, avis FX-AO | <https://clincom.geps.vinaitsolution.com> |
 | Urgences-santé — démonstration (maquettes de l'avis) | <https://urgence-sante-demo.geps.vinaitsolution.com> |
 
-1. Ouvrir l'adresse de l'organisme (ou passer par **Accéder à l'application** sur la vitrine).
+1. Ouvrir l'adresse de l'organisme, ou passer par **Accéder à l'application** sur la vitrine et choisir l'organisme dans
+   la liste (les organismes ouverts que gère le superadmin).
 2. Saisir le nom de connexion et `Passe!Demo2026`.
 
 La connexion de <https://geps.vinaitsolution.com/admin/login> n'ouvre que les **comptes globaux** (exploitation de la
