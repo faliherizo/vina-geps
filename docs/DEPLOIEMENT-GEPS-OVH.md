@@ -149,6 +149,10 @@ quel environnement déployé. Les ajouter pour Azure : [PIPELINES-ENVIRONNEMENTS
 3. **Recette** (`recette-e2e.yml`, environnement `geps-demo`), en lecture seule, contre l'adresse publique :
    - `deploiement-fumee.spec.ts` : le superadmin se connecte, son espace se rend, l'API sert le catalogue ;
    - `deploiement-comptes-demo.spec.ts` : chaque compte publié ouvre une session.
+   - `deploiement-fx-ao.spec.ts` : sur `clincom.`, l'administration a exactement les modules et le menu de l'avis
+     FX-AO-20260810, chaque écran du menu s'ouvre sans erreur ni violation axe-core, et chaque critère fonctionnel a son
+     écran et ses commandes. Il ouvre les écrans au rythme d'une personne (`E2E_PAUSE_MS`, 2,5 s) : la limitation de
+     débit du frontal répond 503 à des rechargements enchaînés.
 
 La porte retenue est « dès la construction » : le déploiement n'attend pas la CI complète (`ci.yml`, sur `main`).
 Une démonstration de `develop` peut donc montrer un défaut que la CI aurait refusé. C'est le prix d'une démonstration
@@ -261,7 +265,7 @@ COMPTES-DEMO-GEPS.md. Lancer ensuite **Semer la démonstration** avec `forcer` p
 ## 6. Essais de bout en bout contre la démonstration
 
 Un essai qui vise un déploiement **ne fait que lire** : se connecter, consulter, jamais écrire
-(`e2e/global-setup.ts`). Deux essais existent pour cela :
+(`e2e/global-setup.ts`). Trois essais existent pour cela :
 
 ```bash
 # Le pipeline : Actions › Recette e2e (environnement déployé) › Run (environnement, essais)
@@ -269,7 +273,8 @@ gh workflow run recette-e2e.yml -f environnement=geps-demo
 # Depuis un poste :
 cd e2e
 E2E_BASE_URL=https://geps.vinaitsolution.com E2E_SUPERADMIN_PASSWORD='…' E2E_COMPTES_DEMO=1 \
-  npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
+  npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts \
+  tests/e2e/deploiement-fx-ao.spec.ts
 ```
 
 Ajouter un essai à la recette : il doit **seulement lire** et se sauter sans `E2E_BASE_URL`. On le passe ensuite dans
