@@ -38,7 +38,10 @@ const OPTIONS = {
   avecDemo: !process.argv.includes("--sans-donnees-de-demo"),
 };
 const ADMIN = "admin";
-const FICHIER = path.join(__dirname, `.organisme-par-defaut.${I.slug(OPTIONS.nom)}.local.json`);
+// Une démonstration publique (DEMO_PASSWORD) écrit dans son propre fichier : sous le même nom, semer la démonstration
+// distante réécrivait les identifiants tirés au hasard de l'organisme local homonyme — perdus, puisqu'ils n'existent
+// que là.
+const FICHIER = path.join(__dirname, `.organisme-par-defaut.${I.slug(OPTIONS.nom)}${process.env.DEMO_PASSWORD ? ".demo" : ""}.local.json`);
 const { appeler, essayer, connecter } = clientApi(OPTIONS.api);
 const bilan = { crees: {}, existants: {}, avertissements: [] };
 

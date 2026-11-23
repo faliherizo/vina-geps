@@ -32,7 +32,11 @@ test.describe("Déploiement — la pile répond sans backend Node", () => {
     // **La racine sert la vitrine**, pas l'application : sur un déploiement, celle-ci vit sous
     // `/admin`. Viser « / » attendait `login-user` sur une page de présentation — un échec qui
     // ressemble à une panne d'authentification alors que ce n'est qu'une adresse.
+    // La liste des organismes arrive après le premier rendu, et son arrivée réinitialise le choix : sélectionner avant
+    // envoyait le formulaire sans organisme, et la page restait sur la connexion sans dire pourquoi.
+    const organismes = page.waitForResponse((r) => r.url().includes("/api/auth/tenants"), { timeout: 15_000 }).catch(() => null);
     await page.goto("/admin/login");
+    await organismes;
     // Le sélecteur d'établissement n'existe que si la résolution se fait par le choix : le
     // superadmin y prend le compte global.
     const selecteur = page.getByTestId("login-tenant");
