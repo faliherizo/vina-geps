@@ -128,4 +128,12 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
     }
     expect(dockerfile).toContain("API_PROXIES_CONFIANCE=127.0.0.1/32");
   });
+
+  it("co-hébergement : /public/ vise le même amont configuré que /api/, jamais un nom d'hôte en dur", () => {
+    for (const location of ["/api/", "/public/"]) {
+      const b = blocEntier(location);
+      expect(b, location).toMatch(/set \$\w+ \$\{API_UPSTREAM\};/);
+      expect(b, location).toMatch(/proxy_pass http:\/\/\$\w+:\$\{API_PORT\};/);
+    }
+  });
 });

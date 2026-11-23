@@ -1,0 +1,44 @@
+# VINA GePS — (re)semer les organismes de démonstration de https://geps.vinaitsolution.com, sans redéployer.
+#
+# Utile après une remise à zéro de la base, ou pour offrir un exemplaire neuf d'une démonstration abîmée pendant une
+# présentation (« forcer » : un nouvel organisme horodaté, l'ancien reste). Les comptes et leur mot de passe publié :
+# docs/COMPTES-DEMO-GEPS.md. Termine par l'essai de connexion de chaque compte publié.
+name: Semer geps
+
+on:
+  workflow_dispatch:
+    inputs:
+      organisme:
+        description: "Un seul organisme (urgences-sante, urgences-sante-demonstration, fx-ao) ; vide = les trois"
+        type: string
+        default: ""
+      forcer:
+        description: "Semer un nouvel exemplaire horodaté même s'il en existe un"
+        type: boolean
+        default: false
+
+concurrency:
+  group: deployer-geps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  semer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: |
+          node scripts/semer-demo-geps.cjs --api https://geps.vinaitsolution.com \
+            ${{ inputs.forcer && '--forcer' || '' }} ${{ inputs.organisme != '' && format('--seulement {0}', inputs.organisme) || '' }}
+        env:
+          SUPERADMIN_PASSWORD: ${{ secrets.GEPS_SUPERADMIN_PASSWORD }}
+      - run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: npx playwright test --project=e2e tests/e2e/deploiement-comptes-demo.spec.ts
+        working-directory: e2e
+        env: { CI: "1", E2E_BASE_URL: "https://geps.vinaitsolution.com" }

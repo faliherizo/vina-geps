@@ -16,6 +16,11 @@ import { test, expect } from "@playwright/test";
 import { GLOBAL_ACCOUNT } from "./helpers/auth";
 
 const DEPLOYE = !!process.env.E2E_BASE_URL;
+/**
+ * Le mot de passe du superadmin de la pile visée : un déploiement public n'a pas `superadmin/superadmin`. Il vient de
+ * l'environnement (secret GEPS_SUPERADMIN_PASSWORD du pipeline), jamais d'un fichier suivi.
+ */
+const SUPERADMIN = { username: process.env.E2E_SUPERADMIN_USER ?? "superadmin", password: process.env.E2E_SUPERADMIN_PASSWORD ?? "superadmin" };
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
@@ -32,8 +37,8 @@ test.describe("Déploiement — la pile répond sans backend Node", () => {
     // superadmin y prend le compte global.
     const selecteur = page.getByTestId("login-tenant");
     if (await selecteur.isVisible().catch(() => false)) await selecteur.selectOption(GLOBAL_ACCOUNT);
-    await page.getByTestId("login-user").fill("superadmin");
-    await page.getByTestId("login-pass").fill("superadmin");
+    await page.getByTestId("login-user").fill(SUPERADMIN.username);
+    await page.getByTestId("login-pass").fill(SUPERADMIN.password);
     await page.getByTestId("login-submit").click();
     await expect(page.getByTestId("logout")).toBeVisible({ timeout: 60_000 });
 
@@ -57,16 +62,17 @@ test.describe("Déploiement — la pile répond sans backend Node", () => {
   });
 
   test("l'API déployée sert les routes neuves — et c'est le Java qui répond", async ({ page }) => {
-    const connexion = await page.request.post("/api/auth/login", { data: { username: "superadmin", password: "superadmin" } });
+    const connexion = await page.request.post("/api/auth/login", { data: SUPERADMIN });
     expect(connexion.ok()).toBeTruthy();
 
     for (const chemin of ["/api/saas/vues", "/api/saas/consommation", "/api/saas/my-modules"]) {
       const r = await page.request.get(chemin);
       expect(r.status(), chemin).toBe(200);
     }
-    // Le catalogue est bien le complet, pas un reliquat : 69 vues, 7 sections.
+    // Le catalogue est servi et non vide. Son compte exact appartient aux essais du serveur, pas à la fumée : figé ici
+    // (69 vues, 7 sections), il est devenu faux au premier menu remanié sans que le déploiement le soit.
     const catalogue = await (await page.request.get("/api/saas/vues")).json();
-    expect(catalogue.vues.length).toBe(69);
-    expect(catalogue.sections.length).toBe(7);
+    expect(catalogue.vues.length).toBeGreaterThan(0);
+    expect(catalogue.sections.length).toBeGreaterThan(0);
   });
 });

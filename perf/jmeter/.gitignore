@@ -1,2 +1,9 @@
 # Le secret du client d'API d'une campagne (preparer.cjs) : jamais versionné.
 donnees/secret-client-*.txt
+# Démonstration geps.vinaitsolution.com (.github/workflows/perf-geps.yml) : le compte de campagne est écrit par le
+# pipeline depuis ses secrets, les identifiants et les résultats sont ceux d'une exécution — rien de cela ne se versionne.
+donnees/*.local.csv
+donnees/identifiants-geps.csv
+donnees/tenant-geps.txt
+resultats/geps/
+rapports/geps/

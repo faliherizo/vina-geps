@@ -1,0 +1,195 @@
+{
+  "$commentaire": "Les comptes de la démonstration publique geps.vinaitsolution.com. Source unique : docs/COMPTES-DEMO-GEPS.md les décrit, scripts/semer-demo-geps.cjs sème les organismes, e2e/tests/e2e/deploiement-comptes-demo.spec.ts vérifie que chaque compte ouvre une session. Le mot de passe est celui de DEMO_PASSWORD (défaut Passe!Demo2026) : publié, il ne protège rien — aucune donnée réelle dans cette démonstration.",
+  "motDePasseParDefaut": "Passe!Demo2026",
+  "organismes": [
+    {
+      "cle": "urgences-sante",
+      "nom": "Urgences-santé",
+      "correspondance": "exact",
+      "semis": "scripts/creer-organisme-par-defaut.cjs",
+      "pourquoi": "L'organisme prêt à l'emploi : un compte par rôle, chaque personne reliée à sa ressource ; c'est celui que filme la vidéo « Mise en route ».",
+      "comptes": [
+        {
+          "username": "admin",
+          "role": "admin",
+          "nom": "Administration de l'organisme",
+          "profil": "Paramétrage complet ; compte technique sans ressource (pas de « Mes absences »)"
+        },
+        {
+          "username": "direction",
+          "role": "director",
+          "nom": "Dominique Direction",
+          "profil": "Matricule D0001, unité SOUT"
+        },
+        {
+          "username": "chef-ops",
+          "role": "manager",
+          "nom": "Camille Chef des opérations",
+          "profil": "Matricule G0001, unité OPS"
+        },
+        {
+          "username": "rh",
+          "role": "rh",
+          "nom": "Rosalie Ressources humaines",
+          "profil": "Matricule R0001, unité SOUT"
+        },
+        {
+          "username": "comptable",
+          "role": "accountant",
+          "nom": "Charles Comptable",
+          "profil": "Matricule C0001, unité SOUT"
+        },
+        {
+          "username": "employe1",
+          "role": "employee",
+          "nom": "Émilie Paramédic",
+          "profil": "Matricule E0001, unité OPS"
+        },
+        {
+          "username": "employe2",
+          "role": "employee",
+          "nom": "Étienne Paramédic",
+          "profil": "Matricule E0002, unité OPS"
+        },
+        {
+          "username": "employe3",
+          "role": "employee",
+          "nom": "Éloïse Paramédic",
+          "profil": "Matricule E0003, unité OPS"
+        }
+      ]
+    },
+    {
+      "cle": "urgences-sante-demonstration",
+      "nom": "Urgences-santé — démonstration",
+      "correspondance": "prefixe",
+      "semis": "scripts/semer-urgences-sante.cjs",
+      "pourquoi": "Le contenu des maquettes de l'avis 26-015-DO : chaque valeur nomme sa planche.",
+      "comptes": [
+        {
+          "username": "admin",
+          "role": "admin",
+          "nom": "Administration de l'organisme",
+          "profil": "Paramétrage complet"
+        },
+        {
+          "username": "julie.roy",
+          "role": "employee",
+          "nom": "Julie Roy",
+          "profil": "Paramédic — temps complet"
+        },
+        {
+          "username": "marc.dube",
+          "role": "employee",
+          "nom": "Marc Dubé",
+          "profil": "Paramédic — temps partiel régulier"
+        },
+        {
+          "username": "ana.cote",
+          "role": "employee",
+          "nom": "Ana Côté",
+          "profil": "Paramédic — temps partiel occasionnel"
+        },
+        {
+          "username": "claire.nadeau",
+          "role": "manager",
+          "nom": "Claire Nadeau",
+          "profil": "Planificatrice des effectifs"
+        },
+        {
+          "username": "denis.lavoie",
+          "role": "director",
+          "nom": "Denis Lavoie",
+          "profil": "Directeur des opérations"
+        },
+        {
+          "username": "sophie.marchand",
+          "role": "rh",
+          "nom": "Sophie Marchand",
+          "profil": "Ressources humaines"
+        },
+        {
+          "username": "luc.gagnon",
+          "role": "accountant",
+          "nom": "Luc Gagnon",
+          "profil": "Comptabilité — paie"
+        }
+      ]
+    },
+    {
+      "cle": "fx-ao",
+      "nom": "Santé Québec Laurentides — démonstration FX-AO",
+      "correspondance": "prefixe",
+      "semis": "scripts/semer-fx-ao.cjs",
+      "pourquoi": "L'avis FX-AO-20260810 : communications cliniques, six sites, alertes et cascades.",
+      "comptes": [
+        {
+          "username": "admin",
+          "role": "admin",
+          "nom": "Administration de l'organisme",
+          "profil": "Paramétrage complet"
+        },
+        {
+          "username": "coord.urgence",
+          "role": "director",
+          "nom": "Sophie Lalonde",
+          "profil": "Coordonnatrice des mesures d'urgence — envoie les alertes critiques (critère 18)"
+        },
+        {
+          "username": "chef.urgence.hsj",
+          "role": "manager",
+          "nom": "Martin Gagnon",
+          "profil": "Chef de l'urgence, Saint-Jérôme — expéditeur (critères 1-17)"
+        },
+        {
+          "username": "chef.soins.hse",
+          "role": "manager",
+          "nom": "Nadia Bouchard",
+          "profil": "Cheffe des soins, Saint-Eustache — expéditrice, suivi partagé (critère 12)"
+        },
+        {
+          "username": "dre.tremblay",
+          "role": "employee",
+          "nom": "Dre Isabelle Tremblay",
+          "profil": "Cardiologue de garde — destinataire (critères 9, 24)"
+        },
+        {
+          "username": "dr.lavoie",
+          "role": "employee",
+          "nom": "Dr Antoine Lavoie",
+          "profil": "Cardiologue — destinataire, deuxième de la garde"
+        },
+        {
+          "username": "inf.roy",
+          "role": "employee",
+          "nom": "Julie Roy",
+          "profil": "Infirmière, urgence de Saint-Jérôme — destinataire"
+        },
+        {
+          "username": "inf.cote",
+          "role": "employee",
+          "nom": "Marc Côté",
+          "profil": "Infirmier, Saint-Eustache — destinataire"
+        },
+        {
+          "username": "inf.pelletier",
+          "role": "employee",
+          "nom": "Émilie Pelletier",
+          "profil": "Infirmière, Mont-Laurier — destinataire"
+        },
+        {
+          "username": "inh.bergeron",
+          "role": "employee",
+          "nom": "Luc Bergeron",
+          "profil": "Inhalothérapeute, Sainte-Agathe — destinataire"
+        },
+        {
+          "username": "exp.garde.hsj",
+          "role": "expediteur",
+          "nom": "Chantal Ouellet",
+          "profil": "Agente de la centrale des gardes, Saint-Jérôme — expéditrice sans administration (addenda 2, Q20-Q21)"
+        }
+      ]
+    }
+  ]
+}

@@ -22,3 +22,7 @@ backend-java/data/
 
 # Identifiants générés par scripts/creer-organisme-par-defaut.cjs — jamais versionnés.
 scripts/.organisme-par-defaut.*.local.json
+# Démonstration geps (deploy/geps) : l'état d'un serveur et les accès remis en main propre, jamais versionnés.
+# (.env.geps est déjà couvert par « .env.* ».)
+deploy/geps/.version-*
+deploy/geps/*.local*

@@ -1,0 +1,65 @@
+# VINA GePS — la démonstration publique, co-hébergée sur le VPS OVH (https://geps.vinaitsolution.com).
+#
+#   GEPS_VERSION=<sha court> docker compose -p vina-geps --env-file .env.geps -f deploy/geps/docker-compose.yml up -d
+#
+# Ne se lance pas à la main en temps ordinaire : deploy/geps/deployer.sh le fait, sauvegarde et retour arrière compris
+# (docs/DEPLOIEMENT-GEPS-OVH.md). Les images ne se construisent pas ici : le pipeline les construit, puis les charge
+# sur le serveur (`docker load`) — le VPS héberge une douzaine d'applications et ne compile rien.
+#
+# Aucun port publié : le Nginx central (vina_nginx) termine TLS et joint `geps-web` par le réseau partagé `web`.
+# Le serveur Java reste sur le réseau privé de la pile. Les noms sont préfixés `geps-` : sur `web`, un service nommé
+# « backend » existe déjà (freelance-invoicing), et un nom partagé y résoudrait vers l'autre application.
+name: vina-geps
+
+services:
+  geps-backend:
+    image: vina-geps/backend:${GEPS_VERSION:?GEPS_VERSION attendu (sha de la version)}
+    container_name: geps-backend
+    restart: unless-stopped
+    env_file:
+      - path: .env.geps
+        required: true
+    # Propres à la pile : l'emportent sur .env.geps.
+    environment:
+      PORT: "4000"
+      DB_URL: jdbc:sqlite:/app/data/urgences-sante.db
+      NEXU_DONNEES: /app/data/fichiers
+      SAUVEGARDES_DOSSIER: /app/data/sauvegardes
+      NEXU_VERSION: ${GEPS_VERSION}
+      MOCK_URL_BASE: http://localhost:4000
+      JAVA_OPTS: -XX:MaxRAMPercentage=75
+    volumes:
+      - donnees:/app/data
+    # Le VPS est partagé : sans plafond, la JVM dimensionne son tas sur la mémoire de l'hôte entier.
+    mem_limit: 1g
+    networks: [interne]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "5" }
+
+  geps-web:
+    image: vina-geps/web:${GEPS_VERSION}
+    container_name: geps-web
+    restart: unless-stopped
+    depends_on:
+      geps-backend:
+        condition: service_healthy
+    environment:
+      API_UPSTREAM: geps-backend
+      API_PORT: "4000"
+      # La plage du réseau `web` : seul le Nginx central y est cru sur X-Forwarded-For. Sinon toute la démonstration
+      # partagerait l'adresse de vina_nginx — et la limite de 20 requêtes/s par adresse deviendrait une limite globale.
+      API_PROXIES_CONFIANCE: ${GEPS_PROXIES_CONFIANCE:?GEPS_PROXIES_CONFIANCE attendu (plage du réseau web)}
+    mem_limit: 128m
+    networks: [interne, web]
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+networks:
+  interne: {}
+  web:
+    external: true
+
+volumes:
+  donnees: {}
