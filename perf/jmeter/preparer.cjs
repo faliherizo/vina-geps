@@ -29,12 +29,21 @@ function lireCsv(fichier) {
   return lignes.map((l) => Object.fromEntries(l.split(",").map((v, i) => [cles[i], v])));
 }
 
+/**
+ * Pause entre deux appels (`PERF_PAUSE_MS`, défaut 0). Un frontal déployé limite le débit par adresse (20 requêtes/s
+ * sur geps, réponse 503 au-delà) : semer sans pause s'y heurtait au milieu d'un jeu, et la campagne partait sur des
+ * identifiants à moitié créés. En local, sur le Java nu, aucune limite : aucune pause.
+ */
+const PAUSE_MS = Number(process.env.PERF_PAUSE_MS ?? 0);
+const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
 async function client(base, compte) {
   const r = await fetch(`${base}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: compte.username, password: compte.password, tenantId: compte.tenantId || undefined }) });
   if (!r.ok) throw new Error(`connexion refusée (${r.status}) pour ${compte.username}`);
   const { token } = await r.json();
   if (!token) throw new Error("connexion sans jeton (choix d'établissement ou seconde étape exigés) : utilisez un compte de campagne sans MFA");
   const appelant = async (methode, chemin, corps, tenant) => {
+    if (PAUSE_MS > 0) await attendre(PAUSE_MS);
     const rep = await fetch(`${base}${chemin}`, { method: methode, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}`, ...(tenant ? { "X-Tenant-Id": tenant } : {}) }, body: corps ? JSON.stringify(corps) : undefined });
     const texte = await rep.text();
     let json = null; try { json = JSON.parse(texte); } catch { json = null; }
@@ -466,9 +475,12 @@ const MODULES_AVIS = ["approvals", "notifications", "effectifs", "effectifs_plan
   "effectifs_presence", "effectifs_temps", "effectifs_integrations", "effectifs_communication"];
 
 async function etablissementDeCampagne(appel, env, tenantVoulu) {
-  const etat = await appel("GET", "/api/saas/my-modules", null, tenantVoulu).catch(() => null);
+  // L'existence se lit dans la liste publique des organismes : `my-modules` ne dit rien d'un organisme pour un compte
+  // système (il ignore X-Tenant-Id et rend une liste vide), et chaque campagne en créait donc un de plus.
+  const publics = await fetch(`${appel.base}/api/auth/tenants`).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+  const existe = !!tenantVoulu && Array.isArray(publics) && publics.some((t) => t.id === tenantVoulu);
   let tenant = tenantVoulu;
-  if (!etat || !etat.etablissement) {
+  if (!existe) {
     const cree = await appel("POST", "/api/saas/tenants",
       { name: `Charge ${new Date().toISOString().slice(0, 16)}`, type: "public_institution", country: "CA", region: "QC", planCode: "enterprise" }, "");
     tenant = cree.id;

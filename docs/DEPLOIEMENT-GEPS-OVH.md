@@ -282,6 +282,10 @@ perf/jmeter/lancer.sh geps scenarios -Jtenant=$(cat perf/jmeter/donnees/tenant-g
 - Ces chiffres décrivent la **démonstration**. L'engagement de l'appel d'offres (2 500 utilisateurs, p95 < 2 s) se
   mesure sur l'infrastructure cible (`perf/jmeter/README.md`).
 - Lire la **couverture utile** (part de 2xx) avant toute latence : un 404 répond vite.
+- Première campagne (22 novembre 2026, sonde de lecture, 5 utilisateurs, 60 s) : 252 requêtes, 0 % d'erreur, 100 % en
+  2xx, p95 de 45 ms. Le verdict reste rouge sur **une seule** connexion à 1 434 ms (objectif 800 ms) : la connexion
+  est mesurée une fois par utilisateur, à froid (BCrypt, JIT). Allonger la campagne avant de conclure, plutôt que
+  desserrer le seuil.
 
 ## 8. Dépannage
 
