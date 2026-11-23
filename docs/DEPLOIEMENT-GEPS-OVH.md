@@ -159,6 +159,14 @@ quel environnement déployé. Les ajouter pour Azure : [PIPELINES-ENVIRONNEMENTS
      en charge nommée au suivi, la recherche d'un destinataire par son nom. Un organisme semé à moitié y échoue en
      nommant ce qui manque ; l'essai de présence ci-dessus le laissait passer.
 
+Hors recette, **parce qu'il écrit** : `deploiement-fx-ao-parcours.spec.ts` (`donnees/fx-ao/parcours-demonstration.json`)
+pose les gestes sur Clincom — absence déclarée puis annulée, disponibilité déposée, alerte à la garde et à une
+personne avec prise en charge, message à une personne et à un groupe. À lancer à la main, avec `E2E_PARCOURS_DEMO=1`.
+
+Ressemer un seul organisme : `node scripts/semer-demo-geps.cjs --api https://geps.vinaitsolution.com --seulement fx-ao
+--forcer` (SUPERADMIN_PASSWORD dans l'environnement), puis suspendre l'ancien exemplaire depuis le superadmin pour qu'il
+quitte la liste de `/acceder`.
+
 La porte retenue est « dès la construction » : le déploiement n'attend pas la CI complète (`ci.yml`, sur `main`).
 Une démonstration de `develop` peut donc montrer un défaut que la CI aurait refusé. C'est le prix d'une démonstration
 à jour en quelques minutes. Pour attendre la CI, remplacer `on: push` par

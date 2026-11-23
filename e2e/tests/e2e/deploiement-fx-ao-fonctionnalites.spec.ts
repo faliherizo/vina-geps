@@ -90,13 +90,14 @@ async function constaterEcran(page: Page, hote: string, e: Ecran): Promise<strin
   if (!rendu) return [`${ou} : aucun titre rendu${e.pourquoi ? ` (${e.pourquoi})` : ""}`];
   if (await page.getByTestId("frontiere-erreur").count()) return [`${ou} : ${await page.getByTestId("frontiere-erreur-motif").textContent()}`];
   const constats: string[] = [];
+  // Les gestes d'abord : un filtre à choisir, un texte à chercher — ce que l'écran montre ensuite en dépend.
+  for (const g of e.gestes ?? []) {
+    await poser(page, g).catch((err: Error) => constats.push(`${ou} : ${g.pourquoi} — ${err.message.split("\n")[0]}`));
+  }
   for (const c of e.preuve ?? []) if (!(await commandePresente(page, c))) constats.push(`${ou} : commande absente ${c}`);
   for (const t of e.textes ?? []) {
     const vu = await expect(page.locator("main")).toContainText(new RegExp(t), { timeout: 15_000 }).then(() => true).catch(() => false);
     if (!vu) constats.push(`${ou} : texte absent /${t}/`);
-  }
-  for (const g of e.gestes ?? []) {
-    await poser(page, g).catch((err: Error) => constats.push(`${ou} : ${g.pourquoi} — ${err.message.split("\n")[0]}`));
   }
   return constats;
 }

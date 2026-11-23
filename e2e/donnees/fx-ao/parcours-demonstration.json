@@ -68,6 +68,8 @@
       ],
       "lecteur": "chef.urgence.hsj",
       "texte": "Point d'équipe à 15 h au poste."
-    }
+    },
+    "unite": "Hôpital de Saint-Jérôme",
+    "uniteNote": "Julie Roy, la Dre Tremblay et Martin Gagnon sont à Saint-Jérôme : la messagerie s'ouvre d'office sur leur unité (elle s'ouvrait sur la première de la liste, Argenteuil, avant le correctif du 23 novembre 2026)."
   }
 }

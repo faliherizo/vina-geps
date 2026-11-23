@@ -67,6 +67,16 @@ class ControleurGroupesDeTravailHttpTest {
     }
 
     @Test
+    @DisplayName("les groupes de la personne connectée : ceux dont elle est membre, et aucun pour qui n'y figure pas")
+    void miens() throws Exception {
+        http.get("/api/communication/groupes/miens", ROY).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1)).andExpect(jsonPath("$[0]").value("EST"));
+        http.get("/api/communication/groupes/miens", new ContexteRequete("u-lea", "lea", "employee", null, "T")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+        http.get("/api/communication/groupes/miens", SANS_MODULE).andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("une erreur de la source devient un 400 nommé ; sans message, « requête invalide »")
     void erreurs() throws Exception {
         http.get("/api/communication/groupes/refuse/membres", ROY).andExpect(status().isBadRequest())

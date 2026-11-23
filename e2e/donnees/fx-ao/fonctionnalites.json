@@ -125,7 +125,7 @@
         { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/groupes/{{garde}}/membres", "contient": [{ "personId": "dre.tremblay" }, { "personId": "dr.lavoie" }], "pourquoi": "L'expéditeur vise la garde d'un geste, sans pouvoir la modifier" }
       ],
       "ecrans": [
-        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-gt-table", "alp-gt-nouveau"], "textes": ["Garde de cardiologie", "Comité des mesures d'urgence", "Inhalothérapie régionale"] }
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-gt-table", "alp-gt-nouveau-ouvrir"], "textes": ["Garde de cardiologie", "Comité des mesures d'urgence", "Inhalothérapie régionale"] }
       ]
     },
     {
@@ -138,7 +138,7 @@
         { "acteur": "dr.lavoie", "chemin": "/api/effectifs/absences", "contient": [{ "codeAbsence": "CONG", "statut": "ACCEPTEE" }] }
       ],
       "ecrans": [
-        { "acteur": "admin", "page": "usabsences", "textes": ["Dr Antoine Lavoie"] },
+        { "acteur": "admin", "page": "usabsences", "gestes": [{ "choisir": "pla-abs-filtre", "valeur": "ACCEPTEE", "pourquoi": "L'écran montre d'abord les absences à approuver ; le congé est accepté" }], "textes": ["Dr Antoine Lavoie"] },
         { "acteur": "dr.lavoie", "page": "mesabsences", "textes": ["CONG|Congé"] },
         { "acteur": "dre.tremblay", "page": "mesdisponibilites", "preuve": ["mdi-titre"] }
       ]

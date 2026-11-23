@@ -81,6 +81,39 @@ La revue a trouvé **quatre écarts**, tous corrigés dans ce changement :
 | EF-039 | Soutien | ✅ | CAP-18 |
 | EF-040 | Facturation des utilisateurs actifs | ✅ minimum de 100 | CAP-16 |
 
-## 4. Résultats
+## 4. Les gestes, posés à l'écran sur la démonstration
 
-Les résultats de l'exécution sur la démonstration sont consignés au § 5.
+`e2e/tests/e2e/deploiement-fx-ao-parcours.spec.ts`, piloté par `e2e/donnees/fx-ao/parcours-demonstration.json`,
+**écrit** dans Clincom avec les comptes de démonstration, chacun dans sa session, et vérifie que le geste de l'un
+arrive chez l'autre. Il s'y tient propre : marque « Exercice e2e » et heure dans chaque texte, absence annulée à la
+fin, dépôt de disponibilité remplacé, fil de groupe repris. Il ne s'exécute qu'avec `E2E_PARCOURS_DEMO=1` et n'est
+pas dans la recette automatique.
+
+| Geste | Comptes | Ce qui est constaté |
+|---|---|---|
+| Déclarer une absence | `inf.cote`, puis `admin` | « Absence déclarée » ; l'administration la lit **acceptée** au nom de Marc Côté ; annulée ensuite |
+| Déposer une disponibilité | `inf.roy` | Période « Collecte — Hôpital de Saint-Jérôme » ouverte ; « Dépôt enregistré », sans refus |
+| Alerte à un groupe et à une personne | `chef.urgence.hsj`, `dre.tremblay`, `inf.roy` | Modèle « Rappel de garde », garde de cardiologie cochée, Julie Roy **cherchée par son nom** ; envoyée à 3 personnes ; la Dre Tremblay prend en charge d'un geste ; Julie Roy la lit ; le suivi nomme la Dre Tremblay |
+| Écrire à une personne | `inf.roy` → `dre.tremblay` | Le message arrive dans leur fil à deux |
+| Écrire à un groupe | `inf.roy` → `dre.tremblay`, `chef.urgence.hsj` | Fil de groupe ouvert (ou repris), participants ajoutés ; le chef y lit le message |
+
+Chaque état d'écran passe axe-core sans violation.
+
+**Constat d'ergonomie, corrigé** : la messagerie s'ouvrait sur la **première unité** de la liste (Argenteuil), et
+non sur celle de la personne : une infirmière de Saint-Jérôme y trouvait « Aucun membre dans ce groupe ». Elle s'ouvre
+désormais sur l'unité de la personne (`GET /api/communication/groupes/miens`, `groupeParDefaut` dans
+`santequebec/perimetre.tsx`) ; le choix fait dans la session reste prioritaire. Le parcours le vérifie.
+
+## 5. Résultats sur la démonstration (23 novembre 2026, soir)
+
+Après le déploiement de `develop` (`118885e`), le nouveau semis de Clincom (exemplaire `e7b1eee6`, complet) et la
+suspension de l'exemplaire semé à moitié (`b79004a4`) :
+
+| Essai | Résultat |
+|---|---|
+| `deploiement-fx-ao-fonctionnalites.spec.ts` — 6 profils, 18 capacités (lecture) | **24 / 24** |
+| `deploiement-fx-ao.spec.ts` — modules, menu, écrans sans violation axe-core, 30 critères | **3 / 3** |
+| `deploiement-fx-ao-parcours.spec.ts` — absence, disponibilité, alerte, messages (écriture) | **5 / 5** |
+
+Avant le nouveau semis, la recette du déploiement échouait sur CAP-01 (« Inhalothérapie régionale » et la liste
+« Soins infirmiers — urgences » introuvables) : c'est l'écart n° 4, que l'essai de présence laissait passer.
