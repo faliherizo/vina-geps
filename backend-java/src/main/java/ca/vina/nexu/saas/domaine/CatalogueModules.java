@@ -46,7 +46,7 @@ public final class CatalogueModules {
     public static final List<Definition> MODULES = List.of(
             m("approvals", "Approbations", "coeur", "Menu Approbations"),
             m("notifications", "Notifications", "coeur", "Menu Notifications"),
-            m("integrations", "Intégrations et webhooks sortants", "coeur", "Menu Administration › Intégrations : cartes d'état, webhooks sortants signés (routes /api/integrations/etat et /webhooks)"),
+            m("integrations", "Intégrations et webhooks sortants", "coeur", "Menu Administration › Intégrations : cartes d'état, webhooks sortants signés, clés d'API OAuth2 (routes /api/integrations)"),
             m("confidentialite", "Registre des incidents de confidentialité (Loi 25)", "coeur", "Onglet Administration › Confidentialité, exports CSV/PDF (routes /api/securite/incidents)"),
             m("effectifs", "Urgences-santé — socle (gestion des effectifs)", "effectifs", "Menu Urgences-santé › Administration des effectifs (Référentiels, Milieux, Périmètres, Journal) : référentiels datés, unités et périmètres, milieux physiques et preuves de présence, journal des décisions (routes /api/effectifs)"),
             m("effectifs_regles", "Urgences-santé — moteur de règles", "effectifs", "effectifs", "Menu Urgences-santé › Administration des effectifs › Règles : règles versionnées par contexte et par portée, simulateur, décisions tracées (routes /api/effectifs/regles)"),

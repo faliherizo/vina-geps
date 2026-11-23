@@ -470,7 +470,8 @@ async function semerJournauxDAvis(appel, tenant, { textos = 2000 } = {}) {
  * Si l'établissement existe déjà (pile Docker, environnement partagé), rien n'est créé : on ne
  * touche pas à un environnement qu'on n'a pas fabriqué.
  */
-const MODULES_AVIS = ["approvals", "notifications", "effectifs", "effectifs_planification", "effectifs_regles",
+// `integrations` : les clients d'API de la campagne (API d'échange) l'exigent depuis IN-FX-02.
+const MODULES_AVIS = ["approvals", "notifications", "integrations", "effectifs", "effectifs_planification", "effectifs_regles",
   "effectifs_agph", "effectifs_absences", "effectifs_echanges", "effectifs_disponibilites",
   "effectifs_presence", "effectifs_temps", "effectifs_integrations", "effectifs_communication"];
 

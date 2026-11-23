@@ -30,6 +30,7 @@ class ControleurGroupesTransversesHttpTest {
     private static final ContexteRequete ADMIN = new ContexteRequete("u-adm", "admin", "admin", null, T);
     private static final ContexteRequete CHEF = new ContexteRequete("u-chef", "chef", "manager", null, T);
     private static final ContexteRequete VOISIN = new ContexteRequete("u-v", "voisin", "admin", null, "T2");
+    private static final ContexteRequete SANS_MODULE = new ContexteRequete("u-s", "sans", "admin", null, "T3");
 
     private ClientHttpEssai http;
 
@@ -45,7 +46,11 @@ class ControleurGroupesTransversesHttpTest {
                 + "VALUES ('rs1', ?, 'P1', 'Léa Morin', 'u-lea', 'EST', 'PARA', 'TECH', 'TC', 'FSSS', 1, 'x')").param(T).update();
         DepotGroupesTransverses depot = new DepotGroupesTransverses(jdbc);
         AtomicInteger n = new AtomicInteger();
+        // T a les alertes, T2 la messagerie : chacun des deux modules suffit ; T3 n'a ni l'un ni l'autre.
+        jdbc.sql("INSERT INTO tenant_quotas (tenantId, maxTeachers, maxContractsPerYear, modules) VALUES (?, -1, -1, '[\"alertes\"]')").param(T).update();
+        jdbc.sql("INSERT INTO tenant_quotas (tenantId, maxTeachers, maxContractsPerYear, modules) VALUES ('T2', -1, -1, '[\"effectifs_communication\"]')").update();
         http = new ClientHttpEssai(new ControleurGroupesTransverses(new GardeAcces(new RegistrePolitiqueAcces()),
+                new ca.vina.nexu.partage.modules.infrastructure.DepotModulesActives(jdbc),
                 new GestionnaireGroupesTransverses(depot, depot, () -> String.valueOf(n.incrementAndGet()))));
     }
 
@@ -98,5 +103,13 @@ class ControleurGroupesTransversesHttpTest {
         http.get(R + "/personnes?q=%25%25%25", ADMIN).andExpect(jsonPath("$.length()").value(0));
         http.get(R + "/personnes?q=___", ADMIN).andExpect(jsonPath("$.length()").value(0));
         http.get(R + "/personnes?q=mor", CHEF).andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("un organisme qui n'a ni la messagerie ni les alertes n'atteint pas les groupes : ni lecture, ni recherche de personnes, ni écriture")
+    void sansModuleUsager() throws Exception {
+        http.get(R, SANS_MODULE).andExpect(status().isForbidden());
+        http.get(R + "/personnes?q=lea", SANS_MODULE).andExpect(status().isForbidden());
+        http.post(R, SANS_MODULE, "{\"nom\":\"Garde\",\"nature\":\"garde\"}").andExpect(status().isForbidden());
     }
 }

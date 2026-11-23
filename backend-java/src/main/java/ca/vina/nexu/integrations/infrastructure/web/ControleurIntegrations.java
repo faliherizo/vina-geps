@@ -66,7 +66,11 @@ public class ControleurIntegrations {
         return ResponseEntity.status(code).body(Map.of("errors", List.of(message)));
     }
 
-    /** Session + établissement + module {@code integrations} + rôle d'administration, dans l'ordre du Node. */
+    /**
+     * Session + établissement + module {@code integrations} + rôle d'administration, dans l'ordre du Node. <strong>Toute</strong>
+     * route de ce contrôleur passe par là (tests d'intrusion FX-AO, IN-FX-02) : les clients d'API n'exigeaient que le rôle,
+     * si bien qu'un organisme privé du module — FX-AO — pouvait émettre un secret d'accès machine à ses données.
+     */
     private GardeAcces.Verdict exigerAdministration(HttpServletRequest requete) {
         GardeAcces.Verdict v = garde.exigerTenant(requete);
         if (v.refuse()) {
@@ -149,13 +153,13 @@ public class ControleurIntegrations {
 
     @GetMapping("/api-clients")
     public ResponseEntity<Object> lister(HttpServletRequest requete) {
-        GardeAcces.Verdict v = garde.exigerRole(requete, "admin", "superadmin");
+        GardeAcces.Verdict v = exigerAdministration(requete);
         return v.refuse() ? v.refus() : ResponseEntity.ok(depot.lister(v.tenantId()));
     }
 
     @PostMapping("/api-clients")
     public ResponseEntity<Object> creer(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> corps) {
-        GardeAcces.Verdict v = garde.exigerRole(requete, "admin", "superadmin");
+        GardeAcces.Verdict v = exigerAdministration(requete);
         if (v.refuse()) {
             return v.refus();
         }
@@ -186,7 +190,7 @@ public class ControleurIntegrations {
 
     @DeleteMapping("/api-clients/{id}")
     public ResponseEntity<Object> revoquer(HttpServletRequest requete, @PathVariable String id) {
-        GardeAcces.Verdict v = garde.exigerRole(requete, "admin", "superadmin");
+        GardeAcces.Verdict v = exigerAdministration(requete);
         if (v.refuse()) {
             return v.refus();
         }
@@ -197,7 +201,7 @@ public class ControleurIntegrations {
 
     @PostMapping("/export.xml")
     public ResponseEntity<Object> exporterXml(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> corps) {
-        GardeAcces.Verdict v = garde.exigerTenant(requete);
+        GardeAcces.Verdict v = exigerAdministration(requete);
         if (v.refuse()) {
             return v.refus();
         }
@@ -251,7 +255,7 @@ public class ControleurIntegrations {
 
     @PostMapping("/sso/map-role")
     public ResponseEntity<Object> mapperRole(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> corps) {
-        GardeAcces.Verdict v = garde.exigerTenant(requete);
+        GardeAcces.Verdict v = exigerAdministration(requete);
         if (v.refuse()) {
             return v.refus();
         }
@@ -282,7 +286,7 @@ public class ControleurIntegrations {
 
     @PostMapping("/inbound-email")
     public ResponseEntity<Object> courrielEntrant(HttpServletRequest requete, @RequestBody(required = false) Map<String, Object> corps) {
-        GardeAcces.Verdict v = garde.exigerTenant(requete);
+        GardeAcces.Verdict v = exigerAdministration(requete);
         if (v.refuse()) {
             return v.refus();
         }

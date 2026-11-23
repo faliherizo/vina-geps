@@ -3,6 +3,7 @@ package ca.vina.nexu.communication.infrastructure.web;
 import ca.vina.nexu.communication.application.commandes.GestionnaireGroupesTransverses;
 import ca.vina.nexu.communication.domaine.GroupesTransverses;
 import ca.vina.nexu.communication.domaine.RefusCommunication;
+import ca.vina.nexu.partage.modules.ModulesActives;
 import ca.vina.nexu.partage.web.GardeAcces;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
@@ -17,12 +18,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * {@code /api/communication/groupes-transverses} — l'administration des groupes de spécialité, de garde et de comité
  * (ST-G09). Ce sont des données de l'organisme, communes à la messagerie et aux alertes : aucun de ces modules ne les
- * possède, et seule l'administration de l'organisme les tient.
+ * possède, et seule l'administration de l'organisme les tient. <strong>L'un des deux au moins</strong> doit être accordé
+ * (balayage par module, tests d'intrusion FX-AO IN-FX-03) : sans eux, un organisme lisait les groupes et cherchait ses
+ * personnes par nom pour une fonctionnalité qu'il n'a pas.
  */
 @RestController
 @RequestMapping("/api/communication/groupes-transverses")
@@ -31,17 +35,31 @@ public class ControleurGroupesTransverses {
     private static final int OK = 200;
     private static final int CREE = 201;
     private static final String ADMINISTRATION = "admin";
+    private static final int INTERDIT = 403;
+    /** Les modules qui se servent des groupes transverses : la messagerie du personnel et les alertes cliniques. */
+    static final List<String> MODULES_USAGERS = List.of(GardeCommunication.MODULE, "alertes");
 
     private final GardeAcces garde;
+    private final ModulesActives modules;
     private final GestionnaireGroupesTransverses groupes;
 
-    public ControleurGroupesTransverses(GardeAcces garde, GestionnaireGroupesTransverses groupes) {
+    public ControleurGroupesTransverses(GardeAcces garde, ModulesActives modules, GestionnaireGroupesTransverses groupes) {
         this.garde = garde;
+        this.modules = modules;
         this.groupes = groupes;
     }
 
     private ResponseEntity<Object> administrer(HttpServletRequest r, int code, java.util.function.Function<String, Object> geste) {
-        return GardeCommunication.repondre(r, garde.exigerRole(r, ADMINISTRATION), code, a -> geste.apply(a.tenantId()));
+        return GardeCommunication.repondre(r, verdict(r), code, a -> geste.apply(a.tenantId()));
+    }
+
+    /** L'administration de l'organisme, et l'un des modules qui se servent des groupes. */
+    private GardeAcces.Verdict verdict(HttpServletRequest r) {
+        GardeAcces.Verdict v = garde.exigerRole(r, ADMINISTRATION);
+        if (v.refuse() || MODULES_USAGERS.stream().anyMatch(m -> modules.estActive(v.tenantId(), m))) {
+            return v;
+        }
+        return new GardeAcces.Verdict(null, GardeCommunication.erreur(INTERDIT, "ni la messagerie ni les alertes ne sont accordées à cet organisme"));
     }
 
     @GetMapping
