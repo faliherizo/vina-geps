@@ -89,7 +89,7 @@ const PAGE_DROIT_SERVEUR: Partial<Record<Page, "peutApprouver">> = {
 /** Le nom du produit : VINA Gestion des Personnels de la Santé. L'organisme client se nomme à côté. */
 export const MARQUE = "VINA GePS";
 
-const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
+const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[]; espacePersonnel?: true }[] = [
   // Les pages d'Urgences-santé sont déclarées par `urgencessante/menu.ts` : ajouter un écran
   // là-bas ne demande pas de modifier l'ossature de l'application.
   ...ENTREES_US.map((e) => ({ key: e.cle as Page, i18nKey: `nav.${e.cle}`, icon: e.icone, roles: e.roles as Role[] })),
@@ -97,7 +97,7 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   // Communications cliniques (ADR 0074, 0085) : envoyer et suivre exigent chacun leur capacité ; recevoir est à tous.
   { key: "alnouvelle", i18nKey: "nav.alnouvelle", icon: "🚨", roles: ["admin", "manager", "director"] },
   { key: "alsuivi", i18nKey: "nav.alsuivi", icon: "📋", roles: ["admin", "manager", "director"] },
-  { key: "mesalertes", i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "mesalertes", espacePersonnel: true, i18nKey: "nav.mesalertes", icon: "🔔", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
   { key: "alparametres", i18nKey: "nav.alparametres", icon: "⚙️", roles: ["admin"] },
   // Paie (ADR 0076, 0084) : produire la paie exige « paie.gerer » au serveur (administration, RH, comptable) ; tenir
   // les règles, les dossiers et les réglages, « paie.configurer » (administration, RH). Chacun lit ses propres bulletins.
@@ -109,9 +109,9 @@ const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[] }[] = [
   { key: "paieparametres", i18nKey: "nav.paieparametres", icon: "⚙️", roles: ["admin", "rh"] },
   { key: "paieregles", i18nKey: "nav.paieregles", icon: "📐", roles: ["admin", "rh"] },
   { key: "rapports", i18nKey: "nav.rapports", icon: "📑", roles: ["admin", "manager"] },
-  { key: "account", i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee"] },
-  { key: "help", i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
-  { key: "soutien", i18nKey: "nav.soutien", icon: "🛟", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "account", espacePersonnel: true, i18nKey: "nav.account", icon: "🪪", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "help", espacePersonnel: true, i18nKey: "nav.help", icon: "❓", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
+  { key: "soutien", espacePersonnel: true, i18nKey: "nav.soutien", icon: "🛟", roles: ["admin", "manager", "employee", "rh", "director", "accountant"] },
   { key: "approvals", i18nKey: "nav.approvals", icon: "✅", roles: ["admin", "manager", "director"] },
   { key: "access", i18nKey: "nav.access", icon: "🔐", roles: ["admin"] },
   { key: "notifications", i18nKey: "nav.notifications", icon: "🔔", roles: ["admin", "manager", "rh"] },
@@ -272,6 +272,7 @@ function AppShell() {
       const droitDelegue = PAGE_DROIT_SERVEUR[p.key];
       if (!droitDeVoir({
         roles: p.roles,
+        espacePersonnel: p.espacePersonnel,
         capacitesRequises: PAGE_CAPABILITIES[p.key],
         droitDelegue: droitDelegue !== undefined,
         droitServeur: droitDelegue ? user[droitDelegue] : undefined,

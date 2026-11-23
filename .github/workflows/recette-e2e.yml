@@ -21,13 +21,13 @@ on:
       essais:
         description: "Fichiers d'essai (chemins sous e2e/), séparés par des espaces"
         type: string
-        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts tests/e2e/deploiement-fx-ao.spec.ts
+        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts tests/e2e/deploiement-fx-ao.spec.ts tests/e2e/deploiement-fx-ao-fonctionnalites.spec.ts
   workflow_call:
     inputs:
       environnement: { type: string, required: true }
       essais:
         type: string
-        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts tests/e2e/deploiement-fx-ao.spec.ts
+        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts tests/e2e/deploiement-fx-ao.spec.ts tests/e2e/deploiement-fx-ao-fonctionnalites.spec.ts
 
 permissions:
   contents: read

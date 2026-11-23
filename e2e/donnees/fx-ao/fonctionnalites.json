@@ -1,0 +1,325 @@
+{
+  "_lecture": "Les fonctionnalités de l'avis FX-AO-20260810, constatées sur l'organisme Clincom tel qu'il est déployé et semé (scripts/semer-fx-ao.cjs, donnees/fx-ao/demonstration.json). Lu par tests/e2e/deploiement-fx-ao-fonctionnalites.spec.ts, en lecture seule : aucune requête n'écrit. « profils » : ce que chaque profil de l'addenda 2 (Q20) voit au menu et a le droit de faire. « capacites » : une capacité métier de 01_synthese_besoins_metier.md § 4, ses exigences EF (02_exigences_fonctionnelles.md) et ses critères de la grille ; chaque lecture de l'API est jugée sur des valeurs (« corps » : sous-ensemble, où chaque élément d'un tableau attendu se retrouve dans le tableau reçu ; « contient » : de même pour une réponse qui est une liste ; « longueur », « texte », « absent » : expressions régulières), chaque écran sur ses commandes (« preuve », syntaxe de helpers/gestes.ts) et sur ce qu'il affiche (« textes »). Le détail des capacités et des écrans : docs/FX-AO-20260810_Dossier/05_maquettes/07_maquette_menus_fonctionnalites.md.",
+  "profils": [
+    {
+      "compte": "admin",
+      "profil": "Pilote — administration de l'organisme (addenda 2, Q20, Q22, Q27)",
+      "droits": { "configurer": true, "envoyer": true, "critique": true, "suivre": true },
+      "menu": {
+        "present": ["dashboard", "alnouvelle", "alsuivi", "mesalertes", "alparametres", "mesdisponibilites", "usdisponibilites", "mesabsences", "usabsences", "usressources", "usmessages", "usappels", "usdiffusion", "usreferentiels", "usjournal", "admin", "access", "account", "help", "soutien"],
+        "absent": []
+      }
+    },
+    {
+      "compte": "coord.urgence",
+      "profil": "Coordonnatrice des mesures d'urgence — expéditrice de l'alerte critique (critère 18)",
+      "droits": { "configurer": false, "envoyer": true, "critique": true, "suivre": true },
+      "menu": {
+        "present": ["alnouvelle", "alsuivi", "mesalertes", "account", "help", "soutien"],
+        "absent": ["alparametres", "admin", "access"]
+      }
+    },
+    {
+      "compte": "chef.urgence.hsj",
+      "profil": "Gestionnaire — chef de l'urgence de Saint-Jérôme (addenda 2, Q20, Q23 ; D-H3 : il envoie)",
+      "droits": { "configurer": false, "envoyer": true, "critique": false, "suivre": true },
+      "menu": {
+        "present": ["alnouvelle", "alsuivi", "mesalertes", "usabsences", "account", "help", "soutien"],
+        "absent": ["alparametres", "admin", "access"]
+      }
+    },
+    {
+      "compte": "exp.garde.hsj",
+      "profil": "Expéditeur — rôle propre qui envoie et suit, sans rien administrer (ADR 0085, ST-H03) ; il reçoit aussi les alertes de son site",
+      "droits": { "configurer": false, "envoyer": true, "critique": false, "suivre": true },
+      "menu": {
+        "present": ["alnouvelle", "alsuivi", "mesalertes", "account", "help", "soutien"],
+        "absent": ["alparametres", "admin", "access", "usabsences"]
+      }
+    },
+    {
+      "compte": "inf.roy",
+      "profil": "Destinataire — infirmière de Saint-Jérôme",
+      "droits": { "configurer": false, "envoyer": false, "critique": false, "suivre": false },
+      "menu": {
+        "present": ["mesalertes", "mesdisponibilites", "mesabsences", "usmessages", "usappels", "account", "help", "soutien"],
+        "absent": ["alnouvelle", "alsuivi", "alparametres", "admin", "access", "usabsences"]
+      }
+    },
+    {
+      "compte": "dre.tremblay",
+      "profil": "Destinataire — médecin de la garde de cardiologie, modératrice du groupe",
+      "droits": { "configurer": false, "envoyer": false, "critique": false, "suivre": false },
+      "menu": {
+        "present": ["mesalertes", "mesdisponibilites", "mesabsences", "usmessages", "account"],
+        "absent": ["alnouvelle", "alsuivi", "alparametres", "admin"]
+      }
+    }
+  ],
+  "capacites": [
+    {
+      "id": "CAP-01",
+      "titre": "Composer et diffuser : la console vise des groupes (sites, garde, comité, spécialité), une liste partagée ou des personnes",
+      "exigences": ["EF-001", "EF-005", "EF-007"],
+      "criteres": ["1", "5", "7"],
+      "api": [
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/groupes", "contient": [{ "id": "HSJ", "nom": "Hôpital de Saint-Jérôme" }, { "nom": "Garde de cardiologie" }, { "nom": "Comité des mesures d'urgence" }, { "nom": "Inhalothérapie régionale" }] },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/listes", "contient": [{ "nom": "Soins infirmiers — urgences" }] },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/groupes/HSJ/membres", "contient": [{ "personId": "inf.roy", "nom": "Julie Roy" }, { "personId": "dre.tremblay", "nom": "Dre Isabelle Tremblay" }] }
+      ],
+      "ecrans": [
+        { "acteur": "chef.urgence.hsj", "page": "alnouvelle", "preuve": ["aln-formulaire", "aln-destinataires", "aln-envoyer"], "textes": ["Garde de cardiologie", "Soins infirmiers — urgences"] }
+      ]
+    },
+    {
+      "id": "CAP-02",
+      "titre": "Rechercher un destinataire par son nom ou son prénom, dès trois caractères, sans voir ses coordonnées",
+      "exigences": ["EF-003", "EF-029"],
+      "criteres": ["3", "29"],
+      "api": [
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/personnes?q=lav", "contient": [{ "personId": "dr.lavoie", "nom": "Dr Antoine Lavoie" }], "absent": "telephone|phone|\\d{3}[ .-]?\\d{3}[ .-]?\\d{4}" },
+        { "acteur": "exp.garde.hsj", "chemin": "/api/alertes/personnes?q=isabelle", "contient": [{ "personId": "dre.tremblay" }] },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/personnes?q=la", "longueur": 0, "pourquoi": "En deçà de trois caractères, la liste serait l'annuaire entier" },
+        { "acteur": "inf.roy", "chemin": "/api/alertes/personnes?q=lav", "statut": 403, "pourquoi": "Un destinataire ne cherche pas de destinataire : il n'envoie pas" }
+      ],
+      "ecrans": [
+        {
+          "acteur": "chef.urgence.hsj", "page": "alnouvelle", "preuve": ["aln-recherche"],
+          "gestes": [
+            { "remplir": "aln-recherche", "valeur": "Tremb", "pourquoi": "La recherche part d'un fragment du nom" },
+            { "visible": "aln-trouvee-dre.tremblay", "pourquoi": "La Dre Tremblay se trouve par son nom et se coche" },
+            { "texte": "aln-recherche-etat", "valeur": "1 personne(s) trouvée(s)", "pourquoi": "Le résultat s'annonce aux lecteurs d'écran" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "CAP-03",
+      "titre": "Messages prédéfinis pour l'expéditeur, réponses prédéfinies pour le destinataire, tenus par l'administration",
+      "exigences": ["EF-006", "EF-010", "EF-032"],
+      "criteres": ["6", "10", "32"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/alertes/modeles", "contient": [{ "titre": "Code bleu", "priorite": "critique", "actif": true }, { "titre": "Code blanc", "priorite": "urgente" }, { "titre": "Rappel de garde", "priorite": "information" }] },
+        { "acteur": "admin", "chemin": "/api/alertes/reponses", "contient": [{ "libelle": "J'arrive", "semantique": "prise_en_charge" }, { "libelle": "Indisponible", "semantique": "refus" }, { "libelle": "Je rappelle dans 5 min", "semantique": "information" }] }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-modeles", "alp-reponses", "alp-modele-ouvrir"], "textes": ["Code bleu", "Rappel de garde", "J'arrive", "Indisponible"] }
+      ]
+    },
+    {
+      "id": "CAP-04",
+      "titre": "Groupes de garde, de comité et de spécialité : membres datés, modérateurs, gérés par le pilote seul",
+      "exigences": ["EF-016", "EF-027", "EF-028", "EF-032"],
+      "criteres": ["16", "27", "28", "32"],
+      "api": [
+        {
+          "acteur": "admin", "chemin": "/api/communication/groupes-transverses",
+          "contient": [
+            { "nom": "Garde de cardiologie", "nature": "garde", "actif": true, "membres": [{ "personId": "dre.tremblay", "moderateur": true }, { "personId": "dr.lavoie", "moderateur": false }] },
+            { "nom": "Comité des mesures d'urgence", "nature": "comite", "membres": [{ "personId": "coord.urgence", "moderateur": true }, { "personId": "chef.urgence.hsj" }, { "personId": "chef.soins.hse" }] },
+            { "nom": "Inhalothérapie régionale", "nature": "specialite", "membres": [{ "personId": "inh.bergeron" }] }
+          ],
+          "capturer": { "garde": { "element": { "nom": "Garde de cardiologie" }, "champ": "id" } }
+        },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/communication/groupes-transverses", "statut": 403, "pourquoi": "Seuls les pilotes gèrent les groupes et les cascades (addenda 2, Q22)" },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/groupes/{{garde}}/membres", "contient": [{ "personId": "dre.tremblay" }, { "personId": "dr.lavoie" }], "pourquoi": "L'expéditeur vise la garde d'un geste, sans pouvoir la modifier" }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-gt-table", "alp-gt-nouveau"], "textes": ["Garde de cardiologie", "Comité des mesures d'urgence", "Inhalothérapie régionale"] }
+      ]
+    },
+    {
+      "id": "CAP-05",
+      "titre": "Disponibilité : le calendrier interne dit qui est absent ; l'absence se déclare par la personne et s'accepte",
+      "exigences": ["EF-025", "EF-032"],
+      "criteres": ["25"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/effectifs/absences", "contient": [{ "ressourceNom": "Dr Antoine Lavoie", "codeAbsence": "CONG", "statut": "ACCEPTEE" }] },
+        { "acteur": "dr.lavoie", "chemin": "/api/effectifs/absences", "contient": [{ "codeAbsence": "CONG", "statut": "ACCEPTEE" }] }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "usabsences", "textes": ["Dr Antoine Lavoie"] },
+        { "acteur": "dr.lavoie", "page": "mesabsences", "textes": ["CONG|Congé"] },
+        { "acteur": "dre.tremblay", "page": "mesdisponibilites", "preuve": ["mdi-titre"] }
+      ]
+    },
+    {
+      "id": "CAP-06",
+      "titre": "Relances et cascades : poussée et texto, puis le prochain disponible de la garde, puis l'appel vocal ; l'absent n'est jamais visé",
+      "exigences": ["EF-014", "EF-015", "EF-016", "EF-017", "EF-019", "EF-025"],
+      "criteres": ["14", "15", "16", "17", "19", "25"],
+      "api": [
+        {
+          "acteur": "admin", "chemin": "/api/alertes/politiques",
+          "contient": [{ "nom": "Code bleu — escalade", "arret": "prise_en_charge", "actif": true, "etapes": [
+            { "cible": "initiaux", "canaux": ["poussee", "texto"], "delaiMinutes": 2 },
+            { "cible": "prochain_disponible", "canaux": ["texto"], "delaiMinutes": 5 },
+            { "cible": "initiaux", "canaux": ["appel"], "delaiMinutes": 10 }
+          ] }]
+        },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/envoyees", "capturer": { "codeBlanc": { "element": { "titre": "Code blanc — urgence, salle 3" }, "champ": "id" } } },
+        {
+          "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/envoyees/{{codeBlanc}}/cascade",
+          "corps": { "cascade": { "politique": { "nom": "Code bleu — escalade" } }, "traces": [{ "evenement": "armee", "etape": 1, "par": "chef.urgence.hsj" }] },
+          "absent": "dr\\.lavoie",
+          "pourquoi": "La trace dit qui a été visé à chaque étape ; le Dr Lavoie, en congé, n'y figure jamais (prochain disponible, critère 25)"
+        }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-politiques-table"], "textes": ["Code bleu — escalade"] }
+      ]
+    },
+    {
+      "id": "CAP-07",
+      "titre": "Suivre : statuts par destinataire, prise en charge nommée, historique partagé entre expéditeurs",
+      "exigences": ["EF-009", "EF-011", "EF-012", "EF-013", "EF-031"],
+      "criteres": ["9", "11", "12", "13", "31"],
+      "api": [
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/envoyees", "contient": [
+          { "titre": "Rappel de garde — cardiologie", "bilan": { "destinataires": 2, "repondues": 2, "priseEnChargePar": "Dre Isabelle Tremblay" } },
+          { "titre": "Code bleu — 4e étage, chambre 412", "priorite": "critique", "expediteurId": "coord.urgence", "bilan": { "destinataires": 3 } }
+        ] },
+        { "acteur": "exp.garde.hsj", "chemin": "/api/alertes/envoyees", "contient": [{ "titre": "Code bleu — 4e étage, chambre 412", "expediteurId": "coord.urgence" }], "pourquoi": "La preuve de livraison est partagée entre expéditeurs, gestionnaires et pilotes (addenda 2, Q26, Q31)" },
+        { "acteur": "inf.roy", "chemin": "/api/alertes/envoyees", "statut": 403, "pourquoi": "Un destinataire ne voit pas le suivi des autres" }
+      ],
+      "ecrans": [
+        { "acteur": "chef.urgence.hsj", "page": "alsuivi", "preuve": ["als-table", "als-filtres"], "textes": ["Rappel de garde — cardiologie", "Code bleu — 4e étage, chambre 412"] },
+        { "acteur": "exp.garde.hsj", "page": "alsuivi", "preuve": ["als-table"] }
+      ]
+    },
+    {
+      "id": "CAP-08",
+      "titre": "Recevoir et répondre d'un geste, depuis un navigateur de téléphone ; ses alertes et ses réponses restent consultables",
+      "exigences": ["EF-009", "EF-020", "EF-023", "EF-024"],
+      "criteres": ["9", "20", "23", "24"],
+      "api": [
+        { "acteur": "inf.roy", "chemin": "/api/alertes/recues", "contient": [{ "titre": "Code bleu — 4e étage, chambre 412", "priorite": "critique", "reponses": [{ "libelle": "J'arrive" }] }] },
+        { "acteur": "dre.tremblay", "chemin": "/api/alertes/recues", "contient": [{ "titre": "Rappel de garde — cardiologie" }] }
+      ],
+      "ecrans": [
+        { "acteur": "inf.roy", "page": "mesalertes", "largeur": 390, "preuve": ["mal-titre"], "textes": ["Code bleu — 4e étage, chambre 412"] },
+        { "acteur": "dre.tremblay", "page": "mesalertes", "preuve": ["mal-titre"], "textes": ["Rappel de garde — cardiologie"] },
+        { "acteur": "exp.garde.hsj", "page": "mesalertes", "preuve": ["mal-titre"], "pourquoi": "L'expéditeur reçoit les alertes de son site : il doit pouvoir les lire" }
+      ]
+    },
+    {
+      "id": "CAP-09",
+      "titre": "Une note sur le destinataire, lue par les expéditeurs avant d'envoyer",
+      "exigences": ["EF-002"],
+      "criteres": ["2"],
+      "api": [
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/notes?personnes=dr.lavoie", "contient": [{ "personId": "dr.lavoie", "texte": "En congé jusqu'au 20 : joindre la Dre Tremblay", "ecritePar": "chef.urgence.hsj" }] },
+        { "acteur": "inf.roy", "chemin": "/api/alertes/notes?personnes=dr.lavoie", "statut": 403 }
+      ],
+      "ecrans": []
+    },
+    {
+      "id": "CAP-10",
+      "titre": "Copie par courriel, réglée par l'organisme",
+      "exigences": ["EF-008"],
+      "criteres": ["8"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/alertes/reglages", "corps": { "copieCourriel": true } }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-copie"] }
+      ]
+    },
+    {
+      "id": "CAP-11",
+      "titre": "Préférences du destinataire, sans contourner les règles obligatoires",
+      "exigences": ["EF-022"],
+      "criteres": ["22"],
+      "api": [
+        { "acteur": "inf.roy", "chemin": "/api/notifications/preferences", "texte": "\"texto\":(true|false)" },
+        { "acteur": "exp.garde.hsj", "chemin": "/api/notifications/preferences", "texte": "\"poussee\":(true|false)" }
+      ],
+      "ecrans": [
+        { "acteur": "inf.roy", "page": "account", "preuve": ["account-tab-profile"] },
+        { "acteur": "exp.garde.hsj", "page": "account", "preuve": ["account-tab-profile"], "pourquoi": "Tout compte, rôle propre compris, tient son compte et ses préférences" }
+      ]
+    },
+    {
+      "id": "CAP-12",
+      "titre": "Profils d'accès : les quatre profils minimaux et le rôle propre « expéditeur »",
+      "exigences": ["EF-030", "EF-033"],
+      "criteres": ["30"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/auth/roles", "corps": { "roles": [{ "code": "expediteur", "capabilities": ["alertes.envoyer", "alertes.suivre"] }, { "code": "admin" }, { "code": "manager" }, { "code": "employee" }] } }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "access", "preuve": ["access-tabs"] }
+      ]
+    },
+    {
+      "id": "CAP-13",
+      "titre": "Console d'administration : comptes par profil et par site, désactivation, annuaire LDAPS déclaré",
+      "exigences": ["EF-026", "EF-027", "EF-033"],
+      "criteres": ["26", "27", "77", "82"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/auth/users", "contient": [{ "username": "exp.garde.hsj", "role": "expediteur", "active": true }, { "username": "coord.urgence", "role": "director" }, { "username": "dre.tremblay", "role": "employee" }] },
+        { "acteur": "admin", "chemin": "/api/auth/annuaires", "corps": { "annuaires": [{ "nom": "Active Directory des Laurentides", "fournisseur": "ldaps" }] }, "texte": "\"emetteur\":\"ldaps://" }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "admin", "preuve": ["admin-page", "admin-users-list"] }
+      ]
+    },
+    {
+      "id": "CAP-14",
+      "titre": "Les six sites du devis, en référentiel",
+      "exigences": ["EF-027", "EF-038"],
+      "criteres": ["27"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/effectifs/referentiels/unites", "contient": [{ "code": "ARG" }, { "code": "HSE" }, { "code": "HSJ" }, { "code": "SAG" }, { "code": "RRO" }, { "code": "HML" }] }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "usreferentiels", "textes": ["Hôpital de Mont-Laurier|Référentiels"] }
+      ]
+    },
+    {
+      "id": "CAP-15",
+      "titre": "Messagerie bidirectionnelle et appel d'un collègue, sans voir son numéro",
+      "exigences": ["EF-004", "EF-029"],
+      "criteres": ["4", "29"],
+      "api": [],
+      "ecrans": [
+        { "acteur": "inf.roy", "page": "usmessages", "preuve": ["sq-msg-ouvrir|sq-msg-directe"] },
+        { "acteur": "inf.roy", "page": "usappels", "preuve": ["prefixe:sq-appels"] }
+      ]
+    },
+    {
+      "id": "CAP-16",
+      "titre": "Utilisateurs actifs du mois et minimum facturable de 100 (contrat 3.03, ST-H01)",
+      "exigences": ["EF-040"],
+      "criteres": ["Bordereau"],
+      "api": [
+        { "acteur": "admin", "chemin": "/api/alertes/utilisateurs-actifs", "corps": { "minimumFacturable": 100, "facturables": 100 } },
+        { "acteur": "chef.urgence.hsj", "chemin": "/api/alertes/utilisateurs-actifs", "statut": 403 }
+      ],
+      "ecrans": [
+        { "acteur": "admin", "page": "alparametres", "preuve": ["alp-actifs", "alp-actifs-facturables"] }
+      ]
+    },
+    {
+      "id": "CAP-17",
+      "titre": "Aucun renseignement de santé : la console le rappelle à l'écriture (addenda 1, Q1, ST-H04)",
+      "exigences": ["EF-001"],
+      "criteres": ["Addenda 1"],
+      "api": [],
+      "ecrans": [
+        { "acteur": "chef.urgence.hsj", "page": "alnouvelle", "preuve": ["aln-corps-aide"] }
+      ]
+    },
+    {
+      "id": "CAP-18",
+      "titre": "Journal et soutien : décisions tracées, demandes suivies",
+      "exigences": ["EF-034", "EF-035", "EF-039"],
+      "criteres": ["89", "90", "110"],
+      "api": [],
+      "ecrans": [
+        { "acteur": "admin", "page": "usjournal" },
+        { "acteur": "admin", "page": "soutien" }
+      ]
+    }
+  ]
+}

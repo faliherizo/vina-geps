@@ -35,4 +35,10 @@ public interface AnnuaireAlertes {
 
     /** Une personne de l'organisme, par son nom de connexion. */
     Optional<Destinataire> personne(String tenantId, String personId);
+
+    /**
+     * Les personnes actives dont le nom ou le nom de connexion contient le texte, au plus {@code limite} : la recherche
+     * d'un destinataire par son nom (FX-AO-20260810, critère 3). Un nom et un identifiant, jamais une coordonnée (critère 29).
+     */
+    List<Destinataire> rechercher(String tenantId, String texte, int limite);
 }

@@ -10,6 +10,7 @@ import ca.vina.nexu.alertes.domaine.Alertes;
 import ca.vina.nexu.alertes.domaine.Priorite;
 import ca.vina.nexu.alertes.domaine.Semantique;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotGroupesTransverses;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotTextosEntrants;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
@@ -95,7 +96,7 @@ class ControleurWebhooksAlertesHttpTest {
             public List<String> membresActifsDuGroupe(String tenantId, String groupeId) {
                 return List.of();
             }
-        }, jdbc);
+        }, new DepotGroupesTransverses(jdbc), jdbc);
         depot = new DepotAlertes(jdbc);
         Clock horloge = Clock.fixed(Instant.parse("2026-11-16T14:00:00Z"), ZoneOffset.UTC);
         envoi = new GestionnaireEnvoiAlertes(new GestionnaireEnvoiAlertes.Dependances(depot, depot, annuaire, PublicationAvis.MUET), () -> "al-" + ++sequence, horloge);

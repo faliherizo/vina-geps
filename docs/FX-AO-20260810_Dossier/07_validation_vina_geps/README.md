@@ -14,6 +14,7 @@
 | [07_analyse_metier_socle_alertes.md](07_analyse_metier_socle_alertes.md) | Analyse métier du socle implanté : acteurs, glossaire, règles R1 à R10, cas d'utilisation |
 | [08_plan_implantation.md](08_plan_implantation.md) | Plan d'exécution à partir de l'état réel du code : phases R0 à R7, tâches par couche, briques réutilisées, jalons, risques (environ 19 semaines jusqu'au pilote) |
 | [06_maquettes_ecrans.md](06_maquettes_ecrans.md) | Maquettes : menu, console d'alerte, suivi, fiche, mobile, modèles, politiques, groupes, superadmin, tableau de bord, rapports |
+| [11_validation_fonctionnalites_2026-11-23.md](11_validation_fonctionnalites_2026-11-23.md) | Groupes, garde, disponibilité et les 40 exigences, jugés sur la démonstration déployée ; quatre écarts trouvés et corrigés |
 
 **En une phrase.** Un module « Communications cliniques » activable par organisme dans VINA GePS
 couvre la grille fonctionnelle avec environ 17 à 22 semaines-personne. Un nouveau projet

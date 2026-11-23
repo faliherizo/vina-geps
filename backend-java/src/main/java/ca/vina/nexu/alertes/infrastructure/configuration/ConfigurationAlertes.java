@@ -21,6 +21,7 @@ import ca.vina.nexu.alertes.infrastructure.web.ControleurWebhooksAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.ControleurAlertes;
 import ca.vina.nexu.alertes.infrastructure.web.GardeAlertes;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
+import ca.vina.nexu.communication.domaine.GroupesTransversesPort;
 import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
 import ca.vina.nexu.ordonnanceur.infrastructure.persistance.DepotTaches;
 import ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs;
@@ -46,8 +47,9 @@ public class ConfigurationAlertes {
     }
 
     @Bean
-    public AdaptateurAnnuaireAlertes annuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes, JdbcClient jdbc) {
-        return new AdaptateurAnnuaireAlertes(groupes, listes, jdbc);
+    public AdaptateurAnnuaireAlertes annuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes,
+                                                     GroupesTransversesPort.Lecture personnes, JdbcClient jdbc) {
+        return new AdaptateurAnnuaireAlertes(groupes, listes, personnes, jdbc);
     }
 
     @Bean

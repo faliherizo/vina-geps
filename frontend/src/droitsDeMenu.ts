@@ -24,7 +24,16 @@ export interface EntreeDuMenu {
   droitDelegue?: boolean;
   /** Le droit calculé par le serveur ; `undefined` = le profil n'a pas encore répondu. */
   droitServeur?: boolean;
+  /**
+   * **L'espace personnel** — mes alertes, mon compte, l'aide, le soutien : à tout compte d'organisme, quel que soit son
+   * rôle. Une liste de rôles l'aurait fermé aux rôles propres (ADR 0085) : l'expéditeur de l'avis FX-AO reçoit des
+   * alertes que le serveur lui sert, mais ne voyait ni « Mes alertes » ni « Mon compte » (constaté le 23 novembre 2026).
+   */
+  espacePersonnel?: boolean;
 }
+
+/** Le compte global d'exploitation : il n'appartient à aucun organisme, il n'a pas d'espace personnel. */
+const ROLE_GLOBAL = "superadmin";
 
 /**
  * Décide si l'entrée doit apparaître, **sans** se prononcer sur les modules : qu'un organisme
@@ -45,6 +54,7 @@ export interface EntreeDuMenu {
  * perte d'accès, et c'est un appel au soutien pour un écran qui allait apparaître.
  */
 export function droitDeVoir(entree: EntreeDuMenu, regard: RegardDuMenu): boolean {
+  if (entree.espacePersonnel) return regard.role !== ROLE_GLOBAL;
   const parRole = entree.roles.includes(regard.role);
 
   if (entree.droitDelegue) return entree.droitServeur === undefined ? parRole : entree.droitServeur;

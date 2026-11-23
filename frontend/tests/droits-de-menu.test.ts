@@ -94,4 +94,23 @@ describe("droit de voir une entrée de menu", () => {
       expect(droitDeVoir(nouvelle, destinataire)).toBe(false);
     });
   });
+
+  describe("l'espace personnel (mes alertes, mon compte, aide, soutien)", () => {
+    const monCompte = { roles: ["admin", "manager", "employee"], espacePersonnel: true };
+
+    it("s'ouvre à un rôle propre, absent de toute liste de rôles livrée", () => {
+      // Le cas constaté sur la démonstration FX-AO : l'expéditeur (ADR 0085) reçoit des alertes que le serveur
+      // lui sert, mais « Mes alertes » et « Mon compte » n'apparaissaient pas à son menu.
+      expect(droitDeVoir(monCompte, { role: "expediteur", capabilities: ["alertes.envoyer", "alertes.suivre"] })).toBe(true);
+      expect(droitDeVoir(monCompte, { role: "director" })).toBe(true);
+    });
+
+    it("reste fermé au compte global, qui n'appartient à aucun organisme", () => {
+      expect(droitDeVoir(monCompte, { role: "superadmin" })).toBe(false);
+    });
+
+    it("ne change rien aux entrées qui ne sont pas personnelles", () => {
+      expect(droitDeVoir({ roles: ["admin"] }, { role: "expediteur" })).toBe(false);
+    });
+  });
 });

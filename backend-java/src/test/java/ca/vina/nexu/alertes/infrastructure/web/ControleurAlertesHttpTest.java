@@ -9,6 +9,7 @@ import ca.vina.nexu.alertes.application.commandes.GestionnaireReceptionAlertes;
 import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
 import ca.vina.nexu.alertes.infrastructure.configuration.ConfigurationAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotGroupesTransverses;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotCascades;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
@@ -113,7 +114,7 @@ class ControleurAlertesHttpTest {
             }
         };
         DepotAlertes depot = new DepotAlertes(jdbc);
-        AdaptateurAnnuaireAlertes annuaire = new AdaptateurAnnuaireAlertes(groupes, listes, jdbc);
+        AdaptateurAnnuaireAlertes annuaire = new AdaptateurAnnuaireAlertes(groupes, listes, new DepotGroupesTransverses(jdbc), jdbc);
         AtomicInteger n = new AtomicInteger();
         Clock horloge = Clock.fixed(Instant.parse("2026-11-14T14:02:00Z"), ZoneOffset.UTC);
         PublicationAvis avis = a -> {
@@ -244,6 +245,22 @@ class ControleurAlertesHttpTest {
     }
 
     @Test
+    @DisplayName("critère 3 : l'expéditeur cherche un destinataire par son nom dès trois caractères, sans coordonnée ; un destinataire ne cherche pas")
+    void rechercheParNom() throws Exception {
+        http.get(A + "/personnes?q=roy", CHEF).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].personId").value("julie")).andExpect(jsonPath("$[0].nom").value("Julie Roy"))
+                .andExpect(jsonPath("$[0].compte").doesNotExist());
+        // Par le nom de connexion aussi, sans égard à la casse.
+        http.get(A + "/personnes?q=MAR", CHEF).andExpect(status().isOk()).andExpect(jsonPath("$[0].personId").value("marc"));
+        // En deçà de trois caractères, ou sans texte, la liste serait l'annuaire entier : rien n'est rendu.
+        http.get(A + "/personnes?q=ro", CHEF).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        http.get(A + "/personnes", CHEF).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        // Les jokers du LIKE sont du texte : « ___ » ne rend pas tout le monde.
+        http.get(A + "/personnes?q=___", CHEF).andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0));
+        http.get(A + "/personnes?q=roy", JULIE).andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("le câblage produit des gestionnaires branchés sur les mêmes dépôts")
     void cablage() {
         ConfigurationAlertes c = new ConfigurationAlertes();
@@ -258,7 +275,7 @@ class ControleurAlertesHttpTest {
             public List<Membre> membres(String tenantId, String groupeId) {
                 return List.of();
             }
-        }, listes, jdbc);
+        }, listes, new DepotGroupesTransverses(jdbc), jdbc);
         ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs registre = new ca.vina.nexu.ordonnanceur.infrastructure.persistance.RegistreExecuteurs();
         ConfigurationAlertes.Durables durables = c.durablesAlertes(new ca.vina.nexu.ordonnanceur.infrastructure.persistance.DepotTaches(jdbc, registre), registre,
                 ca.vina.nexu.partage.disponibilite.DisponibiliteDestinatairesPort.TOUJOURS,

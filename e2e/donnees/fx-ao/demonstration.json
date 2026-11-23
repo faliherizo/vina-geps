@@ -85,6 +85,36 @@
       "libelleFr": "Personnel administratif"
     }
   ],
+  "codesAbsence": [
+    {
+      "code": "CONG",
+      "libelleFr": "Congé",
+      "comportement": "NON_PAYE",
+      "attributs": {
+        "duree": "PONCTUELLE",
+        "planifiable": true
+      }
+    }
+  ],
+  "absences": {
+    "pourquoi": "Le calendrier interne (critère 25) doit dire quelque chose : le Dr Lavoie est en congé, déclaré par lui et accepté. La cascade « Code bleu — escalade » vise à son étape 2 le prochain disponible de la garde de cardiologie — la Dre Tremblay, et non lui. Les dates suivent le jour du semis (en jours depuis aujourd'hui).",
+    "liste": [
+      {
+        "personne": "dr.lavoie",
+        "motif": "CONG",
+        "du": -1,
+        "au": 14,
+        "commentaire": "Congé — joindre la Dre Tremblay",
+        "critere": "25"
+      }
+    ]
+  },
+  "periodesCollecte": {
+    "pourquoi": "« Mes disponibilités » (critère 25) n'a rien à offrir sans une période en collecte : Saint-Jérôme en ouvre une, à venir, où le personnel dépose ses disponibilités. Jours comptés depuis le semis ; la collecte se termine avant le début de la période.",
+    "liste": [
+      { "nom": "Collecte — Hôpital de Saint-Jérôme", "uniteCode": "HSJ", "debut": 14, "fin": 27, "finCollecte": 7 }
+    ]
+  },
   "rolesPropres": {
     "pourquoi": "Les quatre profils minimaux de l'addenda 2 (Q20) : pilote = admin, gestionnaire = manager, destinataire = employee ; l'expéditeur est un rôle propre qui envoie et suit, sans rien administrer (ADR 0085, ST-H03).",
     "roles": [
