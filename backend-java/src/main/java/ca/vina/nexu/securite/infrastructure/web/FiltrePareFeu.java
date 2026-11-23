@@ -1,5 +1,6 @@
 package ca.vina.nexu.securite.infrastructure.web;
 
+import ca.vina.nexu.partage.json.infrastructure.Json;
 import ca.vina.nexu.securite.domaine.PareFeu;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -14,6 +15,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -64,7 +67,9 @@ public class FiltrePareFeu extends OncePerRequestFilter {
             if (refus.isPresent()) {
                 reponse.setStatus(refus.get().code());
                 reponse.setContentType("application/json;charset=UTF-8");
-                reponse.getOutputStream().write(("{\"errors\":[\"" + refus.get().message() + "\"]}").getBytes(StandardCharsets.UTF_8));
+                // Sérialisé, jamais concaténé (Semgrep no-direct-response-writer) : le message ne porte aujourd'hui que des
+                // libellés du pare-feu, mais une saisie qui s'y glisserait un jour casserait le JSON, ou l'injecterait.
+                reponse.getOutputStream().write(Json.texte(Map.of("errors", List.of(refus.get().message()))).getBytes(StandardCharsets.UTF_8));
                 return;
             }
             suite.doFilter(requete, reponse);

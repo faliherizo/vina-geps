@@ -6,6 +6,8 @@
  * `frontend/nginx.conf`) : le client le respecte par une pause entre deux appels (`SEMIS_PAUSE_MS`), il ne le
  * contourne pas. Un corps de requête n'apparaît jamais dans un message d'erreur : il peut porter un mot de passe.
  */
+const { resolveurHote } = require("../hote-etablissement.cjs");
+
 const PAUSE_MS = Number(process.env.SEMIS_PAUSE_MS ?? 70);
 const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
@@ -18,13 +20,16 @@ class ErreurApi extends Error {
 }
 
 function clientApi(api) {
+  const baseDeConnexion = resolveurHote(api);
+  let jetonGlobal;
+
   /** L'appel brut : le statut et le corps, sans lever — l'autocontrôle juge lui-même un 403 attendu. */
-  async function essayer(chemin, { methode = "GET", corps, jeton, tenantId } = {}) {
+  async function essayer(chemin, { methode = "GET", corps, jeton, tenantId, base = api } = {}) {
     await attendre(PAUSE_MS);
     const entetes = { "Content-Type": "application/json" };
     if (jeton) entetes.Authorization = `Bearer ${jeton}`;
     if (tenantId) entetes["X-Tenant-Id"] = tenantId;
-    const r = await fetch(`${api}${chemin}`, { method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined });
+    const r = await fetch(`${base}${chemin}`, { method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined });
     const texte = await r.text();
     let json = texte;
     try { json = texte ? JSON.parse(texte) : null; } catch { json = texte; }
@@ -38,9 +43,13 @@ function clientApi(api) {
   }
 
   /** Le jeton d'une session, ou `null` si les identifiants sont refusés (l'appelant décide de réinitialiser). */
+  /** Un compte d'organisme se connecte sur l'hôte de son organisme (déploiement par sous-domaine, hote-etablissement.cjs). */
   async function connecter({ username, password, tenantId }) {
-    const { statut, corps } = await essayer("/api/auth/login", { methode: "POST", corps: { username, password, tenantId } });
-    return statut === 200 && corps?.token ? corps.token : null;
+    const base = await baseDeConnexion(tenantId, jetonGlobal);
+    const { statut, corps } = await essayer("/api/auth/login", { methode: "POST", corps: { username, password, tenantId }, base });
+    const jeton = statut === 200 && corps?.token ? corps.token : null;
+    if (jeton && !tenantId) jetonGlobal = jeton;
+    return jeton;
   }
 
   return { essayer, appeler, connecter };

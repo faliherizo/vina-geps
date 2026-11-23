@@ -50,6 +50,8 @@ services:
       # La plage du réseau `web` : seul le Nginx central y est cru sur X-Forwarded-For. Sinon toute la démonstration
       # partagerait l'adresse de vina_nginx — et la limite de 20 requêtes/s par adresse deviendrait une limite globale.
       API_PROXIES_CONFIANCE: ${GEPS_PROXIES_CONFIANCE:?GEPS_PROXIES_CONFIANCE attendu (plage du réseau web)}
+      # La vitrine et le choix de l'organisme vivent sur l'hôte commun ; la racine d'un organisme mène à sa connexion.
+      VITRINE_HOTE: ${DOMAINE_RACINE:-*}
     mem_limit: 128m
     networks: [interne, web]
     logging:

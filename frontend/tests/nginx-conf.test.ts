@@ -17,7 +17,8 @@ const conf = readFileSync(join(RACINE, "nginx.conf"), "utf8");
 const bloc = (location: string) => {
   const debut = conf.indexOf(`location ${location} {`);
   expect(debut, `location ${location}`).toBeGreaterThan(-1);
-  return conf.slice(debut, conf.indexOf("}", debut));
+  // Jusqu'à l'accolade fermante de la location (indentée de deux espaces), pas la première : un `if (…) { … }` en a une.
+  return conf.slice(debut, conf.indexOf("\n  }", debut));
 };
 
 describe("nginx — fichiers de l'application à la racine du site", () => {
@@ -54,11 +55,26 @@ describe("nginx — fichiers de l'application à la racine du site", () => {
   it("la racine sert la vitrine, qui mène à l'application ; ces locations précèdent le repli `location /`", () => {
     const racine = conf.indexOf("location / {");
     for (const l of ["= /sw.js", "= /manifest.webmanifest", "/icones/", "/vitrine/"]) expect(conf.indexOf(`location ${l} {`)).toBeLessThan(racine);
-    // La vitrine de VINA GePS (14 novembre 2026) : une page statique, et non une redirection vers /admin.
+    // La vitrine de VINA GePS (14 novembre 2026) : une page statique, et non une redirection vers /admin — sauf sur l'hôte
+    // d'un organisme (ADR 0033), où la racine mène à sa connexion.
     expect(bloc("= /")).toContain("try_files /vitrine/index.html =404;");
-    expect(bloc("= /")).not.toContain("return 302");
+    expect(bloc("= /")).toContain("if ($racine_vers_connexion) { return 302 /admin/login; }");
+    expect(bloc("= /acceder")).toContain("try_files /vitrine/acceder.html =404;");
+    expect(conf.indexOf("location = /acceder {")).toBeLessThan(racine);
     expect(bloc("/vitrine/")).toContain("try_files $uri =404;");
     expect(bloc("~ ^/invitation/")).toContain("try_files $uri @spa_index;");
+  });
+
+  it("la vitrine reste sur l'hôte commun : par défaut (« * ») partout, sinon la racine d'un organisme mène à sa connexion", () => {
+    const map = conf.slice(conf.indexOf('map "$host:${VITRINE_HOTE}" $racine_vers_connexion {'), conf.indexOf("server {"));
+    const motifs = [...map.matchAll(/"~([^"]+)"\s+0;/g)].map((m) => new RegExp(m[1]));
+    const versConnexion = (hote: string, vitrine: string) => !motifs.some((m) => m.test(`${hote}:${vitrine}`));
+    expect(versConnexion("clincom.geps.vinaitsolution.com", "*")).toBe(false);
+    expect(versConnexion("geps.vinaitsolution.com", "geps.vinaitsolution.com")).toBe(false);
+    expect(versConnexion("clincom.geps.vinaitsolution.com", "geps.vinaitsolution.com")).toBe(true);
+    expect(versConnexion("urgence-sante.geps.vinaitsolution.com", "geps.vinaitsolution.com")).toBe(true);
+    expect(map).toMatch(/default\s+1;/);
+    expect(readFileSync(join(RACINE, "Dockerfile"), "utf8")).toContain('VITRINE_HOTE="*" NGINX_ENVSUBST_FILTER="^(API|VITRINE)_"');
   });
 
   it("chaque proxy vers l'API transmet l'hôte d'origine : le backend en déduit l'établissement (ADR 0033)", () => {
@@ -127,6 +143,13 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
       expect(blocEntier(location), location).toContain("proxy_set_header X-Forwarded-For $remote_addr;");
     }
     expect(dockerfile).toContain("API_PROXIES_CONFIANCE=127.0.0.1/32");
+  });
+
+  it("isolation de l'origine (ZAP 90004) : CORP partout où nosniff est posé, COOP partout où la CSP l'est — jamais sur l'API", () => {
+    const compter = (motif: RegExp) => (conf.match(motif) ?? []).length;
+    expect(compter(/add_header X-Content-Type-Options "nosniff" always;/g)).toBe(compter(/add_header Cross-Origin-Resource-Policy "same-origin" always;/g));
+    expect(compter(/add_header Content-Security-Policy \$politique_contenu always;/g)).toBe(compter(/add_header Cross-Origin-Opener-Policy "same-origin" always;/g));
+    for (const location of ["/api/", "/public/"]) expect(blocEntier(location), location).not.toContain("Cross-Origin-");
   });
 
   it("co-hébergement : /public/ vise le même amont configuré que /api/, jamais un nom d'hôte en dur", () => {

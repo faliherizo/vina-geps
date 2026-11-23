@@ -73,6 +73,9 @@ jobs:
         working-directory: frontend
       # Chaque exigence fonctionnelle des deux avis a son scénario e2e, et docs/SCENARIOS-E2E.md est à jour.
       - run: node scripts/construire-scenarios-e2e.cjs --verifier
+      # Les bibliothèques des semis et du préparateur de charge : ce qu'elles décident (hôte de connexion, idempotence)
+      # vaut pour chaque environnement où un pipeline les lance.
+      - run: node --test scripts/lib/*.test.cjs scripts/lib/organisme-par-defaut/*.test.cjs perf/jmeter/jmeter.test.cjs
 
   ecrans:
     name: Écrans (WCAG 2.2 AA, géométrie)

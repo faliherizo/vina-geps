@@ -13,6 +13,9 @@
  */
 
 # Un seul sujet pour toutes les alertes d'exploitation : un courriel déclaré les reçoit toutes.
+# Chiffré par la clé gérée d'AWS (alias/aws/sns) : le sujet ne porte que des alertes d'exploitation, sans renseignement
+# personnel ; une clé gérée par le client n'ajouterait qu'un coût. À revoir si un message y portait un jour des données.
+#trivy:ignore:AVD-AWS-0136
 resource "aws_sns_topic" "alertes" {
   name              = "${local.prefixe}-alertes"
   kms_master_key_id = "alias/aws/sns"

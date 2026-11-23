@@ -82,15 +82,27 @@ const motDePasseConnu = (etat, username) => MDP_DEMO ?? I.trouver(etat.comptes, 
 
 // ── 1. L'organisme, son administration, ses modules ──────────────────────────────────────────────
 
+/**
+ * Le sous-domaine de l'organisme (`SEMIS_SOUS_DOMAINE`, ADR 0033) : en déploiement par sous-domaine, ses comptes ne se
+ * connectent que sur `https://<slug>.<racine>`. Un organisme repris le reçoit s'il ne l'a pas encore.
+ */
+const SOUS_DOMAINE = process.env.SEMIS_SOUS_DOMAINE || "";
+
+async function assurerSousDomaine(sa, tenant) {
+  if (!SOUS_DOMAINE || tenant.slug === SOUS_DOMAINE) return tenant;
+  return appeler(`/api/superadmin/tenants/${tenant.id}`, { methode: "PATCH", jeton: sa, corps: { slug: SOUS_DOMAINE } });
+}
+
 async function organisme(sa, etat) {
   const existant = I.trouver(await appeler("/api/superadmin/tenants", { jeton: sa }), "name", OPTIONS.nom);
   if (existant) {
     compter("organisme", false);
-    return { tenant: existant, adminId: null };
+    return { tenant: await assurerSousDomaine(sa, existant), adminId: null };
   }
   const password = nouveauMotDePasse();
   const cree = await appeler("/api/superadmin/tenants", { methode: "POST", jeton: sa, corps: {
-    name: OPTIONS.nom, type: "public_institution", country: "CA", region: "QC", planCode: "enterprise", adminUsername: ADMIN, adminPassword: password } });
+    name: OPTIONS.nom, type: "public_institution", country: "CA", region: "QC", planCode: "enterprise", adminUsername: ADMIN, adminPassword: password,
+    slug: SOUS_DOMAINE || undefined } });
   etat.organisme = { id: cree.tenant.id, nom: OPTIONS.nom };
   consigner(etat, { cle: ADMIN, username: ADMIN, role: "admin", password, userId: cree.admin?.userId });
   compter("organisme", true);

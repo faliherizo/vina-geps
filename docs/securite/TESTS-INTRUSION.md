@@ -1,5 +1,11 @@
 # Tests d'intrusion
 
+> **Dans ce dépôt, avec un pipeline** (depuis le 22 novembre 2026) : la suite de l'organisme FX-AO-20260810, qui s'exécute
+> dans `securite/intrusion/` (pile éphémère, `lancer.sh`), dans `.github/workflows/intrusion.yml`, et dans l'orchestrateur
+> `devsecops.yml`. Plan : [fx-ao/PLAN-TESTS-INTRUSION-FX-AO.md](fx-ao/PLAN-TESTS-INTRUSION-FX-AO.md) ; rapport :
+> [fx-ao/RAPPORT-TESTS-INTRUSION-FX-AO-2026-11-22.md](fx-ao/RAPPORT-TESTS-INTRUSION-FX-AO-2026-11-22.md) ; portes de
+> sécurité du pipeline : [DEVSECOPS.md](DEVSECOPS.md). La suite générale ci-dessous reste dans son projet local.
+
 Les tests d'intrusion de VINA GePS / Urgences-santé sont dans un **projet distinct** :
 `/Users/faliherizo/project/urgences-sante-pentest`, qui a son propre dépôt Git. Ils visent seulement la
 pile Docker locale.

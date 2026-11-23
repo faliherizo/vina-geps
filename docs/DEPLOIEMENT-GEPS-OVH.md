@@ -49,6 +49,35 @@ protocoles, sans compte réel : **aucun texto ni courriel ne part**. `api` et `w
 (Admin › Intégrations) : les nommer dans la variable arrête le démarrage. Le mode d'essai `NEXU_ESSAI` n'est **pas**
 activé : il ouvre des routes de remise à zéro qui n'ont rien à faire sur une adresse publique.
 
+### Un hôte par organisme (ADR 0094, depuis le 23 novembre 2026)
+
+| Hôte | Ce qu'il sert |
+|---|---|
+| `geps.vinaitsolution.com` | La vitrine, le choix de l'organisme (`/acceder`) et la connexion des **seuls comptes globaux** |
+| `urgence-sante.geps.vinaitsolution.com` | L'organisme Urgences-santé ; sa racine mène à sa connexion |
+| `clincom.geps.vinaitsolution.com` | L'organisme de l'avis FX-AO-20260810 |
+| `urgence-sante-demo.geps.vinaitsolution.com` | Urgences-santé — démonstration (maquettes de l'avis) |
+
+`.env.geps` pose `TENANT_RESOLUTION=sous_domaine` et `DOMAINE_RACINE=geps.vinaitsolution.com` ; la composition en tire
+`VITRINE_HOTE` pour `geps-web`. Le DNS a une entrée `*.geps.vinaitsolution.com` vers le VPS, mais le certificat nomme
+chaque hôte (défi HTTP, sans clés de l'API OVH sur le serveur). **Ajouter un organisme** :
+
+1. son `sousDomaine` dans `e2e/donnees/geps/comptes-demo.json` (le semis pose le slug) et sa carte dans
+   `frontend/public/vitrine/acceder.html` ;
+2. son nom au `server_name` des deux blocs geps de `~/vina-cms/nginx/prod.conf` (bloc `listen 80` et bloc 443), édité
+   **sans `sed -i`** (voir l'encadré ⚠️ du § 2), puis `docker exec vina_nginx nginx -t` et `nginx -s reload` ;
+3. le certificat étendu, puis un nouveau rechargement :
+
+```bash
+docker run --rm -v ~/vina-cms/certbot/conf:/etc/letsencrypt -v ~/vina-cms/certbot/www:/var/www/certbot \
+  certbot/certbot certonly --webroot -w /var/www/certbot --cert-name geps.vinaitsolution.com --expand \
+  -d geps.vinaitsolution.com -d urgence-sante.geps.vinaitsolution.com -d urgence-sante-demo.geps.vinaitsolution.com \
+  -d clincom.geps.vinaitsolution.com -d <nouveau>.geps.vinaitsolution.com \
+  --email admin@vinaitsolution.com --agree-tos --no-eff-email --non-interactive
+```
+
+Retour arrière : `TENANT_RESOLUTION=selecteur` dans `.env.geps`, puis `deploy/geps/deployer.sh $(cat .version-courante)`.
+
 ## 2. Première installation (déjà faite le 22 novembre 2026)
 
 À refaire seulement pour réinstaller sur un autre serveur. Chaque étape est rejouable.

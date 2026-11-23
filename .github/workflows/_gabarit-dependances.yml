@@ -1,0 +1,27 @@
+# Gabarit DevSecOps — DÉPENDANCES (SCA). Les bibliothèques déclarées (pom.xml, package-lock.json) contre les avis connus.
+# Bloque sur une vulnérabilité élevée ou critique qui a un correctif ; le rapport SARIF complet reste en artefact.
+name: "Gabarit — dépendances"
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  dependances:
+    name: Dépendances (Trivy, npm audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/trivy
+        with: { commande: fs, cible: ".", scanners: vuln, rapport: trivy-dependances.sarif }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      # Le paquet livré au navigateur : aucun avis élevé ou critique (IN-03 des tests d'intrusion du 22 novembre 2026).
+      - run: npm ci --no-audit --no-fund && npm run audit:prod
+        working-directory: frontend
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: sarif-dependances, path: trivy-dependances.sarif, if-no-files-found: ignore }

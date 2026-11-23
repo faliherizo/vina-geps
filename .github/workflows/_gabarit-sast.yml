@@ -1,0 +1,30 @@
+# Gabarit DevSecOps — ANALYSE STATIQUE (SAST). Semgrep, règles OWASP Top 10, Java et TypeScript, sur le code de production.
+# Bloque sur la gravité ERROR ; les avertissements sont triés dans docs/securite/DEVSECOPS.md (faux positifs justifiés) et
+# restent visibles en artefact. Un faux positif s'exempte en ligne (`// nosemgrep: <règle> — raison`), jamais en bloc.
+name: "Gabarit — analyse statique"
+
+on:
+  workflow_call: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sast:
+    name: Analyse statique (Semgrep)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Semgrep — rapport complet
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.95.0 semgrep scan --metrics=off --quiet \
+            --config p/owasp-top-ten --config p/java --config p/typescript \
+            --sarif --output /src/semgrep.sarif backend-java/src/main frontend/src scripts deploy || true
+      - name: Semgrep — porte (gravité ERROR)
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src semgrep/semgrep:1.95.0 semgrep scan --metrics=off --quiet --error --severity ERROR \
+            --config p/owasp-top-ten --config p/java --config p/typescript backend-java/src/main frontend/src scripts deploy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: sarif-sast, path: semgrep.sarif, if-no-files-found: ignore }

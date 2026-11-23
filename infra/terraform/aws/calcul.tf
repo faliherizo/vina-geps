@@ -222,6 +222,8 @@ locals {
   )
 }
 
+# Exposé à Internet par conception : c'est l'entrée publique de l'application, derrière TLS (critère 84) et le WAF.
+#trivy:ignore:AVD-AWS-0053
 resource "aws_lb" "principal" {
   name               = local.prefixe
   load_balancer_type = "application"

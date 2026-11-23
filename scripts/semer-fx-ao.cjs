@@ -29,7 +29,9 @@ async function creerOrganisme() {
   const cree = await appeler("/api/superadmin/tenants", {
     methode: "POST", jeton: jetonSa,
     corps: { name: `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`, type: "public_institution", country: "CA", region: "QC",
-      planCode: donnees.organisme.planCode, adminUsername: "admin", adminPassword: MDP },
+      planCode: donnees.organisme.planCode, adminUsername: "admin", adminPassword: MDP,
+      // Le sous-domaine de l'organisme (ADR 0033) : ses comptes ne se connectent que là en déploiement par sous-domaine.
+      slug: process.env.SEMIS_SOUS_DOMAINE || undefined },
   });
   if (cree.admin?.userId) {
     await appeler(`/api/auth/users/${cree.admin.userId}`, { methode: "PATCH", jeton: jetonSa, corps: { securitySetupRequired: false, mustChangePassword: false } });

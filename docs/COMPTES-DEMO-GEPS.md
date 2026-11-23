@@ -2,7 +2,8 @@
 
 > Pour qui montre VINA GePS ou le fait essayer à quelqu'un : où se connecter, avec quel compte, pour voir quoi.
 
-**Adresse :** <https://geps.vinaitsolution.com/admin/login>
+**Adresse :** <https://geps.vinaitsolution.com> › **Accéder à l'application**, puis choisir l'organisme
+(<https://geps.vinaitsolution.com/acceder>).
 
 **Mot de passe de tous les comptes ci-dessous : `Passe!Demo2026`**
 
@@ -12,10 +13,20 @@ ou SAML ne sort du serveur.
 
 ## Se connecter
 
-1. Ouvrir <https://geps.vinaitsolution.com/admin/login>.
-2. Choisir l'**organisme** dans la liste. Le compte `admin` existe dans chaque organisme : c'est l'organisme choisi qui
-   décide lequel s'ouvre.
-3. Saisir le nom de connexion et `Passe!Demo2026`.
+Chaque organisme a **sa propre adresse** (ADR 0033, ADR 0094). L'adresse désigne l'organisme : il n'y a rien à choisir
+à la connexion, et les comptes d'un organisme ne s'ouvrent que sur la sienne.
+
+| Organisme | Adresse de connexion |
+|---|---|
+| Urgences-santé | <https://urgence-sante.geps.vinaitsolution.com> |
+| Clincom — Santé Québec Laurentides, avis FX-AO | <https://clincom.geps.vinaitsolution.com> |
+| Urgences-santé — démonstration (maquettes de l'avis) | <https://urgence-sante-demo.geps.vinaitsolution.com> |
+
+1. Ouvrir l'adresse de l'organisme (ou passer par **Accéder à l'application** sur la vitrine).
+2. Saisir le nom de connexion et `Passe!Demo2026`.
+
+La connexion de <https://geps.vinaitsolution.com/admin/login> n'ouvre que les **comptes globaux** (exploitation de la
+plateforme) : un compte d'organisme y est refusé.
 
 Aucun compte ne demande de changer son mot de passe ni de configurer une seconde étape : la démonstration s'ouvre
 directement. Si quelqu'un change un mot de passe à l'écran, le prochain déploiement le remet (voir
@@ -23,8 +34,8 @@ directement. Si quelqu'un change un mot de passe à l'écran, le prochain déplo
 
 ## Les organismes et leurs comptes
 
-Deux des trois organismes portent l'heure de leur semis dans leur nom (« … (2026-11-23 02:10) »). Si la liste en montre
-plusieurs, le plus récent est celui que le pipeline vérifie.
+Deux des trois organismes portent l'heure de leur semis dans leur nom (« … (2026-11-23 02:10) »). Le sous-domaine va
+toujours à l'exemplaire le plus récent : un exemplaire plus ancien le cède (`clincom-<début de son identifiant>`).
 
 ### Urgences-santé
 
@@ -85,7 +96,7 @@ partie de la démonstration publique : son mot de passe a été tiré au hasard 
 | Dans les pipelines | secret `SUPERADMIN_PASSWORD` de l'environnement GitHub `geps-demo` (illisible, utilisable seulement par les workflows) |
 | Sur le poste qui a installé la démo | `deploy/geps/acces-exploitation.local.env` (ignoré par git, mode 600) |
 
-Pour s'y connecter, choisir **« Administration système (aucun organisme) »** dans la liste des organismes, puis `superadmin`.
+Pour s'y connecter : <https://geps.vinaitsolution.com/admin/login> (l'hôte commun, sans organisme), puis `superadmin`.
 
 Le compte `admin` **hors organisme** (créé au premier démarrage, mot de passe `ADMIN_PASSWORD` du même fichier) sert
 au banc de performance (secret `PERF_COMPTE_PASSWORD` de l'environnement `geps-demo`). Il ne se montre pas.

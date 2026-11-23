@@ -1,0 +1,19 @@
+# gitleaks, épinglé en un seul endroit : les secrets de tout l'historique Git (une fuite retirée d'un fichier reste dans
+# un commit). Les constats déjà connus — tous retirés du suivi, valeurs masquées — sont figés dans la référence : la porte
+# n'échoue que sur une fuite nouvelle. Exemptions par chemin, justifiées, dans .gitleaks.toml.
+name: gitleaks
+description: Secrets dans l'historique Git (version épinglée), nouvelles fuites seulement.
+inputs:
+  reference:
+    default: securite/gitleaks-reference.json
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        REFERENCE: ${{ inputs.reference }}
+      run: |
+        set -euo pipefail
+        git rev-parse --is-shallow-repository | grep -q false || { echo "::error::checkout avec fetch-depth: 0 requis : l'historique entier est analysé"; exit 2; }
+        docker run --rm -v "$PWD:/repo:ro" ghcr.io/gitleaks/gitleaks:v8.21.2 detect --source /repo --config /repo/.gitleaks.toml \
+          --baseline-path "/repo/$REFERENCE" --redact --no-banner --exit-code 1

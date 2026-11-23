@@ -1,0 +1,11 @@
+{
+  "name": "vina-geps-intrusion",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tests d'intrusion scriptés de VINA GePS — joués contre une pile déployée (CIBLE), jamais contre une production sans autorisation écrite",
+  "scripts": {
+    "fx-ao": "node --test --test-concurrency=1 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=resultats/junit-fx-ao.xml \"fx-ao/*.test.mjs\""
+  },
+  "engines": { "node": ">=22" }
+}

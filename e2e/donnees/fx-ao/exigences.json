@@ -300,7 +300,10 @@
    "preuve": [
     "mal-titre"
    ],
-   "scenarios": []
+   "scenarios": [],
+   "essaiProfond": [
+    "e2e/tests/e2e/fx-ao-mobile.spec.ts"
+   ]
   },
   {
    "id": "21",
@@ -311,7 +314,9 @@
    "preuve": [
     "mal-titre"
    ],
-   "scenarios": []
+   "scenarios": [
+    "FX-16"
+   ]
   },
   {
    "id": "22",
@@ -322,7 +327,9 @@
    "preuve": [
     "account-tab-profile"
    ],
-   "scenarios": []
+   "scenarios": [
+    "FX-14"
+   ]
   },
   {
    "id": "23",
@@ -335,6 +342,9 @@
    ],
    "scenarios": [
     "FX-04"
+   ],
+   "essaiProfond": [
+    "e2e/tests/e2e/fx-ao-mobile.spec.ts"
    ]
   },
   {
@@ -376,7 +386,9 @@
     "admin-page",
     "admin-users-list"
    ],
-   "scenarios": []
+   "scenarios": [
+    "FX-17"
+   ]
   },
   {
    "id": "27",
@@ -417,7 +429,9 @@
    "preuve": [
     "prefixe:sq-appels"
    ],
-   "scenarios": []
+   "scenarios": [
+    "FX-15"
+   ]
   },
   {
    "id": "30",

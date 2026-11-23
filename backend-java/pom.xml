@@ -38,6 +38,17 @@
     <jjwt.version>0.12.6</jjwt.version>
     <archunit.version>1.5.0</archunit.version>
     <cucumber.version>7.34.2</cucumber.version>
+    <!-- Au-dessus de la version gérée par Spring Boot 4.0.7 (42.7.11) : CVE-2026-54291, corrigée en 42.7.12 (Trivy, pipeline
+         DevSecOps). À retirer quand le parent gérera une version corrigée. -->
+    <postgresql.version>42.7.13</postgresql.version>
+    <!-- Correctifs de sécurité au-dessus des versions gérées par Spring Boot 4.0.7 (Trivy, image du serveur, 22 nov. 2026) :
+         Tomcat 11.0.22 (CVE-2026-55276, -65182, -65637, -65905, -68525 critiques ; -53404), Spring Web MVC 7.0.8
+         (CVE-2026-47884, -47890 critiques), Jackson 2.21.4 et 3.1.4 (CVE-2026-68497, -89407, -89425, -91776, -91777).
+         Des versions de correctif seulement, dans la même branche : à retirer au passage à un parent qui les gère. -->
+    <tomcat.version>11.0.25</tomcat.version>
+    <spring-framework.version>7.0.9</spring-framework.version>
+    <jackson-2-bom.version>2.21.7</jackson-2-bom.version>
+    <jackson-bom.version>3.1.7</jackson-bom.version>
   </properties>
 
   <dependencies>

@@ -81,9 +81,8 @@ jobs:
       - name: Préparer les données (profils en écriture seulement)
         run: |
           if grep -q '^ecritures=false' "perf/jmeter/env/$PROFIL.properties"; then echo "profil en lecture seule : rien à semer"; exit 0; fi
-          # L'établissement d'une campagne précédente, retrouvé par son nom : une campagne n'en laisse pas un de plus.
-          export PERF_TENANT="$(curl -fsS "$PERF_URL/api/auth/tenants" \
-            | node -e 'const l=JSON.parse(require("fs").readFileSync(0));const t=l.filter(x=>x.name.startsWith("Charge ")).sort((a,b)=>b.name.localeCompare(a.name))[0];process.stdout.write(t?t.id:"")')"
+          # L'organisme d'une campagne précédente (« Charge … ») est retrouvé par le préparateur, avec la session du compte de
+          # campagne : en déploiement par sous-domaine, la liste des organismes n'est plus donnée à un anonyme.
           node perf/jmeter/preparer.cjs --env "$PROFIL" --lignes 3
       - name: Campagne et verdict SLO
         run: |

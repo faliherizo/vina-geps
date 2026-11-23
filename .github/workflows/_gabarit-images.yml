@@ -1,0 +1,45 @@
+# Gabarit DevSecOps — IMAGES. Les deux images telles qu'elles seront livrées : vulnérabilités du système et des
+# bibliothèques embarquées (élevées ou critiques corrigeables : bloquant), et leur liste des composants (SBOM CycloneDX),
+# conservée en artefact — c'est elle qu'on interroge le jour où un nouvel avis paraît.
+name: "Gabarit — images"
+
+on:
+  workflow_call:
+    inputs:
+      etiquette:
+        description: "Étiquette des images construites"
+        type: string
+        default: analyse
+
+permissions:
+  contents: read
+
+jobs:
+  images:
+    name: Images (Trivy, SBOM)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend-java/Dockerfile
+          load: true
+          tags: vina-geps/backend:${{ inputs.etiquette }}
+          cache-from: type=gha,scope=geps-backend
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          load: true
+          tags: vina-geps/web:${{ inputs.etiquette }}
+          cache-from: type=gha,scope=geps-web
+      - uses: ./.github/actions/trivy
+        with: { commande: image, cible: "vina-geps/backend:${{ inputs.etiquette }}", sbom: sbom-backend.cdx.json, rapport: trivy-image-backend.sarif }
+      - uses: ./.github/actions/trivy
+        with: { commande: image, cible: "vina-geps/web:${{ inputs.etiquette }}", sbom: sbom-web.cdx.json, rapport: trivy-image-web.sarif }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: sbom-et-sarif-images, path: "*.cdx.json\n*.sarif", if-no-files-found: ignore }

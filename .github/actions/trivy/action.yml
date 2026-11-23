@@ -1,0 +1,65 @@
+# Trivy, épinglé en un seul endroit : vulnérabilités, secrets, mauvaises configurations, image, liste des composants.
+# Employé par les gabarits du pipeline DevSecOps (.github/workflows/_gabarit-*.yml) et par le déploiement.
+# Une exemption se justifie là où elle s'applique (commentaire #trivy:ignore au-dessus de la ressource Terraform), jamais
+# en bloc : docs/securite/DEVSECOPS.md § Exemptions.
+name: Trivy
+description: Analyse Trivy (version épinglée) ; échoue sur un constat de la gravité visée.
+inputs:
+  commande:
+    description: "fs | config | image"
+    required: true
+  cible:
+    description: "Chemin (fs, config) ou image (image)"
+    required: true
+  scanners:
+    description: "vuln | secret | misconfig (séparés par des virgules)"
+    default: vuln
+  severites:
+    default: HIGH,CRITICAL
+  ignorer-sans-correctif:
+    description: "true : seules les vulnérabilités qui ont un correctif font échouer (on ne peut agir que sur elles)"
+    default: "true"
+  echouer:
+    description: "true : la porte bloque ; false : rapport seulement"
+    default: "true"
+  rapport:
+    description: "Nom du rapport SARIF écrit dans le dossier de travail (vide : aucun)"
+    default: ""
+  sbom:
+    description: "Nom d'un fichier CycloneDX à produire en plus (vide : aucun)"
+    default: ""
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      env:
+        IMAGE_TRIVY: aquasec/trivy:0.58.1
+        COMMANDE: ${{ inputs.commande }}
+        CIBLE: ${{ inputs.cible }}
+        SCANNERS: ${{ inputs.scanners }}
+        SEVERITES: ${{ inputs.severites }}
+        SANS_CORRECTIF: ${{ inputs.ignorer-sans-correctif }}
+        ECHOUER: ${{ inputs.echouer }}
+        RAPPORT: ${{ inputs.rapport }}
+        SBOM: ${{ inputs.sbom }}
+      run: |
+        set -euo pipefail
+        SAUTER="node_modules,frontend/node_modules,e2e/node_modules,backend-java/target,bac-a-sable/poussee/node_modules,securite/intrusion/resultats"
+        COMMUN=(--quiet --cache-dir /cache --severity "$SEVERITES")
+        [ "$SANS_CORRECTIF" = "true" ] && COMMUN+=(--ignore-unfixed)
+        MONTAGES=(-v "$PWD:/src" -v trivy-cache:/cache -v /var/run/docker.sock:/var/run/docker.sock -w /src)
+        case "$COMMANDE" in
+          fs)     ARGS=(fs --scanners "$SCANNERS" --skip-dirs "$SAUTER" "/src/$CIBLE") ;;
+          config) ARGS=(config --skip-dirs "$SAUTER" "/src/$CIBLE") ;;
+          image)  ARGS=(image --scanners "$SCANNERS" "$CIBLE") ;;
+          *) echo "commande inconnue : $COMMANDE"; exit 2 ;;
+        esac
+        if [ -n "$RAPPORT" ]; then
+          docker run --rm "${MONTAGES[@]}" "$IMAGE_TRIVY" "${ARGS[0]}" "${COMMUN[@]}" --format sarif --output "/src/$RAPPORT" "${ARGS[@]:1}" || true
+        fi
+        if [ -n "$SBOM" ]; then
+          docker run --rm "${MONTAGES[@]}" "$IMAGE_TRIVY" "${ARGS[0]}" --quiet --cache-dir /cache --format cyclonedx --output "/src/$SBOM" "${ARGS[@]:1}"
+        fi
+        CODE=0
+        [ "$ECHOUER" = "true" ] && CODE=1
+        docker run --rm "${MONTAGES[@]}" "$IMAGE_TRIVY" "${ARGS[0]}" "${COMMUN[@]}" --exit-code "$CODE" --format table "${ARGS[@]:1}"

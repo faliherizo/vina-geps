@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -42,12 +43,16 @@ public record Preferences(boolean courriel, boolean texto, boolean poussee, Map<
         return new Canaux(courriel, texto, poussee);
     }
 
-    /** Le canal est-il ouvert pour cet événement : en général <em>et</em> pour l'événement (défaut du catalogue s'il n'est pas réglé) ? */
+    /**
+     * Le canal est-il ouvert pour cet événement : en général <em>et</em> pour l'événement (défaut du catalogue s'il n'est pas
+     * réglé) ? Un événement <strong>obligatoire</strong> les ouvre tous : la règle de l'organisation prévaut sur le choix.
+     */
     public boolean ouvert(Canal canal, String evenement) {
-        if (!ouvert(canal)) {
-            return false;
+        Optional<Evenement> e = Evenements.parCode(evenement == null ? "" : evenement);
+        if (e.map(Evenement::obligatoire).orElse(false)) {
+            return true;
         }
-        return Evenements.parCode(evenement == null ? "" : evenement).map(e -> canauxDe(e).ouvert(canal)).orElse(true);
+        return ouvert(canal) && e.map(x -> canauxDe(x).ouvert(canal)).orElse(true);
     }
 
     public boolean ouvert(String canal, String evenement) {

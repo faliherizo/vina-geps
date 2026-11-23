@@ -84,6 +84,8 @@ async function semer() {
     corps: {
       name: nom, type: "public_institution", country: "CA", region: "QC",
       planCode: donnees.organisme.planCode, adminUsername: "admin", adminPassword: MDP,
+      // Le sous-domaine de l'organisme (ADR 0033) : ses comptes ne se connectent que là en déploiement par sous-domaine.
+      slug: process.env.SEMIS_SOUS_DOMAINE || undefined,
     },
   });
   const tenant = cree.tenant;

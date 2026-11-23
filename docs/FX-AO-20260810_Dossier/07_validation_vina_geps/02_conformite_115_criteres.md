@@ -25,6 +25,11 @@ Les stories `ST-Gxx` sont détaillées dans [05_roadmap_et_stories.md](05_roadma
 | Performance, fournisseur, soutien | 94-115, 99.1 | 8 | 0 | 0 | 15 | 0 |
 | **Total** | **116** | **84** | **1** | **0** | **31** | **0** |
 
+**Revue du 22 novembre 2026, par les comportements.** Chaque critère fonctionnel a désormais une preuve jouée contre le
+Java, et non seulement un écran. Elle a révélé que le critère 22 n'était pas tenu (une préférence fermait un canal d'une
+alerte critique, corrigé), et a vérifié le cloisonnement de l'organisme côté serveur. Les statuts ci-dessous sont
+inchangés. Détail : [10_validation_exigences_cloisonnement_2026-11-22.md](10_validation_exigences_cloisonnement_2026-11-22.md).
+
 **Revue du 15 novembre 2026, contre le code.** Les neuf partiels ont été relus un à un. Trois étaient périmés :
 - 11 : l'état « relancée » manquait encore ; il est ajouté.
 - 51 et 61 : le guide d'installation était écrit.

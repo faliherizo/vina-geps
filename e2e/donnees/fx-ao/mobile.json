@@ -1,0 +1,20 @@
+{
+ "pourquoi": "Critères 20 et 23 de FX-AO-20260810 : une destinataire reçoit et prend en charge une alerte depuis le navigateur d'un téléphone, sans équipement fourni, en peu de gestes. Joué par fx-ao-mobile.spec.ts sur l'organisme que sème scripts/semer-fx-ao.cjs.",
+ "expediteur": "coord.urgence",
+ "destinataire": "inf.roy",
+ "alerte": {
+  "titre": "Patient instable — civière 7",
+  "corps": "Évaluation demandée à l'urgence de Saint-Jérôme.",
+  "priorite": "urgente",
+  "semantiqueAttendue": "prise_en_charge"
+ },
+ "appareils": [
+  { "nom": "téléphone", "largeur": 390, "hauteur": 844 },
+  { "nom": "petit téléphone (WCAG 1.4.10)", "largeur": 320, "hauteur": 640 }
+ ],
+ "seuils": {
+  "gestesMax": 2,
+  "delaiMaxMs": 15000,
+  "cibleMinPx": 44
+ }
+}
