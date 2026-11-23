@@ -44,8 +44,9 @@ Trois choix tiennent au partage du serveur :
 
 ### Le mode démonstration
 
-`.env.geps` pose `DEMONSTRATION_INTEGRATIONS=entra,saml,sms,antivirus,api,webhooks`. Les tiers embarqués parlent les
-vrais protocoles, sans compte réel : **aucun texto ni courriel ne part**. Le mode d'essai `NEXU_ESSAI` n'est **pas**
+`.env.geps` pose `DEMONSTRATION_INTEGRATIONS=entra,saml,sms,antivirus`. Les tiers embarqués parlent les vrais
+protocoles, sans compte réel : **aucun texto ni courriel ne part**. `api` et `webhooks` se branchent à l'écran
+(Admin › Intégrations) : les nommer dans la variable arrête le démarrage. Le mode d'essai `NEXU_ESSAI` n'est **pas**
 activé : il ouvre des routes de remise à zéro qui n'ont rien à faire sur une adresse publique.
 
 ## 2. Première installation (déjà faite le 22 novembre 2026)
