@@ -31,6 +31,12 @@ public class ControleurGroupesDeTravail {
         return GardeCommunication.repondre(requete, garde.socle(requete), OK, a -> groupes.groupes(a.tenantId()));
     }
 
+    /** Les groupes dont la personne est membre aujourd'hui : la messagerie s'ouvre sur le sien, pas sur le premier de la liste. */
+    @GetMapping("/groupes/miens")
+    public ResponseEntity<Object> miens(HttpServletRequest requete) {
+        return GardeCommunication.repondre(requete, garde.socle(requete), OK, a -> groupes.groupesDe(a.tenantId(), a.acteurId()));
+    }
+
     @GetMapping("/groupes/{id}/membres")
     public ResponseEntity<Object> membres(HttpServletRequest requete, @PathVariable String id) {
         return GardeCommunication.repondre(requete, garde.socle(requete), OK, a -> groupes.membres(a.tenantId(), id));

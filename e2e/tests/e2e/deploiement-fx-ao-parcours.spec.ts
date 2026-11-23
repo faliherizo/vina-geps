@@ -36,6 +36,14 @@ async function session(browser: Browser, hote: string, compte: string, ecran: st
   return page;
 }
 
+/** La messagerie s'ouvre d'office sur l'unité de la personne (`groupeParDefaut`) : celle des personnes du parcours. */
+async function messagerie(browser: Browser, hote: string, compte: string): Promise<Page> {
+  const page = await session(browser, hote, compte, "usmessages");
+  await expect(page.getByTestId("sq-perimetre-groupe").locator("option:checked"), `${compte} : unité ouverte d'office`)
+    .toContainText(jeu.messages.unite, { timeout: 30_000 });
+  return page;
+}
+
 async function sansViolation(page: Page, etat: string) {
   expect(await auditA11y(page), `axe-core : ${etat}`).toEqual([]);
 }
@@ -84,7 +92,8 @@ test.describe("Déploiement — FX-AO-20260810, les gestes sur la démonstration
     // L'administration la voit, au nom de la personne, et acceptée : elle compte au calendrier interne.
     const admin = await apiDe(hote, a.verificateur);
     const vues = await (await admin.get(`${hote}/api/effectifs/absences`)).json();
-    expect(vues.filter((x: { ressourceNom: string; du: string }) => x.ressourceNom === a.nom && x.du === du)
+    // Les passages précédents ont laissé des absences annulées à la même date : seules celles en vigueur comptent.
+    expect(vues.filter((x: { ressourceNom: string; du: string; statut: string }) => x.ressourceNom === a.nom && x.du === du && x.statut !== "ANNULEE")
       .map((x: { codeAbsence: string; statut: string }) => [x.codeAbsence, x.statut])).toEqual([[a.code, "ACCEPTEE"]]);
 
     // La démonstration n'en garde pas trace : la personne l'annule.
@@ -164,7 +173,7 @@ test.describe("Déploiement — FX-AO-20260810, les gestes sur la démonstration
   test(`écrire à une personne — ${jeu.messages.direct.pourquoi}`, async ({ browser }) => {
     const m = jeu.messages.direct;
     const texte = marque(m.texte);
-    const de = await session(browser, hote, m.de, "usmessages");
+    const de = await messagerie(browser, hote, m.de);
     await choisir(de, "sq-msg-directe-personne", m.nomA);
     await de.getByTestId("sq-msg-directe").click();
     await expect(de.getByTestId("sq-msg-entete-fil")).toContainText(m.nomA, { timeout: 30_000 });
@@ -172,8 +181,9 @@ test.describe("Déploiement — FX-AO-20260810, les gestes sur la démonstration
     await de.getByTestId("sq-msg-envoyer").click();
     await expect(de.locator("main").getByText(texte).first()).toBeVisible({ timeout: 30_000 });
 
-    const a = await session(browser, hote, m.a, "usmessages");
-    await choisir(a, "sq-msg-fil", new RegExp(m.nomDe));
+    const a = await messagerie(browser, hote, m.a);
+    // Un fil à deux se nomme « à deux » ou par l'autre personne, selon son libellé (urgences-sante-messagerie.spec.ts).
+    await choisir(a, "sq-msg-fil", new RegExp(`deux|${m.nomDe}|${m.de}`, "i"));
     await expect(a.locator("main").getByText(texte).first()).toBeVisible({ timeout: 30_000 });
     await sansViolation(a, "Messagerie, message reçu dans le fil à deux");
     await Promise.all([de.context().close(), a.context().close()]);
@@ -182,7 +192,7 @@ test.describe("Déploiement — FX-AO-20260810, les gestes sur la démonstration
   test(`écrire à un groupe — ${jeu.messages.groupe.pourquoi}`, async ({ browser }) => {
     const g = jeu.messages.groupe;
     const texte = marque(g.texte);
-    const de = await session(browser, hote, g.de, "usmessages");
+    const de = await messagerie(browser, hote, g.de);
     // Le fil de groupe est repris s'il existe : un passage n'ajoute pas un fil à la démonstration.
     const existe = await de.getByTestId("sq-msg-fil").locator("option").filter({ hasText: g.sujet }).count()
       .catch(() => 0);
@@ -202,7 +212,7 @@ test.describe("Déploiement — FX-AO-20260810, les gestes sur la démonstration
     await de.getByTestId("sq-msg-envoyer").click();
     await expect(de.locator("main").getByText(texte).first()).toBeVisible({ timeout: 30_000 });
 
-    const lecteur = await session(browser, hote, g.lecteur, "usmessages");
+    const lecteur = await messagerie(browser, hote, g.lecteur);
     await choisir(lecteur, "sq-msg-fil", g.sujet);
     await expect(lecteur.locator("main").getByText(texte).first()).toBeVisible({ timeout: 30_000 });
     await sansViolation(lecteur, "Messagerie, message reçu dans le fil de groupe");

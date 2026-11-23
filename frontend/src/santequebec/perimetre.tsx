@@ -35,6 +35,16 @@ const retenir = (cle: string, valeur: string) => {
   try { if (valeur) sessionStorage.setItem(cle, valeur); else sessionStorage.removeItem(cle); } catch { /* navigation privée */ }
 };
 
+/**
+ * **Le groupe ouvert d'office** : celui qu'on avait choisi dans la session, s'il existe encore ; sinon **le sien** ;
+ * sinon le premier. Le premier de la liste seul faisait ouvrir la messagerie d'une infirmière de Saint-Jérôme sur
+ * Argenteuil, « aucun membre dans ce groupe » — constaté sur la démonstration FX-AO le 23 novembre 2026.
+ */
+export function groupeParDefaut(groupes: GroupeSq[], miens: string[], retenuId: string): string {
+  if (groupes.some((x) => x.id === retenuId)) return retenuId;
+  return groupes.find((x) => miens.includes(x.id))?.id ?? groupes[0]?.id ?? "";
+}
+
 export function FournisseurPerimetre({ children }: { children: ReactNode }) {
   const { apiFetch } = useAuth();
   const { tenantId } = useCurrentTenant();
@@ -64,15 +74,15 @@ export function FournisseurPerimetre({ children }: { children: ReactNode }) {
   useEffect(() => {
     let vivant = true;
     setChargement(true);
-    lire("/api/communication/groupes")
-      .then((g) => {
+    // Les groupes de la personne sont un confort : leur échec ne doit pas empêcher la liste de s'afficher.
+    Promise.all([lire("/api/communication/groupes"), lire("/api/communication/groupes/miens").catch(() => [])])
+      .then(([g, m]) => {
         if (!vivant) return;
         const liste: GroupeSq[] = Array.isArray(g) ? g : [];
+        const miens: string[] = Array.isArray(m) ? m : [];
         setGroupes(liste);
         setErreur("");
-        // Le groupe retenu peut avoir disparu : on retombe sur le premier plutôt que de laisser
-        // l'écran bloqué sur un identifiant mort.
-        setGroupeId((actuel) => (liste.some((x) => x.id === actuel) ? actuel : (liste[0]?.id ?? "")));
+        setGroupeId((actuel) => groupeParDefaut(liste, miens, actuel));
       })
       .catch((e: Error) => { if (vivant) { setGroupes([]); setErreur(e.message); } })
       .finally(() => { if (vivant) setChargement(false); });
