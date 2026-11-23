@@ -12,14 +12,16 @@ import { test, expect } from "@playwright/test";
 import comptesDemo from "../../donnees/geps/comptes-demo.json";
 
 const DEPLOYE = !!process.env.E2E_BASE_URL;
-const MDP = process.env.E2E_DEMO_PASSWORD ?? comptesDemo.motDePasseParDefaut;
+/** Un environnement réel (recette Azure, production) n'a pas ces comptes : l'essai ne vaut que là où ils sont semés. */
+const SEMES = process.env.E2E_COMPTES_DEMO === "1";
+const MDP = process.env.E2E_DEMO_PASSWORD || comptesDemo.motDePasseParDefaut;
 
 interface OrganismePublic { id: string; name: string }
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test.describe("Déploiement — les comptes de démonstration publiés", () => {
-  test.skip(!DEPLOYE, "vise une pile déployée : poser E2E_BASE_URL");
+  test.skip(!DEPLOYE || !SEMES, "vise une démonstration déployée et semée : poser E2E_BASE_URL et E2E_COMPTES_DEMO=1");
 
   for (const organisme of comptesDemo.organismes) {
     test(`${organisme.nom} : chaque compte publié ouvre une session`, async ({ playwright }) => {

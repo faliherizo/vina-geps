@@ -90,13 +90,16 @@ for n in vinaitsolution.com nexus.vinaitsolution.com contrat.vinaitsolution.com 
 
 ## 3. Le pipeline
 
-Trois workflows GitHub Actions, dans `.github/workflows/`.
+Un seul workflow est propre à OVH : la livraison. Les trois autres sont **séparés, paramétrés par un environnement
+GitHub** (`geps-demo` ici) et ne connaissent ni OVH ni Azure. Ils se lancent seuls, à tout moment, contre n'importe
+quel environnement déployé. Les ajouter pour Azure : [PIPELINES-ENVIRONNEMENTS.md](PIPELINES-ENVIRONNEMENTS.md).
 
 | Workflow | Déclenchement | Ce qu'il fait |
 |---|---|---|
-| **Déployer geps (démonstration)**, `deployer-geps.yml` | chaque poussée sur **`develop`**, ou à la main | construit les deux images, les livre, déploie, sème, puis lance la fumée |
-| **Semer geps**, `semer-geps.yml` | à la main | (re)sème les organismes de démonstration, puis vérifie chaque compte publié |
-| **Performance geps**, `perf-geps.yml` | à la main | campagne JMeter et verdict SLO |
+| **Déployer geps (démonstration)**, `deployer-geps.yml` | chaque poussée sur **`develop`**, ou à la main | construit les deux images, les livre au VPS, déploie, puis appelle les deux pipelines suivants |
+| **Semer la démonstration**, `semer-demo.yml` | à la main (environnement au choix), ou appelé par le déploiement | (re)sème les organismes de démonstration ; refuse un environnement sans `COMPTES_DEMO=1` |
+| **Recette e2e (environnement déployé)**, `recette-e2e.yml` | à la main, ou appelé par le déploiement | essais Playwright en lecture seule contre `APP_URL` |
+| **Performance (JMeter)**, `perf.yml` | à la main seulement | campagne JMeter au profil `PERF_PROFIL`, verdict SLO |
 
 ### Déployer : les trois jobs
 
@@ -110,8 +113,8 @@ Trois workflows GitHub Actions, dans `.github/workflows/`.
      3. attend que le Java **et** le relais nginx répondent à `/api/health` (240 s au plus) ;
      4. en cas d'échec, revient à la version précédente et fait échouer le job ;
      5. ne garde que les images courante et précédente.
-2. **Semer.** Lance `scripts/semer-demo-geps.cjs`, qui est idempotent (§5).
-3. **Fumée**, en lecture seule, contre l'adresse publique :
+2. **Semer** (`semer-demo.yml`, environnement `geps-demo`). Lance `scripts/semer-demo-geps.cjs`, qui est idempotent (§5).
+3. **Recette** (`recette-e2e.yml`, environnement `geps-demo`), en lecture seule, contre l'adresse publique :
    - `deploiement-fumee.spec.ts` : le superadmin se connecte, son espace se rend, l'API sert le catalogue ;
    - `deploiement-comptes-demo.spec.ts` : chaque compte publié ouvre une session.
 
@@ -128,9 +131,23 @@ gh workflow run "Déployer geps (démonstration)" --ref develop -f semer=true
 gh run watch $(gh run list --workflow deployer-geps.yml -L1 --json databaseId -q '.[0].databaseId')
 ```
 
-### Secrets du dépôt
+### Secrets et variables
 
-Posés par `gh secret set` le 22 novembre 2026. Aucune valeur n'est dans le dépôt.
+Posés par `gh secret set` et `gh variable set` le 22 novembre 2026. Aucune valeur n'est dans le dépôt.
+
+**Environnement GitHub `geps-demo`** (Settings › Environments). C'est ce que les pipelines séparés lisent :
+
+| Nom | Type | Valeur |
+|---|---|---|
+| `APP_URL` | variable | `https://geps.vinaitsolution.com` |
+| `COMPTES_DEMO` | variable | `1` : démonstration aux comptes publiés (semis permis, essai des comptes actif) |
+| `PERF_PROFIL` | variable | `geps` → `perf/jmeter/env/geps.properties` |
+| `PERF_COMPTE` | variable | `admin` (compte système du premier démarrage) |
+| `SUPERADMIN_PASSWORD` | secret | `SUPERADMIN_PASSWORD` de `.env.geps` |
+| `PERF_COMPTE_PASSWORD` | secret | `ADMIN_PASSWORD` de `.env.geps` |
+| `DEMO_PASSWORD` | secret, facultatif | le mot de passe des comptes publiés, s'il diffère de `Passe!Demo2026` |
+
+**Secrets du dépôt**, pour la livraison au VPS seulement :
 
 | Secret | Contenu | Remplacer |
 |---|---|---|
@@ -138,8 +155,6 @@ Posés par `gh secret set` le 22 novembre 2026. Aucune valeur n'est dans le dép
 | `DEPLOY_USER` | `deploy` | — |
 | `DEPLOY_SSH_KEY` | clé ed25519 privée **dédiée** (`github-actions-geps`), dont la publique est dans `~deploy/.ssh/authorized_keys` | voir ci-dessous |
 | `DEPLOY_KNOWN_HOSTS` | clés d'hôte du VPS, comparées à celles d'un poste qui le connaissait | `ssh-keyscan 51.222.86.37 \| gh secret set DEPLOY_KNOWN_HOSTS`, **après** comparaison des empreintes |
-| `GEPS_SUPERADMIN_PASSWORD` | `SUPERADMIN_PASSWORD` de `.env.geps` | recopier depuis le serveur (ci-dessous) |
-| `GEPS_ADMIN_PASSWORD` | `ADMIN_PASSWORD` de `.env.geps` (compte du banc de performance) | idem |
 
 Pour changer la clé du pipeline : en générer une, ajouter la publique à `authorized_keys`, poser la privée avec
 `gh secret set DEPLOY_SSH_KEY < cle`, puis **retirer l'ancienne ligne** `github-actions-geps` du fichier.
@@ -148,7 +163,7 @@ Pour recopier un mot de passe du serveur vers un secret, sans qu'il s'affiche :
 
 ```bash
 ssh deploy@51.222.86.37 'grep ^SUPERADMIN_PASSWORD= ~/projets/vina-geps/deploy/geps/.env.geps | cut -d= -f2-' \
-  | tr -d '\n' | gh secret set GEPS_SUPERADMIN_PASSWORD -R faliherizo/vina-geps
+  | tr -d '\n' | gh secret set SUPERADMIN_PASSWORD --env geps-demo -R faliherizo/vina-geps
 ```
 
 > Changer `SUPERADMIN_PASSWORD` dans `.env.geps` **ne change pas** le mot de passe d'un superadmin déjà créé : le
@@ -197,7 +212,7 @@ Tous les comptes reçoivent `DEMO_PASSWORD`, par défaut `Passe!Demo2026`. Ce mo
 comportement d'organisme réel : un mot de passe tiré au hasard par compte.
 
 ```bash
-# Depuis le pipeline : Actions › Semer geps › Run (organisme, forcer)
+# Depuis le pipeline : Actions › Semer la démonstration › Run (environnement, organisme, forcer)
 # Depuis un poste (Node 22) :
 SUPERADMIN_PASSWORD='…' node scripts/semer-demo-geps.cjs --api https://geps.vinaitsolution.com
 SUPERADMIN_PASSWORD='…' node scripts/semer-demo-geps.cjs --api https://geps.vinaitsolution.com --seulement fx-ao --forcer
@@ -209,7 +224,7 @@ frontal, avec une pause entre deux appels (`SEMIS_PAUSE_MS`, 70 ms par défaut).
 **Ajouter des données** : enrichir le jeu de données du semis concerné (`e2e/donnees/urgences-sante/demonstration.json`,
 `e2e/donnees/fx-ao/demonstration.json`, `scripts/lib/organisme-par-defaut/donnees.cjs`). Si l'ajout crée un compte,
 l'ajouter aussi à [`e2e/donnees/geps/comptes-demo.json`](../e2e/donnees/geps/comptes-demo.json) et au tableau de
-COMPTES-DEMO-GEPS.md. Lancer ensuite **Semer geps** avec `forcer` pour les deux organismes horodatés.
+COMPTES-DEMO-GEPS.md. Lancer ensuite **Semer la démonstration** avec `forcer` pour les deux organismes horodatés.
 
 ## 6. Essais de bout en bout contre la démonstration
 
@@ -217,10 +232,16 @@ Un essai qui vise un déploiement **ne fait que lire** : se connecter, consulter
 (`e2e/global-setup.ts`). Deux essais existent pour cela :
 
 ```bash
+# Le pipeline : Actions › Recette e2e (environnement déployé) › Run (environnement, essais)
+gh workflow run recette-e2e.yml -f environnement=geps-demo
+# Depuis un poste :
 cd e2e
-E2E_BASE_URL=https://geps.vinaitsolution.com E2E_SUPERADMIN_PASSWORD='…' \
+E2E_BASE_URL=https://geps.vinaitsolution.com E2E_SUPERADMIN_PASSWORD='…' E2E_COMPTES_DEMO=1 \
   npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
 ```
+
+Ajouter un essai à la recette : il doit **seulement lire** et se sauter sans `E2E_BASE_URL`. On le passe ensuite dans
+l'entrée `essais` du workflow, ou on l'ajoute à sa valeur par défaut.
 
 La campagne complète (`backend-java/scripts/campagne-e2e.sh`, 67 fichiers) **ne vise pas** la démonstration : elle
 remet la base à zéro entre deux essais, ce qui exige le mode `NEXU_ESSAI` et une base jetable. Elle tourne dans
@@ -228,24 +249,25 @@ remet la base à zéro entre deux essais, ce qui exige le mode `NEXU_ESSAI` et u
 
 ## 7. Performance
 
-`perf-geps.yml` (Actions › **Performance geps** › Run) :
+`perf.yml` (Actions › **Performance (JMeter)** › Run, environnement `geps-demo`) :
 
 1. installe JMeter 5.6.3 ;
-2. écrit le compte de campagne depuis `GEPS_ADMIN_PASSWORD` ;
+2. écrit le compte de campagne depuis `PERF_COMPTE` / `PERF_COMPTE_PASSWORD` ;
 3. sème ses données dans l'établissement « Charge … », réutilisé d'une campagne à l'autre (`PERF_TENANT`) ;
-4. joue le plan choisi (`scenarios`, `endpoints`, `operations`, ou un fichier `.jmx`) ;
+4. joue le plan choisi (`scenarios`, `endpoints`, `operations`, ou un fichier `.jmx`), au profil `PERF_PROFIL`, contre
+   `APP_URL` ;
 5. rend le verdict de `perf/jmeter/analyser.cjs`. Le job échoue si un objectif est manqué.
 
-Le tableau de bord HTML et `RESULTATS.md` sont dans l'artefact `rapports-perf-geps`.
+Le tableau de bord HTML et `RESULTATS.md` sont dans l'artefact `perf-geps-demo`.
 
 ```bash
-gh workflow run "Performance geps" -f plan=scenarios -f utilisateurs=10 -f duree=180
+gh workflow run perf.yml -f environnement=geps-demo -f plan=scenarios -f utilisateurs=10 -f duree=180
 ```
 
 À la main, depuis un poste qui a JMeter et zsh :
 
 ```bash
-printf 'username,password,tenantId,role\nadmin,%s,,admin\n' "$GEPS_ADMIN_PASSWORD" > perf/jmeter/donnees/comptes-geps.local.csv
+printf 'username,password,tenantId,role\nadmin,%s,,admin\n' "$MDP_ADMIN" > perf/jmeter/donnees/comptes-geps.local.csv
 node perf/jmeter/preparer.cjs --env geps --lignes 3
 perf/jmeter/lancer.sh geps scenarios -Jtenant=$(cat perf/jmeter/donnees/tenant-geps.txt)
 ```
@@ -269,6 +291,6 @@ perf/jmeter/lancer.sh geps scenarios -Jtenant=$(cat perf/jmeter/donnees/tenant-g
 | Le déploiement échoue sur « image absente » | livraison interrompue | relancer le workflow |
 | « ne répond pas après 240 s » puis retour arrière | le Java ne démarre pas (variable refusée, migration) | le job affiche les 80 dernières lignes du journal ; corriger `.env.geps` ou le code |
 | `git fetch` échoue sur le serveur | clé de déploiement `github-geps` retirée de GitHub | `ssh -T github-geps` sur le serveur |
-| Un compte de démonstration est refusé | mot de passe changé à l'écran, base recréée | Actions › Semer geps |
+| Un compte de démonstration est refusé | mot de passe changé à l'écran, base recréée | Actions › Semer la démonstration |
 | 429 pendant une campagne | limite de débit par adresse | baisser `utilisateurs` ou monter `reflexion` |
 | Les visiteurs partagent tous la même limite de débit | `GEPS_PROXIES_CONFIANCE` ne couvre plus le réseau `web` | `docker network inspect web`, corriger `.env.geps`, redéployer |

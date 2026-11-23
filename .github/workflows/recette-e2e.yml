@@ -1,0 +1,61 @@
+# Recette de bout en bout contre un environnement DÉPLOYÉ — indépendante de l'hébergeur (OVH aujourd'hui, Azure demain).
+#
+# L'environnement est un « environnement » GitHub (Settings › Environments) qui porte tout ce qui lui est propre :
+#   variable APP_URL               l'adresse publique (https://geps.vinaitsolution.com, https://<app>.azurewebsites.net…)
+#   secret   SUPERADMIN_PASSWORD   le superadmin de CET environnement
+#   variable COMPTES_DEMO          (facultatif) « 1 » si les comptes publiés de e2e/donnees/geps/comptes-demo.json y sont
+#                                  semés — sans elle, leur essai se saute (un environnement réel n'en a pas)
+# Migrer vers Azure = créer l'environnement Azure avec ces valeurs ; ce fichier ne change pas.
+#
+# Lecture seule : un essai qui vise un déploiement se connecte et consulte, il n'écrit jamais (e2e/global-setup.ts).
+# La campagne complète, qui remet la base à zéro, tourne dans ci.yml contre un serveur éphémère — jamais ici.
+name: Recette e2e (environnement déployé)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: "Environnement GitHub visé (geps-demo, azure-recette, …)"
+        type: string
+        default: geps-demo
+      essais:
+        description: "Fichiers d'essai (chemins sous e2e/), séparés par des espaces"
+        type: string
+        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
+  workflow_call:
+    inputs:
+      environnement: { type: string, required: true }
+      essais:
+        type: string
+        default: tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
+
+permissions:
+  contents: read
+
+jobs:
+  recette:
+    name: Recette e2e — ${{ inputs.environnement }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environnement }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: L'environnement est complet
+        run: |
+          [ -n "${{ vars.APP_URL }}" ] || { echo "::error::variable APP_URL absente de l'environnement ${{ inputs.environnement }}"; exit 2; }
+          curl -fsS --retry 10 --retry-delay 5 --retry-all-errors "${{ vars.APP_URL }}/api/health"
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: npx playwright test --project=e2e ${{ inputs.essais }}
+        working-directory: e2e
+        env:
+          CI: "1"
+          E2E_BASE_URL: ${{ vars.APP_URL }}
+          E2E_SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
+          E2E_COMPTES_DEMO: ${{ vars.COMPTES_DEMO }}
+          E2E_DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: "recette-e2e-${{ inputs.environnement }}", path: e2e/playwright-report }

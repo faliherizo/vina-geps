@@ -1,0 +1,61 @@
+# (Re)semer les organismes de démonstration et leurs comptes publiés dans un environnement DÉPLOYÉ — OVH ou Azure.
+#
+# Variables et secrets de l'environnement GitHub :
+#   variable APP_URL              l'adresse publique
+#   variable COMPTES_DEMO         « 1 » : l'environnement est une démonstration. SANS ELLE, LE SEMIS REFUSE — des comptes
+#                                 au mot de passe publié n'ont rien à faire dans une recette ou une production réelle.
+#   secret   SUPERADMIN_PASSWORD  le superadmin de cet environnement
+#   secret   DEMO_PASSWORD        (facultatif) le mot de passe des comptes ; défaut : celui de docs/COMPTES-DEMO-GEPS.md
+#
+# Rejouable : rien n'est doublé ; « forcer » sème un nouvel exemplaire horodaté. La connexion de chaque compte publié
+# se vérifie ensuite par « Recette e2e » (deploiement-comptes-demo.spec.ts).
+name: Semer la démonstration
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: "Environnement GitHub visé (geps-demo, …)"
+        type: string
+        default: geps-demo
+      organisme:
+        description: "Un seul organisme (urgences-sante, urgences-sante-demonstration, fx-ao) ; vide = les trois"
+        type: string
+        default: ""
+      forcer:
+        description: "Semer un nouvel exemplaire horodaté même s'il en existe un"
+        type: boolean
+        default: false
+  workflow_call:
+    inputs:
+      environnement: { type: string, required: true }
+      organisme: { type: string, default: "" }
+      forcer: { type: boolean, default: false }
+
+concurrency:
+  group: semer-${{ inputs.environnement }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  semer:
+    name: Semer — ${{ inputs.environnement }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environnement }}
+    steps:
+      - name: L'environnement est une démonstration
+        run: |
+          [ "${{ vars.COMPTES_DEMO }}" = "1" ] || { echo "::error::${{ inputs.environnement }} ne déclare pas COMPTES_DEMO=1 : refus de semer des comptes au mot de passe publié"; exit 2; }
+          [ -n "${{ vars.APP_URL }}" ] || { echo "::error::variable APP_URL absente"; exit 2; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: |
+          node scripts/semer-demo-geps.cjs --api "${{ vars.APP_URL }}" \
+            ${{ inputs.forcer && '--forcer' || '' }} ${{ inputs.organisme != '' && format('--seulement {0}', inputs.organisme) || '' }}
+        env:
+          SUPERADMIN_PASSWORD: ${{ secrets.SUPERADMIN_PASSWORD }}
+          DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}

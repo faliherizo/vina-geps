@@ -82,21 +82,21 @@ partie de la démonstration publique : son mot de passe a été tiré au hasard 
 | Où le trouver | Comment |
 |---|---|
 | Sur le serveur | `grep ^SUPERADMIN_PASSWORD= ~/projets/vina-geps/deploy/geps/.env.geps` (session `deploy`) |
-| Dans le pipeline | secret GitHub `GEPS_SUPERADMIN_PASSWORD` (illisible, utilisable seulement par les workflows) |
+| Dans les pipelines | secret `SUPERADMIN_PASSWORD` de l'environnement GitHub `geps-demo` (illisible, utilisable seulement par les workflows) |
 | Sur le poste qui a installé la démo | `deploy/geps/acces-exploitation.local.env` (ignoré par git, mode 600) |
 
 Pour s'y connecter, choisir **« Administration système (aucun organisme) »** dans la liste des organismes, puis `superadmin`.
 
 Le compte `admin` **hors organisme** (créé au premier démarrage, mot de passe `ADMIN_PASSWORD` du même fichier) sert
-au banc de performance. Il ne se montre pas.
+au banc de performance (secret `PERF_COMPTE_PASSWORD` de l'environnement `geps-demo`). Il ne se montre pas.
 
 ## Remettre la démonstration en état
 
 | Besoin | Geste |
 |---|---|
-| Un mot de passe a été changé, un compte supprimé | Actions › **Semer geps** › Run. L'organisme `Urgences-santé` est repris et chaque mot de passe remis à `Passe!Demo2026`. |
-| Une démonstration a été abîmée pendant une présentation | Actions › **Semer geps**, `forcer` coché : un nouvel organisme horodaté est semé, l'ancien reste. |
-| La base a été perdue | Le prochain déploiement sème les trois organismes ; ou **Semer geps** tout de suite. |
+| Un mot de passe a été changé, un compte supprimé | Actions › **Semer la démonstration** › Run. L'organisme `Urgences-santé` est repris et chaque mot de passe remis à `Passe!Demo2026`. |
+| Une démonstration a été abîmée pendant une présentation | Actions › **Semer la démonstration**, `forcer` coché : un nouvel organisme horodaté est semé, l'ancien reste. |
+| La base a été perdue | Le prochain déploiement sème les trois organismes ; ou **Semer la démonstration** tout de suite. |
 
 En ligne de commande, depuis un poste qui a Node 22 :
 
@@ -112,7 +112,10 @@ essai ouvre une session avec **chaque** compte après chaque déploiement : un c
 au lieu d'être découvert devant la personne à qui l'on montre le produit.
 
 ```bash
-cd e2e && E2E_BASE_URL=https://geps.vinaitsolution.com npx playwright test --project=e2e tests/e2e/deploiement-comptes-demo.spec.ts
+cd e2e && E2E_BASE_URL=https://geps.vinaitsolution.com E2E_COMPTES_DEMO=1 \
+  npx playwright test --project=e2e tests/e2e/deploiement-comptes-demo.spec.ts
 ```
+
+Ou Actions › **Recette e2e (environnement déployé)** › Run, environnement `geps-demo`.
 
 Ajouter un compte : l'ajouter au jeu de données du semis concerné, puis à `comptes-demo.json`, puis à ce tableau.

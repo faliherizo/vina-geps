@@ -489,7 +489,9 @@ async function main() {
   const env = option("env", "local");
   const p = proprietes(env);
   if (p.ecritures === "false") throw new Error(`${env} : ecritures=false — cet environnement ne se sème pas`);
-  const base = `${p.protocole}://${p.hote}:${p.port}`;
+  // PERF_URL : l'adresse de l'environnement GitHub visé (variable APP_URL) l'emporte sur l'hôte du profil de charge —
+  // le profil dit COMBIEN charger, l'environnement dit OÙ ; ainsi un même profil sert sur OVH comme sur Azure.
+  const base = (process.env.PERF_URL || `${p.protocole}://${p.hote}:${p.port}`).replace(/\/+$/, "");
   const compte = lireCsv(path.join(ICI, p.comptes))[0];
   const appel = await client(base, compte);
   // PERF_TENANT : l'établissement d'une campagne précédente, que le pipeline retrouve par son nom (« Charge … ») — sur

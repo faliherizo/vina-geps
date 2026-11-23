@@ -1,0 +1,97 @@
+# Campagne de performance JMeter contre un environnement DÉPLOYÉ — indépendante de l'hébergeur (OVH, Azure…).
+#
+# Toujours lancée à la main (Actions › Performance (JMeter) › Run) : une campagne charge un serveur, elle ne part jamais
+# seule. L'environnement GitHub dit OÙ, le profil de charge dit COMBIEN :
+#   variable APP_URL        l'adresse publique de l'environnement
+#   variable PERF_PROFIL    le profil perf/jmeter/env/<profil>.properties (charge, seuils, écritures) — geps, preprod, prod…
+#   variable PERF_COMPTE    (facultatif, défaut admin) le compte système de la campagne, sans organisme
+#   secret   PERF_COMPTE_PASSWORD   son mot de passe
+# Migrer vers Azure = un environnement GitHub de plus avec ces valeurs, et au besoin un profil ; ce fichier ne change pas.
+#
+# Un profil qui admet les écritures (ecritures=true) fait semer ses données par preparer.cjs dans l'établissement
+# « Charge … », repris d'une campagne à l'autre. Un profil en lecture seule (prod) ne sème rien. Verdict : perf/jmeter/
+# analyser.cjs — le job échoue si un objectif SLO est manqué. Rapports : artefact « perf-<environnement> ».
+name: Performance (JMeter)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: "Environnement GitHub visé (geps-demo, azure-recette, …)"
+        type: string
+        default: geps-demo
+      plan:
+        description: "scenarios | endpoints | operations | tous | scenarios/sonde-lecture.jmx | plans/endpoints-effectifs.jmx …"
+        type: string
+        default: scenarios
+      utilisateurs:
+        description: "Utilisateurs virtuels (vide = celui du profil)"
+        type: string
+        default: ""
+      duree:
+        description: "Durée en secondes (vide = celle du profil)"
+        type: string
+        default: ""
+
+concurrency:
+  group: perf-${{ inputs.environnement }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  JMETER_VERSION: "5.6.3"
+
+jobs:
+  campagne:
+    name: JMeter — ${{ inputs.environnement }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    environment: ${{ inputs.environnement }}
+    env:
+      PERF_URL: ${{ vars.APP_URL }}
+      PROFIL: ${{ vars.PERF_PROFIL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: L'environnement est complet
+        run: |
+          [ -n "$PERF_URL" ] || { echo "::error::variable APP_URL absente de ${{ inputs.environnement }}"; exit 2; }
+          [ -f "perf/jmeter/env/$PROFIL.properties" ] || { echo "::error::PERF_PROFIL « $PROFIL » : perf/jmeter/env/$PROFIL.properties introuvable"; exit 2; }
+          curl -fsS --retry 10 --retry-delay 5 --retry-all-errors "$PERF_URL/api/health"
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - name: JMeter, zsh, pandoc
+        run: |
+          sudo apt-get update && sudo apt-get install -y zsh pandoc
+          curl -fsSL "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz" | tar xz -C "$RUNNER_TEMP"
+          echo "$RUNNER_TEMP/apache-jmeter-${JMETER_VERSION}/bin" >> "$GITHUB_PATH"
+      - name: Compte de campagne (depuis les secrets de l'environnement)
+        env:
+          COMPTE: ${{ vars.PERF_COMPTE || 'admin' }}
+          MDP: ${{ secrets.PERF_COMPTE_PASSWORD }}
+        run: |
+          [ -n "$MDP" ] || { echo "::error::secret PERF_COMPTE_PASSWORD absent de ${{ inputs.environnement }}"; exit 2; }
+          F="perf/jmeter/$(grep '^comptes=' "perf/jmeter/env/$PROFIL.properties" | cut -d= -f2)"
+          printf 'username,password,tenantId,role\n%s,%s,,admin\n' "$COMPTE" "$MDP" > "$F"
+      - name: Préparer les données (profils en écriture seulement)
+        run: |
+          if grep -q '^ecritures=false' "perf/jmeter/env/$PROFIL.properties"; then echo "profil en lecture seule : rien à semer"; exit 0; fi
+          # L'établissement d'une campagne précédente, retrouvé par son nom : une campagne n'en laisse pas un de plus.
+          export PERF_TENANT="$(curl -fsS "$PERF_URL/api/auth/tenants" \
+            | node -e 'const l=JSON.parse(require("fs").readFileSync(0));const t=l.filter(x=>x.name.startsWith("Charge ")).sort((a,b)=>b.name.localeCompare(a.name))[0];process.stdout.write(t?t.id:"")')"
+          node perf/jmeter/preparer.cjs --env "$PROFIL" --lignes 3
+      - name: Campagne et verdict SLO
+        run: |
+          HOTE="$(node -e 'const u=new URL(process.argv[1]);console.log(u.protocol.slice(0,-1),u.hostname,u.port||(u.protocol==="https:"?443:80))' "$PERF_URL")"
+          set -- $HOTE
+          ARGS=(-Jprotocole="$1" -Jhote="$2" -Jport="$3")
+          T="perf/jmeter/donnees/tenant-$PROFIL.txt"; [ -f "$T" ] && ARGS+=(-Jtenant="$(cat "$T")")
+          [ -n "${{ inputs.utilisateurs }}" ] && ARGS+=(-Jutilisateurs="${{ inputs.utilisateurs }}")
+          [ -n "${{ inputs.duree }}" ] && ARGS+=(-Jduree="${{ inputs.duree }}")
+          perf/jmeter/lancer.sh "$PROFIL" "${{ inputs.plan }}" "${ARGS[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: "perf-${{ inputs.environnement }}", path: "perf/jmeter/rapports/${{ vars.PERF_PROFIL }}" }
