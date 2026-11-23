@@ -476,11 +476,17 @@ const MODULES_AVIS = ["approvals", "notifications", "integrations", "effectifs",
   "effectifs_presence", "effectifs_temps", "effectifs_integrations", "effectifs_communication"];
 
 async function etablissementDeCampagne(appel, env, tenantVoulu) {
-  // L'existence se lit dans la liste publique des organismes : `my-modules` ne dit rien d'un organisme pour un compte
-  // système (il ignore X-Tenant-Id et rend une liste vide), et chaque campagne en créait donc un de plus.
-  const publics = await fetch(`${appel.base}/api/auth/tenants`).then((r) => (r.ok ? r.json() : [])).catch(() => []);
-  const existe = !!tenantVoulu && Array.isArray(publics) && publics.some((t) => t.id === tenantVoulu);
-  let tenant = tenantVoulu;
+  // L'existence se lit dans la liste des organismes : `my-modules` ne dit rien d'un organisme pour un compte système (il
+  // ignore X-Tenant-Id et rend une liste vide), et chaque campagne en créait donc un de plus. La liste se demande avec la
+  // session du compte global : en déploiement par sous-domaine (ADR 0033), elle n'est plus donnée à un anonyme.
+  const liste = await appel("GET", "/api/auth/tenants").catch(() => []);
+  const organismes = Array.isArray(liste) ? liste : [];
+  // Sans organisme désigné, celui d'une campagne précédente (« Charge … », le plus récent) : une campagne par jour sur un
+  // environnement partagé ne doit pas laisser un organisme de plus à chaque fois.
+  const precedent = organismes.filter((t) => t.name?.startsWith("Charge ")).sort((a, b) => b.name.localeCompare(a.name))[0];
+  const voulu = tenantVoulu || precedent?.id || "";
+  const existe = !!voulu && organismes.some((t) => t.id === voulu);
+  let tenant = voulu;
   if (!existe) {
     const cree = await appel("POST", "/api/saas/tenants",
       { name: `Charge ${new Date().toISOString().slice(0, 16)}`, type: "public_institution", country: "CA", region: "QC", planCode: "enterprise" }, "");
@@ -507,8 +513,7 @@ async function main() {
   const base = (process.env.PERF_URL || `${p.protocole}://${p.hote}:${p.port}`).replace(/\/+$/, "");
   const compte = lireCsv(path.join(ICI, p.comptes))[0];
   const appel = await client(base, compte);
-  // PERF_TENANT : l'établissement d'une campagne précédente, que le pipeline retrouve par son nom (« Charge … ») — sur
-  // un environnement partagé, une campagne par jour ne doit pas laisser un établissement de plus à chaque fois.
+  // PERF_TENANT ou la propriété `tenant` désignent l'organisme ; sinon, celui de la campagne précédente.
   const tenant = compte.tenantId ? "" : await etablissementDeCampagne(appel, env, process.env.PERF_TENANT || p.tenant || "");
   if (option("profil", "typique") === "volumineux") {
     const v = await semerJournauxDAvis(appel, tenant);

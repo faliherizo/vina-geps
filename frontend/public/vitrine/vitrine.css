@@ -1,0 +1,59 @@
+/* La vitrine de VINA GePS : accueil (index.html) et choix de l'organisme (acceder.html). */
+/* Jetons : la palette de l'application (ADR 0073), contrastes calculés. */
+:root {
+  --marine: #13294b; --fond: #f5f8fb; --surface: #ffffff; --texte: #18324b; --doux: #566a80;
+  --primaire: #0a66b5; --primaire-appui: #08528f; --trait: #d7e3ee; --sarcelle: #0f6b66; --sur-marine: #d5e0ef;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --fond: #0e1726; --surface: #16233a; --texte: #e6edf6; --doux: #b3c2d4; --trait: #2c3d57;
+    --primaire: #7cb8ff; --primaire-appui: #a8d0ff;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-padding-top: 80px; }
+body { margin: 0; font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fond); color: var(--texte); overflow-x: clip; }
+a { color: var(--primaire); }
+.skip-link { position: absolute; left: -9999px; top: 0; background: var(--primaire); color: #fff; padding: 10px 16px; z-index: 10; }
+.skip-link:focus { left: 0; }
+:focus-visible { outline: 3px solid #ffbf47; outline-offset: 2px; }
+.conteneur { max-width: 1120px; margin: 0 auto; padding: 0 16px; }
+header { background: var(--marine); color: #fff; position: sticky; top: 0; z-index: 5; }
+header .conteneur { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; }
+.marque { font-weight: 800; letter-spacing: .04em; font-size: 18px; color: #fff; text-decoration: none; }
+header nav ul { list-style: none; display: flex; gap: 8px 18px; margin: 0; padding: 0; flex-wrap: wrap; }
+header nav a { color: var(--sur-marine); text-decoration: none; display: inline-flex; min-height: 44px; align-items: center; }
+header nav a:hover { color: #fff; text-decoration: underline; }
+.bouton { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 10px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; }
+.bouton-principal { background: var(--sarcelle); color: #fff; }
+.bouton-principal:hover { background: #0b5753; }
+.bouton-second { border: 2px solid currentColor; color: var(--primaire); }
+header .bouton-principal { color: #fff; }
+.heros { padding: 56px 0 40px; }
+.heros h1 { font-size: clamp(28px, 1.4rem + 2.2vw, 46px); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; }
+.heros p.chapeau { font-size: clamp(17px, 1rem + .4vw, 20px); color: var(--doux); max-width: 46rem; margin: 0 0 24px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+section { padding: 40px 0; }
+h2 { font-size: clamp(22px, 1.1rem + 1vw, 30px); margin: 0 0 16px; }
+.cartes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 16px; padding: 0; list-style: none; }
+.carte { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 18px; }
+.carte h3 { margin: 0 0 6px; font-size: 18px; }
+.carte p { margin: 0; color: var(--doux); }
+.video { background: var(--surface); border: 1px solid var(--trait); border-radius: 12px; padding: 16px; }
+video { width: 100%; height: auto; border-radius: 8px; background: #000; display: block; }
+details { margin-top: 12px; }
+summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; font-weight: 700; }
+.preuves { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; list-style: none; padding: 0; }
+.preuves li { background: var(--surface); border: 1px solid var(--trait); border-left: 4px solid var(--sarcelle); border-radius: 8px; padding: 12px 14px; }
+footer { background: var(--marine); color: var(--sur-marine); padding: 24px 0; margin-top: 24px; }
+footer a { color: #fff; }
+
+/* Choix de l'organisme (acceder.html) : une carte par organisme, son adresse lisible, un bouton qui mène à sa connexion. */
+.organismes { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; padding: 0; margin: 0 0 32px; list-style: none; }
+.organisme { display: flex; flex-direction: column; gap: 12px; background: var(--surface); border: 1px solid var(--trait); border-top: 4px solid var(--sarcelle); border-radius: 12px; padding: 20px; }
+.organisme h2 { font-size: clamp(20px, 1rem + .6vw, 24px); margin: 0; }
+.organisme p { margin: 0; color: var(--doux); }
+.organisme .adresse { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 15px; color: var(--texte); overflow-wrap: anywhere; }
+.organisme .bouton { align-self: flex-start; margin-top: auto; }
+.exploitation { border-top: 1px solid var(--trait); padding-top: 24px; }
+.exploitation h2 { font-size: 20px; }

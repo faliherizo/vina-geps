@@ -1,10 +1,11 @@
 {
-  "$commentaire": "Les comptes de la démonstration publique geps.vinaitsolution.com. Source unique : docs/COMPTES-DEMO-GEPS.md les décrit, scripts/semer-demo-geps.cjs sème les organismes, e2e/tests/e2e/deploiement-comptes-demo.spec.ts vérifie que chaque compte ouvre une session. Le mot de passe est celui de DEMO_PASSWORD (défaut Passe!Demo2026) : publié, il ne protège rien — aucune donnée réelle dans cette démonstration.",
+  "$commentaire": "Les comptes de la démonstration publique geps.vinaitsolution.com. Source unique : docs/COMPTES-DEMO-GEPS.md les décrit, scripts/semer-demo-geps.cjs sème les organismes, e2e/tests/e2e/deploiement-comptes-demo.spec.ts vérifie que chaque compte ouvre une session. Le mot de passe est celui de DEMO_PASSWORD (défaut Passe!Demo2026) : publié, il ne protège rien — aucune donnée réelle dans cette démonstration. Chaque organisme a son sous-domaine (`sousDomaine`, ADR 0033) : https://<sousDomaine>.geps.vinaitsolution.com ; la racine n'ouvre que les comptes globaux.",
   "motDePasseParDefaut": "Passe!Demo2026",
   "organismes": [
     {
       "cle": "urgences-sante",
       "nom": "Urgences-santé",
+      "sousDomaine": "urgence-sante",
       "correspondance": "exact",
       "semis": "scripts/creer-organisme-par-defaut.cjs",
       "pourquoi": "L'organisme prêt à l'emploi : un compte par rôle, chaque personne reliée à sa ressource ; c'est celui que filme la vidéo « Mise en route ».",
@@ -62,6 +63,7 @@
     {
       "cle": "urgences-sante-demonstration",
       "nom": "Urgences-santé — démonstration",
+      "sousDomaine": "urgence-sante-demo",
       "correspondance": "prefixe",
       "semis": "scripts/semer-urgences-sante.cjs",
       "pourquoi": "Le contenu des maquettes de l'avis 26-015-DO : chaque valeur nomme sa planche.",
@@ -119,6 +121,7 @@
     {
       "cle": "fx-ao",
       "nom": "Santé Québec Laurentides — démonstration FX-AO",
+      "sousDomaine": "clincom",
       "correspondance": "prefixe",
       "semis": "scripts/semer-fx-ao.cjs",
       "pourquoi": "L'avis FX-AO-20260810 : communications cliniques, six sites, alertes et cascades.",

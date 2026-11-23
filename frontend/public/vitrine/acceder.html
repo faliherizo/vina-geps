@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fr-CA">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Accéder à VINA GePS — choisir son organisme</title>
+  <meta name="description" content="Choisir l'organisme de la démonstration VINA GePS : chaque organisme a sa propre adresse de connexion." />
+  <meta name="theme-color" content="#13294b" />
+  <link rel="icon" href="/icones/icone-192.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/vitrine/vitrine.css" />
+</head>
+<body data-testid="acceder-root">
+  <a class="skip-link" href="#contenu" data-testid="acceder-skip-link">Aller au contenu principal</a>
+  <header>
+    <div class="conteneur">
+      <a class="marque" href="/" aria-label="VINA GePS, accueil">VINA GePS</a>
+      <nav aria-label="Navigation principale">
+        <ul>
+          <li><a href="/" data-testid="acceder-retour">Retour à l'accueil</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu" tabindex="-1">
+    <section class="heros" aria-labelledby="acceder-titre">
+      <div class="conteneur">
+        <h1 id="acceder-titre">Accéder à l'application</h1>
+        <p class="chapeau">Choisissez votre organisme. Chaque organisme a sa propre adresse : on s'y connecte avec les comptes de cet organisme, et rien d'un autre organisme n'y est visible.</p>
+
+        <ul class="organismes" data-testid="acceder-organismes">
+          <li class="organisme" data-testid="acceder-organisme-urgence-sante">
+            <h2 id="org-urgence-sante">Urgences-santé</h2>
+            <p>Gestion des effectifs préhospitaliers : horaires, disponibilités, absences, confection annuelle, pointage et feuilles de temps (avis 26-015-DO).</p>
+            <p class="adresse">urgence-sante.geps.vinaitsolution.com</p>
+            <a class="bouton bouton-principal" href="https://urgence-sante.geps.vinaitsolution.com/admin/login" aria-describedby="org-urgence-sante" data-testid="acceder-urgence-sante">Se connecter à Urgences-santé</a>
+          </li>
+          <li class="organisme" data-testid="acceder-organisme-clincom">
+            <h2 id="org-clincom">Clincom — communications cliniques</h2>
+            <p>Santé Québec Laurentides : alertes et cascades d'appel, messagerie sécurisée et disponibilités des équipes de six sites (avis FX-AO-20260810).</p>
+            <p class="adresse">clincom.geps.vinaitsolution.com</p>
+            <a class="bouton bouton-principal" href="https://clincom.geps.vinaitsolution.com/admin/login" aria-describedby="org-clincom" data-testid="acceder-clincom">Se connecter à Clincom</a>
+          </li>
+        </ul>
+
+        <section class="exploitation" aria-labelledby="exploitation-titre">
+          <h2 id="exploitation-titre">Exploitation de la plateforme</h2>
+          <p>Réservé aux comptes globaux (superadmin) : créer et suspendre des organismes, accorder les modules, suivre l'exploitation. Aucun compte d'organisme ne s'y connecte.</p>
+          <p><a class="bouton bouton-second" href="/admin/login" data-testid="acceder-exploitation">Espace d'exploitation</a></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="conteneur">
+      <p>VINA GePS — VINA Gestion des Personnels de la Santé. <a href="/">Retour à l'accueil</a>.</p>
+    </div>
+  </footer>
+</body>
+</html>

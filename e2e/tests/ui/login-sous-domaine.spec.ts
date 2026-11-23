@@ -38,6 +38,8 @@ test("admin. : la console des comptes globaux, sans sélecteur", async ({ page, 
   await page.goto("/");
   await expect(page.getByTestId("login-comptes-globaux")).toBeVisible();   // le libellé suit la langue du navigateur
   await expect(page.getByTestId("login-tenant")).toHaveCount(0);
+  // Le compte d'un organisme ne s'ouvre pas ici : l'écran mène au choix de l'organisme, où chacun a son adresse.
+  await expect(page.getByTestId("login-vers-organismes")).toHaveAttribute("href", "/acceder");
   await expect(page.getByTestId("login-submit")).toBeEnabled();
   await expectNoA11yViolations(page);
 });

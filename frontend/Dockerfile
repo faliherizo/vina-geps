@@ -21,7 +21,7 @@ COPY --from=build /app/frontend/dist /usr/share/nginx/html
 # Gabarit rempli par l'image nginx au démarrage (envsubst sur ${API_UPSTREAM} et ${API_PORT} seulement).
 COPY frontend/nginx.conf /etc/nginx/templates/default.conf.template
 # API_PROXIES_CONFIANCE : la plage d'où X-Forwarded-For est cru (le VPC en AWS) ; par défaut, personne.
-ENV API_UPSTREAM=backend API_PORT=4000 API_PROXIES_CONFIANCE=127.0.0.1/32 NGINX_ENVSUBST_FILTER="^API_"
+ENV API_UPSTREAM=backend API_PORT=4000 API_PROXIES_CONFIANCE=127.0.0.1/32 VITRINE_HOTE="*" NGINX_ENVSUBST_FILTER="^(API|VITRINE)_"
 # Déclaré explicitement (Trivy DS002) : l'image de base tourne déjà sous nginx (uid 101), mais rien ne le garantissait
 # si elle changeait — c'est l'image livrée qui doit le dire.
 USER 101

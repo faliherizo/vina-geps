@@ -188,7 +188,11 @@ export default function Login() {
             <input id="f-Login-1" value={tenantLocked.name} readOnly disabled />
           </div>
         ) : hote === "global" ? (
-          <p className="subtitle" data-testid="login-comptes-globaux" style={{ marginBottom: 12 }}>{t("login.comptesGlobaux")}</p>
+          <div style={{ marginBottom: 12 }}>
+            <p className="subtitle" data-testid="login-comptes-globaux" style={{ marginBottom: 8 }}>{t("login.comptesGlobaux")}</p>
+            {/* Un compte d'organisme ne s'ouvre que sur l'adresse de son organisme (ADR 0033) : on y mène. */}
+            <p className="subtitle" style={{ margin: 0 }}><a href="/acceder" data-testid="login-vers-organismes">{t("login.versOrganismes")}</a></p>
+          </div>
         ) : (
           // Hors sous-domaine dédié : le choix est **obligatoire**. On se connecte toujours
           // « à un établissement », jamais dans l'absolu — c'est lui qui définit le périmètre

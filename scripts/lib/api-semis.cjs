@@ -7,24 +7,32 @@
  * Le frontal limite le débit (20 requêtes par seconde par adresse, `frontend/nginx.conf`) : c'est un contrôle de
  * sécurité, que le semis respecte au lieu de le contourner — une pause entre deux appels (`SEMIS_PAUSE_MS`).
  */
+const { resolveurHote } = require("./hote-etablissement.cjs");
+
 const PAUSE_MS = Number(process.env.SEMIS_PAUSE_MS ?? 70);
 const attendre = (ms) => new Promise((ok) => setTimeout(ok, ms));
 
 function clientApi(api) {
-  async function appeler(chemin, { methode = "GET", corps, jeton, tenantId } = {}) {
+  const baseDeConnexion = resolveurHote(api);
+  let jetonGlobal;
+
+  async function appeler(chemin, { methode = "GET", corps, jeton, tenantId, base = api } = {}) {
     await attendre(PAUSE_MS);
     const entetes = { "Content-Type": "application/json" };
     if (jeton) entetes.Authorization = `Bearer ${jeton}`;
     if (tenantId) entetes["X-Tenant-Id"] = tenantId;
-    const r = await fetch(`${api}${chemin}`, { method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined });
+    const r = await fetch(`${base}${chemin}`, { method: methode, headers: entetes, body: corps ? JSON.stringify(corps) : undefined });
     const texte = await r.text();
     if (!r.ok) throw new Error(`${methode} ${chemin} → ${r.status} ${texte.slice(0, 300)}`);
     return texte ? JSON.parse(texte) : null;
   }
 
+  /** Un compte d'organisme se connecte sur l'hôte de son organisme (déploiement par sous-domaine) ; un compte global, ici. */
   async function connecter(identifiants) {
-    const r = await appeler("/api/auth/login", { methode: "POST", corps: identifiants });
+    const base = await baseDeConnexion(identifiants.tenantId, jetonGlobal);
+    const r = await appeler("/api/auth/login", { methode: "POST", corps: identifiants, base });
     if (!r?.token) throw new Error(`connexion refusée pour ${identifiants.username}`);
+    if (!identifiants.tenantId) jetonGlobal = r.token;
     return r.token;
   }
 

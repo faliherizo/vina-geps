@@ -26,8 +26,8 @@ Trois formes de données JSON :
 
 | Avis | Exigences | Scénario d'écran | Scénario par l'API | BDD | Au moins un e2e | Sans e2e |
 |---|---|---|---|---|---|---|
-| Urgences-santé 26-015-DO | 144 | 90 | 38 | 100 | 102 | 42 |
-| FX-AO-20260810 | 115 | 32 | 39 | 0 | 44 | 71 |
+| Urgences-santé 26-015-DO | 144 | 90 | 38 | 101 | 102 | 42 |
+| FX-AO-20260810 | 115 | 32 | 43 | 0 | 44 | 71 |
 
 « Sans e2e » : exigences technologiques, engagements contractuels ou responsabilités de l'établissement — chacune
 dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logiciel n'est à jouer.
@@ -1432,7 +1432,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-planification.spec.ts`, `tests/e2e/effectifs-regles.spec.ts`, `tests/e2e/effectifs-socle.spec.ts`
 
-**Essais Java** : `SocleEffectifsDomaineTest.java`, `ControleurIntegrationsEffectifsHttpTest.java`, `ControleurPresenceEffectifsHttpTest.java`, `ActionTest.java`, `DepotRecherchesTest.java`, `ControleurHeuresSupplementairesHttpTest.java`, `comportements.json`, `effectifs-planification.spec.ts`, `effectifs-regles.spec.ts`, `effectifs-socle.spec.ts`
+**Essais Java** : `SocleEffectifsDomaineTest.java`, `ControleurIntegrationsEffectifsHttpTest.java`, `ControleurPresenceEffectifsHttpTest.java`, `comportements.json`, `effectifs-planification.spec.ts`, `effectifs-regles.spec.ts`, `effectifs-socle.spec.ts`
 
 ### E-GN-10 — La solution doit permettre l’audit, l’analyse et la consultation a posteriori de l’ensemble des traces d’exécution et de paramétrage.
 
@@ -1881,7 +1881,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 **BDD** (Cucumber, contre le Java) : « 03-disponibilites.feature — Hors collecte, le dépôt de disponibilités est refusé en disant pourquoi ; en collecte, un dépôt trop maigre est bloqué avec son motif, un dépôt suffisant passe avec un avertissement » ; « 03-disponibilites.feature — Une règle de conformité vise une unité ou un statut d'emploi : elle ne s'applique qu'à ceux qu'elle vise »
 
-**Essais e2e qui la nomment** : `tests/e2e/effectifs-regles.spec.ts`
+**Essais e2e qui la nomment** : `tests/e2e/effectifs-regles.spec.ts`, `tests/e2e/urgences-sante-sp-csn.spec.ts`
 
 **Essais Java** : `ReglesEffectifsDomaineTest.java`, `comportements.json`, `effectifs-regles.spec.ts`
 
@@ -2612,7 +2612,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres » ; « 06-agph.feature — Le dépôt AGPH est jugé par les règles de convention — nombre et durée des quarts — et par le budget fixé par la planification »
+**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres » ; « 06-agph.feature — Le dépôt AGPH est jugé par les règles de convention — nombre et durée des quarts — et par le budget fixé par la planification » ; « 06-agph.feature — La solution propose les postes qui couvrent le plus d'heures sans dépasser le budget, parmi ceux que les dépôts couvrent »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-agph.spec.ts`, `tests/ui/audit-wcag22.spec.ts`
 
@@ -3329,7 +3329,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 04-absences.feature — La dérogation exige un droit, un motif et un code ; elle accorde l'absence et rend les places vacantes par un mécanisme journalisé »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — La dérogation exige un droit, un motif et un code ; elle accorde l'absence et rend les places vacantes par un mécanisme journalisé » ; « 04-absences.feature — Le seuil du code décide du remplacement long terme, sauf pendant une période horaire en cours »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-absences.spec.ts`
 
@@ -3356,7 +3356,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Un remplacement long terme s'ouvre, reçoit les manifestations d'intérêt et s'attribue au plus ancien des intéressés »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Le seuil du code décide du remplacement long terme, sauf pendant une période horaire en cours » ; « 06-agph.feature — Un remplacement long terme s'ouvre, reçoit les manifestations d'intérêt et s'attribue au plus ancien des intéressés »
 
 **Essais Java** : `ControleurAgphEffectifsHttpTest.java`
 
@@ -3702,7 +3702,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés » ; « 04-absences.feature — Le seuil du code décide du remplacement long terme, sauf pendant une période horaire en cours »
 
 **Essais Java** : `ControleurAbsencesEffectifsHttpTest.java`
 
@@ -3923,7 +3923,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 05-echanges.feature — Un échange se propose, s'accepte par l'autre employé seulement, et s'applique aux deux horaires » ; « 05-echanges.feature — Un échange qui priverait un employé de son repos est bloqué, motif à l'appui ; un quart non publié ne s'échange pas »
+**BDD** (Cucumber, contre le Java) : « 02-quarts-et-attribution.feature — Une règle à portée de convention ne vise que ses personnes ; le travail en continuité n'est pas un repos (14.06) mais compte dans les 16 h sur 24 h (16.02) » ; « 05-echanges.feature — Un échange se propose, s'accepte par l'autre employé seulement, et s'applique aux deux horaires » ; « 05-echanges.feature — Un échange qui priverait un employé de son repos est bloqué, motif à l'appui ; un quart non publié ne s'échange pas » ; « 05-echanges.feature — Un échange qui ferait travailler plus de 16 heures sur 24 heures est bloqué, pour la seule personne concernée »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-echanges.spec.ts`
 
@@ -5156,7 +5156,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 08-feuilles-de-temps.feature — La feuille se prépare depuis l'horaire : heures par type, heures supplémentaires, écart planifié-déclaré et anomalies affichées »
+**BDD** (Cucumber, contre le Java) : « 08-feuilles-de-temps.feature — La feuille se prépare depuis l'horaire : heures par type, heures supplémentaires, écart planifié-déclaré et anomalies affichées » ; « 08-feuilles-de-temps.feature — Une convention porte ses propres seuils, dont celui de la période de paie, et seule la feuille de ses personnes en suit le calcul »
 
 **Essais Java** : `ControleurTempsEffectifsHttpTest.java`
 
@@ -5562,7 +5562,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 *essentiel · Technologie · verdict : ACQUIS · lot U8*
 
-**BDD** (Cucumber, contre le Java) : « 11-technologie.feature — Le journal part au bus d'entreprise en événements, et à l'entrepôt de données en versements, à partir d'un curseur »
+**BDD** (Cucumber, contre le Java) : « 11-technologie.feature — Le journal part au bus d'entreprise en événements, et à l'entrepôt de données en versements, à partir d'un curseur » ; « 11-technologie.feature — Les opérations transmettent une absence sur un quart réel par l'API d'échange ; le quart vacant est annoncé au webhook et paraît parmi les correctifs (AD-06c) »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-integrations.spec.ts`
 
@@ -5784,7 +5784,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés » ; « 04-absences.feature — En mode par ancienneté et à tour de rôle, le quart libéré est offert à un rang à la fois ; un refus passe au suivant, qui l'accepte (AD-07) »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-absences.spec.ts`
 
@@ -6317,7 +6317,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Après une dérogation, le quart automatisé va au prioritaire disponible et le quart manuel est offert aux admissibles, avisés » ; « 04-absences.feature — En mode par ancienneté et à tour de rôle, le quart libéré est offert à un rang à la fois ; un refus passe au suivant, qui l'accepte (AD-07) »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-absences.spec.ts`
 
@@ -6398,7 +6398,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres »
+**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres » ; « 06-agph.feature — À son tour, un employé renonce à tout poste ; le tour passe, et le traitement du délai échu se règle par campagne »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-agph.spec.ts`
 
@@ -6449,6 +6449,8 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 ```
 
 </details>
+
+**BDD** (Cucumber, contre le Java) : « 06-agph.feature — À son tour, un employé renonce à tout poste ; le tour passe, et le traitement du délai échu se règle par campagne »
 
 **Essais Java** : `ControleurAgphEffectifsHttpTest.java`
 
@@ -6534,7 +6536,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres »
+**BDD** (Cucumber, contre le Java) : « 06-agph.feature — Une campagne AGPH complète — dépôt, tour de rôle, révision, clôture — puis la gestion régulière reprend les postes libres » ; « 06-agph.feature — À son tour, un employé renonce à tout poste ; le tour passe, et le traitement du délai échu se règle par campagne »
 
 **Essais Java** : `AgphDomaineTest.java`, `ControleurAgphEffectifsHttpTest.java`
 
@@ -6559,7 +6561,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
-**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Une absence de long terme réserve ses places et ouvre un remplacement long terme qui lui est lié »
+**BDD** (Cucumber, contre le Java) : « 04-absences.feature — Une absence de long terme réserve ses places et ouvre un remplacement long terme qui lui est lié » ; « 04-absences.feature — Le seuil du code décide du remplacement long terme, sauf pendant une période horaire en cours »
 
 **Essais e2e qui la nomment** : `tests/e2e/effectifs-absences.spec.ts`
 
@@ -7085,7 +7087,7 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 *préférentiel · Technologie · verdict : HORS_CODE*
 
-**BDD** (Cucumber, contre le Java) : « 11-technologie.feature — L'API se décrit en OpenAPI 3, pour un compte authentifié »
+**BDD** (Cucumber, contre le Java) : « 11-technologie.feature — L'API se décrit en OpenAPI 3, pour un compte authentifié » ; « 11-technologie.feature — Les opérations transmettent une absence sur un quart réel par l'API d'échange ; le quart vacant est annoncé au webhook et paraît parmi les correctifs (AD-06c) »
 
 > **Aucun scénario e2e** — exigence technologique : Développement d'API à inscrire au plan de projet.
 
@@ -9596,6 +9598,8 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
+**Essais Java** : `fx-ao-mobile.spec.ts`
+
 ### FX-021 — Application mobile iOS et Android, si proposée
 
 *critère 21 · fonctionnel · statut ✅*
@@ -9616,6 +9620,77 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
+**Scénario par l'API FX-16** (`fx-ao-comportements.spec.ts`) — Les applications iOS et Android s'abonnent aux alertes ; une plateforme inconnue est refusée
+
+<details><summary>Données JSON de FX-16 (5 étapes)</summary>
+
+```json
+[
+  {
+    "acteur": "julie",
+    "methode": "POST",
+    "chemin": "/api/notifications/appareils",
+    "corps": {
+      "jeton": "ExponentPushToken[ios-{{suffixe}}]",
+      "plateforme": "ios",
+      "nom": "iPhone de Julie"
+    },
+    "attendu": {
+      "statut": 201
+    }
+  },
+  {
+    "acteur": "julie",
+    "methode": "POST",
+    "chemin": "/api/notifications/appareils",
+    "corps": {
+      "jeton": "ExponentPushToken[android-{{suffixe}}]",
+      "plateforme": "android",
+      "nom": "Pixel de Julie"
+    },
+    "attendu": {
+      "statut": 201
+    }
+  },
+  {
+    "acteur": "julie",
+    "methode": "GET",
+    "chemin": "/api/notifications/appareils",
+    "attendu": {
+      "statut": 200,
+      "texte": "\"plateforme\":\"ios\"[\\s\\S]*\"plateforme\":\"android\"|\"plateforme\":\"android\"[\\s\\S]*\"plateforme\":\"ios\""
+    }
+  },
+  {
+    "acteur": "julie",
+    "methode": "POST",
+    "chemin": "/api/notifications/appareils",
+    "corps": {
+      "jeton": "ExponentPushToken[x-{{suffixe}}]",
+      "plateforme": "blackberry"
+    },
+    "attendu": {
+      "statut": 400
+    }
+  },
+  {
+    "pourquoi": "Un jeton qui n'est pas un jeton Expo est refusé",
+    "acteur": "julie",
+    "methode": "POST",
+    "chemin": "/api/notifications/appareils",
+    "corps": {
+      "jeton": "n-importe-quoi",
+      "plateforme": "ios"
+    },
+    "attendu": {
+      "statut": 400
+    }
+  }
+]
+```
+
+</details>
+
 ### FX-022 — Préférences de communication par destinataire, sans contourner les règles obligatoires
 
 *critère 22 · fonctionnel · statut ✅*
@@ -9632,6 +9707,92 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
     "account-tab-profile"
   ]
 }
+```
+
+</details>
+
+**Scénario par l'API FX-14** (`fx-ao-comportements.spec.ts`) — Une destinataire ferme le texto ; une alerte critique le lui envoie quand même (règle obligatoire), et couper tous les canaux écrits est refusé
+
+<details><summary>Données JSON de FX-14 (5 étapes)</summary>
+
+```json
+[
+  {
+    "pourquoi": "Les préférences se règlent par la personne elle-même ; un canal écrit au moins reste actif (règle du serveur)",
+    "acteur": "julie",
+    "methode": "PUT",
+    "chemin": "/api/notifications/preferences",
+    "corps": {
+      "courriel": true,
+      "texto": false,
+      "poussee": false
+    },
+    "attendu": {
+      "statut": 200,
+      "corps": {
+        "courriel": true,
+        "texto": false,
+        "poussee": false
+      }
+    }
+  },
+  {
+    "pourquoi": "Couper tous les canaux écrits est refusé : une alerte doit pouvoir joindre la personne",
+    "acteur": "julie",
+    "methode": "PUT",
+    "chemin": "/api/notifications/preferences",
+    "corps": {
+      "courriel": false,
+      "texto": false,
+      "poussee": false
+    },
+    "attendu": {
+      "statut": 400
+    }
+  },
+  {
+    "acteur": "julie",
+    "methode": "GET",
+    "chemin": "/api/notifications/preferences",
+    "attendu": {
+      "statut": 200,
+      "corps": {
+        "texto": false
+      }
+    }
+  },
+  {
+    "pourquoi": "Une alerte critique impose tous les canaux, quelles que soient les préférences (Priorite.canauxImposes)",
+    "acteur": "dir",
+    "methode": "POST",
+    "chemin": "/api/alertes",
+    "corps": {
+      "titre": "Code orange — afflux massif",
+      "corps": "Rappel du personnel",
+      "priorite": "critique",
+      "personnes": [
+        "{{p_julie}}"
+      ]
+    },
+    "attendu": {
+      "statut": 201,
+      "corps": {
+        "priorite": "critique"
+      }
+    }
+  },
+  {
+    "pourquoi": "Le journal des livraisons : le texto de l'alerte critique est tenté pour Julie, jamais « désactivé » par sa préférence",
+    "methode": "GET",
+    "chemin": "/api/notifications/livraisons?evenement=alerte.critique&canal=sms&destinataire={{u_julie}}",
+    "attendu": {
+      "statut": 200,
+      "texte": "\"canal\":\"sms\"",
+      "absent": "\"etat\":\"desactive\""
+    },
+    "reessayer": 10
+  }
+]
 ```
 
 </details>
@@ -9791,6 +9952,8 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 ```
 
 </details>
+
+**Essais Java** : `fx-ao-mobile.spec.ts`
 
 ### FX-024 — Historique de ses messages et confirmations selon ses droits
 
@@ -10072,6 +10235,72 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
 
 </details>
 
+**Scénario par l'API FX-17** (`fx-ao-comportements.spec.ts`) — La console d'administration est centralisée et réservée : comptes, paramètres des alertes, journal
+
+<details><summary>Données JSON de FX-17 (7 étapes)</summary>
+
+```json
+[
+  {
+    "methode": "GET",
+    "chemin": "/api/auth/users",
+    "attendu": {
+      "statut": 200,
+      "texte": "{{p_julie}}"
+    }
+  },
+  {
+    "methode": "GET",
+    "chemin": "/api/alertes/reglages",
+    "attendu": {
+      "statut": 200
+    }
+  },
+  {
+    "methode": "GET",
+    "chemin": "/api/alertes/reponses",
+    "attendu": {
+      "statut": 200
+    }
+  },
+  {
+    "methode": "GET",
+    "chemin": "/api/auth/journal-actions",
+    "attendu": {
+      "statut": 200
+    }
+  },
+  {
+    "pourquoi": "Une destinataire n'administre rien",
+    "acteur": "julie",
+    "methode": "GET",
+    "chemin": "/api/auth/users",
+    "attendu": {
+      "statut": 403
+    }
+  },
+  {
+    "acteur": "julie",
+    "methode": "GET",
+    "chemin": "/api/auth/journal-actions",
+    "attendu": {
+      "statut": 403
+    }
+  },
+  {
+    "pourquoi": "Une gestionnaire envoie et suit, mais ne règle pas l'organisme",
+    "acteur": "chef",
+    "methode": "GET",
+    "chemin": "/api/auth/users",
+    "attendu": {
+      "statut": 403
+    }
+  }
+]
+```
+
+</details>
+
 ### FX-027 — Créer, modifier, désactiver utilisateurs et groupes (unité, service, spécialité, établissement)
 
 *critère 27 · fonctionnel · statut ✅*
@@ -10312,6 +10541,76 @@ dit, à sa ligne, par quoi elle est prouvée ou pourquoi aucun comportement logi
     "prefixe:sq-appels"
   ]
 }
+```
+
+</details>
+
+**Scénario par l'API FX-15** (`fx-ao-comportements.spec.ts`) — Le numéro de téléphone d'une personne n'est jamais rendu à un expéditeur ni à un destinataire
+
+<details><summary>Données JSON de FX-15 (5 étapes)</summary>
+
+```json
+[
+  {
+    "pourquoi": "Une fiche porte un vrai numéro",
+    "methode": "POST",
+    "chemin": "/api/personnel/employes",
+    "corps": {
+      "firstName": "Nadia",
+      "lastName": "Confidentielle",
+      "email": "nadia.c@exemple.test",
+      "phone": "+1 514 555 0199",
+      "jobTitle": "Inhalothérapeute"
+    },
+    "attendu": {
+      "statut": 201
+    },
+    "capturer": {
+      "nadia": "id"
+    }
+  },
+  {
+    "pourquoi": "La gestionnaire (expéditrice) lit la liste : le nom, jamais le numéro",
+    "acteur": "chef",
+    "methode": "GET",
+    "chemin": "/api/personnel/employes",
+    "attendu": {
+      "statut": 200,
+      "texte": "Confidentielle",
+      "absent": "555.?0199|5145550199"
+    }
+  },
+  {
+    "acteur": "chef",
+    "methode": "GET",
+    "chemin": "/api/personnel/employes/{{nadia}}",
+    "attendu": {
+      "statut": 200,
+      "texte": "Nadia",
+      "absent": "555.?0199|5145550199"
+    }
+  },
+  {
+    "pourquoi": "Une destinataire cherche une collègue : le numéro n'y est pas non plus",
+    "acteur": "julie",
+    "methode": "GET",
+    "chemin": "/api/personnel/employes/suggestions?q=Confid",
+    "attendu": {
+      "statut": 200,
+      "texte": "Confidentielle",
+      "absent": "555.?0199|5145550199"
+    }
+  },
+  {
+    "pourquoi": "Même l'administration ne le relit pas dans la liste : il ne sert qu'à l'acheminement",
+    "methode": "GET",
+    "chemin": "/api/personnel/employes",
+    "attendu": {
+      "statut": 200,
+      "absent": "555.?0199|5145550199"
+    }
+  }
+]
 ```
 
 </details>
