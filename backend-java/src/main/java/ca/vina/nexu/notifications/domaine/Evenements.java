@@ -52,7 +52,17 @@ public final class Evenements {
         }
     }
 
-    public record Evenement(String code, String libelle, String module, String destinataire, Canaux defauts, boolean essentiel) {
+    /**
+     * @param essentiel   la personne ne ferme pas <em>tous</em> ses canaux écrits à cet avis ;
+     * @param obligatoire aucune préférence ne ferme <em>aucun</em> canal : une règle de l'organisation prévaut sur le choix
+     *                    de la personne (FX-AO-20260810, critère 22 ; l'alerte critique, critère 18).
+     */
+    public record Evenement(String code, String libelle, String module, String destinataire, Canaux defauts, boolean essentiel, boolean obligatoire) {
+
+        /** Un événement réglable par la personne : seul l'essentiel garde un canal écrit. */
+        public Evenement(String code, String libelle, String module, String destinataire, Canaux defauts, boolean essentiel) {
+            this(code, libelle, module, destinataire, defauts, essentiel, false);
+        }
 
         public Map<String, Object> vue() {
             Map<String, Object> m = new LinkedHashMap<>();
@@ -62,6 +72,7 @@ public final class Evenements {
             m.put("destinataire", destinataire);
             m.put("defauts", defauts.vue());
             m.put("essentiel", essentiel);
+            m.put("obligatoire", obligatoire);
             m.put("moduleLibelle", LIBELLE_MODULE.get(module));
             return m;
         }
@@ -78,7 +89,10 @@ public final class Evenements {
             new Evenement("alerte.recue", "Alerte clinique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true),
             // ST-G07 : une alerte critique se pousse avec l'étiquette « critique » — canal Android à importance maximale,
             // niveau d'interruption critique sur iOS si Apple l'accorde, interaction exigée dans le navigateur.
-            new Evenement(Evenements.ALERTE_CRITIQUE, "Alerte clinique critique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true));
+            // Obligatoire : la préférence d'une personne ne ferme aucun canal à une alerte critique. Le domaine des alertes
+            // imposait déjà tous les canaux (Priorite.canauxImposes), mais l'envoi revérifiait la préférence canal par canal
+            // et marquait « désactivé » le texto qu'elle avait fermé (tests e2e FX-AO, FX-14, 22 nov. 2026).
+            new Evenement(Evenements.ALERTE_CRITIQUE, "Alerte clinique critique reçue", "alertes", "les destinataires de l'alerte", new Canaux(true, true, true), true, true));
 
     /** L'événement d'une alerte de priorité critique. */
     public static final String ALERTE_CRITIQUE = "alerte.critique";

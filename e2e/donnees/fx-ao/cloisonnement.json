@@ -1,0 +1,47 @@
+{
+ "pourquoi": "Ce que le SERVEUR accorde à l'organisme FX-AO-20260810, et refuse. Masquer une vue au menu n'est pas une permission : chaque route ci-dessous est appelée par l'API, profil par profil, sur l'organisme que sème scripts/semer-fx-ao.cjs. Joué par fx-ao-cloisonnement.spec.ts.",
+ "modules": {
+  "attendus": ["alertes", "effectifs", "effectifs_communication", "effectifs_disponibilites", "effectifs_absences", "effectifs_planification", "effectifs_regles"],
+  "justification": {
+   "alertes": "critères 1 à 19, 24, 31, 32 : console d'envoi, réponses, suivi, relances, cascades",
+   "effectifs_communication": "critère 4 : messagerie bidirectionnelle ; critère 29 : appel par le numéro du centre",
+   "effectifs_disponibilites": "critère 25 : calendrier interne de disponibilité",
+   "effectifs_absences": "critère 25 : une personne absente n'est pas disponible",
+   "effectifs_planification": "dépendance technique de disponibilités et d'absences (CatalogueModules.requiert), vues masquées",
+   "effectifs_regles": "dépendance technique de la planification, vues masquées",
+   "effectifs": "socle des modules d'effectifs ; référentiels des sites (critère 38) et des ressources"
+  },
+  "jamais": ["paie", "effectifs_temps", "effectifs_presence", "effectifs_echanges", "effectifs_agph", "effectifs_integrations", "integrations", "confidentialite"]
+ },
+ "refusesATous": [
+  { "chemin": "/api/paie/dossiers", "pourquoi": "paie : hors de l'avis" },
+  { "chemin": "/api/effectifs/temps/feuilles", "pourquoi": "feuilles de temps : hors de l'avis" },
+  { "chemin": "/api/effectifs/presence/pointages", "pourquoi": "pointage : hors de l'avis" },
+  { "chemin": "/api/effectifs/echanges", "pourquoi": "échanges de quarts : hors de l'avis" },
+  { "chemin": "/api/effectifs/agph/campagnes", "pourquoi": "AGPH : hors de l'avis" },
+  { "chemin": "/api/effectifs/integrations/connecteurs", "pourquoi": "connecteurs RH : hors de l'avis" },
+  { "chemin": "/api/integrations/api-clients", "pourquoi": "clés d'API machine : module integrations non accordé (IN-FX-02)" },
+  { "chemin": "/api/integrations/webhooks", "pourquoi": "webhooks sortants : module integrations non accordé" },
+  { "chemin": "/api/securite/incidents", "pourquoi": "registre Loi 25 : module confidentialite non accordé" }
+ ],
+ "profils": {
+  "admin": {
+   "permis": ["/api/alertes/reponses", "/api/alertes/reglages", "/api/alertes/envoyees", "/api/communication/conversations",
+              "/api/effectifs/disponibilites/moi", "/api/auth/users", "/api/auth/journal-actions", "/api/alertes/utilisateurs-actifs?mois={{mois}}"],
+   "refuses": []
+  },
+  "coord.urgence": {
+   "permis": ["/api/alertes/envoyees", "/api/alertes/groupes", "/api/alertes/recues", "/api/communication/conversations"],
+   "refuses": ["/api/auth/users", "/api/auth/journal-actions", "/api/alertes/utilisateurs-actifs?mois={{mois}}"]
+  },
+  "exp.garde.hsj": {
+   "permis": ["/api/alertes/envoyees", "/api/alertes/groupes"],
+   "refuses": ["/api/auth/users", "/api/auth/journal-actions", "/api/alertes/utilisateurs-actifs?mois={{mois}}"]
+  },
+  "inf.roy": {
+   "permis": ["/api/alertes/recues", "/api/communication/conversations", "/api/effectifs/disponibilites/moi", "/api/notifications/preferences"],
+   "refuses": ["/api/alertes/envoyees", "/api/alertes/groupes", "/api/auth/users", "/api/auth/journal-actions"]
+  }
+ },
+ "autreOrganisme": "t-inexistant-fx-ao"
+}

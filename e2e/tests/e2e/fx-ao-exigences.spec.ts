@@ -70,6 +70,10 @@ test.describe.serial("FX-AO-20260810 — la grille de conformité, à l'écran",
     const fonctionnels = CRITERES.filter((c) => c.bloc === "fonctionnel");
     // Un critère fonctionnel acquis se constate à l'écran : sans page ni commande, il n'est que déclaré.
     expect(fonctionnels.filter((c) => c.statut === "✅" && (!c.page || !(c.preuve ?? []).length)).map((c) => c.id)).toEqual([]);
+    // Et il se prouve par un comportement : un scénario joué contre l'API, ou un essai qui agit. La présence d'un écran
+    // ne dit pas que la règle tient — c'est ainsi que 20, 21, 22, 26 et 29 étaient « acquis » sans preuve (22 nov. 2026).
+    expect(fonctionnels.filter((c) => c.statut !== "📄" && !(c.scenarios ?? []).length && !(c.essaiProfond ?? []).length)
+      .map((c) => c.id), "critères fonctionnels sans preuve de comportement").toEqual([]);
     const connus = new Set(comportements.scenarios.map((s) => s.id));
     const inconnus = CRITERES.flatMap((c) => (c.scenarios ?? []).filter((s) => !connus.has(s)).map((s) => `${c.id} → ${s}`));
     expect(inconnus).toEqual([]);

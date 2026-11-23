@@ -86,6 +86,21 @@ class EvenementsTest {
     }
 
     @Test
+    @DisplayName("un avis obligatoire (l'alerte critique) passe outre chaque préférence fermée ; un avis réglable la respecte (critère 22)")
+    void obligatoirePasseOutreLesPreferences() {
+        Preferences ferme = Preferences.PAR_DEFAUT.fusionner(Map.of("texto", false, "poussee", false), "t")
+                .fusionner(Map.of("evenements", Map.of(Evenements.ALERTE_CRITIQUE, Map.of("texto", false, "poussee", false))), "t2");
+        for (String canal : List.of("courriel", "texto", "poussee")) {
+            assertThat(ferme.ouvert(canal, Evenements.ALERTE_CRITIQUE)).as(canal).isTrue();
+        }
+        assertThat(ferme.ouvert("texto", "alerte.recue")).as("l'alerte ordinaire suit la préférence").isFalse();
+        assertThat(ferme.ouvert("poussee", "quart.offert")).isFalse();
+        assertThat(Evenements.TOUS.stream().filter(Evenement::obligatoire).map(Evenement::code)).containsExactly(Evenements.ALERTE_CRITIQUE);
+        assertThat(Evenements.parCode(Evenements.ALERTE_CRITIQUE).orElseThrow().vue()).containsEntry("obligatoire", true);
+        assertThat(Evenements.parCode("quart.offert").orElseThrow().vue()).containsEntry("obligatoire", false);
+    }
+
+    @Test
     @DisplayName("le courriel dit qui envoie, pourquoi et où régler ; le texto porte l'identité, le retrait, et tient dans la limite ; l'envoi manuel se refuse nommément")
     void textes() {
         String pied = Avis.piedDeCourriel("CSS des Rives", Evenements.parCode("quart.offert").orElseThrow(), "https://nexu.exemple", "/admin/timesheets");
