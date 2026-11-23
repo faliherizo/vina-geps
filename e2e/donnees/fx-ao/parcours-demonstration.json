@@ -1,0 +1,73 @@
+{
+  "_lecture": "Les gestes de l'avis FX-AO-20260810, posés à l'écran sur l'organisme Clincom déployé, compte par compte : déclarer une absence, déposer une disponibilité, envoyer une alerte à un groupe et à une personne puis y répondre, écrire à une personne et à un groupe. Lu par tests/e2e/deploiement-fx-ao-parcours.spec.ts. Contrairement à deploiement-fx-ao-fonctionnalites.spec.ts, ces essais ÉCRIVENT dans la démonstration : chaque titre et chaque message porte la marque « Exercice e2e » et l'heure, l'absence est annulée à la fin, le dépôt de disponibilité se remplace, et le fil de groupe est repris s'il existe. Les jours sont comptés depuis aujourd'hui.",
+  "marque": "Exercice e2e",
+  "absence": {
+    "pourquoi": "Critère 25 : une personne déclare son absence depuis « Mes absences » ; l'administration la voit dans « Absences et comblement » ; l'absence acceptée la rend indisponible pour les cascades. Annulée à la fin : la démonstration n'en garde pas trace.",
+    "compte": "inf.cote",
+    "nom": "Marc Côté",
+    "code": "CONG",
+    "du": 40,
+    "au": 41,
+    "verificateur": "admin"
+  },
+  "disponibilite": {
+    "pourquoi": "Critère 25 : une personne dépose ses disponibilités pour la période en collecte de son site ; le dépôt se remplace à chaque passage.",
+    "compte": "inf.roy",
+    "periode": "Collecte — Hôpital de Saint-Jérôme",
+    "etat": "Collecte ouverte"
+  },
+  "alerte": {
+    "pourquoi": "Critères 1, 3, 5, 9, 11 : le gestionnaire vise la garde de cardiologie (un groupe) et cherche Julie Roy par son nom ; la Dre Tremblay prend en charge d'un geste, Julie Roy lit ; le suivi nomme qui a pris en charge.",
+    "expediteur": "chef.urgence.hsj",
+    "modele": "Rappel de garde",
+    "titre": "Rappel de garde",
+    "corps": "Consultation demandée à l'urgence, salle 3.",
+    "priorite": "information",
+    "groupes": [
+      "Garde de cardiologie"
+    ],
+    "recherches": [
+      {
+        "texte": "Roy",
+        "personId": "inf.roy",
+        "nom": "Julie Roy"
+      }
+    ],
+    "destinataires": 3,
+    "priseEnCharge": {
+      "compte": "dre.tremblay",
+      "nom": "Dre Isabelle Tremblay",
+      "reponse": "J'arrive"
+    },
+    "lecteurs": [
+      "inf.roy"
+    ]
+  },
+  "messages": {
+    "direct": {
+      "pourquoi": "Critère 4 : un message entre deux personnes, choisies par leur nom ; il arrive dans leur fil à deux.",
+      "de": "inf.roy",
+      "nomDe": "Julie Roy",
+      "a": "dre.tremblay",
+      "nomA": "Dre Isabelle Tremblay",
+      "texte": "Pouvez-vous passer voir le patient de la salle 3 ?"
+    },
+    "groupe": {
+      "pourquoi": "Critère 4 : un fil de groupe ; un participant ajouté y lit le message.",
+      "de": "inf.roy",
+      "sujet": "Exercice e2e — équipe de Saint-Jérôme",
+      "participants": [
+        {
+          "compte": "dre.tremblay",
+          "nom": "Dre Isabelle Tremblay"
+        },
+        {
+          "compte": "chef.urgence.hsj",
+          "nom": "Martin Gagnon"
+        }
+      ],
+      "lecteur": "chef.urgence.hsj",
+      "texte": "Point d'équipe à 15 h au poste."
+    }
+  }
+}

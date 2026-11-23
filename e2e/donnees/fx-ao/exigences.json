@@ -43,6 +43,7 @@
    "bloc": "fonctionnel",
    "page": "alnouvelle",
    "preuve": [
+    "aln-recherche",
     "aln-groupe-personnes"
    ],
    "scenarios": [

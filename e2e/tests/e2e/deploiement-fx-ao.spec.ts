@@ -9,23 +9,17 @@
  *
  * Piloté par `donnees/fx-ao/demonstration.json` (vues gardées) et `donnees/fx-ao/exigences.json` (critères).
  */
-import { test, expect, type Page } from "@playwright/test";
-import comptesDemo from "../../donnees/geps/comptes-demo.json";
+import { test, expect } from "@playwright/test";
 import donnees from "../../donnees/fx-ao/demonstration.json";
 import jeu from "../../donnees/fx-ao/exigences.json";
-import { menuPret } from "./helpers/nav";
 import { commandePresente, poser, type Geste } from "./helpers/gestes";
 import { auditA11y } from "./helpers/a11y";
+import { DEPLOYE, SEMES, allerA, entreesDuMenu, hoteDe, organismeDemo, seConnecter } from "./helpers/demonstration-deployee";
 
-const DEPLOYE = !!process.env.E2E_BASE_URL;
-const SEMES = process.env.E2E_COMPTES_DEMO === "1";
-const MDP = process.env.E2E_DEMO_PASSWORD || comptesDemo.motDePasseParDefaut;
-const ORGANISME = comptesDemo.organismes.find((o) => o.cle === "fx-ao")!;
+const ORGANISME = organismeDemo("fx-ao");
 const GARDEES = new Set(donnees.vuesGardees.cles);
 /** Ce que l'administration doit trouver au menu : les écrans de la grille qu'elle opère (fx-ao-menu.spec.ts), et les ressources. */
 const ATTENDUS_ADMIN = ["alnouvelle", "alsuivi", "mesalertes", "alparametres", "admin", "access", "usmessages", "usressources", "help"];
-/** Laisse le seau de la limitation de débit se vider entre deux écrans (`E2E_PAUSE_MS`). */
-const PAUSE_MS = Number(process.env.E2E_PAUSE_MS ?? 2500);
 const MODULES = ["alertes", "effectifs", "effectifs_absences", "effectifs_communication", "effectifs_disponibilites", "effectifs_planification", "effectifs_regles"];
 
 interface Critere { id: string; bloc: string; statut: string; page?: string; prealable?: Geste[]; preuve?: string[] }
@@ -34,48 +28,11 @@ const CRITERES = (jeu.exigences as Critere[]).filter((c) => c.bloc === "fonction
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: "serial", timeout: 600_000 });
 
-/** L'hôte de l'organisme : `https://clincom.<racine>` en déploiement par sous-domaine (ADR 0094). */
-async function hoteDeLOrganisme(page: Page): Promise<string> {
-  const d = await (await page.request.get(`${process.env.E2E_BASE_URL}/api/auth/deploiement`)).json();
-  if (d.resolution !== "sous_domaine") return process.env.E2E_BASE_URL!;
-  const u = new URL(process.env.E2E_BASE_URL!);
-  u.hostname = `${ORGANISME.sousDomaine}.${d.domaineRacine}`;
-  return u.origin;
-}
-
-async function seConnecter(page: Page, hote: string) {
-  await page.goto(`${hote}/admin/login`);
-  await expect(page.getByTestId("login-tenant-locked")).toBeVisible({ timeout: 30_000 });
-  await page.getByTestId("login-user").fill("admin");
-  await page.getByTestId("login-pass").fill(MDP);
-  await page.getByTestId("login-submit").click();
-  await expect(page.getByTestId("logout")).toBeVisible({ timeout: 60_000 });
-  await menuPret(page);
-}
-
-/**
- * Ouvrir un écran au rythme d'une personne. Le frontal limite le débit par adresse (20 requêtes/s, rafale de 40 —
- * `frontend/nginx.conf`, MIFI #94) : un écran rechargé en appelle une vingtaine, et enchaîner les rechargements sans
- * pause faisait répondre 503 à la moitié des écrans. L'essai respecte ce contrôle de sécurité au lieu de le contourner.
- */
-async function allerA(page: Page, url: string) {
-  await page.goto(url);
-  await page.waitForLoadState("networkidle", { timeout: 30_000 }).catch(() => {});
-  await page.waitForTimeout(PAUSE_MS);
-}
-
-/** Les vues du menu : les entrées, sans les rubriques ni les notions (`nav-access-octrois` est la vue `access:octrois`). */
-async function entreesDuMenu(page: Page): Promise<string[]> {
-  const ids = await page.locator('nav [data-testid^="nav-"]').evaluateAll((els) => els.map((e) => e.getAttribute("data-testid") ?? ""));
-  return [...new Set(ids.filter((i) => !i.startsWith("nav-group-") && !i.startsWith("nav-concept-"))
-    .map((i) => i.slice(4).replace(/^access-/, "access:")))];
-}
-
 test.describe("Déploiement — FX-AO-20260810 sur l'organisme montré au client", () => {
   test.skip(!DEPLOYE || !SEMES, "vise une démonstration déployée et semée : poser E2E_BASE_URL et E2E_COMPTES_DEMO=1");
 
   test("l'administration a exactement les modules et le menu de l'avis", async ({ page }) => {
-    const hote = await hoteDeLOrganisme(page);
+    const hote = await hoteDe(page.request, ORGANISME);
     await seConnecter(page, hote);
     const modules = (await (await page.request.get(`${hote}/api/saas/my-modules`)).json()).modules as string[];
     expect([...modules].sort(), "modules accordés à l'organisme").toEqual([...MODULES].sort());
@@ -85,7 +42,7 @@ test.describe("Déploiement — FX-AO-20260810 sur l'organisme montré au client
   });
 
   test("chaque écran du menu s'ouvre, sans erreur ni violation axe-core", async ({ page }) => {
-    const hote = await hoteDeLOrganisme(page);
+    const hote = await hoteDe(page.request, ORGANISME);
     await seConnecter(page, hote);
     const pages = [...new Set((await entreesDuMenu(page)).map((v) => v.split(":")[0]))];
     const defauts: string[] = [];
@@ -100,7 +57,7 @@ test.describe("Déploiement — FX-AO-20260810 sur l'organisme montré au client
   });
 
   test("chaque critère fonctionnel a son écran et ses commandes", async ({ page }) => {
-    const hote = await hoteDeLOrganisme(page);
+    const hote = await hoteDe(page.request, ORGANISME);
     await seConnecter(page, hote);
     const manquants: string[] = [];
     const refus: string[] = [];

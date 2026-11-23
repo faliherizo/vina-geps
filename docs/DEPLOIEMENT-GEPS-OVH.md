@@ -153,6 +153,11 @@ quel environnement déployé. Les ajouter pour Azure : [PIPELINES-ENVIRONNEMENTS
      FX-AO-20260810, chaque écran du menu s'ouvre sans erreur ni violation axe-core, et chaque critère fonctionnel a son
      écran et ses commandes. Il ouvre les écrans au rythme d'une personne (`E2E_PAUSE_MS`, 2,5 s) : la limitation de
      débit du frontal répond 503 à des rechargements enchaînés.
+   - `deploiement-fx-ao-fonctionnalites.spec.ts` : sur `clincom.`, chaque fonctionnalité de l'avis jugée sur ses
+     valeurs, par l'API et à l'écran, compte par compte (`donnees/fx-ao/fonctionnalites.json`) : le menu et les droits
+     des six profils, les groupes de garde et leur modératrice, le congé du Dr Lavoie que la cascade respecte, la prise
+     en charge nommée au suivi, la recherche d'un destinataire par son nom. Un organisme semé à moitié y échoue en
+     nommant ce qui manque ; l'essai de présence ci-dessus le laissait passer.
 
 La porte retenue est « dès la construction » : le déploiement n'attend pas la CI complète (`ci.yml`, sur `main`).
 Une démonstration de `develop` peut donc montrer un défaut que la CI aurait refusé. C'est le prix d'une démonstration
@@ -274,7 +279,7 @@ gh workflow run recette-e2e.yml -f environnement=geps-demo
 cd e2e
 E2E_BASE_URL=https://geps.vinaitsolution.com E2E_SUPERADMIN_PASSWORD='…' E2E_COMPTES_DEMO=1 \
   npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts \
-  tests/e2e/deploiement-fx-ao.spec.ts
+  tests/e2e/deploiement-fx-ao.spec.ts tests/e2e/deploiement-fx-ao-fonctionnalites.spec.ts
 ```
 
 Ajouter un essai à la recette : il doit **seulement lire** et se sauter sans `E2E_BASE_URL`. On le passe ensuite dans

@@ -5,6 +5,7 @@ import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.acces.infrastructure.persistance.RegistrePolitiqueAcces;
 import ca.vina.nexu.alertes.infrastructure.configuration.ConfigurationAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotGroupesTransverses;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
 import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
 import ca.vina.nexu.communication.domaine.ListesDistribution;
@@ -77,7 +78,7 @@ class ControleurNotesHttpTest {
             public List<String> membresActifsDuGroupe(String tenantId, String groupeId) {
                 return List.of();
             }
-        }, jdbc);
+        }, new DepotGroupesTransverses(jdbc), jdbc);
         Clock horloge = Clock.fixed(Instant.parse("2026-11-15T12:00:00Z"), ZoneOffset.UTC);
         http = new ClientHttpEssai(new ControleurNotes(new GardeAlertes(new GardeAcces(new RegistrePolitiqueAcces()), new DepotModulesActives(jdbc)),
                 new ConfigurationAlertes().gestionnaireNotes(jdbc, annuaire, horloge)));

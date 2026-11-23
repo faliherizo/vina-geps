@@ -169,6 +169,30 @@ describe("Nouvelle alerte", () => {
     expect($("aln-pers-marc")).toBeNull();
   });
 
+  it("critère 3 : un destinataire se cherche par son nom dès trois caractères, puis se coche ; l'état de la recherche s'annonce", async () => {
+    api.etat.routes = { ...routes, "GET /api/alertes/personnes?q=lav": [{ personId: "dr.lavoie", nom: "Dr Antoine Lavoie" }] };
+    await rendre(<NouvelleAlerte />);
+    const laisserFinirLaFrappe = () => act(async () => { await new Promise((ok) => setTimeout(ok, 300)); });
+    await saisir("aln-recherche", "la");
+    await laisserFinirLaFrappe();
+    expect($("aln-recherche-etat")!.textContent).toBe("Saisir au moins 3 caractères.");
+    expect(api.etat.appels.some((a) => a.url.startsWith("/api/alertes/personnes"))).toBe(false);
+    await saisir("aln-recherche", " lav ");
+    await laisserFinirLaFrappe();
+    await attendre();
+    expect($("aln-recherche-etat")!.textContent).toBe("1 personne(s) trouvée(s).");
+    expect($("aln-recherche-etat")!.getAttribute("role")).toBe("status");
+    await cliquer("aln-trouvee-dr.lavoie");
+    expect($("aln-compte")!.textContent).toBe("0 groupe(s) et 1 personne(s) choisis : Dr Antoine Lavoie.");
+    await saisir("aln-recherche", "");
+    expect($("aln-trouvee-dr.lavoie")).toBeNull();
+    // Retirer le texte n'efface pas le choix : la personne part avec l'alerte.
+    await saisir("aln-titre-champ", "Consultation");
+    await saisir("aln-corps", "Urgence, salle 3");
+    await act(async () => { ($("aln-envoyer") as HTMLButtonElement).form!.requestSubmit(); }); await attendre();
+    expect(envoisVers("/api/alertes").at(-1)!.corps).toMatchObject({ personnes: ["dr.lavoie"] });
+  });
+
   it("ST-G01/G02 : une liste de distribution se vise ; le modèle choisi part avec l'alerte ; sans le droit, la critique est inactive et l'écran dit pourquoi", async () => {
     api.etat.routes = { ...routes, "GET /api/alertes/droits": { envoyer: true, critique: false, configurer: false },
       "GET /api/alertes/modeles": [...routes["GET /api/alertes/modeles"], { id: "m3", titre: "Relève", corps: "Qui prend la nuit ?", priorite: "urgente", reponseIds: [], actif: true }] };

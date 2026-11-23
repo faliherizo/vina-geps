@@ -13,3 +13,7 @@ Six écrans indicatifs ont été produits en double format :
 6. Tableau de bord opérationnel.
 
 Les maquettes illustrent une structure de navigation et des zones fonctionnelles, pas un design final validé. Les champs, libellés, statuts, contrastes, parcours clavier, lecteurs d'écran, messages d'erreur et règles d'accessibilité devront être détaillés avec les utilisateurs. Cible de conception recommandée : WCAG 2.2 niveau AA; ce niveau n'est pas explicitement formulé comme exigence dans les deux pièces fournies.
+
+**Relevé sur le produit livré (23 novembre 2026)** : [07_maquette_menus_fonctionnalites.md](07_maquette_menus_fonctionnalites.md)
+— le menu de chaque profil, les écrans d'alerte, de garde et de disponibilité, et les besoins qu'ils servent ; chaque
+capacité y est jugée par `e2e/tests/e2e/deploiement-fx-ao-fonctionnalites.spec.ts` sur la démonstration déployée.

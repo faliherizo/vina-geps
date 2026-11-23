@@ -20,7 +20,7 @@
  * deux démonstrations.
  */
 const donnees = require("../e2e/donnees/urgences-sante/demonstration.json");
-const { clientApi, argument: arg, jour } = require("./lib/api-semis.cjs");
+const { clientApi, argument: arg, jour, SEMIS_EN_COURS, achever } = require("./lib/api-semis.cjs");
 
 const API = arg("api", process.env.API_URL || "http://localhost:4000");
 const MDP = arg("mdp", process.env.DEMO_PASSWORD || "Passe!Demo2026");
@@ -69,7 +69,7 @@ async function semer() {
   const jetonSa = await connecter(SUPERADMIN);
   const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ");
   // `SEMIS_NOM_ORGANISME` : le tournage du film nomme l'organisme sans client ni appel d'offres (monter-video-vitrine.sh).
-  const nom = `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`;
+  const nom = `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})${SEMIS_EN_COURS}`;
 
   /**
    * **`/api/superadmin/tenants`, et non `/api/saas/tenants`.**
@@ -290,7 +290,7 @@ async function semer() {
   await semerPaie(ctx, tenant.id, comptes)
     .catch((e) => console.warn(`  paie non semée : ${e.message.slice(0, 200)}`));
 
-  return { tenant, comptes, quarts, periode };
+  return { tenant: await achever(appeler, jetonSa, tenant), comptes, quarts, periode };
 }
 
 /**

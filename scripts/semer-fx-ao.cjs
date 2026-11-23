@@ -15,7 +15,7 @@
  * crée un nouvel organisme horodaté : une démonstration ne s'écrase pas pendant qu'on la montre.
  */
 const donnees = require("../e2e/donnees/fx-ao/demonstration.json");
-const { clientApi, argument, jour } = require("./lib/api-semis.cjs");
+const { clientApi, argument, jour, SEMIS_EN_COURS, achever } = require("./lib/api-semis.cjs");
 
 const API = argument("api", process.env.API_URL || "http://localhost:4000");
 const MDP = argument("mdp", process.env.DEMO_PASSWORD || "Passe!Demo2026");
@@ -28,7 +28,7 @@ async function creerOrganisme() {
   const horodatage = new Date().toISOString().slice(0, 16).replace("T", " ");
   const cree = await appeler("/api/superadmin/tenants", {
     methode: "POST", jeton: jetonSa,
-    corps: { name: `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})`, type: "public_institution", country: "CA", region: "QC",
+    corps: { name: `${process.env.SEMIS_NOM_ORGANISME ?? donnees.organisme.nom} (${horodatage})${SEMIS_EN_COURS}`, type: "public_institution", country: "CA", region: "QC",
       planCode: donnees.organisme.planCode, adminUsername: "admin", adminPassword: MDP,
       // Le sous-domaine de l'organisme (ADR 0033) : ses comptes ne se connectent que là en déploiement par sous-domaine.
       slug: process.env.SEMIS_SOUS_DOMAINE || undefined },
@@ -39,7 +39,7 @@ async function creerOrganisme() {
   const tenant = cree.tenant;
   await appeler(`/api/saas/tenants/${tenant.id}/modules`, { methode: "PUT", jeton: jetonSa, corps: { modules: donnees.modules } });
   await cloisonner(jetonSa, tenant.id);
-  return tenant;
+  return { tenant, jetonSa };
 }
 
 /** Le menu réduit à l'avis : toute vue du catalogue qui n'est pas nommée dans `vuesGardees` est masquée. */
@@ -56,6 +56,7 @@ async function semerPersonnes(ctx) {
   const poser = (chemin, corps) => appeler(chemin, { ...ctx, methode: "POST", corps });
   for (const s of donnees.sites) await poser("/api/effectifs/referentiels/unites", { effectifDepuis: "2026-01-01", ...s });
   for (const c of donnees.corpsEmploi) await poser("/api/effectifs/referentiels/corps_emploi", { effectifDepuis: "2026-01-01", ...c });
+  for (const c of donnees.codesAbsence) await poser("/api/effectifs/referentiels/codes_absence", { effectifDepuis: "2026-01-01", ...c });
   // Les rôles propres d'abord (ADR 0085) : un compte ne peut porter qu'un rôle qui existe déjà.
   for (const r of donnees.rolesPropres.roles) await poser("/api/auth/roles", r);
   const comptes = {};
@@ -130,14 +131,41 @@ async function semerAlertes(tenantId, groupes, parametres) {
   await comme(n.par, `/api/alertes/notes/${n.personne}`, "PUT", { texte: n.texte });
 }
 
+/** Une période en collecte par site nommé : « Mes disponibilités » a de quoi recevoir un dépôt (critère 25). */
+async function semerPeriodes(ctx) {
+  for (const p of donnees.periodesCollecte.liste) {
+    const periode = await appeler("/api/effectifs/planification/periodes", { ...ctx, methode: "POST",
+      corps: { nom: p.nom, uniteCode: p.uniteCode, debut: jour(p.debut), fin: jour(p.fin) } });
+    await appeler(`/api/effectifs/planification/periodes/${periode.id}/etat`, { ...ctx, methode: "POST",
+      corps: { etat: "COLLECTE", finCollecte: jour(p.finCollecte) } });
+  }
+}
+
+/**
+ * Le calendrier interne (critère 25) : chaque absence est déclarée **par la personne**, depuis « Mes absences » ; si une
+ * règle la retient pour approbation, l'administration l'approuve. Une absence non acceptée ne rend personne indisponible.
+ */
+async function semerAbsences(ctx) {
+  const jetons = {};
+  for (const a of donnees.absences.liste) {
+    jetons[a.personne] ??= await connecter({ username: a.personne, password: MDP, tenantId: ctx.tenantId });
+    const r = await appeler("/api/effectifs/absences", { jeton: jetons[a.personne], tenantId: ctx.tenantId, methode: "POST",
+      corps: { motif: a.motif, du: jour(a.du), au: jour(a.au), commentaire: a.commentaire } });
+    if (r.statut === "A_APPROUVER") await appeler(`/api/effectifs/absences/${r.ids[0]}/decisions`, { ...ctx, methode: "POST", corps: { decision: "APPROUVER" } });
+    else if (r.statut !== "ACCEPTEE") throw new Error(`absence de ${a.personne} : ${r.statut} (${(r.motifs ?? []).join(" ; ")})`);
+  }
+}
+
 async function semer() {
-  const tenant = await creerOrganisme();
+  const { tenant, jetonSa } = await creerOrganisme();
   const ctx = { jeton: await connecter({ username: "admin", password: MDP, tenantId: tenant.id }), tenantId: tenant.id };
   const comptes = await semerPersonnes(ctx);
   const groupes = await semerGroupes(ctx);
   const parametres = await semerParametres(ctx, groupes);
+  await semerAbsences(ctx);
+  await semerPeriodes(ctx);
   await semerAlertes(tenant.id, groupes, parametres);
-  return { tenant, comptes };
+  return { tenant: await achever(appeler, jetonSa, tenant), comptes };
 }
 
 /**

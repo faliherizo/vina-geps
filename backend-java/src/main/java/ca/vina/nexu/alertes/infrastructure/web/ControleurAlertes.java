@@ -135,6 +135,12 @@ public class ControleurAlertes {
         return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK, a -> cas.lecture().membres(a.tenantId(), id).stream().map(VuesAlertes::personne).toList());
     }
 
+    /** Un destinataire cherché par son nom ou son prénom (critère 3), dès trois caractères ; réservé à qui envoie. */
+    @GetMapping("/personnes")
+    public ResponseEntity<Object> personnes(HttpServletRequest r, @RequestParam(required = false) String q) {
+        return repondre(r, garde.capacite(r, CAPACITE_ENVOI), OK, a -> cas.lecture().rechercher(a.tenantId(), q).stream().map(VuesAlertes::personne).toList());
+    }
+
     /** Les listes de distribution que l'expéditeur voit : partagées, ou les siennes. */
     @GetMapping("/listes")
     public ResponseEntity<Object> listes(HttpServletRequest r) {

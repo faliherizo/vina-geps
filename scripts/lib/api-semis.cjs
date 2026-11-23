@@ -52,4 +52,20 @@ const jour = (decalage) => {
   return d.toISOString().slice(0, 10);
 };
 
-module.exports = { clientApi, argument, jour };
+/**
+ * **Un semis qui n'est pas allé au bout ne passe pas pour une démonstration.** L'organisme naît avec cette marque à la fin
+ * de son nom, et la perd au dernier geste du semis (`achever`). Un semis interrompu — échec, travail annulé — laisse la
+ * marque : l'orchestrateur (`semer-demo-geps.cjs`) ne le compte pas comme semé et en sème un nouvel exemplaire, au lieu de
+ * montrer au client un organisme sans modèles ni cascades (constaté le 23 novembre 2026 sur Clincom).
+ */
+const SEMIS_EN_COURS = " [semis en cours]";
+const semisInacheve = (nom) => nom.endsWith(SEMIS_EN_COURS);
+
+/** Le dernier geste d'un semis : l'organisme prend son nom définitif. */
+async function achever(appeler, jetonSa, tenant) {
+  const nom = tenant.name.slice(0, tenant.name.length - (semisInacheve(tenant.name) ? SEMIS_EN_COURS.length : 0));
+  await appeler(`/api/superadmin/tenants/${tenant.id}`, { methode: "PATCH", jeton: jetonSa, corps: { name: nom } });
+  return { ...tenant, name: nom };
+}
+
+module.exports = { clientApi, argument, jour, SEMIS_EN_COURS, semisInacheve, achever };

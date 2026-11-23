@@ -24,6 +24,10 @@ public final class LectureAlertes {
 
     /** Le suivi et « Mes alertes » s'arrêtent aux plus récentes : l'historique complet est un export. */
     public static final int LIMITE = 200;
+    /** Le nombre de caractères à partir duquel la recherche d'un destinataire interroge l'annuaire. */
+    public static final int SEUIL_RECHERCHE = 3;
+    /** Assez pour reconnaître la personne voulue, trop peu pour lister l'organisme. */
+    public static final int LIMITE_RECHERCHE = 20;
     /** L'export, lui, va plus loin : c'est la pièce qu'on archive. */
     public static final int LIMITE_EXPORT = 5_000;
 
@@ -63,6 +67,12 @@ public final class LectureAlertes {
 
     public List<Destinataire> membres(String tenantId, String groupeId) {
         return annuaire.membres(tenantId, groupeId);
+    }
+
+    /** Un destinataire cherché par son nom, dès {@value #SEUIL_RECHERCHE} caractères : en deçà, la liste serait l'annuaire entier. */
+    public List<Destinataire> rechercher(String tenantId, String texte) {
+        String t = texte == null ? "" : texte.strip();
+        return t.length() < SEUIL_RECHERCHE ? List.of() : annuaire.rechercher(tenantId, t, LIMITE_RECHERCHE);
     }
 
     public List<AnnuaireAlertes.Liste> listes(Acteur acteur) {

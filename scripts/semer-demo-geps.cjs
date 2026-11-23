@@ -17,7 +17,7 @@
 const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 const comptes = require("../e2e/donnees/geps/comptes-demo.json");
-const { clientApi, argument } = require("./lib/api-semis.cjs");
+const { clientApi, argument, semisInacheve } = require("./lib/api-semis.cjs");
 
 const API = argument("api", process.env.API_URL || "http://localhost:8095").replace(/\/+$/, "");
 const FORCER = process.argv.includes("--forcer");
@@ -32,12 +32,13 @@ const ARGUMENTS = {
   "fx-ao": () => ["--api", API],
 };
 
-const present = (organisme, existants) => existants.some((t) =>
-  organisme.correspondance === "exact" ? t.name === organisme.nom : t.name.startsWith(organisme.nom));
+/** Un exemplaire de l'organisme dont le semis est allé au bout ; un semis interrompu garde sa marque et ne compte pas. */
+const exemplaire = (organisme) => (t) => organisme.correspondance === "exact"
+  ? t.name === organisme.nom : t.name.startsWith(organisme.nom) && !semisInacheve(t.name);
 
-const instances = (organisme, existants) => existants
-  .filter((t) => organisme.correspondance === "exact" ? t.name === organisme.nom : t.name.startsWith(organisme.nom))
-  .sort((a, b) => b.name.localeCompare(a.name));
+const present = (organisme, existants) => existants.some(exemplaire(organisme));
+
+const instances = (organisme, existants) => existants.filter(exemplaire(organisme)).sort((a, b) => b.name.localeCompare(a.name));
 
 function semer(organisme) {
   const script = path.join(__dirname, "..", organisme.semis);

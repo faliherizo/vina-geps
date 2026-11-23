@@ -3,7 +3,7 @@
  *
  * Un modèle remplit d'un geste le titre, le texte, la priorité et les réponses ; tout reste modifiable, et
  * l'alerte retient la version du modèle dont elle part. Les destinataires sont des groupes entiers (unités et
- * groupes transverses), des listes de distribution, ou des personnes choisies dans un groupe, par leur nom ;
+ * groupes transverses), des listes de distribution, ou des personnes cherchées par leur nom ou choisies dans un groupe ;
  * le serveur les résout et les fige à l'envoi. Une alerte critique part sur tous les canaux, et se réserve à
  * qui en a le droit (ST-G01) : l'écran le dit avant l'envoi, pas après.
  */
@@ -150,7 +150,47 @@ export default function NouvelleAlerte() {
   );
 }
 
-/** Des groupes entiers, ou des personnes choisies dans un groupe — par leur nom, jamais un identifiant. */
+/** Le nombre de caractères à partir duquel le serveur cherche (`LectureAlertes.SEUIL_RECHERCHE`). */
+const SEUIL_RECHERCHE = 3;
+/** Le temps de laisser finir la frappe avant d'interroger l'annuaire. */
+const DELAI_FRAPPE_MS = 250;
+
+/**
+ * **Chercher un destinataire par son nom ou son prénom** (critère 3), dans tout l'organisme : sur un site de 500 personnes,
+ * choisir un groupe puis parcourir ses membres n'est pas une recherche. Le serveur ne rend qu'un nom et un identifiant.
+ */
+function ChercherPersonne({ choisie, basculer }: { choisie: (p: Personne) => boolean; basculer: (p: Personne) => void }) {
+  const { lire } = useApi();
+  const [texte, setTexte] = useState("");
+  const [trouvees, setTrouvees] = useState<Personne[]>([]);
+  useEffect(() => {
+    const t = texte.trim();
+    if (t.length < SEUIL_RECHERCHE) { setTrouvees([]); return; }
+    const minuterie = setTimeout(() => {
+      void lire<Personne[]>(`/api/alertes/personnes?q=${encodeURIComponent(t)}`).then((r) => setTrouvees(liste<Personne>(r)));
+    }, DELAI_FRAPPE_MS);
+    return () => clearTimeout(minuterie);
+  }, [texte, lire]);
+  const cherche = texte.trim().length >= SEUIL_RECHERCHE;
+  return (
+    <>
+      <p><label htmlFor="aln-recherche">Chercher une personne par son nom ou son prénom</label>
+        <input id="aln-recherche" data-testid="aln-recherche" type="search" autoComplete="off" value={texte}
+          aria-describedby="aln-recherche-etat" onChange={(e) => setTexte(e.target.value)} /></p>
+      <p className="muted" role="status" id="aln-recherche-etat" data-testid="aln-recherche-etat">
+        {cherche ? `${trouvees.length} personne(s) trouvée(s).` : `Saisir au moins ${SEUIL_RECHERCHE} caractères.`}
+      </p>
+      {trouvees.map((p) => (
+        <p key={p.personId} className="checkbox-line">
+          <input type="checkbox" id={`aln-trouvee-${p.personId}`} data-testid={`aln-trouvee-${p.personId}`} checked={choisie(p)} onChange={() => basculer(p)} />
+          <label htmlFor={`aln-trouvee-${p.personId}`}>{p.nom}</label>
+        </p>
+      ))}
+    </>
+  );
+}
+
+/** Des groupes entiers, ou des personnes cherchées par leur nom ou choisies dans un groupe — jamais par un identifiant. */
 function Destinataires({ groupes, groupesChoisis, basculerGroupe, personnes, changerPersonnes }: {
   groupes: Groupe[]; groupesChoisis: string[]; basculerGroupe: (g: string) => void;
   personnes: Personne[]; changerPersonnes: (p: Personne[]) => void;
@@ -177,6 +217,7 @@ function Destinataires({ groupes, groupesChoisis, basculerGroupe, personnes, cha
           <label htmlFor={`aln-g-${g.id}`}>Tout le groupe {g.nom}</label>
         </p>
       ))}
+      <ChercherPersonne choisie={choisie} basculer={basculerPersonne} />
       <p><label htmlFor="aln-groupe-personnes">Choisir des personnes dans un groupe</label>
         <select id="aln-groupe-personnes" data-testid="aln-groupe-personnes" value={groupeOuvert} onChange={(e) => void ouvrir(e.target.value)}>
           <option value="">— Choisir un groupe —</option>

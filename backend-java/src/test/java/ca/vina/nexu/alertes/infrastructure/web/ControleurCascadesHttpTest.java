@@ -16,6 +16,7 @@ import ca.vina.nexu.alertes.application.requetes.LectureAlertes;
 import ca.vina.nexu.alertes.application.requetes.LectureCascades;
 import ca.vina.nexu.alertes.domaine.Cascades;
 import ca.vina.nexu.alertes.infrastructure.persistance.AdaptateurAnnuaireAlertes;
+import ca.vina.nexu.communication.infrastructure.persistance.DepotGroupesTransverses;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotAlertes;
 import ca.vina.nexu.alertes.infrastructure.persistance.DepotCascades;
 import ca.vina.nexu.alertes.infrastructure.persistance.EcheancierOrdonnanceur;
@@ -131,7 +132,7 @@ class ControleurCascadesHttpTest {
                         : List.of(new Membre("lea", "Léa Côté"), new Membre("marc", "Marc Dubé"), new Membre("remi", "Rémi Roy"));
             }
         };
-        AdaptateurAnnuaireAlertes annuaire = new AdaptateurAnnuaireAlertes(groupes, sansListe(), jdbc);
+        AdaptateurAnnuaireAlertes annuaire = new AdaptateurAnnuaireAlertes(groupes, sansListe(), new DepotGroupesTransverses(jdbc), jdbc);
         DepotAlertes depot = new DepotAlertes(jdbc);
         DepotCascades depotCascades = new DepotCascades(jdbc);
         RegistreExecuteurs registre = new RegistreExecuteurs();

@@ -3,6 +3,7 @@ package ca.vina.nexu.alertes.infrastructure.persistance;
 import ca.vina.nexu.alertes.domaine.Alertes.Destinataire;
 import ca.vina.nexu.alertes.domaine.AnnuaireAlertes;
 import ca.vina.nexu.communication.domaine.GroupesDeTravailPort;
+import ca.vina.nexu.communication.domaine.GroupesTransversesPort;
 import ca.vina.nexu.communication.domaine.LectureListesDistributionPort;
 import ca.vina.nexu.communication.domaine.ListesDistribution;
 import org.springframework.jdbc.core.simple.JdbcClient;
@@ -28,12 +29,21 @@ public class AdaptateurAnnuaireAlertes implements AnnuaireAlertes {
 
     private final GroupesDeTravailPort groupes;
     private final LectureListesDistributionPort listes;
+    private final GroupesTransversesPort.Lecture personnes;
     private final JdbcClient jdbc;
 
-    public AdaptateurAnnuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes, JdbcClient jdbc) {
+    public AdaptateurAnnuaireAlertes(GroupesDeTravailPort groupes, LectureListesDistributionPort listes, GroupesTransversesPort.Lecture personnes,
+                                     JdbcClient jdbc) {
         this.groupes = groupes;
         this.listes = listes;
+        this.personnes = personnes;
         this.jdbc = jdbc;
+    }
+
+    /** La recherche par nom est celle de la communication (un seul SQL, jokers neutralisés) ; le compte à aviser se résout à l'envoi. */
+    @Override
+    public List<Destinataire> rechercher(String tenantId, String texte, int limite) {
+        return personnes.personnes(tenantId, texte, limite).stream().map(p -> new Destinataire(p.personId(), p.nom(), null)).toList();
     }
 
     @Override
