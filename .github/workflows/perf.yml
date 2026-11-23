@@ -52,6 +52,8 @@ jobs:
     env:
       PERF_URL: ${{ vars.APP_URL }}
       PROFIL: ${{ vars.PERF_PROFIL }}
+      # Le semis de la campagne respecte la limite de débit du frontal (20 requêtes/s par adresse sur geps).
+      PERF_PAUSE_MS: ${{ vars.PERF_PAUSE_MS || '80' }}
     steps:
       - uses: actions/checkout@v4
       - name: L'environnement est complet
