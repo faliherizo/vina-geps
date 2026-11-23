@@ -492,7 +492,9 @@ async function main() {
   const base = `${p.protocole}://${p.hote}:${p.port}`;
   const compte = lireCsv(path.join(ICI, p.comptes))[0];
   const appel = await client(base, compte);
-  const tenant = compte.tenantId ? "" : await etablissementDeCampagne(appel, env, p.tenant || "");
+  // PERF_TENANT : l'établissement d'une campagne précédente, que le pipeline retrouve par son nom (« Charge … ») — sur
+  // un environnement partagé, une campagne par jour ne doit pas laisser un établissement de plus à chaque fois.
+  const tenant = compte.tenantId ? "" : await etablissementDeCampagne(appel, env, process.env.PERF_TENANT || p.tenant || "");
   if (option("profil", "typique") === "volumineux") {
     const v = await semerJournauxDAvis(appel, tenant);
     console.log(`profil volumineux semé : ${v.textos} textos au journal d'avis (${base})`);

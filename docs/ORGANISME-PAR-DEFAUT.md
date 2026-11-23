@@ -37,6 +37,10 @@ Chaque mot de passe est tiré au hasard (28 caractères, quatre classes ; la pol
 console n'affiche que les noms de connexion. Ce fichier ne se versionne pas, ne se colle pas dans un billet, et se
 remet en main propre.
 
+**Démonstration publique** : avec `DEMO_PASSWORD` dans l'environnement, chaque compte reçoit ce mot de passe, et un
+compte qui ne l'a plus y est remis. C'est ainsi que se sème geps.vinaitsolution.com, dont les comptes sont publiés
+([COMPTES-DEMO-GEPS.md](COMPTES-DEMO-GEPS.md)). À ne jamais employer pour un organisme réel.
+
 Perdu ? Relancer le script : un compte dont le mot de passe n'est plus connu en reçoit un nouveau, posé par
 l'administration (ou par le superadmin pour le compte `admin`), et le fichier est réécrit. La console le signale.
 

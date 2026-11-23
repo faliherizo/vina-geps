@@ -1,0 +1,129 @@
+# VINA GePS — déploiement continu de la démonstration https://geps.vinaitsolution.com (VPS OVH partagé).
+#
+#   construire-livrer : les deux images construites ici (jamais sur le VPS, qui héberge une douzaine d'applications),
+#                       chargées sur le serveur par SSH (docker save | docker load : aucun registre à ouvrir), puis
+#                       deploy/geps/deployer.sh — sauvegarde, démarrage, santé, retour arrière automatique.
+#   semer             : les organismes de démonstration et leurs comptes publiés (idempotent : rien n'est doublé).
+#   fumee             : la pile déployée, en lecture seule — le superadmin, l'API, et chaque compte publié ouvre une session.
+#
+# Déclenché à chaque poussée sur develop (la démonstration montre la version en cours), ou à la main (Actions › Run).
+# Secrets : DEPLOY_HOST, DEPLOY_USER, DEPLOY_SSH_KEY, DEPLOY_KNOWN_HOSTS, GEPS_SUPERADMIN_PASSWORD — docs/DEPLOIEMENT-GEPS-OVH.md §4.
+name: Déployer geps (démonstration)
+
+on:
+  push:
+    branches: [develop]
+  workflow_dispatch:
+    inputs:
+      semer:
+        description: "Semer les organismes de démonstration après le déploiement"
+        type: boolean
+        default: true
+      forcer_semis:
+        description: "Semer un nouvel exemplaire horodaté des démonstrations Urgences-santé et FX-AO, même s'il en existe un"
+        type: boolean
+        default: false
+
+# Deux déploiements ne se chevauchent jamais ; le second attend le premier au lieu de l'interrompre à mi-chemin.
+concurrency:
+  group: deployer-geps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  GEPS_URL: https://geps.vinaitsolution.com
+  NODE_VERSION: "22"
+
+jobs:
+  construire-livrer:
+    name: Construire, livrer, déployer
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment:
+      name: geps-demo
+      url: https://geps.vinaitsolution.com
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: version
+        run: echo "version=${GITHUB_SHA::12}" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - name: Image du serveur Java
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend-java/Dockerfile
+          load: true
+          tags: vina-geps/backend:${{ steps.version.outputs.version }}
+          cache-from: type=gha,scope=geps-backend
+          cache-to: type=gha,scope=geps-backend,mode=max
+      - name: Image de l'interface (nginx)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          load: true
+          tags: vina-geps/web:${{ steps.version.outputs.version }}
+          cache-from: type=gha,scope=geps-web
+          cache-to: type=gha,scope=geps-web,mode=max
+      - name: Clé SSH du déploiement
+        env:
+          CLE: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOTES: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/geps && chmod 600 ~/.ssh/geps
+          printf '%s\n' "$HOTES" > ~/.ssh/known_hosts
+          printf 'Host geps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/geps\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n  ServerAliveInterval 30\n' \
+            "${{ secrets.DEPLOY_HOST }}" "${{ secrets.DEPLOY_USER }}" > ~/.ssh/config
+      - name: Livrer les images au serveur
+        run: |
+          V=${{ steps.version.outputs.version }}
+          docker save "vina-geps/backend:$V" "vina-geps/web:$V" | gzip -1 | ssh geps 'gunzip | docker load'
+      # Le serveur ne prend du dépôt que deploy/geps (composition et scripts) ; les images viennent d'ici.
+      - name: Déployer
+        run: |
+          ssh geps "set -e; cd ~/projets/vina-geps && git fetch --quiet origin && git checkout --quiet --force --detach ${GITHUB_SHA} \
+            && deploy/geps/deployer.sh ${{ steps.version.outputs.version }}"
+      - name: La version servie est la bonne
+        run: |
+          for i in $(seq 1 30); do curl -fsS "$GEPS_URL/api/health" && exit 0; sleep 5; done; exit 1
+
+  semer:
+    name: Semer les organismes de démonstration
+    needs: construire-livrer
+    if: github.event_name == 'push' || inputs.semer
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: node scripts/semer-demo-geps.cjs --api "$GEPS_URL" ${{ inputs.forcer_semis && '--forcer' || '' }}
+        env:
+          SUPERADMIN_PASSWORD: ${{ secrets.GEPS_SUPERADMIN_PASSWORD }}
+
+  fumee:
+    name: Fumée (lecture seule)
+    needs: [construire-livrer, semer]
+    if: always() && needs.construire-livrer.result == 'success' && needs.semer.result != 'failure'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "${{ env.NODE_VERSION }}" }
+      - run: npm ci --no-audit --no-fund && npx playwright install --with-deps chromium
+        working-directory: e2e
+      - run: npx playwright test --project=e2e tests/e2e/deploiement-fumee.spec.ts tests/e2e/deploiement-comptes-demo.spec.ts
+        working-directory: e2e
+        env:
+          CI: "1"
+          E2E_BASE_URL: ${{ env.GEPS_URL }}
+          E2E_SUPERADMIN_PASSWORD: ${{ secrets.GEPS_SUPERADMIN_PASSWORD }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: rapport-fumee-geps, path: e2e/playwright-report }

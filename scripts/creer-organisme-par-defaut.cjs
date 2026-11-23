@@ -68,7 +68,14 @@ function consigner(etat, compte) {
   ecrireEtat(etat);
 }
 
-const motDePasseConnu = (etat, username) => I.trouver(etat.comptes, "username", username)?.password ?? null;
+/**
+ * **Démonstration publique** (`DEMO_PASSWORD`, docs/COMPTES-DEMO-GEPS.md) : chaque compte reçoit ce mot de passe, publié,
+ * pour que quiconque reçoit le lien de la démonstration puisse s'y connecter. Sans la variable, le comportement reste
+ * celui d'un organisme réel : un mot de passe tiré au hasard par compte, écrit seulement dans le fichier local.
+ */
+const MDP_DEMO = process.env.DEMO_PASSWORD || null;
+const nouveauMotDePasse = () => MDP_DEMO ?? I.motDePasse();
+const motDePasseConnu = (etat, username) => MDP_DEMO ?? I.trouver(etat.comptes, "username", username)?.password ?? null;
 
 // ── 1. L'organisme, son administration, ses modules ──────────────────────────────────────────────
 
@@ -78,7 +85,7 @@ async function organisme(sa, etat) {
     compter("organisme", false);
     return { tenant: existant, adminId: null };
   }
-  const password = I.motDePasse();
+  const password = nouveauMotDePasse();
   const cree = await appeler("/api/superadmin/tenants", { methode: "POST", jeton: sa, corps: {
     name: OPTIONS.nom, type: "public_institution", country: "CA", region: "QC", planCode: "enterprise", adminUsername: ADMIN, adminPassword: password } });
   etat.organisme = { id: cree.tenant.id, nom: OPTIONS.nom };
@@ -116,7 +123,7 @@ async function modules(sa, tenantId) {
 async function assurerCompte(ctx, etat, compte, tenantId) {
   const connu = motDePasseConnu(etat, compte.username);
   const valide = connu && await connecter({ username: compte.username, password: connu, tenantId });
-  const password = valide ? connu : I.motDePasse();
+  const password = valide ? connu : nouveauMotDePasse();
   const corps = { securitySetupRequired: false, mustChangePassword: false, ...(valide ? {} : { password }) };
   await appeler(`/api/auth/users/${compte.userId}`, { ...ctx, methode: "PATCH", corps });
   consigner(etat, { ...compte, password });
@@ -132,7 +139,7 @@ async function compteDe(ctx, etat, c, existants) {
     await assurerCompte(ctx, etat, { cle: c.cle, username: c.cle, role: c.role, userId: existant.id }, ctx.tenantId);
     return existant.id;
   }
-  const password = I.motDePasse();
+  const password = nouveauMotDePasse();
   const cree = await appeler("/api/auth/users", { ...ctx, methode: "POST", corps: { username: c.cle, password, role: c.role, mustChangePassword: false } });
   consigner(etat, { cle: c.cle, username: c.cle, role: c.role, password, userId: cree.id });
   await appeler(`/api/auth/users/${cree.id}`, { ...ctx, methode: "PATCH", corps: { securitySetupRequired: false } });
