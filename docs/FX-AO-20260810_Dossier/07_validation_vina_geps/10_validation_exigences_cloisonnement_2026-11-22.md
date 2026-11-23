@@ -115,3 +115,25 @@ E2E_API_PORT=4031 E2E_WEB_PORT=5331 backend-java/scripts/campagne-e2e.sh tests/e
   tests/e2e/fx-ao-menu.spec.ts tests/e2e/fx-ao-parcours.spec.ts
 securite/intrusion/lancer.sh
 ```
+
+## 5. Sur la démonstration déployée (23 novembre 2026)
+
+L'organisme montré au client, joint par son hôte <https://clincom.geps.vinaitsolution.com> avec le compte `admin` :
+
+| Contrôle | Résultat |
+|---|---|
+| Modules accordés | exactement les 7 de la grille (`alertes`, `effectifs`, `effectifs_absences`, `effectifs_communication`, `effectifs_disponibilites`, `effectifs_planification`, `effectifs_regles`) |
+| Menu (réglage du superadmin) | 22 vues gardées sur 56 = exactement `vuesGardees` de `demonstration.json` ; aucune attendue masquée, aucune en trop |
+| Écrans du menu | chacun s'ouvre, sans erreur, sans violation axe-core |
+| Critères fonctionnels avec écran (30) | chaque écran et chaque commande de preuve présents |
+
+Aucun accès n'a eu à être corrigé dans l'espace superadmin. Constat en cours de route : enchaîner les rechargements
+d'écrans dépasse la limitation de débit du frontal (20 requêtes/s par adresse, rafale de 40) et fait répondre 503 aux
+appels de l'écran suivant ; l'essai ouvre donc les écrans au rythme d'une personne.
+
+Rejouer (aussi joué par la recette après chaque déploiement, une fois la branche fusionnée) :
+
+```bash
+cd e2e && E2E_BASE_URL=https://geps.vinaitsolution.com E2E_COMPTES_DEMO=1 \
+  npx playwright test --project=e2e tests/e2e/deploiement-fx-ao.spec.ts
+```
