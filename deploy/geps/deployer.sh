@@ -35,9 +35,10 @@ sauvegarder() {
   mkdir -p "$SAUVEGARDES"
   docker stop geps-backend >/dev/null 2>&1 || true
   local archive="$SAUVEGARDES/donnees-$(date +%Y%m%d-%H%M%S)-${PRECEDENTE:-initiale}.tar.gz"
-  docker run --rm -v vina-geps_donnees:/donnees:ro -v "$SAUVEGARDES":/sortie alpine \
-    tar czf "/sortie/$(basename "$archive")" -C /donnees .
-  chmod 600 "$archive"
+  # Le conteneur lit le volume en root (fichiers 600 de l'utilisateur du serveur Java) : c'est lui qui rend l'archive
+  # à `deploy`, mode 600 — `deploy` ne pourrait ni la relire ni changer ses droits après coup.
+  docker run --rm -v vina-geps_donnees:/donnees:ro -v "$SAUVEGARDES":/sortie alpine sh -c \
+    "tar czf '/sortie/$(basename "$archive")' -C /donnees . && chown $(id -u):$(id -g) '/sortie/$(basename "$archive")' && chmod 600 '/sortie/$(basename "$archive")'"
   ls -1t "$SAUVEGARDES"/donnees-*.tar.gz | tail -n +11 | xargs -r rm -f
   echo "✓ sauvegarde : $archive"
 }
