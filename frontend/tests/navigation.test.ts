@@ -75,8 +75,8 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     const section = NAVIGATION.find((g) => g.key === "urgencessante");
     expect(section).toBeDefined();
     expect(section!.entrees.filter(estConcept).map((c) => c.key)).toEqual([
-      "usdisponibilitesnotion", "usabsencesnotion", "usagphnotion", "usquarts",
-      "uspointagenotion", "ustempsnotion", "usechangesnotion", "uscommunication", "alertesnotion", "paienotion",
+      "usdisponibilitesnotion", "usabsencesnotion", "uscongesnotion", "usagphnotion", "usquarts",
+      "uspointagenotion", "ustempsnotion", "usechangesnotion", "usdemandesnotion", "uscommunication", "alertesnotion", "paienotion",
     ]);
     // Le tableau de bord en tête, puis « Mon horaire » ; les rapports et les approbations en fin
     // de colonne — des **vues directes** : une notion d'un seul élément n'est pas une structure.
@@ -90,7 +90,7 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
     // Chaque écran du module porte le **socle** : sans lui, tous disparaissent, le tableau de bord reste.
     const ecransDuModule = NAVIGATION.flatMap((g) => g.entrees).flatMap((e) => (estConcept(e) ? e.vues : [e]))
       .filter((v) => v.module !== "alertes" && v.module !== "paie" && (v.page === "monhoraire" || v.page.startsWith("us") || /^m(es|on|a)/.test(v.page)));
-    expect(ecransDuModule).toHaveLength(31);
+    expect(ecransDuModule).toHaveLength(35);
     expect(ecransDuModule.filter((v) => v.module !== "effectifs").map((v) => v.page)).toEqual([]);
     expect((section!.entrees[0] as Vue).module).toBeUndefined();
 
@@ -124,6 +124,8 @@ describe("menu à deux niveaux — une notion, une entrée", () => {
       uspointagenotion: ["monpointage", "uspresence"],
       ustempsnotion: ["matemps", "ustemps"],
       usechangesnotion: ["mesechanges", "usechanges"],
+      usdemandesnotion: ["mesdemandes", "usdemandes"],
+      uscongesnotion: ["mescongesannuels", "uscongesannuels"],
     };
     for (const [cle, attendues] of Object.entries(PAIRES)) {
       const notion = section!.entrees.filter(estConcept).find((c) => c.key === cle);

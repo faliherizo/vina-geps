@@ -70,6 +70,8 @@ public class FaitsRelevesEffectifs implements FournisseurFaits {
             case POINTAGES -> pointages(c);
             case PLACES -> places(c);
             case ABSENCES -> absences(c);
+            case HORAIRES -> horaires(c);
+            case BUDGET -> budget(c);
         };
     }
 
@@ -300,6 +302,66 @@ public class FaitsRelevesEffectifs implements FournisseurFaits {
                 propres.put("absences", i == 0 ? 1 : 0);
                 return c.fait(new Lieu(jours.get(i), a.uniteCode(), a.ressourceId(), null), propres);
             });
+        }).toList();
+    }
+
+    // ── Horaires et budget en heures (addenda 8, M-18) ───────────────────────────────────
+
+    private record QuartTenu(String placeId, String ressourceId, String corpsEmploiCode, String date, String uniteCode, String plageCode, int debut, int fin) {
+    }
+
+    private List<QuartTenu> quartsDeLaPeriode(Cadre c, String du, String au) {
+        return jdbc.sql("SELECT pl.id AS placeId, pl.ressourceId, pl.corpsEmploiCode, e.date, e.uniteCode, e.plageCode, e.debut, e.fin FROM eff_places pl "
+                        + "JOIN eff_equipages e ON e.id = pl.equipageId AND e.tenantId = pl.tenantId WHERE pl.tenantId = ? AND e.date BETWEEN ? AND ? "
+                        + "ORDER BY e.date, e.debut, pl.equipageId, pl.rang")
+                .params(c.ctx().tenantId(), du, au).query(QuartTenu.class).list().stream().filter(q -> c.visible(q.uniteCode())).toList();
+    }
+
+    /** L'horaire : une ligne par quart tenu, avec ses bornes et ses heures. */
+    private List<Map<String, Object>> horaires(Cadre c) {
+        return quartsDeLaPeriode(c, c.periode().du(), c.periode().au()).stream().filter(q -> q.ressourceId() != null).map(q -> {
+            Map<String, Object> propres = new HashMap<>();
+            propres.put("plageHoraire", q.plageCode());
+            propres.put("debut", RelevesEffectifs.hhmm(q.debut()));
+            propres.put("fin", RelevesEffectifs.hhmm(q.fin()));
+            propres.put("quarts", 1);
+            propres.put("heures", RelevesEffectifs.heures(RelevesEffectifs.dureeMinutes(q.debut(), q.fin())));
+            return c.fait(new Lieu(q.date(), q.uniteCode(), q.ressourceId(), q.placeId()), propres);
+        }).toList();
+    }
+
+    private record CampagneBudget(String uniteCode, String corpsEmploiCode, int annee, double budgetHeuresSemaine) {
+    }
+
+    /**
+     * Le budget en heures : par semaine (son lundi dans la période), unité et corps d'emploi, le budget hebdomadaire de la
+     * campagne AGPH de l'année, confronté aux heures de toutes les places de la semaine et à celles qui sont pourvues.
+     */
+    private List<Map<String, Object>> budget(Cadre c) {
+        Map<String, Double> budgets = new HashMap<>();
+        jdbc.sql("SELECT uniteCode, corpsEmploiCode, annee, budgetHeuresSemaine FROM eff_agph_campagnes WHERE tenantId = ? AND budgetHeuresSemaine IS NOT NULL")
+                .param(c.ctx().tenantId()).query(CampagneBudget.class).list()
+                .forEach(b -> budgets.put(b.uniteCode() + "|" + b.corpsEmploiCode() + "|" + b.annee(), b.budgetHeuresSemaine()));
+        Map<RelevesEffectifs.SemaineBudget, long[]> minutes = new java.util.TreeMap<>(java.util.Comparator.comparing(RelevesEffectifs.SemaineBudget::lundi)
+                .thenComparing(RelevesEffectifs.SemaineBudget::uniteCode).thenComparing(RelevesEffectifs.SemaineBudget::corpsEmploiCode));
+        String fin = LocalDate.parse(Planification.lundiDe(c.periode().au())).plusDays(6).toString();
+        for (QuartTenu q : quartsDeLaPeriode(c, Planification.lundiDe(c.periode().du()), fin)) {
+            long[] m = minutes.computeIfAbsent(new RelevesEffectifs.SemaineBudget(Planification.lundiDe(q.date()), q.uniteCode(), q.corpsEmploiCode()), k -> new long[2]);
+            int duree = RelevesEffectifs.dureeMinutes(q.debut(), q.fin());
+            m[0] += duree;
+            m[1] += q.ressourceId() == null ? 0 : duree;
+        }
+        return minutes.entrySet().stream().filter(e -> c.periode().contient(e.getKey().lundi())).map(e -> {
+            RelevesEffectifs.SemaineBudget s = e.getKey();
+            RelevesEffectifs.HeuresSemaine h = new RelevesEffectifs.HeuresSemaine(
+                    budgets.getOrDefault(s.uniteCode() + "|" + s.corpsEmploiCode() + "|" + s.lundi().substring(0, 4), 0.0), e.getValue()[0], e.getValue()[1]);
+            Map<String, Object> propres = new HashMap<>();
+            propres.put("corpsEmploi", s.corpsEmploiCode());
+            propres.put("budgetHeures", h.budget());
+            propres.put("heuresPlanifiees", RelevesEffectifs.heures(h.minutesPlanifiees()));
+            propres.put("heuresPourvues", RelevesEffectifs.heures(h.minutesPourvues()));
+            propres.put("ecartHeures", h.ecart());
+            return c.fait(new Lieu(s.lundi(), s.uniteCode(), null, null), propres);
         }).toList();
     }
 }

@@ -67,3 +67,12 @@ avec l'équipe de l'Organisme avant le déploiement des charges de travail.
 | 4 | **AD-13** Journal des consultations | Option, mais exigée « de façon paramétrable » |
 | 5 | **AD-10** Choix annuel des congés | Gros ; processus annuel |
 | 6 | **AD-12** Rattachements multiples | Change le modèle de la ressource et les périmètres ; risque le plus élevé |
+
+## 4. Livraison
+
+Les six écarts sont fermés dans le code (détail et critères : [02_stories.md](02_stories.md), AD-09 à AD-14) :
+AD-09 compétences (M-04), AD-10 congés annuels (M-02), AD-11 demandes opérationnelles (M-08), AD-12 autres unités
+(M-09), AD-13 journal des consultations (M-10), AD-14 relevés horaires et budget (M-18). Les deux organismes de la
+démonstration — Urgences-santé et Clincom (FX-AO) — sont semés avec des données qui les montrent, et
+`e2e/tests/e2e/deploiement-addenda-08.spec.ts` les constate à l'écran sur chacun, d'après
+`e2e/donnees/addenda-08/demonstration.json`. Chaque nouvel écran a sa vidéo d'aide.

@@ -7,6 +7,7 @@ import ca.vina.nexu.SchemaEssai;
 import ca.vina.nexu.acces.infrastructure.persistance.RegistrePolitiqueAcces;
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireCongesAnnuels;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs.Declaration;
 import ca.vina.nexu.effectifs.application.commandes.DecisionRemplacementsAgph;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
@@ -51,6 +52,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireReferentiels;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
 import ca.vina.nexu.effectifs.application.requetes.LectureAbsencesEffectifs;
+import ca.vina.nexu.effectifs.application.requetes.LectureCongesAnnuels;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LectureJournalEffectifs;
 import ca.vina.nexu.effectifs.application.requetes.LectureMilieux;
@@ -69,6 +71,7 @@ import ca.vina.nexu.effectifs.domaine.IntrouvableException;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurComptesPourEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurModulesPourEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotAbsencesEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotCongesAnnuels;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotEquipages;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotJournalEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotMilieux;
@@ -265,7 +268,12 @@ class ControleurAbsencesEffectifsHttpTest {
         soldes = new DepotSoldesBanques(jdbc, new SchemaEffectifs(jdbc));
         absences = new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depotAbs, planning, depotEqp, comblement),
                 new GestionnaireAbsencesEffectifs.Lectures(lecture, lectRes, referentiels, perimetres, soldes), evaluateur, journal, seq);
-        http = new ClientHttpEssai(socle, planification, new ControleurAbsencesEffectifs(garde, lecture, absences, suivi));
+        // Addenda 8, M-02 : le choix annuel des congés, dont l'octroi passe par la déclaration d'absence ci-dessus.
+        DepotCongesAnnuels depotCng = new DepotCongesAnnuels(jdbc, schema);
+        LectureCongesAnnuels lectCng = new LectureCongesAnnuels(depotCng, lectRes, perimetres);
+        http = new ClientHttpEssai(socle, planification, new ControleurAbsencesEffectifs(garde, lecture, absences, suivi),
+                new ControleurCongesAnnuels(garde, lectCng, new GestionnaireCongesAnnuels(new GestionnaireCongesAnnuels.Lectures(lectCng, lectRes, referentiels, perimetres),
+                        new GestionnaireCongesAnnuels.Ecritures(depotCng, journal, seq, absences))));
         GestesEchangesApi gestes = new GestesEchangesApi(new GestesEchangesApi.Ports(
                 new GestionnaireRessources((t, inscription) -> { }, depotRes, lectRes, referentiels, perimetres, journal, seq), lectRes,
                 new DepotPresenceEffectifs(jdbc, new SchemaPresenceEffectifs(jdbc), schemaPlanif, schema), soldes), new GestesEchangesApi.Absences(absences, echanges), journal);
@@ -688,5 +696,95 @@ class ControleurAbsencesEffectifsHttpTest {
             assertThat(a.evenement()).isEqualTo(JournalAvecAvisDesQuarts.EVENEMENT);
             assertThat(a.donnees()).containsEntry("lire", JournalAvecAvisDesQuarts.LECTURE).containsEntry("uniteCode", "EST");
         });
+    }
+
+    @Test
+    @DisplayName("addenda 8, M-02 : une campagne s'ouvre, chacun classe ses semaines, l'octroi suit l'ancienneté sous les plafonds, "
+            + "et chaque semaine octroyée devient une absence acceptée")
+    void congesAnnuels() throws Exception {
+        String api = "/api/effectifs/absences/conges";
+        jdbc.sql("UPDATE eff_ressources SET anciennete = 9 WHERE id = ?").param(ids.get("P2")).update();
+        String campagne = "{\"nom\":\"Été 2027\",\"uniteCode\":\"EST\",\"corpsEmploiCode\":\"PARA\",\"annee\":2027,\"du\":\"2027-07-05\","
+                + "\"au\":\"2027-07-25\",\"codeAbsence\":\"MAL\",\"plafondParSemaine\":1,\"maxSemainesParPersonne\":1}";
+        http.post(api, JULIE, campagne).andExpect(status().isForbidden());
+        http.post(api, ADMIN, campagne.replace("2027-07-25", "2027-07-06")).andExpect(status().is(422));
+        String id = JsonPath.read(http.post(api, ADMIN, campagne).andExpect(status().isCreated()).andExpect(jsonPath("$.etat").value("BROUILLON"))
+                .andReturn().getResponse().getContentAsString(), "$.id");
+        http.get(api + "/miennes", JULIE).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(0)));
+        http.put(api + "/" + id + "/choix", JULIE, "{\"semaines\":[\"2027-07-05\"]}").andExpect(status().isConflict());
+        http.post(api + "/" + id + "/etat", ADMIN, "{\"etat\":\"FERMEE\"}").andExpect(status().isConflict());
+        http.post(api + "/" + id + "/etat", ADMIN, "{\"etat\":\"OUVERTE\"}").andExpect(status().isOk()).andExpect(jsonPath("$.etat").value("OUVERTE"));
+        http.get(api + "/miennes", JULIE).andExpect(jsonPath("$[0].semaines", Matchers.contains("2027-07-05", "2027-07-12", "2027-07-19")));
+        http.put(api + "/" + id + "/choix", JULIE, "{\"semaines\":[\"2027-07-06\"]}").andExpect(status().is(422));
+        http.put(api + "/" + id + "/choix", JULIE, "{\"semaines\":[\"2027-07-05\",\"2027-07-12\"]}").andExpect(status().isOk());
+        http.put(api + "/" + id + "/choix", MARC, "{\"semaines\":[\"2027-07-05\",\"2027-07-19\"]}").andExpect(status().isOk());
+        http.post(api + "/" + id + "/octroyer", ADMIN, "{}").andExpect(status().isConflict());
+        http.post(api + "/" + id + "/etat", ADMIN, "{\"etat\":\"FERMEE\"}").andExpect(status().isOk());
+        http.post(api + "/" + id + "/octroyer", ADMIN, "{}").andExpect(status().isOk()).andExpect(jsonPath("$.octroyes").value(2))
+                .andExpect(jsonPath("$.refuses").value(2)).andExpect(jsonPath("$.campagne.etat").value("OCTROYEE"));
+        // Marc (9 ans) d'abord : sa semaine du 5, puis son maximum d'une semaine ; Julie : la semaine du 5 au plafond, celle du 12 octroyée.
+        http.get(api + "/" + id + "/resultats", ADMIN).andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].ressourceNom", Matchers.contains("Marc", "Marc", "Julie", "Julie")))
+                .andExpect(jsonPath("$[*].statut", Matchers.contains("OCTROYE", "REFUSE", "REFUSE", "OCTROYE")))
+                .andExpect(jsonPath("$[1].motif").value("au plus 1 semaine(s) par personne"))
+                .andExpect(jsonPath("$[2].motif").value("plafond de 1 absent(s) atteint cette semaine"));
+        // La semaine octroyée est déclarée comme absence : les règles d'absence de l'organisme la jugent encore — ici, une règle
+        // de cet essai la soumet à approbation, et le choix le dit.
+        http.get(api + "/miennes", JULIE).andExpect(jsonPath("$[0].choix[1].statut").value("OCTROYE"))
+                .andExpect(jsonPath("$[0].choix[1].motif").value("absence à approuver selon les règles"));
+        assertThat(jdbc.sql("SELECT du || ' ' || statut FROM eff_absences WHERE ressourceId = ? AND motif LIKE 'Congé annuel%'").param(ids.get("P1"))
+                .query(String.class).list()).containsExactly("2027-07-12 A_APPROUVER");
+        http.get(api, ADMIN).andExpect(jsonPath("$[0].etat").value("OCTROYEE"));
+        http.get(api, JULIE).andExpect(status().isForbidden());
+        http.get(api + "/inconnue/resultats", ADMIN).andExpect(status().isNotFound());
+        http.post(api + "/" + id + "/etat", ADMIN, "{\"etat\":\"PEUT-ETRE\"}").andExpect(status().is(422));
+    }
+
+    @Test
+    @DisplayName("addenda 8, M-02 : la déclaration de chaque semaine octroyée décide encore — acceptée sans règle, refusée par une règle "
+            + "ou par une absence qui la couvre ; et la campagne ne reçoit que les choix du groupe qu'elle vise")
+    void congesAnnuelsJugesParLaDeclaration() throws Exception {
+        // Janvier 2027, avant l'entrée en vigueur des règles de l'essai (1er février) : rien ne s'oppose à l'absence.
+        String janvier = campagneOuverte("Hiver 2027", "2027-01-18", "2027-01-31");
+        http.put(CONGES + "/" + janvier + "/choix", JULIE, "{\"semaines\":[\"2027-01-18\"]}").andExpect(status().isOk());
+        http.put(CONGES + "/" + janvier + "/choix", MARC, "{\"semaines\":[\"2027-01-25\"]}").andExpect(status().isOk());
+        // Marc a déjà une absence dans sa semaine : la déclaration refuse, et le choix porte son motif.
+        declarer(MARC, null, "MAL", "2027-01-26", null, null);
+        octroyer(janvier);
+        http.get(CONGES + "/" + janvier + "/resultats", ADMIN)
+                .andExpect(jsonPath("$[?(@.ressourceNom == 'Julie')].statut").value("OCTROYE"))
+                .andExpect(jsonPath("$[?(@.ressourceNom == 'Julie')].motif").value(Matchers.contains(Matchers.nullValue())))
+                .andExpect(jsonPath("$[?(@.ressourceNom == 'Marc')].statut").value("REFUSE"))
+                .andExpect(jsonPath("$[?(@.ressourceNom == 'Marc')].motif").value(Matchers.contains(Matchers.containsString("couvre déjà"))));
+        assertThat(jdbc.sql("SELECT statut FROM eff_absences WHERE ressourceId = ? AND motif LIKE 'Congé annuel%'").param(ids.get("P1"))
+                .query(String.class).list()).containsExactly("ACCEPTEE");
+
+        // Une règle de l'organisme refuse toute absence de plus de six jours : la semaine n'est pas octroyée.
+        regle("semaine-refusee", Map.of("fait", "joursDemandes", "op", ">", "valeur", 6), "REFUSER", "Pas d'absence d'une semaine");
+        String aout = campagneOuverte("Août 2027", "2027-08-02", "2027-08-08");
+        http.put(CONGES + "/" + aout + "/choix", JULIE, "{\"semaines\":[\"2027-08-02\"]}").andExpect(status().isOk());
+        octroyer(aout);
+        http.get(CONGES + "/" + aout + "/resultats", ADMIN).andExpect(jsonPath("$[0].statut").value("REFUSE"))
+                .andExpect(jsonPath("$[0].motif").value("refusée par les règles de l'organisme"));
+
+        // Marc change de corps d'emploi : la campagne des paramédics ne le vise plus.
+        String autre = campagneOuverte("Automne 2027", "2027-10-04", "2027-10-17");
+        jdbc.sql("UPDATE eff_ressources SET corpsEmploiCode = 'REP' WHERE id = ?").param(ids.get("P2")).update();
+        http.put(CONGES + "/" + autre + "/choix", MARC, "{\"semaines\":[\"2027-10-04\"]}").andExpect(status().isForbidden());
+    }
+
+    private static final String CONGES = "/api/effectifs/absences/conges";
+
+    private String campagneOuverte(String nom, String du, String au) throws Exception {
+        String corps = "{\"nom\":\"" + nom + "\",\"uniteCode\":\"EST\",\"corpsEmploiCode\":\"PARA\",\"annee\":2027,\"du\":\"" + du
+                + "\",\"au\":\"" + au + "\",\"codeAbsence\":\"MAL\",\"plafondParSemaine\":2}";
+        String id = JsonPath.read(http.post(CONGES, ADMIN, corps).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(), "$.id");
+        http.post(CONGES + "/" + id + "/etat", ADMIN, "{\"etat\":\"OUVERTE\"}").andExpect(status().isOk());
+        return id;
+    }
+
+    private void octroyer(String id) throws Exception {
+        http.post(CONGES + "/" + id + "/etat", ADMIN, "{\"etat\":\"FERMEE\"}").andExpect(status().isOk());
+        http.post(CONGES + "/" + id + "/octroyer", ADMIN, "{}").andExpect(status().isOk());
     }
 }

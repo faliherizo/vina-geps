@@ -1,0 +1,30 @@
+{
+  "_lecture": "Les réponses de l'addenda 8 de 26-015-DO (M-02, M-04, M-08, M-09, M-10, M-18), constatées à l'écran sur les deux organismes déployés — Urgences-santé et Clincom (FX-AO) — avec les données que leurs semis posent (scripts/lib/organisme-par-defaut/donnees.cjs, addenda8DeDemo ; e2e/donnees/fx-ao/demonstration.json, addenda8). Lu par tests/e2e/deploiement-addenda-08.spec.ts. « lecture » ne modifie rien ; « gestes » écrivent (E2E_PARCOURS_DEMO=1) et marquent chaque texte « Exercice e2e ».",
+  "marque": "Exercice e2e",
+  "organismes": [
+    {
+      "cle": "urgences-sante",
+      "admin": "admin",
+      "decideur": "admin",
+      "employe": "employe1",
+      "employeNom": "Émilie Paramédic",
+      "competence": { "matricule": "E0003", "attendus": ["Réanimation cardiorespiratoire (RCR)", "Permis de conduire classe 4A"], "echeance": "Éloïse Paramédic" },
+      "rattachement": { "matricule": "E0003", "unite": "Soutien et administration" },
+      "demandes": { "enAttente": "Étienne Paramédic", "inscritTs": "Émilie Paramédic", "dansJours": 10, "typeGeste": "AUTRE", "typeRefus": "EVENEMENT" },
+      "conges": { "campagne": "Vacances d'été", "resultat": "Étienne Paramédic" },
+      "rapports": ["effectifs_horaires", "effectifs_budget"]
+    },
+    {
+      "cle": "fx-ao",
+      "admin": "admin",
+      "decideur": "admin",
+      "employe": "chef.urgence.hsj",
+      "employeNom": "Martin Gagnon",
+      "competence": { "matricule": "L-2001", "attendus": ["Soins immédiats de réanimation (BLS)", "Réanimation cardiovasculaire avancée (ACLS)"], "echeance": "Dre Isabelle Tremblay" },
+      "rattachement": { "matricule": "L-3002", "unite": "Hôpital de Saint-Jérôme" },
+      "demandes": { "enAttente": "Émilie Pelletier", "inscritTs": "Julie Roy", "dansJours": 10, "typeGeste": "AUTRE", "typeRefus": "EVENEMENT" },
+      "conges": { "campagne": "Vacances d'été — Saint-Jérôme", "resultat": "Martin Gagnon" },
+      "rapports": ["effectifs_horaires"]
+    }
+  ]
+}

@@ -37,5 +37,9 @@
   <include file="db/changelog/0025-auth-sessions-revoquees.xml"/>
   <include file="db/changelog/0026-auth-identites-externes.xml"/>
   <include file="db/changelog/0027-effectifs-competences.xml"/>
+  <include file="db/changelog/0028-effectifs-demandes.xml"/>
+  <include file="db/changelog/0029-effectifs-reglages-journal.xml"/>
+  <include file="db/changelog/0030-effectifs-rattachements.xml"/>
+  <include file="db/changelog/0031-effectifs-conges-annuels.xml"/>
 
 </databaseChangeLog>

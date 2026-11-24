@@ -156,6 +156,60 @@ async function semerAbsences(ctx) {
   }
 }
 
+/**
+ * **Addenda 8 de 26-015-DO, montré sur FX-AO** — idempotent : chaque élément se cherche avant de se poser, pour qu'un
+ * exemplaire déjà semé se mette à niveau (`--completer`) sans rien doubler.
+ */
+async function semerAddenda8(tenantId) {
+  const a = donnees.addenda8;
+  const ctx = { jeton: await connecter({ username: "admin", password: MDP, tenantId }), tenantId };
+  const lire = (chemin, c = ctx) => appeler(chemin, c);
+  const poser = (chemin, corps, methode = "POST", c = ctx) => appeler(chemin, { ...c, methode, corps });
+  for (const [type, valeurs] of [["types_demande", a.typesDemande], ["competences", a.competences]]) {
+    const existants = (await lire(`/api/effectifs/referentiels/${type}`)).map((v) => v.code);
+    for (const v of valeurs.filter((x) => !existants.includes(x.code))) await poser(`/api/effectifs/referentiels/${type}`, { effectifDepuis: "2026-01-01", ...v });
+  }
+  const ressources = await lire("/api/effectifs/planification/ressources");
+  const comptes = await lire("/api/auth/users");
+  const ressourceDe = (username) => {
+    const compte = comptes.find((c) => c.username === username || c.username?.startsWith(`${username}@@`));
+    return ressources.find((r) => r.utilisateurId === compte?.id);
+  };
+  for (const d of a.detentions) {
+    await poser(`/api/effectifs/planification/ressources/${ressourceDe(d.personne).id}/competences/${d.code}`,
+      { obtenueLe: jour(d.obtenueLe), echeance: jour(d.echeance) }, "PUT");
+  }
+  await poser("/api/effectifs/journal/reglages", { consultations: a.consultations }, "PUT");
+  const r = a.rattachement;
+  const baseRattachement = `/api/effectifs/planification/ressources/${ressourceDe(r.personne).id}/rattachements`;
+  if (!(await lire(baseRattachement)).some((x) => x.uniteCode === r.uniteCode)) {
+    await poser(baseRattachement, { uniteCode: r.uniteCode, depuis: jour(r.depuis), jusqua: jour(r.jusqua) });
+  }
+  const annee = Number(jour(0).slice(0, 4)) + 1;
+  let campagne = (await lire("/api/effectifs/absences/conges")).find((c) => c.nom === a.campagne.nom);
+  if (!campagne) {
+    campagne = await poser("/api/effectifs/absences/conges", { ...a.campagne, annee, du: `${annee}-06-01`, au: `${annee}-09-30` });
+    campagne = await poser(`/api/effectifs/absences/conges/${campagne.id}/etat`, { etat: "OUVERTE" });
+  }
+  const jetons = {};
+  const comme = async (u) => ({ jeton: (jetons[u] ??= await connecter({ username: u, password: MDP, tenantId })), tenantId });
+  for (const d of a.demandes) {
+    const moi = await comme(d.personne);
+    const existante = (await lire("/api/effectifs/planification/demandes/miennes", moi)).find((x) => x.typeCode === d.typeCode && x.statut !== "ANNULEE");
+    const demande = existante ?? await poser("/api/effectifs/planification/demandes",
+      { typeCode: d.typeCode, du: jour(d.du), au: jour(d.au), commentaire: d.commentaire }, "POST", moi);
+    if (d.decision && demande.statut === "EN_ATTENTE") {
+      await poser(`/api/effectifs/planification/demandes/${demande.id}/decision`, { decision: d.decision, motif: "Démonstration" });
+    }
+  }
+  if (campagne.etat === "OUVERTE") {
+    const moi = await comme(a.choix.personne);
+    const offertes = (await lire("/api/effectifs/absences/conges/miennes", moi)).find((m) => m.campagne.id === campagne.id)?.semaines ?? [];
+    const semaines = a.choix.semaines.map((i) => offertes[i]).filter(Boolean);
+    if (semaines.length) await poser(`/api/effectifs/absences/conges/${campagne.id}/choix`, { semaines }, "PUT", moi);
+  }
+}
+
 async function semer() {
   const { tenant, jetonSa } = await creerOrganisme();
   const ctx = { jeton: await connecter({ username: "admin", password: MDP, tenantId: tenant.id }), tenantId: tenant.id };
@@ -164,6 +218,7 @@ async function semer() {
   const parametres = await semerParametres(ctx, groupes);
   await semerAbsences(ctx);
   await semerPeriodes(ctx);
+  await semerAddenda8(tenant.id);
   await semerAlertes(tenant.id, groupes, parametres);
   return { tenant: await achever(appeler, jetonSa, tenant), comptes };
 }
@@ -173,7 +228,14 @@ async function semer() {
  * semer d'autre. Le menu se règle par vues masquées : l'appliquer de nouveau ne double rien.
  */
 const ORGANISME_A_CLOISONNER = argument("cloisonner", "");
-if (ORGANISME_A_CLOISONNER) {
+const ORGANISME_A_COMPLETER = argument("completer", "");
+if (ORGANISME_A_COMPLETER) {
+  // Met à niveau un exemplaire déjà semé : le menu de l'avis, puis les données de l'addenda 8. Rien n'est doublé.
+  connecter(SUPERADMIN).then((jeton) => cloisonner(jeton, ORGANISME_A_COMPLETER)).then(() => semerAddenda8(ORGANISME_A_COMPLETER)).then(() => {
+    console.log(`✅ ${ORGANISME_A_COMPLETER} mis à niveau : menu de l'avis et addenda 8.`);
+    process.exit(0);
+  }).catch((e) => { console.error(`\n❌ ${e.message}\n`); process.exit(1); });
+} else if (ORGANISME_A_CLOISONNER) {
   connecter(SUPERADMIN).then((jeton) => cloisonner(jeton, ORGANISME_A_CLOISONNER)).then(({ gardees, masquees }) => {
     console.log(`✅ Menu de ${ORGANISME_A_CLOISONNER} réduit à l'avis FX-AO-20260810 : ${gardees} vues gardées, ${masquees} masquées.`);
     process.exit(0);

@@ -2,6 +2,8 @@ package ca.vina.nexu.effectifs.infrastructure.configuration;
 
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireCompetences;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireDemandes;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireRattachements;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireEquipages;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePeriodes;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePlaces;
@@ -11,6 +13,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
 import ca.vina.nexu.partage.personnel.FichesPersonnelPort;
 import ca.vina.nexu.effectifs.application.commandes.RepercussionPostes;
 import ca.vina.nexu.effectifs.application.requetes.LectureCompetences;
+import ca.vina.nexu.effectifs.application.requetes.LectureDemandes;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LectureMilieux;
 import ca.vina.nexu.effectifs.application.requetes.LecturePeriodes;
@@ -20,6 +23,8 @@ import ca.vina.nexu.effectifs.application.requetes.LectureQuotas;
 import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
 import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
 import ca.vina.nexu.effectifs.domaine.CompetencesPort;
+import ca.vina.nexu.effectifs.domaine.DemandesPort;
+import ca.vina.nexu.effectifs.domaine.RattachementsPort;
 import ca.vina.nexu.effectifs.domaine.DepotEquipagesPort;
 import ca.vina.nexu.effectifs.domaine.DepotReferentielsPort;
 import ca.vina.nexu.effectifs.domaine.DepotPeriodesPort;
@@ -39,8 +44,8 @@ import org.springframework.context.annotation.Configuration;
 public class ConfigurationPlanificationEffectifs {
 
     @Bean
-    public LectureRessources lectureRessourcesEffectifs(DepotRessourcesPort depot, LecturePerimetres perimetres) {
-        return new LectureRessources(depot, perimetres);
+    public LectureRessources lectureRessourcesEffectifs(DepotRessourcesPort depot, LecturePerimetres perimetres, RattachementsPort rattachements) {
+        return new LectureRessources(depot, perimetres, rattachements);
     }
 
     @Bean
@@ -117,6 +122,26 @@ public class ConfigurationPlanificationEffectifs {
     @Bean
     public LectureCompetences lectureCompetencesEffectifs(CompetencesPort depot, DepotReferentielsPort referentiels, LectureRessources ressources) {
         return new LectureCompetences(depot, referentiels, ressources);
+    }
+
+    /** Addenda 8, M-09 : les autres unités d'une personne. */
+    @Bean
+    public GestionnaireRattachements gestionnaireRattachementsEffectifs(RattachementsPort depot, LectureRessources ressources, LectureReferentiels referentiels,
+                                                                        LecturePerimetres perimetres, JournalEffectifsPort journal) {
+        return new GestionnaireRattachements(depot, new GestionnaireRattachements.Lectures(ressources, referentiels, perimetres), journal);
+    }
+
+    /** Addenda 8, M-08 : les demandes opérationnelles. */
+    @Bean
+    public LectureDemandes lectureDemandesEffectifs(DemandesPort depot, LectureReferentiels referentiels, LectureRessources ressources, LecturePerimetres perimetres) {
+        return new LectureDemandes(depot, referentiels, ressources, perimetres);
+    }
+
+    @Bean
+    public GestionnaireDemandes gestionnaireDemandesEffectifs(DemandesPort depot, LectureRessources ressources, LectureReferentiels referentiels,
+                                                              LecturePerimetres perimetres, JournalEffectifsPort journal, Sequence sequence) {
+        return new GestionnaireDemandes(new GestionnaireDemandes.Lectures(ressources, referentiels, perimetres),
+                new GestionnaireDemandes.Ecritures(depot, journal, sequence));
     }
 
     @Bean

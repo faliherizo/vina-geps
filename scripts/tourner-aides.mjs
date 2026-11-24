@@ -4,6 +4,7 @@
  *
  *   node scripts/tourner-aides.mjs --api http://localhost:8095 --us <organisme Urgences-santé> --fx <organisme FX-AO>
  *   node scripts/tourner-aides.mjs ... --seulement paiecycles,mesbulletins
+ *   node scripts/tourner-aides.mjs ... --comptes scripts/.organisme-par-defaut.organisme-par-defaut.local.json
  *
  * Pour chaque écran : la fiche est **dite** (voix française du Québec), puis filmée sur un organisme de démonstration
  * semé, avec le compte qui a le droit de l'ouvrir. On part du tableau de bord, on déplie le menu et le sous-menu jusqu'à
@@ -14,7 +15,7 @@
  * dans l'environnement (`SUPERADMIN_USERNAME`, `SUPERADMIN_PASSWORD`, celles du `.env`), jamais écrit ici.
  */
 import { execFileSync } from "node:child_process";
-import { mkdirSync, rmSync, writeFileSync, readdirSync } from "node:fs";
+import { mkdirSync, rmSync, writeFileSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { narrer, vtt, duree } from "./lib/narration.mjs";
 import { RACINE, TAILLE, chargerModuleInterface, connecter as connecterApi, exiger, parLeMenu, parcourir } from "./lib/tournage.mjs";
@@ -25,6 +26,11 @@ const arg = (nom, defaut = "") => { const i = process.argv.indexOf(`--${nom}`); 
 const API = arg("api", "http://localhost:8095");
 const ORGANISMES = { us: arg("us"), fx: arg("fx") };
 const MDP = process.env.DEMO_PASSWORD ?? "Passe!Demo2026";
+// L'organisme par défaut donne à chaque compte un mot de passe tiré au hasard, consigné dans son fichier local
+// (`scripts/.organisme-par-defaut.*.local.json`, hors git) : `--comptes <fichier>` l'y lit pour les comptes « us ».
+const COMPTES_US = arg("comptes") ? JSON.parse(readFileSync(arg("comptes"), "utf8")).comptes : [];
+const motDePasseDe = (organisme, identifiant) =>
+  (organisme === "us" && COMPTES_US.find((c) => c.username === identifiant)?.password) || MDP;
 const SEULEMENT = arg("seulement") ? new Set(arg("seulement").split(",")) : null;
 // Les vidéos tournées sont des **sources** : `introduire-aides.mjs` leur ajoute l'introduction « Avant de commencer »
 // et publie le résultat dans `frontend/public/aide/videos`.
@@ -38,6 +44,7 @@ const QUI = {
   usappels: ["us", "julie.roy"], usdiffusion: ["us", "julie.roy"], monagph: ["us", "denis.lavoie"], monequipe: ["us", "claire.nadeau"],
   paieregles: ["us", "sophie.marchand"], paiedossiers: ["us", "sophie.marchand"], paieparametres: ["us", "sophie.marchand"],
   paietemps: ["us", "luc.gagnon"], paiecycles: ["us", "luc.gagnon"], paiedeclarations: ["us", "luc.gagnon"],
+  mesdemandes: ["us", "employe1"], mescongesannuels: ["us", "employe2"],
   alnouvelle: ["fx", "coord.urgence"], alsuivi: ["fx", "coord.urgence"], mesalertes: ["fx", "inf.roy"], alparametres: ["fx", "admin"],
   superadmin: ["sa", process.env.SUPERADMIN_USERNAME ?? "superadmin"],
 };
@@ -55,7 +62,7 @@ function phrases(f) {
 async function connecter(contexte, organisme, identifiant) {
   const corps = organisme === "sa"
     ? { username: identifiant, password: process.env.SUPERADMIN_PASSWORD ?? "" }
-    : { username: identifiant, password: MDP, tenantId: ORGANISMES[organisme] };
+    : { username: identifiant, password: motDePasseDe(organisme, identifiant), tenantId: ORGANISMES[organisme] };
   await connecterApi(contexte, API, corps);
 }
 

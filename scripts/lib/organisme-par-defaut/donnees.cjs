@@ -143,6 +143,41 @@ function competencesDeDemo(aujourdhui) {
   ];
 }
 
+/** Addenda 8, M-08 : les types de demande opérationnelle et ce que chacun fait. */
+const TYPES_DEMANDE = [
+  { code: "LISTE-TS", libelleFr: "Liste de temps supplémentaire", comportement: "LISTE_TEMPS_SUPPLEMENTAIRE" },
+  { code: "EVENEMENT", libelleFr: "Événement (couverture d'un événement spécial)", comportement: "EVENEMENT" },
+  { code: "FORMATION", libelleFr: "Formation", comportement: "FORMATION" },
+  { code: "REMPLACEMENT", libelleFr: "Remplacement", comportement: "REMPLACEMENT" },
+  { code: "AUTRE", libelleFr: "Autre demande opérationnelle", comportement: "AUTRE" },
+];
+
+/**
+ * Addenda 8 (M-02, M-08, M-09, M-10) : ce que la démonstration montre de chaque réponse — une inscription au temps
+ * supplémentaire acceptée et une formation en attente, une campagne de congés d'été ouverte avec les choix d'une
+ * personne, un prêt temporaire au soutien, et le journal des consultations activé. Dates relatives au jour du semis.
+ */
+function addenda8DeDemo(aujourdhui) {
+  const annee = Number(aujourdhui.slice(0, 4)) + 1;
+  return {
+    consultations: true,
+    demandes: [
+      { cle: "employe1", corps: { typeCode: "LISTE-TS", du: decaler(aujourdhui, 3), au: decaler(aujourdhui, 60), commentaire: "Soirs et fins de semaine" }, decision: "ACCEPTER" },
+      { cle: "employe2", corps: { typeCode: "FORMATION", du: decaler(aujourdhui, 30), au: decaler(aujourdhui, 31), commentaire: "Cours de réanimation avancée" } },
+    ],
+    campagne: { nom: `Vacances d'été ${annee}`, uniteCode: "OPS", corpsEmploiCode: "PARA", annee, du: `${annee}-06-01`, au: `${annee}-09-30`,
+      codeAbsence: "VAC", plafondParSemaine: 1, maxSemainesParPersonne: 2 },
+    choix: { cle: "employe2", semaines: [lundiSuivant(`${annee}-07-01`), lundiSuivant(`${annee}-07-15`)] },
+    rattachement: { cle: "employe3", corps: { uniteCode: "SOUT", depuis: aujourdhui, jusqua: decaler(aujourdhui, 90) } },
+  };
+}
+
+/** Le premier lundi d'une date ou après elle. */
+function lundiSuivant(date) {
+  const lundi = lundiDe(date);
+  return lundi < date ? decaler(lundi, 7) : lundi;
+}
+
 /** Les référentiels, dans l'ordre où ils doivent passer (une référence vise une valeur déjà posée). */
 function referentiels(annee) {
   return [
@@ -150,7 +185,7 @@ function referentiels(annee) {
     ["statuts_emploi", STATUTS_EMPLOI], ["conventions", CONVENTIONS], ["natures_quart", NATURES_QUART],
     ["plages_horaires", PLAGES_HORAIRES], ["types_milieu", TYPES_MILIEU], ["codes_absence", CODES_ABSENCE],
     ["types_heure", TYPES_HEURE], ["activites_presence", ACTIVITES_PRESENCE], ["jours_feries", joursFeries(annee)],
-    ["competences", COMPETENCES],
+    ["competences", COMPETENCES], ["types_demande", TYPES_DEMANDE],
   ].flatMap(([type, valeurs]) => valeurs.map((v) => ({ type, corps: { effectifDepuis: EFFECTIF_DEPUIS, ...v } })));
 }
 
@@ -296,5 +331,5 @@ function chevauche(existante, { du, au }) {
 module.exports = {
   EFFECTIF_DEPUIS, FAMILLES_HORS_PRODUIT, MODULES_DU_PRODUIT, UNITES, CORPS_EMPLOI, TITRES_EMPLOI, STATUTS_EMPLOI, CONVENTIONS,
   NATURES_QUART, PLAGES_HORAIRES, TYPES_MILIEU, CODES_ABSENCE, TYPES_HEURE, ACTIVITES_PRESENCE, COMPETENCES, MILIEUX, REGLES, PARAMETRES_TEMPS,
-  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo, competencesDeDemo, chevauche,
+  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo, competencesDeDemo, addenda8DeDemo, TYPES_DEMANDE, chevauche,
 };

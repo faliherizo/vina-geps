@@ -18,7 +18,7 @@ describe("Urgences-santé — le menu et ses pages", () => {
     expect(ENTREES_US.filter((e) => !PAGES_US[e.cle]).map((e) => e.cle)).toEqual([]);
     expect(Object.keys(PAGES_US).filter((c) => !CLES_US.includes(c))).toEqual([]);
     // Trente et un : vingt écrans de pilotage (codes d'absence compris), huit personnels (Mon équipe comprise), trois de communication.
-    expect(CLES_US).toHaveLength(31);
+    expect(CLES_US).toHaveLength(35);
   });
 
   it("aucune clé en double : une page ne s'atteint que par une entrée", () => {
@@ -56,7 +56,7 @@ describe("Urgences-santé — le menu et ses pages", () => {
 
   it("les écrans personnels sont ouverts à tous, les consoles à l'encadrement seul", () => {
     const personnels = ["monhoraire", "mesdisponibilites", "mesabsences", "monagph",
-                        "monpointage", "matemps", "mesechanges"];
+                        "monpointage", "matemps", "mesechanges", "mesdemandes", "mescongesannuels"];
     /**
      * **La communication est ouverte à tous, et ce n'est pas une console.**
      *

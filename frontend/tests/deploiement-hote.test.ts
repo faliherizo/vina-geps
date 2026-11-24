@@ -36,4 +36,13 @@ describe("lecture de ce que l'hôte désigne", () => {
     expect(await lireDeploiement(async () => json(true, { resolution: "selecteur" }), [], sansAttente))
       .toEqual({ etat: "lu", ok: true, corps: { resolution: "selecteur" } });
   });
+
+  it("attend vraiment entre deux essais quand rien n'est injecté", async () => {
+    let appels = 0;
+    const debut = Date.now();
+    const l = await lireDeploiement(async () => { appels++; return html502; }, [5]);
+    expect(l).toEqual({ etat: "indisponible" });
+    expect(appels).toBe(2);
+    expect(Date.now() - debut).toBeGreaterThanOrEqual(4);
+  });
 });

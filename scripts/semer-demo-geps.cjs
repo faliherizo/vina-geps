@@ -48,6 +48,15 @@ function semer(organisme) {
   execFileSync(process.execPath, [script, ...ARGUMENTS[organisme.cle](organisme)], { env, stdio: "inherit" });
 }
 
+/** Les semis qui savent mettre à niveau un exemplaire existant, sans en créer un nouveau. */
+const COMPLETER = { "fx-ao": true };
+
+function completer(organisme, tenantId) {
+  const script = path.join(__dirname, "..", organisme.semis);
+  const env = { ...process.env, DEMO_PASSWORD: MDP, SUPERADMIN_USER: SUPERADMIN.username, SUPERADMIN_PASS: SUPERADMIN.password };
+  execFileSync(process.execPath, [script, "--api", API, "--completer", tenantId], { env, stdio: "inherit" });
+}
+
 /** Le sous-domaine libéré par tout organisme autre que `garde` qui le tient : un slug est unique. */
 async function liberer(ctx, slug, garde) {
   for (const t of ctx.existants.filter((x) => x.slug === slug && x.id !== garde)) {
@@ -76,6 +85,8 @@ async function principal() {
     try {
       if (present(organisme, ctx.existants) && organisme.correspondance !== "exact" && !FORCER) {
         await attribuer(ctx, organisme);
+        // Un exemplaire déjà semé se met à niveau quand son semis sait le faire (FX-AO : menu de l'avis, addenda 8).
+        if (COMPLETER[organisme.cle]) completer(organisme, instances(organisme, ctx.existants)[0].id);
         console.log(`= ${organisme.nom} — déjà semé (--forcer pour un nouvel exemplaire)`);
         continue;
       }

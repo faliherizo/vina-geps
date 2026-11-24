@@ -99,5 +99,17 @@ public final class SourcesEffectifs {
                     axe("typeAbsence", "Type d'absence (payée, non payée, banque)"),
                     axe("statut", "Statut de l'absence"),
                     mesure("jours", "Jours d'absence"),
-                    mesure("absences", "Absences"))));
+                    mesure("absences", "Absences"))),
+            // Addenda 8, M-18 : les rapports attendus dès la mise en production — l'horaire et le budget en heures.
+            source("effectifs_horaires", "Effectifs — horaires (quarts tenus)", "effectifs_planification", COMMUNS, QUART, List.of(
+                    axe("plageHoraire", "Plage horaire"),
+                    axe("debut", "Début (HH:MM)"),
+                    axe("fin", "Fin (HH:MM)"),
+                    mesure("quarts", "Quarts"),
+                    mesure("heures", "Heures"))),
+            source("effectifs_budget", "Effectifs — budget en heures (AGPH) et heures planifiées", "effectifs_agph", COMMUNS, List.of(
+                    mesure("budgetHeures", "Budget de la semaine (h)"),
+                    mesure("heuresPlanifiees", "Heures planifiées (toutes les places)"),
+                    mesure("heuresPourvues", "Heures pourvues"),
+                    mesure("ecartHeures", "Écart planifié moins budget (h)"))));
 }

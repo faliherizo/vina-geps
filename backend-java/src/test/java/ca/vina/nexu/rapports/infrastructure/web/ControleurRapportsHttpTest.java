@@ -117,8 +117,9 @@ class ControleurRapportsHttpTest {
     @Test
     @DisplayName("les sources offertes suivent les modules ouverts de l'organisme, avec leur période et leur capacité")
     void sourcesFiltrees() throws Exception {
+        // Six : les cinq relevés d'origine et l'horaire (planification) ; le budget en heures exige le module AGPH, absent ici.
         http.get("/api/rapports/sources", COMPLET).andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(5)));
+                .andExpect(jsonPath("$", hasSize(6))).andExpect(jsonPath("$[5].code").value("effectifs_horaires"));
         http.get("/api/rapports/sources", RESTREINT).andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].code").value("effectifs_heures"))
                 .andExpect(jsonPath("$[0].faits.periode").value("jour"))

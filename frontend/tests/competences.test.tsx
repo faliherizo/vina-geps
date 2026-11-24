@@ -110,6 +110,9 @@ describe("relevé des échéances", () => {
     const texte = decodeURIComponent(lien.href.split(",")[1]);
     expect(texte).toContain("\"Personne\";\"Unité\";\"Compétence\"");
     expect(texte).toContain("\"Marc \"\"Mac\"\" Dubé\";\"EST\";\"Réanimation cardiorespiratoire\";\"2026-12-30\";\"À échoir\";\"37\"");
+    // Chaque colonne triable se trie : la plus pressante d'abord par jours, puis par nom, unité et échéance.
+    for (const col of ["personne", "unite", "echeance", "jours"]) await act(async () => { $(`pla-echeances-tableau-tri-${col}`)!.click(); });
+    expect($("pla-echeances-tableau")!.querySelectorAll("tbody tr")[0].getAttribute("data-testid")).toBe("pla-echeance-r-1-PERMIS");
     await saisir("pla-echeances-horizon", "30");
     await attendre();
     expect($("pla-echeances-vide")).not.toBeNull();

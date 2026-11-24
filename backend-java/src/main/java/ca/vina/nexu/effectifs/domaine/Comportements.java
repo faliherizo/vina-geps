@@ -33,6 +33,9 @@ public final class Comportements {
     /** La catégorie de durée d'un code d'absence. */
     public enum DureeAbsence { PONCTUELLE, MOYEN_TERME, LONG_TERME }
 
+    /** Addenda 8, M-08 : ce que fait un type de demande opérationnelle. */
+    public enum NatureDemande { LISTE_TEMPS_SUPPLEMENTAIRE, EVENEMENT, FORMATION, REMPLACEMENT, AUTRE }
+
     /** Le type de valeur d'un paramètre de poste. */
     public enum TypeValeurParametre { TEXTE, NOMBRE, BOOLEEN }
 

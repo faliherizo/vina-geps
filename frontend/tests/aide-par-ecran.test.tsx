@@ -185,7 +185,7 @@ describe("le guide se restreint aux modules souscrits", () => {
 
   it("les écrans du module renvoient à ses deux sections : les effectifs, et la communication", () => {
     const us = Object.entries(AIDE_PAR_PAGE).filter(([page]) => page.startsWith("us"));
-    expect(us).toHaveLength(23);
+    expect(us).toHaveLength(25);
     expect([...new Set(us.map(([, s]) => s))].sort()).toEqual(["communication", "effectifs-planification"]);
   });
 });

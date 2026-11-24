@@ -7,11 +7,13 @@
 import { EnTeteEcran } from "../../composants";
 import PageMaquette from "../../composants/PageMaquette";
 import Journal from "../../effectifs/Journal";
+import ReglageConsultations from "../../effectifs/ReglageConsultations";
 
 export default function Usjournal() {
   return (
     <PageMaquette module="Urgences-santé" contexte="Journal des décisions">
       <EnTeteEcran titre="Journal des décisions" description="Chaque action horodatée avec son auteur ou le mécanisme qui l'a posée." testId="usjournal-titre" />
+      <ReglageConsultations />
       <Journal />
     </PageMaquette>
   );

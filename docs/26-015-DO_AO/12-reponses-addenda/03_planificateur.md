@@ -64,11 +64,11 @@ Commandes : section « Vérifier — les portes » de [CLAUDE.md](../../../CLAUD
 |---|---|---|---|
 | E1 | Traiter les 19 réponses et E-TN-31 | ✅ | [07_addenda_08.md](07_addenda_08.md) |
 | E2 | AD-09 Compétences et échéances | ✅ | `CompetencesTest`, `ControleurPlanificationEffectifsHttpTest.competences`, changeset 0027, BDD @M-04, vitest `competences.test.tsx`, audit « Ressources » ; semis de démonstration (`competencesDeDemo`) |
-| E3 | AD-14 Relevés horaires et budget en heures | ⬜ | |
-| E4 | AD-11 Demandes opérationnelles | ⬜ | |
-| E5 | AD-13 Journal des consultations | ⬜ | |
-| E6 | AD-10 Choix annuel des congés | ⬜ | |
-| E7 | AD-12 Rattachements multiples | ⬜ | |
+| E3 | AD-14 Relevés horaires et budget en heures | ✅ | `RelevesEffectifsDomaineTest.horairesEtBudget`, `FaitsRelevesEffectifsHttpTest.horairesEtBudget`, `CatalogueRapportsTest`, `RelevesStatistiquesTest` ; sources `effectifs_horaires` (module planification) et `effectifs_budget` (module AGPH), exports CSV, XLSX, PDF du constructeur de rapports |
+| E4 | AD-11 Demandes opérationnelles | ✅ | `DemandesOperationnellesTest`, `ControleurDemandesEffectifsHttpTest`, changeset 0028, écrans « Mes demandes » et « Demandes opérationnelles » |
+| E5 | AD-13 Journal des consultations | ✅ | `ConsultationsTest`, `ControleurReglagesJournalHttpTest`, changeset 0029, réglage dans « Journal des décisions » |
+| E6 | AD-10 Choix annuel des congés | ✅ | `CongesAnnuelsTest`, `ControleurAbsencesEffectifsHttpTest.congesAnnuels`, changeset 0031, écrans « Mes congés annuels » et « Congés annuels » |
+| E7 | AD-12 Rattachements multiples | ✅ | `RattachementsTest`, `ControleurRattachementsEffectifsHttpTest`, changeset 0030, tiroir « Autres unités » de « Ressources » |
 | E8 | Bordereau : notifications, textos compris, au forfait (M-07) | 🏢 soumission | Addenda 8, M-07 |
 
 ## D. Proposition et hors code

@@ -59,6 +59,11 @@ export const NOTIONS_US: NotionUs[] = [
     { cle: "mesabsences", icone: "🌴", roles: TOUS, module: "effectifs_absences" },
     { cle: "usabsences", icone: "📋", roles: ENCADREMENT, module: "effectifs_absences" },
   ] },
+  // Addenda 8, M-02 : le choix annuel des congés, par formulaire, octroyé par ancienneté sous un plafond par groupe.
+  { cle: "uscongesnotion", icone: "🏖️", entrees: [
+    { cle: "mescongesannuels", icone: "🏖️", roles: TOUS, module: "effectifs_absences" },
+    { cle: "uscongesannuels", icone: "📋", roles: ENCADREMENT, module: "effectifs_absences" },
+  ] },
   { cle: "usagphnotion", icone: "🗂️", entrees: [
     { cle: "monagph", icone: "🗂️", roles: TOUS, module: "effectifs_agph" },
     { cle: "usagph", icone: "📋", roles: ENCADREMENT, module: "effectifs_agph" },
@@ -84,6 +89,11 @@ export const NOTIONS_US: NotionUs[] = [
   { cle: "usechangesnotion", icone: "🔁", entrees: [
     { cle: "mesechanges", icone: "🔁", roles: TOUS, module: "effectifs_echanges" },
     { cle: "usechanges", icone: "📋", roles: ENCADREMENT, module: "effectifs_echanges" },
+  ] },
+  // Addenda 8, M-08 : la liste de temps supplémentaire, les événements, la formation et les autres demandes opérationnelles.
+  { cle: "usdemandesnotion", icone: "📝", entrees: [
+    { cle: "mesdemandes", icone: "📝", roles: TOUS, module: "effectifs_planification" },
+    { cle: "usdemandes", icone: "📋", roles: ENCADREMENT, module: "effectifs_planification" },
   ] },
   // Mon équipe (comme dans Nexu VINA) : la ligne hiérarchique du gestionnaire, ses feuilles à approuver, sa suppléance.
   { cle: null, icone: "👥", entrees: [

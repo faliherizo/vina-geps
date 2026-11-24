@@ -6,15 +6,18 @@ import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAbsencesEffectifs;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireAttributionFinDeCollecte;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireComblementAbsences;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireCongesAnnuels;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRemplacementsAgph;
 import ca.vina.nexu.effectifs.application.commandes.SuiviComblementAbsence;
 import ca.vina.nexu.effectifs.application.requetes.LectureAbsencesEffectifs;
+import ca.vina.nexu.effectifs.application.requetes.LectureCongesAnnuels;
 import ca.vina.nexu.effectifs.application.requetes.LectureDisponibilites;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
 import ca.vina.nexu.effectifs.application.requetes.LecturePostes;
 import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
 import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
+import ca.vina.nexu.effectifs.domaine.CongesAnnuelsPort;
 import ca.vina.nexu.effectifs.domaine.DepotAbsencesEffectifsPort;
 import ca.vina.nexu.effectifs.domaine.DepotComblementsAbsencesPort;
 import ca.vina.nexu.effectifs.domaine.DepotEquipagesPort;
@@ -64,5 +67,19 @@ public class ConfigurationAbsencesEffectifs {
                                                                        JournalEffectifsPort journal, Sequence sequence, SoldesBanquesPort soldes) {
         return new GestionnaireAbsencesEffectifs(new GestionnaireAbsencesEffectifs.Ports(depot, planning, equipages, comblement),
                 new GestionnaireAbsencesEffectifs.Lectures(absences, ressources, referentiels, perimetres, soldes), regles, journal, sequence);
+    }
+
+    /** Addenda 8, M-02 : le choix annuel des congés ; chaque semaine octroyée passe par la déclaration d'absence. */
+    @Bean
+    public LectureCongesAnnuels lectureCongesAnnuelsEffectifs(CongesAnnuelsPort depot, LectureRessources ressources, LecturePerimetres perimetres) {
+        return new LectureCongesAnnuels(depot, ressources, perimetres);
+    }
+
+    @Bean
+    public GestionnaireCongesAnnuels gestionnaireCongesAnnuelsEffectifs(CongesAnnuelsPort depot, LectureCongesAnnuels campagnes, LectureRessources ressources,
+                                                                        LectureReferentiels referentiels, LecturePerimetres perimetres, JournalEffectifsPort journal,
+                                                                        Sequence sequence, GestionnaireAbsencesEffectifs absences) {
+        return new GestionnaireCongesAnnuels(new GestionnaireCongesAnnuels.Lectures(campagnes, ressources, referentiels, perimetres),
+                new GestionnaireCongesAnnuels.Ecritures(depot, journal, sequence, absences));
     }
 }
