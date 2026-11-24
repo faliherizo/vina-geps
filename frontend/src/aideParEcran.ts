@@ -20,6 +20,7 @@ import { PAGE_MODULE } from "./modulesParPage";
 /** Les sections du guide, dans l'ordre où elles paraissent (le sommaire en découle). */
 export const SECTIONS_AIDE = [
   { id: "demarrage", titre: "Premiers pas : la mise en route" },
+  { id: "parcours", titre: "Parcours en vidéo : configurer, alertes, absences, disponibilités, quarts" },
   { id: "notions", titre: "Notions clés (statuts, rôles, périmètres)" },
   { id: "mon-espace", titre: "Mon espace : horaire, disponibilités, échanges, temps" },
   { id: "organisation", titre: "Organisation : accès et rôles" },

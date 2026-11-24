@@ -16,14 +16,12 @@
  *   passages joués sur cet écran — scénarios d'abord (ajout, modification, refus motivé, diffusion…), saisies et
  *   exigences ensuite. Un écran qu'aucun scénario ne joue garde sa vidéo précédente, et il est nommé au bilan.
  */
-import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { cartonsDesChapitres, dessinerCartons } from "./cartons-vitrine.mjs";
-import { horodatage } from "./lib/narration.mjs";
+import { HAUTEUR, LARGEUR, atelier, vtt } from "./lib/montage.mjs";
 
 const RACINE = join(dirname(fileURLToPath(import.meta.url)), "..");
 const JOURNAL = join(RACINE, "e2e", "test-results", "recit.jsonl");
@@ -31,87 +29,13 @@ const TRAVAIL = join(process.env.TMPDIR ?? "/tmp", "vina-geps-recit");
 const VITRINE = join(RACINE, "frontend", "public", "vitrine");
 // Sources des vidéos d'aide : `introduire-aides.mjs` y ajoute « Avant de commencer » et publie dans `public/aide/videos`.
 const AIDES = join(RACINE, "frontend", "aide-sources", "videos");
-const LARGEUR = 1280;
-const HAUTEUR = 720;
-const IMAGES_PAR_SECONDE = 25;
-const VOIX = "Amélie";
-const DEBIT = "180";
-/** Après la dernière phrase d'un essai, le temps de voir le résultat. */
-const QUEUE_S = 5;
-/** Un passage sans phrase pendant plus longtemps est coupé : une attente n'a rien à montrer. */
-const PASSAGE_MAX_S = 30;
 /** La durée des scénarios d'une vidéo d'aide, carton non compris. */
 const AIDE_MAX_S = 150;
-/** Le silence après l'annonce d'un carton. */
-const SOUFFLE_S = 1.2;
 /** Les chapitres qui parcourent tous les écrans : une vidéo d'aide ne les prend qu'à défaut de scénario. */
 const CHAPITRES_DE_BALAYAGE = ["tests/e2e/urgences-sante-saisies.spec.ts", "tests/e2e/urgences-sante-exigences.spec.ts", "tests/e2e/fx-ao-exigences.spec.ts"];
 
 const SEULEMENT_AIDES = process.argv.includes("--aides-seulement");
-mkdirSync(TRAVAIL, { recursive: true });
-
-const executer = (cmd, args) => execFileSync(cmd, args, { stdio: ["ignore", "ignore", "inherit"] });
-const empreinte = (...parts) => createHash("sha256").update(parts.join("|")).digest("hex").slice(0, 20);
-const durees = new Map();
-function duree(fichier) {
-  if (!durees.has(fichier)) {
-    const s = execFileSync("ffprobe", ["-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", fichier], { encoding: "utf8" });
-    durees.set(fichier, Number(s.trim()));
-  }
-  return durees.get(fichier);
-}
-
-/** La phrase d'un carton, dite par la même voix que le récit ; rend le fichier et sa durée. */
-function dire(texte) {
-  const fichier = join(TRAVAIL, `voix-${empreinte(texte)}.aiff`);
-  if (!existsSync(fichier)) executer("say", ["-v", VOIX, "-r", DEBIT, "-o", fichier, texte]);
-  return { fichier, duree: duree(fichier) };
-}
-
-const FILTRE_IMAGE = `scale=${LARGEUR}:${HAUTEUR}:force_original_aspect_ratio=decrease,pad=${LARGEUR}:${HAUTEUR}:(ow-iw)/2:(oh-ih)/2:color=white,fps=${IMAGES_PAR_SECONDE},format=yuv420p,tpad=stop_mode=clone:stop_duration=${PASSAGE_MAX_S + 30}`;
-const SORTIE = ["-c:v", "libvpx-vp9", "-crf", "34", "-b:v", "0", "-row-mt", "1", "-deadline", "good", "-cpu-used", "5",
-  "-c:a", "libopus", "-b:a", "64k", "-ar", "48000", "-ac", "1"];
-
-/** Un passage : `longueur` secondes de `video` à partir de `debut`, sa phrase au début, en VP9 + Opus uniformes. */
-function encoderPassage({ video, debut, longueur, voix }) {
-  const sortie = join(TRAVAIL, `p-${empreinte(video, debut.toFixed(2), longueur.toFixed(2), voix)}.webm`);
-  if (existsSync(sortie)) return sortie;
-  executer("ffmpeg", ["-y", "-loglevel", "error", "-ss", debut.toFixed(3), "-i", video, "-i", voix,
-    "-filter_complex", `[0:v]${FILTRE_IMAGE}[v];[1:a]aresample=48000,apad[a]`, "-map", "[v]", "-map", "[a]",
-    "-t", longueur.toFixed(3), ...SORTIE, sortie]);
-  return sortie;
-}
-
-/** Un carton : l'image fixe, et son annonce. */
-function encoderCarton(image, texte) {
-  const voix = dire(texte);
-  const longueur = voix.duree + SOUFFLE_S;
-  const sortie = join(TRAVAIL, `c-${empreinte(image, texte)}.webm`);
-  if (!existsSync(sortie)) {
-    executer("ffmpeg", ["-y", "-loglevel", "error", "-loop", "1", "-framerate", String(IMAGES_PAR_SECONDE), "-i", image, "-i", voix.fichier,
-      "-filter_complex", `[0:v]${FILTRE_IMAGE}[v];[1:a]aresample=48000,apad[a]`, "-map", "[v]", "-map", "[a]",
-      "-t", longueur.toFixed(3), ...SORTIE, sortie]);
-  }
-  return { fichier: sortie, longueur, texte };
-}
-
-/** Met bout à bout des morceaux encodés de la même façon, sans réencoder. */
-function concatener(morceaux, sortie) {
-  const liste = join(TRAVAIL, `liste-${empreinte(sortie)}.txt`);
-  writeFileSync(liste, morceaux.map((m) => `file '${m}'`).join("\n") + "\n");
-  executer("ffmpeg", ["-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", liste, "-c", "copy", sortie]);
-}
-
-/** Les cues WebVTT d'une suite de morceaux `{ longueur, phrases: [{ decalage, duree, texte }] }`. */
-function vtt(morceaux) {
-  const cues = [];
-  let t = 0;
-  for (const m of morceaux) {
-    for (const p of m.phrases) cues.push(`${horodatage(t + p.decalage)} --> ${horodatage(t + p.decalage + p.duree)}\n${p.texte}`);
-    t += m.longueur;
-  }
-  return `WEBVTT\n\n${cues.join("\n\n")}\n`;
-}
+const { encoderCarton, concatener, passages, encoder: encode } = atelier(TRAVAIL);
 
 /** L'écran d'une adresse : `/admin/paieregles?x` → `paieregles`. */
 function ecranDe(url) {
@@ -157,26 +81,15 @@ const entrees = readFileSync(JOURNAL, "utf8").split("\n").filter(Boolean).map((l
 const { chapitres } = JSON.parse(readFileSync(join(RACINE, "scripts", "vitrine-chapitres.json"), "utf8"));
 
 function passagesDe(fichier) {
-  const es = entrees.filter((e) => e.essai === fichier);
-  return es.map((e, i) => {
-    const suivante = es[i + 1];
-    const debut = Math.max(0, (e.t - e.naissance) / 1000);
-    const total = duree(e.video);
-    let fin = suivante && suivante.titre === e.titre ? (suivante.t - e.naissance) / 1000 : debut + e.duree + QUEUE_S;
-    fin = Math.min(fin, debut + Math.max(PASSAGE_MAX_S, e.duree + 2), total);
-    fin = Math.max(fin, debut + e.duree + 0.3);
-    return {
-      chapitre: fichier, video: e.video, debut, longueur: fin - debut, voix: e.voix, duree: e.duree, texte: e.texte,
-      ecran: ecranMontre(e.video, e.t, e.naissance + fin * 1000, ecranDe(e.url)),
-    };
-  });
+  return passages(entrees.filter((e) => e.essai === fichier)).map((p) => ({
+    chapitre: fichier, video: p.video, debut: p.debut, longueur: p.longueur, voix: p.voix, duree: p.duree, texte: p.texte,
+    ecran: ecranMontre(p.video, p.t, p.naissance + p.fin * 1000, ecranDe(p.url)),
+  }));
 }
 
 const passagesParChapitre = new Map(chapitres.map((c) => [c.fichier, passagesDe(c.fichier)]));
 const muets = chapitres.filter((c) => passagesParChapitre.get(c.fichier).length === 0).map((c) => c.fichier);
 if (muets.length) throw new Error(`chapitres sans récit — l'essai a-t-il été joué avec E2E_RECIT=1 ? ${muets.join(", ")}`);
-
-const encode = (p) => ({ fichier: encoderPassage(p), longueur: p.longueur, phrases: [{ decalage: 0, duree: p.duree, texte: p.texte }] });
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Le film de la vitrine.
@@ -187,8 +100,7 @@ if (!SEULEMENT_AIDES) {
   const morceaux = [];
   chapitres.forEach((c, i) => {
     const annonce = `Chapitre ${i + 1} : ${c.titre}.`;
-    const carton = encoderCarton(join(TRAVAIL, "cartons", `${cartons[i].nom}.png`), annonce);
-    morceaux.push({ ...carton, phrases: [{ decalage: 0, duree: carton.longueur - SOUFFLE_S, texte: annonce }] });
+    morceaux.push(encoderCarton(join(TRAVAIL, "cartons", `${cartons[i].nom}.png`), annonce));
     for (const p of passagesParChapitre.get(c.fichier)) morceaux.push(encode(p));
     process.stdout.write(`  chapitre ${i + 1}/${chapitres.length} monté\n`);
   });
@@ -236,7 +148,7 @@ for (const c of cartonsAide) {
   choisis.sort((a, b) => ordre.get(a) - ordre.get(b));
   const annonce = `${c.titre}. Voici comment s'en servir, sur des cas réels joués dans l'application.`;
   const carton = encoderCarton(join(TRAVAIL, "cartons", `${c.nom}.png`), annonce);
-  const morceaux = [{ ...carton, phrases: [{ decalage: 0, duree: carton.longueur - SOUFFLE_S, texte: annonce }] }, ...choisis.map(encode)];
+  const morceaux = [carton, ...choisis.map(encode)];
   concatener(morceaux.map((m) => m.fichier), join(AIDES, `${ecran}.webm`));
   writeFileSync(join(AIDES, `${ecran}.fr.vtt`), vtt(morceaux));
   console.log(`  ✓ aide ${ecran} : ${choisis.length} passage(s), ${Math.round(cumul + carton.longueur)} s`);

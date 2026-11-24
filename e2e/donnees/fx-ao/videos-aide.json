@@ -1,0 +1,70 @@
+{
+  "_lecture": "Les parcours en vidéo de l'aide, joués sur l'organisme Clincom (FX-AO-20260810) de la démonstration déployée. Lu par tests/e2e/deploiement-fx-ao-videos.spec.ts, qui joue chaque parcours en le racontant (E2E_RECIT=1), et par scripts/monter-parcours.mjs, qui monte une vidéo par parcours (frontend/public/aide/videos/parcours-<id>.webm). Chaque parcours est un essai qui affirme ce qu'il montre : une donnée absente le fait échouer en la nommant. Les gestes qui écrivent (absence, dépôt, alerte) reprennent ceux de parcours-demonstration.json, marqués « Exercice e2e » ; l'absence est annulée à la fin. La configuration ouvre ses formulaires et les remplit sans les enregistrer.",
+  "marque": "Exercice e2e",
+  "parcours": [
+    {
+      "id": "configurer",
+      "titre": "Configurer les communications cliniques",
+      "essai": "configurer : sites, comptes, profils, réponses, modèles, groupes de garde et relances",
+      "annonce": "Configurer les communications cliniques : les sites, les comptes et leurs profils, les réponses et les modèles d'alerte, les groupes de garde et les relances."
+    },
+    {
+      "id": "alertes",
+      "titre": "Envoyer une alerte, y répondre, la suivre",
+      "essai": "alertes : envoyer à un groupe de garde et à une personne, prendre en charge, suivre",
+      "annonce": "Envoyer une alerte à un groupe de garde et à une personne, la prendre en charge d'un geste, puis la suivre."
+    },
+    {
+      "id": "absences",
+      "titre": "Déclarer une absence et la voir au calendrier interne",
+      "essai": "absences : déclarer, voir au calendrier interne, annuler",
+      "annonce": "Déclarer une absence, la voir au calendrier interne de l'organisme, puis l'annuler."
+    },
+    {
+      "id": "disponibilites",
+      "titre": "Déposer ses disponibilités et suivre les dépôts",
+      "essai": "disponibilités : déposer ses plages de quart, suivre les dépôts de la période",
+      "annonce": "Déposer ses disponibilités par plage de quart pendant la collecte, puis suivre les dépôts de la période."
+    },
+    {
+      "id": "quarts",
+      "titre": "Quarts supplémentaires : la liste de temps supplémentaire",
+      "essai": "quarts : s'inscrire aux quarts supplémentaires, lire la liste du jour",
+      "annonce": "Les quarts supplémentaires : la personne s'inscrit à la liste de temps supplémentaire, et le gestionnaire lit la liste d'un jour."
+    }
+  ],
+  "configuration": {
+    "compte": "admin",
+    "site": "Hôpital de Mont-Laurier",
+    "reponses": ["J'arrive", "Indisponible"],
+    "modeles": ["Code bleu", "Rappel de garde"],
+    "groupes": ["Garde de cardiologie", "Comité des mesures d'urgence"],
+    "politique": "Code bleu — escalade",
+    "exempleReponse": { "libelle": "Je rappelle dans 5 minutes" },
+    "exempleModele": { "titre": "Rappel de garde — soins intensifs", "corps": "Consultation demandée aux soins intensifs." }
+  },
+  "absences": {
+    "compte": "inf.cote",
+    "nom": "Marc Côté",
+    "code": "CONG",
+    "du": 45,
+    "au": 46,
+    "verificateur": "admin",
+    "dejaAuCalendrier": "Dr Antoine Lavoie"
+  },
+  "disponibilites": {
+    "compte": "inf.roy",
+    "periode": "Collecte — Hôpital de Saint-Jérôme",
+    "etat": "Collecte ouverte",
+    "gestionnaire": "admin",
+    "personne": "Julie Roy"
+  },
+  "quarts": {
+    "compte": "inf.roy",
+    "type": "Liste de temps supplémentaire",
+    "gestionnaire": "admin",
+    "dansJours": 10,
+    "inscrite": "Julie Roy",
+    "enAttente": "Émilie Pelletier"
+  }
+}

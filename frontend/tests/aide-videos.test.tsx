@@ -11,6 +11,8 @@ import { resolve } from "node:path";
 import Help, { videoDeFiche } from "../src/Help";
 import { FICHES, resumePrealable } from "../src/aide/fichesEcrans";
 import { MISE_EN_ROUTE, VIDEO_MISE_EN_ROUTE } from "../src/aide/miseEnRoute";
+import { PARCOURS_VIDEO, parcoursVisibles, videoDeParcours } from "../src/aide/parcoursVideo";
+import jeuParcours from "../../e2e/donnees/fx-ao/videos-aide.json";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -51,6 +53,29 @@ describe("aide — une vidéo commentée et ses sous-titres par écran", () => {
     expect(debuts).toEqual([...debuts].sort((a, b) => a - b));
   });
 
+  describe("les parcours en vidéo (FX-AO)", () => {
+    it("chaque parcours a sa vidéo et ses sous-titres, qui commencent par son annonce", () => {
+      const fautifs = PARCOURS_VIDEO.filter((x) => {
+        const { video, sousTitres } = videoDeParcours(x.id);
+        const annonce = jeuParcours.parcours.find((j) => j.id === x.id)?.annonce ?? "∅";
+        return !existsSync(fichier(video)) || statSync(fichier(video)).size < 200_000 || !existsSync(fichier(sousTitres))
+          || !readFileSync(fichier(sousTitres), "utf8").includes(annonce);
+      }).map((x) => x.id);
+      expect({ parcoursSansVideo: fautifs }).toEqual({ parcoursSansVideo: [] });
+    });
+
+    it("le catalogue et le jeu de l'essai qui les tourne nomment les mêmes parcours, dans le même ordre et sous le même titre", () => {
+      expect(PARCOURS_VIDEO.map((x) => [x.id, x.titre])).toEqual(jeuParcours.parcours.map((j) => [j.id, j.titre]));
+    });
+
+    it("un parcours ne paraît que si l'organisme a le module des alertes et chacun de ses écrans", () => {
+      const tout = () => true;
+      expect(parcoursVisibles(tout, tout).map((x) => x.id)).toEqual(PARCOURS_VIDEO.map((x) => x.id));
+      expect(parcoursVisibles((code) => code !== "alertes", tout)).toEqual([]);
+      expect(parcoursVisibles(tout, (p) => p !== "usdemandes").map((x) => x.id)).not.toContain("quarts");
+    });
+  });
+
   describe("la page d'aide", () => {
     let conteneur: HTMLDivElement;
     let racine: Root;
@@ -67,6 +92,18 @@ describe("aide — une vidéo commentée et ses sous-titres par écran", () => {
       expect([piste.getAttribute("kind"), piste.getAttribute("srclang"), piste.getAttribute("src")]).toEqual(["captions", "fr", "/aide/videos/dashboard.fr.vtt"]);
       const description = conteneur.ownerDocument.getElementById(video.getAttribute("aria-describedby")!);
       expect(description?.textContent).toContain("Démonstration commentée");
+    });
+
+    it("montre les parcours en vidéo, au sommaire, et les relie depuis la fiche de chaque écran qu'ils traversent", () => {
+      act(() => { racine.render(<Help />); });
+      expect(conteneur.querySelector('[data-testid="help-sommaire-parcours"]')).not.toBeNull();
+      const video = conteneur.querySelector<HTMLVideoElement>('[data-testid="help-parcours-alertes"]')!;
+      expect([video.getAttribute("src"), video.getAttribute("preload")]).toEqual(["/aide/videos/parcours-alertes.webm", "none"]);
+      expect(video.querySelector("track")!.getAttribute("src")).toBe("/aide/videos/parcours-alertes.fr.vtt");
+      expect(conteneur.ownerDocument.getElementById(video.getAttribute("aria-describedby")!)?.textContent).toContain("prend en charge");
+      const lien = conteneur.querySelector<HTMLAnchorElement>('[data-testid="aide-parcours-mesabsences-absences"]')!;
+      expect(lien.getAttribute("href")).toBe("#parcours-absences");
+      expect(conteneur.querySelector('[data-testid="aide-parcours-dashboard"]')).toBeNull();
     });
   });
 });

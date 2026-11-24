@@ -75,7 +75,7 @@ export default function MesDisponibilites() {
 
   return (
     <PageMaquette module="Urgences-santé" contexte="Mon espace • disponibilités">
-      <EnTeteEcran titre="Mes disponibilités" description="Déposez vos disponibilités pour chaque période, pendant sa collecte — et sachez d\u2019avance ce qui les juge." testId="mdi-titre" />
+      <EnTeteEcran titre="Mes disponibilités" description="Déposez vos disponibilités pour chaque période, pendant sa collecte — et sachez d’avance ce qui les juge." testId="mdi-titre" />
       {!donnees.ressource && (
         <EtatVide titre="Votre compte n'est relié à aucune ressource planifiable" testId="mdi-sans-ressource"
           action={<LienPrealables page="mesdisponibilites" testId="mdi-sans-ressource-prealables" />}>
