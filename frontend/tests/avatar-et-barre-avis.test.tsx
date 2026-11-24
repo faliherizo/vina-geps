@@ -10,6 +10,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Avatar, { initialesDe, teinteDe } from "../src/composants/Avatar";
 import BarreAvis from "../src/BarreAvis";
+import { filEnAttente, oublierFil } from "../src/filDemande";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -147,6 +148,19 @@ describe("Barre d'avis — ce qui m'attend, dans la barre du haut", () => {
     await act(async () => { document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" })); });
     expect((conteneur.querySelector('[data-testid="avis-messages"]') as HTMLDetailsElement).open).toBe(false);
   });
+  it("un message non lu mène à **la messagerie du personnel**, son fil demandé, panneau refermé", async () => {
+    oublierFil();
+    const vus: string[] = [];
+    brancher({ total: 1, conversations: [{ conversationId: "c1", sujet: "Transfert", nonLus: 1, dernierExtrait: "Civière 4" }] }, []);
+    await act(async () => { racine.render(<BarreAvis avecMessagerie avecAvis={false} aller={(p) => vus.push(p)} jeton={1} />); });
+    await act(async () => { (conteneur.querySelector('[data-testid="avis-messages-bouton"]') as HTMLElement).click(); });
+    await act(async () => { (conteneur.querySelector('[data-testid="avis-message-c1"]') as HTMLElement).click(); });
+    expect(vus).toEqual(["usmessages"]);
+    expect(filEnAttente()).toBe("c1");
+    expect((conteneur.querySelector('[data-testid="avis-messages"]') as HTMLDetailsElement).open).toBe(false);
+    oublierFil();
+  });
+
   it("un avis ouvert est **marqué lu**, puis l'écran des avis s'ouvre", async () => {
     const appels: string[] = [];
     const vus: string[] = [];

@@ -424,7 +424,7 @@ function AppShell() {
   useEffect(() => {
     // Même règle que la garde par rôle : on ne juge la page qu'une fois les modules connus.
     if (user && modulesCharges && !visible.some((p) => p.key === page)) {
-      setPage(visible[0]?.key || "time");
+      setPage(repli);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, modulesCharges]);
@@ -464,6 +464,8 @@ function AppShell() {
   }
 
   function go(p: Page, onglet?: string) {
+    // Une page inconnue n'a ni fiche ni écran : la rendre ferait tomber toute l'application.
+    if (!PAGES.some((x) => x.key === p)) return;
     setPage(p);
     setDemande((d) => ({ onglet: onglet ?? null, jeton: d.jeton + 1 }));
     setOpen(false);
@@ -580,16 +582,12 @@ function AppShell() {
           * ouvrant le menu ne prévient personne.
           */}
         {/*
-            **La messagerie se compte dès qu'un module la sert.**
-
-            Le compteur ne regardait que `sq_communication` : un organisme qui achète la
-            communication du personnel dans Urgences-santé (`effectifs_communication`) avait donc
-            les écrans et pas le compteur — ses messages non lus n'étaient annoncés nulle part, et
-            c'est précisément ce que la barre du haut sert à dire.
+            **La messagerie se compte dès que son écran s'ouvre à ce compte** : un compteur dont
+            les messages mènent à un écran fermé n'annonce rien d'utile.
         */}
-        <BarreAvis avecMessagerie={moduleCodeAllowed("sq_communication") || moduleCodeAllowed("effectifs_communication")}
+        <BarreAvis avecMessagerie={visible.some((p) => p.key === "usmessages") && !vueMasquee({ page: "usmessages" })}
                    avecAvis={moduleCodeAllowed("notifications")}
-                   aller={(p) => go(p as Page)} jeton={page} />
+                   aller={go} jeton={page} />
         {user && (
           <MenuProfil nom={user.username} role={user.role}
                       versProfil={() => go("account")} versAide={ouvrirAide} />
