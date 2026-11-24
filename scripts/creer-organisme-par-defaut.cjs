@@ -325,7 +325,16 @@ async function absence(tenantId, etat) {
   compter("absences", true);
 }
 
+/** Addenda 8, M-04 : les compétences d'abord — la règle d'admissibilité les lit à chaque attribution. Une pose remplace. */
+async function competences(ctx, ids) {
+  for (const c of D.competencesDeDemo(aujourdhui())) {
+    await appeler(`/api/effectifs/planification/ressources/${ids[c.cle].ressourceId}/competences/${c.code}`, { ...ctx, methode: "PUT", corps: c.corps });
+    compter("compétences", true);
+  }
+}
+
 async function demonstration(ctx, plan, ids, etat) {
+  await competences(ctx, ids);
   await attribuer(ctx, plan, ids);
   await absence(ctx.tenantId, etat);
   const lundi = D.lundiDe(aujourdhui());

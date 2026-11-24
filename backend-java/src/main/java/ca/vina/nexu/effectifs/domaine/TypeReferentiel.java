@@ -26,7 +26,9 @@ public enum TypeReferentiel {
     JOURS_FERIES("jours_feries", "Jours fériés", List.of()),
     PARAMETRES_POSTE("parametres_poste", "Paramètres de poste", List.of()),
     /** E-GP-15 : le catalogue des activités qu'un pointage ou une saisie peut déclarer. Absent du Java, aucune activité ne se validait. */
-    ACTIVITES_PRESENCE("activites_presence", "Activités de présence", Comportements.noms(Comportements.ActivitePresence.values()));
+    ACTIVITES_PRESENCE("activites_presence", "Activités de présence", Comportements.noms(Comportements.ActivitePresence.values())),
+    /** Addenda 8, M-04 : permis, accréditations, formations obligatoires ; exigées par corps d'emploi, avec leur échéance. */
+    COMPETENCES("competences", "Compétences", List.of());
 
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
@@ -77,6 +79,9 @@ public enum TypeReferentiel {
                     DescripteurAttribut.borne(SoldesBanques.ATTRIBUT_HEURES_PAR_JOUR, "Heures par jour d'absence", false, 0.25, 24));
             case TYPES_HEURE -> List.of(DescripteurAttribut.simple("codePaie", "Code de paie (PFT)", TypeAttribut.TEXTE),
                     DescripteurAttribut.borne("majorationPourcent", "Majoration (%)", false, 0, 300));
+            // Addenda 8, M-04 : les corps d'emploi qui l'exigent ; une compétence sans corps est suivie sans être exigée.
+            case COMPETENCES -> List.of(DescripteurAttribut.reference(Competences.ATTRIBUT_CORPS, "Exigée des corps d'emploi (vide = suivie seulement)",
+                    TypeAttribut.REFERENCES, CORPS_EMPLOI, false));
             case PARAMETRES_POSTE -> List.of(DescripteurAttribut.choix("typeValeur", "Type de valeur", Comportements.noms(Comportements.TypeValeurParametre.values()), true));
             // `codePaie` et `facturable` sont des attributs parce qu'ils varient d'un organisme à l'autre.
             case ACTIVITES_PRESENCE -> List.of(DescripteurAttribut.simple("codePaie", "Code de paie (PFT)", TypeAttribut.TEXTE),

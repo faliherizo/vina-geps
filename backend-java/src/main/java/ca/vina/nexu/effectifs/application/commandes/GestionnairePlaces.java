@@ -3,6 +3,7 @@ package ca.vina.nexu.effectifs.application.commandes;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LecturePerimetres;
 import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
+import ca.vina.nexu.effectifs.domaine.Competences;
 import ca.vina.nexu.effectifs.domaine.ConflitException;
 import ca.vina.nexu.effectifs.domaine.ContexteRegle;
 import ca.vina.nexu.effectifs.domaine.Contexte;
@@ -45,9 +46,17 @@ public class GestionnairePlaces {
     private final GestionnaireEquipages gestion;
     private final EvaluateurRegles regles;
     private final JournalEffectifsPort journal;
+    private final Competences.Source competences;
 
+    /** Sans compétences déclarées : aucune n'est exigée, la formation requise est toujours acquise. */
     public GestionnairePlaces(DepotEquipagesPort depot, LectureEquipages equipages, LectureRessources ressources, LecturePerimetres perimetres,
                               GestionnaireEquipages gestion, EvaluateurRegles regles, JournalEffectifsPort journal) {
+        this(depot, equipages, ressources, perimetres, gestion, regles, journal, Competences.Source.AUCUNE);
+    }
+
+    public GestionnairePlaces(DepotEquipagesPort depot, LectureEquipages equipages, LectureRessources ressources, LecturePerimetres perimetres,
+                              GestionnaireEquipages gestion, EvaluateurRegles regles, JournalEffectifsPort journal, Competences.Source competences) {
+        this.competences = competences;
         this.depot = depot;
         this.equipages = equipages;
         this.ressources = ressources;
@@ -73,7 +82,11 @@ public class GestionnairePlaces {
         faits.put("admissible", true);
         faits.put("reposHeures", Planification.reposHeures(autres, e.creneau()).orElse(REPOS_SANS_VOISIN));
         faits.put("heuresSemaine", Planification.heuresSemaine(autres, e.creneau()));
-        faits.put("formationRequiseAcquise", true);
+        // Addenda 8, M-04 : la formation requise est acquise si aucune compétence exigée ne manque ni n'est échue ce jour-là.
+        Competences.Faits c = competences.faits(ctx.tenantId(), r.id(), r.corpsEmploiCode(), e.date());
+        faits.put("formationRequiseAcquise", c.manquantes().isEmpty());
+        faits.put("competencesManquantes", c.manquantes().size());
+        faits.put("joursAvantEcheance", c.joursAvantEcheance());
         faits.put("rang", 0);
         faits.put("heures24h", Planification.heuresSur24h(autres, e.creneau()));
         Map<String, String> portees = new HashMap<>();

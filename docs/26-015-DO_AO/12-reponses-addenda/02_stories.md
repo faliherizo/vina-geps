@@ -18,6 +18,12 @@
 | AD-06 | API d'échange pour les systèmes internes, soldes des banques compris | Addenda 5 Q1 ; addenda 7 A8 ; M-01 (ex-S-01) | E-TN-7 (essentielle), P-TN-17, E-RF-12 | L | 2 |
 | AD-07 | Offre d'un quart par ancienneté et à tour de rôle, avec délai de réponse | Convention 15.10, 16.02, 16.03 ; M-19 (ex-S-05) | P-GH-3, P-GN-1 | L | 3 |
 | AD-08 | Paramétrage de démonstration de la convention SP-CSN | Addenda 4 Q1 ; addenda 6 Q2 (démontrer le paramétrage) | E-GN-12, E-CH-1 | S | 2 (après AD-01, AD-03) |
+| AD-09 | Compétences et échéances ; inadmissibilité selon une règle ; relevé des échéances | Addenda 8, M-04 (ex-S-04) | E-GN-11, E-GN-16 | M | 1 |
+| AD-10 | Choix annuel des congés par formulaire, paramétrable par groupe et selon la convention | Addenda 8, M-02 (ex-S-02) | Cahier 2.1 | L | 5 |
+| AD-11 | Demandes opérationnelles : liste de temps supplémentaire, événements, autres | Addenda 8, M-08 | Cahier 2.1 (formulaires) | M | 3 |
+| AD-12 | Appartenance datée à plusieurs groupes ; visibilité paramétrable | Addenda 8, M-09 | E-GN-7, E-GN-8 | L | 6 |
+| AD-13 | Journal des consultations, activable par l'organisme | Addenda 8, M-10 | E-GN-9 | M | 4 |
+| AD-14 | Relevés « horaires » et « budget en heures » | Addenda 8, M-18 | E-RF-7, E-RF-8 | S | 2 |
 
 Stories du fichier 08 : **S-01** absorbée par AD-06 ; **S-02** maintenue, non déclarée ; **S-03** sans objet (un
 horaire type est un patron d'horaire, c'est-à-dire le poste de l'AGPH) ; **S-04** maintenue, non prioritaire ;
@@ -180,3 +186,33 @@ Livré le 22 novembre, sans code serveur : paramétrage, semeur, scénarios et �
 [05_scenarios/AD-08.md](05_scenarios/AD-08.md). Le « vendredi sur deux » de 15.04, l'exception des quarts de 7,75 h de
 14.15, les 8 h au changement de plage (14.13) et la journée régulière de 16.01 ne s'expriment pas : ils sont listés
 comme écarts, pas contournés.
+
+---
+
+## AD-09 — Compétences et échéances (addenda 8, M-04)
+
+**Pour** qu'une personne dont une compétence exigée est échue ne soit pas placée sur un quart. **En tant que**
+planificatrice, **je veux** entrer les compétences de chacun avec leur échéance, que la règle de l'organisme décide de
+l'admissibilité, et voir ce qui échoit.
+
+Défaut fermé au passage : le fait `formationRequiseAcquise` était **fixé à `true`** (`GestionnairePlaces`). Une règle
+écrite sur lui ne refusait jamais personne.
+
+Critères d'acceptation :
+1. Un référentiel `competences` déclare chaque compétence et les corps d'emploi qui l'exigent (attribut `corps`, vide =
+   suivie sans être exigée).
+2. L'encadrement de l'unité (périmètre `GESTION`) pose, renouvelle ou retire la compétence d'une personne : date
+   d'obtention exigée, échéance facultative et postérieure. La personne ne s'atteste pas elle-même. Chaque geste est au
+   journal, avec l'avant et l'après.
+3. À l'attribution, quel que soit son chemin (manuelle, automatique, offre acceptée), les faits `competencesManquantes`
+   et `joursAvantEcheance` se calculent **au jour du quart** ; `formationRequiseAcquise` en découle.
+4. La règle de l'organisme décide : `competencesManquantes > 0 → BLOQUER` refuse en nommant le motif ; une compétence
+   échue la veille du quart bloque ; renouvelée, elle débloque.
+5. Le relevé liste les compétences échues ou à échoir dans un horizon (60 jours par défaut, 0 à 3 650), la plus pressante
+   d'abord, limité au périmètre de l'acteur ; il s'exporte en CSV.
+6. L'écran « Ressources » ouvre la fiche des compétences d'une personne et montre le relevé ; WCAG 2.2 AA.
+
+Preuves : `CompetencesTest`, `ControleurPlanificationEffectifsHttpTest.competences`, changeset 0027 (`SchemaLiquibaseTest`,
+`RetourArriereSchemaTest`), BDD `02-quarts-et-attribution.feature` (@M-04), vitest `competences.test.tsx`, audit
+géométrique « Ressources » (fiche ouverte). Scénarios : [05_scenarios/AD-09.md](05_scenarios/AD-09.md).
+

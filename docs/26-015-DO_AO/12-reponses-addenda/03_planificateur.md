@@ -58,6 +58,19 @@ fichiers, 360 essais ; `audit-accessibilite.js` ✅ ; campagne Java (ports 4061 
 
 Commandes : section « Vérifier — les portes » de [CLAUDE.md](../../../CLAUDE.md) ; e2e sur les ports 4041 / 5341.
 
+## C-bis. Addenda n° 8 (23 novembre 2026) — dépôt le 2 décembre
+
+| # | Tâche | État | Preuve |
+|---|---|---|---|
+| E1 | Traiter les 19 réponses et E-TN-31 | ✅ | [07_addenda_08.md](07_addenda_08.md) |
+| E2 | AD-09 Compétences et échéances | ✅ | `CompetencesTest`, `ControleurPlanificationEffectifsHttpTest.competences`, changeset 0027, BDD @M-04, vitest `competences.test.tsx`, audit « Ressources » ; semis de démonstration (`competencesDeDemo`) |
+| E3 | AD-14 Relevés horaires et budget en heures | ⬜ | |
+| E4 | AD-11 Demandes opérationnelles | ⬜ | |
+| E5 | AD-13 Journal des consultations | ⬜ | |
+| E6 | AD-10 Choix annuel des congés | ⬜ | |
+| E7 | AD-12 Rattachements multiples | ⬜ | |
+| E8 | Bordereau : notifications, textos compris, au forfait (M-07) | 🏢 soumission | Addenda 8, M-07 |
+
 ## D. Proposition et hors code
 
 | # | Tâche | État | Source |

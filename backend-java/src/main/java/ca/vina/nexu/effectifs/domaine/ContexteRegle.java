@@ -45,7 +45,10 @@ public enum ContexteRegle {
             case ATTRIBUTION -> List.of(f("admissible", BOOLEEN, "Admissible au poste"), f("reposHeures", NOMBRE, "Heures de repos depuis le quart précédent"),
                     f("heuresSemaine", NOMBRE, "Heures déjà planifiées dans la semaine"), f("formationRequiseAcquise", BOOLEEN, "Formation requise acquise"),
                     f("rang", NOMBRE, "Rang dans le classement"),
-                    f("heures24h", NOMBRE, "Heures planifiées sur 24 h, ce quart compris"));
+                    f("heures24h", NOMBRE, "Heures planifiées sur 24 h, ce quart compris"),
+                    // Addenda 8, M-04 : les compétences exigées du corps d'emploi, à la date du quart.
+                    f("competencesManquantes", NOMBRE, "Compétences exigées manquantes ou échues au jour du quart"),
+                    f("joursAvantEcheance", NOMBRE, "Jours avant l'échéance d'une compétence exigée"));
             case ECHANGE -> List.of(f("reposHeures", NOMBRE, "Heures de repos entre deux quarts"), f("heuresSemaine", NOMBRE, "Heures de la semaine après l'échange"),
                     f("contigu", BOOLEEN, "Quart contigu à un autre quart"), f("memePeriode", BOOLEEN, "Échange dans la même période"),
                     // Addenda 7, Q8 : la contiguïté vise aussi le nombre d'heures maximal par jour de travail (24 h).

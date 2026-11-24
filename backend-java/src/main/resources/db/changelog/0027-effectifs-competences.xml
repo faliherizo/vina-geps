@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+  <!--
+    **Compétences et échéances** (addenda 8 de 26-015-DO, M-04, 23 novembre 2026). Les compétences (permis, accréditations,
+    formations obligatoires) et leurs dates d'échéance sont entrées dans la solution ; une compétence exigée et échue rend
+    la personne inadmissible au quart selon une règle paramétrable. Une ligne par personne et par compétence.
+  -->
+  <changeSet id="0027-effectifs-competences" author="effectifs">
+    <preConditions onFail="MARK_RAN">
+      <sqlCheck expectedResult="0">SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name = 'eff_competences'</sqlCheck>
+    </preConditions>
+    <comment>Compétences détenues par personne, avec leur échéance.</comment>
+    <sql>
+      CREATE TABLE IF NOT EXISTS eff_competences (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, code TEXT NOT NULL, obtenueLe TEXT NOT NULL, echeance TEXT, poseePar TEXT NOT NULL, poseeLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, code));
+    </sql>
+  </changeSet>
+</databaseChangeLog>

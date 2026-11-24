@@ -36,5 +36,6 @@
   <include file="db/changelog/0024-offres-quart-tour-de-role.xml"/>
   <include file="db/changelog/0025-auth-sessions-revoquees.xml"/>
   <include file="db/changelog/0026-auth-identites-externes.xml"/>
+  <include file="db/changelog/0027-effectifs-competences.xml"/>
 
 </databaseChangeLog>
