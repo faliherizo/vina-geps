@@ -1,0 +1,8 @@
+{
+  "_lecture": "Les destinataires d'un message non lu, sur chaque organisme déployé. Lu par tests/e2e/deploiement-messages-non-lus.spec.ts : le message n'est envoyé que si le destinataire n'en a aucun en attente, et il n'est pas marqué lu — un passage n'en ajoute pas un par exécution.",
+  "texte": "Exercice e2e — message non lu",
+  "cas": [
+    { "organisme": "fx-ao", "expediteur": "inf.roy", "destinataire": "dre.tremblay" },
+    { "organisme": "urgences-sante", "expediteur": "employe2", "destinataire": "employe1" }
+  ]
+}

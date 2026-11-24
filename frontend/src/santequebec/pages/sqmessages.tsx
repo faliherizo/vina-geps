@@ -23,6 +23,7 @@ import { downloadApiFile } from "../../FileViewerModal";
 import { AppelsSq, signalerAppelLance } from "../appels";
 import Avatar from "../../composants/Avatar";
 import { useAuth } from "../../AuthContext";
+import { demanderFil, ecouterFil, filEnAttente, oublierFil } from "../../filDemande";
 
 /**
  * **Les limites de la messagerie clinique**, dites à l'écran avant que le serveur ne refuse.
@@ -110,8 +111,7 @@ const quand = (iso: string | null | undefined) => String(iso ?? "").replace("T",
  * que la liste rechargée le contient. Sans lui, on lisait « choisissez-la dans la liste » — un
  * second geste pour un fil qu'on venait de demander (relevé du 14 novembre 2026).
  */
-const FIL_OUVERT = "vina:fil-ouvert";
-const signalerFilOuvert = (id: string) => window.dispatchEvent(new CustomEvent<string>(FIL_OUVERT, { detail: id }));
+const signalerFilOuvert = demanderFil;
 
 function Ouvrir({ ctx }: { ctx: ContexteSection }) {
   const { user } = useAuth();
@@ -388,22 +388,22 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
   useEffect(() => { void charger(conversationId); }, [conversationId]);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { void rechargerFils(); }, [conversations.length]);     // eslint-disable-line react-hooks/exhaustive-deps
   // Un fil tout juste ouvert ailleurs dans l'écran s'ouvre ici, dès que la liste le contient.
-  const [aOuvrir, setAOuvrir] = useState("");
+  const [aOuvrir, setAOuvrir] = useState(filEnAttente);
   useEffect(() => {
-    const noter = (e: Event) => setAOuvrir((e as CustomEvent<string>).detail);
-    window.addEventListener(FIL_OUVERT, noter);
-    return () => window.removeEventListener(FIL_OUVERT, noter);
-  }, []);
+    // Un fil arrivé depuis l'affichage de l'écran n'est pas encore dans la liste : la relire.
+    // La demande survit au démontage : l'écran se remonte pendant son chargement.
+    return ecouterFil((id) => { setAOuvrir(id); ctx.recharger(); });
+  }, []);  // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!aOuvrir || !conversations.some((c) => c.id === aOuvrir)) return;
-    setConversationId(aOuvrir); setPriveA(""); setRepondA(""); setAOuvrir("");
+    setConversationId(aOuvrir); setPriveA(""); setRepondA(""); setAOuvrir(""); oublierFil();
   }, [aOuvrir, conversations]);
 
   if (conversations.length === 0) {
     return <p className="sq-vide">Aucune conversation. Ouvrez-en une ci-dessus.</p>;
   }
 
-  const ouvrir = (id: string) => { setConversationId(id); setPriveA(""); setRepondA(""); };
+  const ouvrir = (id: string) => { setAOuvrir(""); oublierFil(); setConversationId(id); setPriveA(""); setRepondA(""); };
   const parId = new Map(conversations.map((c) => [c.id, c]));
   const filsVisibles = fils.filter((f) => {
     const c = parId.get(f.conversationId);

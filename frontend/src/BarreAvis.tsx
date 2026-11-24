@@ -26,7 +26,9 @@
  * et par usager connecté, pour une information qu'on regarde deux fois par heure.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { Page } from "./App";
 import { useAuth } from "./AuthContext";
+import { demanderFil } from "./filDemande";
 
 /** Ce que la route des non-lus rend pour chaque fil. */
 interface FilNonLu {
@@ -49,8 +51,11 @@ interface Props {
   avecMessagerie: boolean;
   /** Les avis de l'organisme, de même : un établissement sans le module n'en reçoit pas. */
   avecAvis: boolean;
-  /** Ouvrir l'écran de la messagerie, ou celui des avis. */
-  aller: (page: string) => void;
+  /**
+   * Ouvrir l'écran de la messagerie, ou celui des avis. `Page` et non `string` : la barre menait à
+   * « sqmessages », un écran retiré du produit, et l'application entière devenait blanche.
+   */
+  aller: (page: Page) => void;
   /** Change à chaque navigation : c'est le signal de rafraîchissement, et il est gratuit. */
   jeton: unknown;
 }
@@ -143,7 +148,7 @@ export default function BarreAvis({ avecMessagerie, avecAvis, aller, jeton }: Pr
                   {messages.map((f) => (
                     <li key={f.conversationId}>
                       <button type="button" data-testid={`avis-message-${f.conversationId}`}
-                              onClick={() => { setOuvert(null); aller("sqmessages"); }}>
+                              onClick={() => { setOuvert(null); demanderFil(f.conversationId); aller("usmessages"); }}>
                         <span className="avis-sujet">{f.sujet}</span>
                         <span className="avis-extrait">{f.dernierExtrait ?? ""}</span>
                         <span className="avis-compte">{f.nonLus} non lu(s)</span>
