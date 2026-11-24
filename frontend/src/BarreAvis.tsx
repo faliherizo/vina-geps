@@ -21,14 +21,15 @@
  *
  * ## Ce qu'elle ne fait pas
  *
- * Elle **n'interroge pas en boucle**. Le compte se rafraîchit à l'ouverture du panneau et à
- * chaque navigation : une messagerie qui sonne à la seconde près coûte une requête par seconde
+ * Elle **n'interroge pas en boucle**. Le compte se rafraîchit à l'ouverture du panneau, à
+ * chaque navigation et dès que la messagerie signale une lecture : une messagerie qui sonne à la seconde près coûte une requête par seconde
  * et par usager connecté, pour une information qu'on regarde deux fois par heure.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Page } from "./App";
 import { useAuth } from "./AuthContext";
 import { demanderFil } from "./filDemande";
+import { ecouterLectures } from "./lecturesMessages";
 
 /** Ce que la route des non-lus rend pour chaque fil. */
 interface FilNonLu {
@@ -88,6 +89,7 @@ export default function BarreAvis({ avecMessagerie, avecAvis, aller, jeton }: Pr
   }, [apiFetch, user, avecMessagerie, avecAvis]);
 
   useEffect(() => { void relire(); }, [relire, jeton]);
+  useEffect(() => ecouterLectures(() => { void relire(); }), [relire]);
 
   // Refermer en cliquant ailleurs et à Échap : un panneau qui reste ouvert recouvre le contenu,
   // et c'est exactement le défaut de superposition que les essais de géométrie traquent.
