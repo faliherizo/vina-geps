@@ -15,6 +15,9 @@ import { auditA11y } from "./helpers/a11y";
 import { DEPLOYE, SEMES, allerA, apiDe, hoteDe, organismeDemo, seConnecter } from "./helpers/demonstration-deployee";
 
 const ECRIT = process.env.E2E_PARCOURS_DEMO === "1";
+/** Chaque essai se connecte par l'écran de connexion de l'organisme : aucune session enregistrée ne s'applique. */
+const SANS_SESSION = { cookies: [], origins: [] };
+test.use({ storageState: SANS_SESSION });
 type Cas = (typeof jeu.organismes)[number];
 
 /** Le jour de Montréal décalé de `n` jours : la liste de temps supplémentaire se lit à une date couverte par le semis. */
@@ -117,7 +120,7 @@ test.describe("Addenda 8 — les réponses à l'écran, avec leurs données", ()
       test(`M-08 : soumettre, annuler, refuser — gestes réels (${cas.cle})`, async ({ browser }) => {
         test.skip(!ECRIT, "écrit dans la démonstration : poser E2E_PARCOURS_DEMO=1");
         const h = await hote(cas);
-        const employe = await (await browser.newContext()).newPage();
+        const employe = await (await browser.newContext({ storageState: SANS_SESSION })).newPage();
         await seConnecter(employe, h, cas.employe);
         await ouvrir(employe, h, "mesdemandes");
         const soumettre = async (type: string, texte: string) => {
@@ -137,7 +140,7 @@ test.describe("Addenda 8 — les réponses à l'écran, avec leurs données", ()
         const aRefuser = `${jeu.marque} — refusée ${Date.now()}`;
         await soumettre(cas.demandes.typeRefus, aRefuser);
 
-        const decideur = await (await browser.newContext()).newPage();
+        const decideur = await (await browser.newContext({ storageState: SANS_SESSION })).newPage();
         await seConnecter(decideur, h, cas.decideur);
         await ouvrir(decideur, h, "usdemandes");
         const aTraiter = decideur.getByTestId("dem-gestion-table").locator("tr", { hasText: aRefuser });
