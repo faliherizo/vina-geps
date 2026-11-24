@@ -11,16 +11,18 @@
 set -euo pipefail
 RACINE="$(cd "$(dirname "$0")/.." && pwd)"
 # Les titres des essais des parcours choisis, en expression : le filtre de Playwright porte sur le titre, pas l'identifiant.
-FILTRE=""
+FILTRE=()
+CHOIX=()
 if [ -n "${SEULEMENT:-}" ]; then
-  FILTRE="$(node -e 'const [f, ids] = process.argv.slice(1);
+  FILTRE=(--grep "$(node -e 'const [f, ids] = process.argv.slice(1);
     console.log(require(f).parcours.filter((p) => ids.split(",").includes(p.id)).map((p) => p.essai).join("|"))' \
-    "$RACINE/e2e/donnees/fx-ao/videos-aide.json" "$SEULEMENT")"
+    "$RACINE/e2e/donnees/fx-ao/videos-aide.json" "$SEULEMENT")")
+  CHOIX=(--seulement "$SEULEMENT")
 fi
 if [ "${REJEU:-1}" = "1" ]; then
   rm -rf "$RACINE/e2e/test-results"
   (cd "$RACINE/e2e" && E2E_BASE_URL="${E2E_BASE_URL:-https://geps.vinaitsolution.com}" E2E_COMPTES_DEMO=1 E2E_PARCOURS_DEMO=1 \
     E2E_RECIT=1 E2E_VIDEO_LARGEUR=1280 npx playwright test --project=e2e tests/e2e/deploiement-fx-ao-videos.spec.ts --workers=1 --reporter=line \
-    ${FILTRE:+--grep "$FILTRE"})
+    "${FILTRE[@]}")
 fi
-node "$RACINE/scripts/monter-parcours.mjs" ${SEULEMENT:+--seulement "$SEULEMENT"}
+node "$RACINE/scripts/monter-parcours.mjs" "${CHOIX[@]}"

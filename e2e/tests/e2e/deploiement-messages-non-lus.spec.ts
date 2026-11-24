@@ -7,6 +7,7 @@ import { test, expect, request } from "@playwright/test";
 import jeu from "../../donnees/messages-non-lus.json";
 import { DEPLOYE, SEMES, allerA, apiDe, hoteDe, organismeDemo, seConnecter } from "./helpers/demonstration-deployee";
 
+const ECRIT = process.env.E2E_PARCOURS_DEMO === "1";
 interface FilNonLu { conversationId: string; sujet: string; nonLus: number }
 
 test.use({ storageState: { cookies: [], origins: [] } });
@@ -45,6 +46,13 @@ test.describe("Déploiement — un message non lu mène à son fil", () => {
         await expect(page.locator("main h1"), `depuis ${depart}`).toHaveText("Messagerie du personnel", { timeout: 30_000 });
         await expect(page.getByTestId("sq-msg-fil")).toHaveValue(attendu.conversationId, { timeout: 30_000 });
         await expect(page.getByTestId("sq-msg-entete-fil")).toBeVisible();
+      }
+
+      // Le geste de lecture consomme le message : joué à la demande, sans quoi chaque recette en enverrait un nouveau.
+      if (ECRIT) {
+        await page.getByTestId("sq-msg-corps").focus();
+        await page.getByTestId("avis-messages-bouton").click();
+        await expect(page.getByTestId(`avis-message-${attendu.conversationId}`), "fil lu, retiré de l'icône").toHaveCount(0, { timeout: 30_000 });
       }
       expect(erreurs).toEqual([]);
     });

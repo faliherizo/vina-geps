@@ -11,6 +11,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import Avatar, { initialesDe, teinteDe } from "../src/composants/Avatar";
 import BarreAvis from "../src/BarreAvis";
 import { filEnAttente, oublierFil } from "../src/filDemande";
+import { signalerLectures } from "../src/lecturesMessages";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -159,6 +160,16 @@ describe("Barre d'avis — ce qui m'attend, dans la barre du haut", () => {
     expect(filEnAttente()).toBe("c1");
     expect((conteneur.querySelector('[data-testid="avis-messages"]') as HTMLDetailsElement).open).toBe(false);
     oublierFil();
+  });
+
+  it("une lecture signalée par la messagerie met le compte à jour, **sans navigation**", async () => {
+    brancher({ total: 1, conversations: [{ conversationId: "c1", sujet: "Transfert", nonLus: 1, dernierExtrait: "x" }] }, []);
+    await rendre();
+    expect(conteneur.querySelector('[data-testid="avis-messages-compte"]')!.textContent).toBe("1");
+    brancher({ total: 0, conversations: [] }, []);
+    await act(async () => { signalerLectures(); });
+    expect(conteneur.querySelector('[data-testid="avis-messages-compte"]')).toBeNull();
+    expect(conteneur.querySelector('[data-testid="avis-message-c1"]')).toBeNull();
   });
 
   it("un avis ouvert est **marqué lu**, puis l'écran des avis s'ouvre", async () => {

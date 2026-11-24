@@ -15,7 +15,7 @@
  * Le **brouillon** s'enregistre à la demande et non à la frappe : un enregistrement automatique
  * aurait noyé le journal et surpris l'auteur, qui n'a pas demandé qu'on garde ce qu'il efface.
  */
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Panneau, TableauDonnees, page, type ContexteSection, type Section } from "../noyau";
 import { ChampMembre } from "../references";
 import { ChampPieces, tailleLisible, type PieceLocale, type LimitesPieces } from "../../SoutienPieces";
@@ -24,6 +24,7 @@ import { AppelsSq, signalerAppelLance } from "../appels";
 import Avatar from "../../composants/Avatar";
 import { useAuth } from "../../AuthContext";
 import { demanderFil, ecouterFil, filEnAttente, oublierFil } from "../../filDemande";
+import { signalerLectures } from "../../lecturesMessages";
 
 /**
  * **Les limites de la messagerie clinique**, dites à l'écran avant que le serveur ne refuse.
@@ -379,9 +380,13 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
   const choisie = conversations.find((c) => c.id === conversationId);
   const actifs = (choisie?.participants ?? []).filter((p) => p.jusqua === null);
 
+  // Le fil affiché : une réponse arrivée après un changement de fil ne remplace pas celui qu'on lit.
+  const affiche = useRef(conversationId);
+  affiche.current = conversationId;
   const charger = async (id: string) => {
     if (!id) { setMessages([]); return; }
     const lus = await ctx.appeler(`/api/communication/conversations/${encodeURIComponent(id)}/messages`);
+    if (affiche.current !== id) return;
     setMessages(Array.isArray(lus) ? lus : []);
   };
 
@@ -394,6 +399,10 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
     // La demande survit au démontage : l'écran se remonte pendant son chargement.
     return ecouterFil((id) => { setAOuvrir(id); ctx.recharger(); });
   }, []);  // eslint-disable-line react-hooks/exhaustive-deps
+  // Le champ a pu recevoir le focus avant que les messages n'arrivent : ils sont lus à leur arrivée.
+  const lectureEnCours = useRef(false);
+  const lire = useRef<() => Promise<void>>(async () => {});
+  useEffect(() => { if (document.activeElement?.id === "sq-msg-corps") void lire.current(); }, [messages]);
   useEffect(() => {
     if (!aOuvrir || !conversations.some((c) => c.id === aOuvrir)) return;
     setConversationId(aOuvrir); setPriveA(""); setRepondA(""); setAOuvrir(""); oublierFil();
@@ -414,6 +423,34 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
     return !t || `${f.sujet} ${f.dernierExtrait ?? ""}`.toLocaleLowerCase("fr").includes(t);
   });
   const autre = choisie?.type === "individuelle" ? actifs.find((p) => p.personId !== moiId) : undefined;
+
+  /** Le fil, la liste et la barre du haut disent le même état de lecture. */
+  const apresLecture = async () => {
+    signalerLectures();
+    await charger(conversationId);
+    await rechargerFils();
+  };
+  const marquerFilLu = () => ctx.appeler(`/api/communication/conversations/${encodeURIComponent(conversationId)}/lu`, { method: "POST" });
+
+  /**
+   * **Se placer sur le champ de réponse, c'est avoir lu le fil** : au clavier (focus) comme à la souris (survol ou clic).
+   * Rien n'est envoyé quand tout est déjà lu, ni deux fois pour le même geste (le clic survole puis donne le focus).
+   */
+  const lireEnRepondant = async () => {
+    const aLire = messages.some((m) => m.auteurId !== moiId && !m.luParMoi);
+    if (lectureEnCours.current || !aLire) return;
+    lectureEnCours.current = true;
+    try {
+      const r = await marquerFilLu();
+      if (!r) return;
+      // Rien à marquer : déjà lu ailleurs (autre onglet, téléphone) ; seul le compte est à remettre à jour.
+      if (!(r.marques > 0)) { signalerLectures(); return; }
+      ctx.annoncer(`${r.marques} message(s) marqué(s) lu(s).`);
+      await apresLecture();
+    } finally { lectureEnCours.current = false; }
+  };
+
+  lire.current = lireEnRepondant;
 
   const enregistrerModification = async () => {
     if (!edition) return;
@@ -555,14 +592,12 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
             {/* Rattraper une garde ne doit pas demander quarante clics. */}
             <button type="button" className="sq-lien" data-testid="sq-msg-tout-lu"
                     onClick={async () => {
-                      const r = await ctx.appeler(`/api/communication/conversations/${encodeURIComponent(conversationId)}/lu`,
-                                                  { method: "POST" });
+                      const r = await marquerFilLu();
                       if (r) {
                         ctx.annoncer(r.marques > 0
                           ? `${r.marques} message(s) marqué(s) lu(s).`
                           : "Tout était déjà lu dans ce fil.");
-                        await charger(conversationId);
-                        await rechargerFils();
+                        await apresLecture();
                       }
                     }}>
               Tout marquer lu
@@ -715,7 +750,7 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
                       <button type="button" className="sq-lien" data-testid={`sq-msg-lu-${m.id}`}
                               onClick={async () => {
                                 const fait = await ctx.appeler(`/api/communication/messages/${m.id}/lu`, { method: "POST" });
-                                if (fait) { ctx.annoncer(`Message de ${auteur} marqué lu.`); await rechargerFils(); }
+                                if (fait) { ctx.annoncer(`Message de ${auteur} marqué lu.`); await apresLecture(); }
                               }}>
                         Marquer lu
                       </button>
@@ -753,6 +788,7 @@ function Fil({ ctx }: { ctx: ContexteSection }) {
                 <label htmlFor="sq-msg-corps">Message <span className="req-star" aria-hidden="true">*</span><span className="sr-only"> (obligatoire)</span></label>
                 <textarea id="sq-msg-corps" required rows={3} data-testid="sq-msg-corps"
                           aria-describedby="sq-msg-corps-aide" value={corps}
+                          onFocus={() => { void lireEnRepondant(); }} onPointerEnter={() => { void lireEnRepondant(); }}
                           onChange={(e) => setCorps(e.target.value)} />
                 <p className="sq-champ-aide" id="sq-msg-corps-aide">
                   {priveA
