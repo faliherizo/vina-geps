@@ -95,6 +95,22 @@ const MODULES_AUDIT = {
     detenues: [{ ressourceId: "rs-1", code: "RCR", obtenueLe: "2025-01-10", echeance: "2026-11-01", valide: false }] },
   "GET /api/effectifs/planification/competences/echeances": [{ ressourceId: "rs-1", ressourceNom: "Julie Roy", uniteCode: "EST", code: "RCR",
     obtenueLe: "2025-01-10", echeance: "2026-11-01", valide: false, etat: "echue", jours: -22 }],
+  // Addenda 8, M-02, M-08, M-09, M-10 : demandes, liste de temps supplémentaire, campagne de congés, autres unités, journal.
+  "GET /api/effectifs/planification/demandes/types": [{ code: "LISTE-TS", libelleFr: "Liste de temps supplémentaire", comportement: "LISTE_TEMPS_SUPPLEMENTAIRE" },
+    { code: "FORMATION", libelleFr: "Formation", comportement: "FORMATION" }],
+  "GET /api/effectifs/planification/demandes/miennes": [{ id: "dm-1", ressourceId: "rs-1", ressourceNom: "Julie Roy", uniteCode: "EST", typeCode: "LISTE-TS",
+    du: "2030-03-04", au: "2030-04-30", commentaire: "Soirs et fins de semaine", statut: "EN_ATTENTE", motifDecision: null }],
+  "GET /api/effectifs/planification/demandes/liste-ts": [{ ressourceId: "rs-2", ressourceNom: "Marc Dubé", uniteCode: "EST", anciennete: 9, du: "2030-03-01", au: "2030-04-30" }],
+  "GET /api/effectifs/planification/demandes": [{ id: "dm-2", ressourceId: "rs-3", ressourceNom: "Étienne Paramédic", uniteCode: "EST", typeCode: "FORMATION",
+    du: "2030-03-10", au: "2030-03-11", commentaire: "Cours de réanimation avancée", statut: "EN_ATTENTE", motifDecision: null }],
+  "GET /api/effectifs/absences/conges/miennes": [{ campagne: { id: "cg-1", nom: "Vacances d'été 2030", uniteCode: "EST", corpsEmploiCode: "PARA", annee: 2030,
+    du: "2030-07-01", au: "2030-07-21", codeAbsence: "VAC", plafondParSemaine: 1, etat: "OUVERTE" },
+    semaines: ["2030-07-01", "2030-07-08", "2030-07-15"], choix: [{ semaine: "2030-07-08", rang: 1, statut: "DEMANDE", motif: null }] }],
+  "GET /api/effectifs/absences/conges/cg-1/resultats": [{ ressourceNom: "Julie Roy", anciennete: 3, semaine: "2030-07-08", rang: 1, statut: "DEMANDE", motif: null }],
+  "GET /api/effectifs/absences/conges": [{ id: "cg-1", nom: "Vacances d'été 2030", uniteCode: "EST", corpsEmploiCode: "PARA", annee: 2030,
+    du: "2030-07-01", au: "2030-07-21", codeAbsence: "VAC", plafondParSemaine: 1, etat: "OUVERTE" }],
+  "GET /api/effectifs/planification/ressources/rs-1/rattachements": [{ uniteCode: "OUEST", depuis: "2030-03-01", jusqua: "2030-05-31", actif: true }],
+  "GET /api/effectifs/journal/reglages": { consultations: true },
   "GET /api/effectifs/planification/ressources": [{ id: "rs-1", matricule: "P1", nom: "Julie Roy", uniteCode: "EST", corpsEmploiCode: "PARA", titreEmploiCode: null,
     statutEmploiCode: null, conventionCode: null, anciennete: 3, actif: true }],
   // E-CH-3 : un poste, pour que la sélection multiple et le tiroir de modification en lot s'auditent.
@@ -775,6 +791,12 @@ const PAGES = [
       await page.getByTestId("pla-abs-offres-enregistrer").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Demandes et échanges", nav: "nav-usechanges" },
+  { nom: "Demandes opérationnelles", nav: "nav-usdemandes" },
+  { nom: "Congés annuels (campagnes)", nav: "nav-uscongesannuels",
+    etats: [{ nom: "résultats d'une campagne", agir: async (page) => {
+      await page.getByTestId("cng-resultats-cg-1").click();
+      await page.getByTestId("cng-resultats").waitFor({ state: "visible" });
+    } }] },
   { nom: "Confection annuelle (AGPH)", nav: "nav-usagph" },
   { nom: "Pointage et présence (console)", nav: "nav-uspresence" },
   { nom: "Feuilles de temps (console)", nav: "nav-ustemps",
@@ -801,6 +823,9 @@ const PAGES = [
   { nom: "Ressources", nav: "nav-usressources", etats: [{ nom: "compétences d'une personne ouvertes", agir: async (page) => {
       await page.getByTestId("pla-ressource-competences-P1").click();
       await page.getByTestId("pla-competences-manquantes").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }, { nom: "autres unités d'une personne ouvertes", agir: async (page) => {
+      await page.getByTestId("pla-ressource-unites-P1").click();
+      await page.getByTestId("pla-rattachement-OUEST").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Quotas", nav: "nav-usquotas" },
   { nom: "Référentiels", nav: "nav-usreferentiels" },
@@ -1006,6 +1031,8 @@ const PAGES = [
       await page.getByTestId("mpo-s-pause-fin").fill("12:30");
       await page.getByTestId("mpo-s-nature").waitFor({ state: "visible" });
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
+  { nom: "Mes demandes", nav: "nav-mesdemandes" },
+  { nom: "Mes congés annuels", nav: "nav-mescongesannuels" },
   { nom: "Mes échanges", nav: "nav-mesechanges",
     etats: [{ nom: "échange en préparation", agir: async (page) => {
       await page.getByTestId("mec-cede").selectOption("pl-1");

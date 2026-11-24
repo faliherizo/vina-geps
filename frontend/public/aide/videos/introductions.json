@@ -88,6 +88,20 @@
     "Ressources",
     "Cycles de paie"
   ],
+  "mescongesannuels": [
+    "Modules accordés à l'organisme : effectifs, effectifs_absences",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Choix des congés annuels",
+    "Codes d'absence"
+  ],
+  "mesdemandes": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Référentiels",
+    "Le compte de la personne, avec son rôle",
+    "La ressource de la personne, reliée à son compte",
+    "Périmètres"
+  ],
   "mesdisponibilites": [
     "Modules accordés à l'organisme : effectifs, effectifs_disponibilites",
     "Référentiels",
@@ -225,6 +239,18 @@
     "Périmètres",
     "Périodes",
     "Quotas"
+  ],
+  "uscongesannuels": [
+    "Modules accordés à l'organisme : effectifs, effectifs_absences",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Codes d'absence"
+  ],
+  "usdemandes": [
+    "Modules accordés à l'organisme : effectifs, effectifs_planification",
+    "Le compte de la personne, avec son rôle",
+    "Périmètres",
+    "Référentiels"
   ],
   "usdiffusion": [
     "Modules accordés à l'organisme : effectifs, effectifs_communication",

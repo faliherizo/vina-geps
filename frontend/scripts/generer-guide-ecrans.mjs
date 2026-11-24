@@ -24,7 +24,7 @@ async function charger(fichier) {
 const RUBRIQUES = [
   ["Menu principal", ["dashboard", "monhoraire", "mesdisponibilites", "usdisponibilites", "mesabsences", "usabsences", "monagph", "usagph",
     "uscomblement", "usequipages", "uspostes", "usperiodes", "usressources", "usquotas", "monpointage", "uspresence", "matemps", "ustemps", "monequipe",
-    "mesechanges", "usechanges", "alnouvelle", "alsuivi", "mesalertes", "paietemps", "paiecycles", "paiedossiers", "paiedeclarations", "mesbulletins", "usmessages", "usappels", "usdiffusion", "rapports", "approvals"]],
+    "mesechanges", "usechanges", "mesdemandes", "usdemandes", "mescongesannuels", "uscongesannuels", "alnouvelle", "alsuivi", "mesalertes", "paietemps", "paiecycles", "paiedossiers", "paiedeclarations", "mesbulletins", "usmessages", "usappels", "usdiffusion", "rapports", "approvals"]],
   ["Administration", ["alparametres", "paieparametres", "paieregles", "usreferentiels", "uscodesabsence", "usregles", "usmilieux", "usperimetres", "usintegrations", "usretention", "usjournal",
     "admin", "access", "notifications", "integrations", "apidocs", "superadmin"]],
   ["Aide et compte", ["account", "help", "soutien"]],

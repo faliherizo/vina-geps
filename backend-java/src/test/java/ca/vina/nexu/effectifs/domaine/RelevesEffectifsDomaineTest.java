@@ -75,4 +75,17 @@ class RelevesEffectifsDomaineTest {
         assertThatThrownBy(() -> RelevesEffectifs.Source.de("users")).isInstanceOf(EffectifsInvalideException.class)
                 .hasMessage("source de relevé inconnue : « users »");
     }
+
+    @org.junit.jupiter.api.Test
+    @org.junit.jupiter.api.DisplayName("addenda 8, M-18 : durée d'un quart (la nuit passe minuit), heure lisible, écart au budget, sources nommées")
+    void horairesEtBudget() {
+        assertThat(List.of(RelevesEffectifs.dureeMinutes(360, 1080), RelevesEffectifs.dureeMinutes(1080, 360), RelevesEffectifs.dureeMinutes(0, 1440)))
+                .containsExactly(720, 720, 1440);
+        assertThat(List.of(RelevesEffectifs.hhmm(0), RelevesEffectifs.hhmm(365), RelevesEffectifs.hhmm(1440))).containsExactly("00:00", "06:05", "24:00");
+        assertThat(new RelevesEffectifs.HeuresSemaine(20, 2160, 1440).ecart()).isEqualTo(16L);
+        assertThat(new RelevesEffectifs.HeuresSemaine(37.5, 2160, 0).ecart()).isEqualTo(-1.5);
+        assertThat(List.of(RelevesEffectifs.Source.de("effectifs_horaires"), RelevesEffectifs.Source.de("effectifs_budget")))
+                .containsExactly(RelevesEffectifs.Source.HORAIRES, RelevesEffectifs.Source.BUDGET);
+    }
 }
+

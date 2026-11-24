@@ -52,7 +52,7 @@ class CatalogueRapportsTest {
         assertThatThrownBy(() -> CatalogueRapports.FormatExport.de("docx"))
                 .hasMessageContaining("csv, xlsx, pdf, json");
         assertThatThrownBy(() -> CatalogueRapports.sourceDe("users"))
-                .hasMessageContaining("effectifs_heures, effectifs_journees, effectifs_pointages, effectifs_places, effectifs_absences");
+                .hasMessageContaining("effectifs_heures, effectifs_journees, effectifs_pointages, effectifs_places, effectifs_absences, effectifs_horaires, effectifs_budget");
     }
 
     @Test
@@ -62,7 +62,8 @@ class CatalogueRapportsTest {
                 .extracting(CatalogueRapports.Source::code).containsExactly("effectifs_heures", "effectifs_journees");
         assertThat(CatalogueRapports.sourcesDisponibles(List.of())).isEmpty();
         assertThat(CatalogueRapports.sourcesDisponibles(List.of("effectifs_temps", "effectifs_presence", "effectifs_planification", "effectifs_absences")))
-                .hasSize(5);
+                .hasSize(6);
+        assertThat(CatalogueRapports.sourcesDisponibles(List.of("effectifs_agph"))).extracting(CatalogueRapports.Source::code).containsExactly("effectifs_budget");
     }
 
     // ── La planification ─────────────────────────────────────────────────────────────────────

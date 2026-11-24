@@ -75,6 +75,9 @@ public final class CatalogueVues {
                     new Vue("usdisponibilites", "urgencessante", "usdisponibilitesnotion", "usdisponibilites", null, "nav.usdisponibilites", "effectifs_disponibilites"),
                     new Vue("mesabsences", "urgencessante", "usabsencesnotion", "mesabsences", null, "nav.mesabsences", "effectifs_absences"),
                     new Vue("usabsences", "urgencessante", "usabsencesnotion", "usabsences", null, "nav.usabsences", "effectifs_absences"),
+                    // Addenda 8, M-02 : le choix annuel des congés.
+                    new Vue("mescongesannuels", "urgencessante", "uscongesnotion", "mescongesannuels", null, "nav.mescongesannuels", "effectifs_absences"),
+                    new Vue("uscongesannuels", "urgencessante", "uscongesnotion", "uscongesannuels", null, "nav.uscongesannuels", "effectifs_absences"),
                     new Vue("monagph", "urgencessante", "usagphnotion", "monagph", null, "nav.monagph", "effectifs_agph"),
                     new Vue("usagph", "urgencessante", "usagphnotion", "usagph", null, "nav.usagph", "effectifs_agph"),
                     new Vue("uscomblement", "urgencessante", "usquarts", "uscomblement", null, "nav.uscomblement", "effectifs_planification"),
@@ -89,6 +92,9 @@ public final class CatalogueVues {
                     new Vue("ustemps", "urgencessante", "ustempsnotion", "ustemps", null, "nav.ustemps", "effectifs_temps"),
                     new Vue("mesechanges", "urgencessante", "usechangesnotion", "mesechanges", null, "nav.mesechanges", "effectifs_echanges"),
                     new Vue("usechanges", "urgencessante", "usechangesnotion", "usechanges", null, "nav.usechanges", "effectifs_echanges"),
+                    // Addenda 8, M-08 : les demandes opérationnelles.
+                    new Vue("mesdemandes", "urgencessante", "usdemandesnotion", "mesdemandes", null, "nav.mesdemandes", "effectifs_planification"),
+                    new Vue("usdemandes", "urgencessante", "usdemandesnotion", "usdemandes", null, "nav.usdemandes", "effectifs_planification"),
                     new Vue("monequipe", "urgencessante", null, "monequipe", null, "nav.monequipe", "effectifs"),
                     new Vue("alnouvelle", "urgencessante", "alertesnotion", "alnouvelle", null, "nav.alnouvelle", "alertes"),
                     new Vue("alsuivi", "urgencessante", "alertesnotion", "alsuivi", null, "nav.alsuivi", "alertes"),

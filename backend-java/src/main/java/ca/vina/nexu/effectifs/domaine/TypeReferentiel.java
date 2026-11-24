@@ -28,7 +28,9 @@ public enum TypeReferentiel {
     /** E-GP-15 : le catalogue des activités qu'un pointage ou une saisie peut déclarer. Absent du Java, aucune activité ne se validait. */
     ACTIVITES_PRESENCE("activites_presence", "Activités de présence", Comportements.noms(Comportements.ActivitePresence.values())),
     /** Addenda 8, M-04 : permis, accréditations, formations obligatoires ; exigées par corps d'emploi, avec leur échéance. */
-    COMPETENCES("competences", "Compétences", List.of());
+    COMPETENCES("competences", "Compétences", List.of()),
+    /** Addenda 8, M-08 : les types de demande opérationnelle et ce que chacun fait. */
+    TYPES_DEMANDE("types_demande", "Types de demande", Comportements.noms(Comportements.NatureDemande.values()));
 
     private static final Pattern DATE = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
 
@@ -86,7 +88,7 @@ public enum TypeReferentiel {
             // `codePaie` et `facturable` sont des attributs parce qu'ils varient d'un organisme à l'autre.
             case ACTIVITES_PRESENCE -> List.of(DescripteurAttribut.simple("codePaie", "Code de paie (PFT)", TypeAttribut.TEXTE),
                     DescripteurAttribut.simple("facturable", "Refacturable à un tiers", TypeAttribut.BOOLEEN));
-            case CORPS_EMPLOI, STATUTS_EMPLOI, CONVENTIONS, TYPES_MILIEU, JOURS_FERIES -> List.of();
+            case CORPS_EMPLOI, STATUTS_EMPLOI, CONVENTIONS, TYPES_MILIEU, JOURS_FERIES, TYPES_DEMANDE -> List.of();
         };
     }
 

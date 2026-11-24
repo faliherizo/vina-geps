@@ -58,13 +58,15 @@ class RelevesStatistiquesTest {
     }
 
     @Test
-    @DisplayName("cinq sources d'effectifs, chacune sous son module, toutes bornées par le jour et gardées par la capacité")
+    @DisplayName("sept sources d'effectifs, chacune sous son module, toutes bornées par le jour et gardées par la capacité")
     void catalogue() {
         assertThat(SourcesEffectifs.SOURCES).extracting(CatalogueRapports.Source::code, CatalogueRapports.Source::module).containsExactly(
                 org.assertj.core.groups.Tuple.tuple("effectifs_heures", "effectifs_temps"), org.assertj.core.groups.Tuple.tuple("effectifs_journees", "effectifs_temps"),
                 org.assertj.core.groups.Tuple.tuple("effectifs_pointages", "effectifs_presence"),
                 org.assertj.core.groups.Tuple.tuple("effectifs_places", "effectifs_planification"),
-                org.assertj.core.groups.Tuple.tuple("effectifs_absences", "effectifs_absences"));
+                org.assertj.core.groups.Tuple.tuple("effectifs_absences", "effectifs_absences"),
+                org.assertj.core.groups.Tuple.tuple("effectifs_horaires", "effectifs_planification"),
+                org.assertj.core.groups.Tuple.tuple("effectifs_budget", "effectifs_agph"));
         assertThat(SourcesEffectifs.SOURCES).allSatisfy(s -> {
             assertThat(s.faits().periode()).isEqualTo("jour");
             assertThat(s.capacite()).isEqualTo("effectifs.manage");

@@ -33,6 +33,15 @@ public class SchemaEffectifs {
             "CREATE INDEX IF NOT EXISTS idx_eff_journal_objet ON eff_journal (tenantId, objetType, objetId)",
             // Soldes des banques transmis par l'organisme (changeset 0022, AD-06b) ; heures en texte décimal exact.
             "CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode))",
+            // Choix annuel des congés : campagnes et choix (changeset 0031, addenda 8, M-02).
+            "CREATE TABLE IF NOT EXISTS eff_conges_campagnes (tenantId TEXT NOT NULL, id TEXT NOT NULL, nom TEXT NOT NULL, uniteCode TEXT NOT NULL, corpsEmploiCode TEXT NOT NULL, annee INTEGER NOT NULL, du TEXT NOT NULL, au TEXT NOT NULL, codeAbsence TEXT NOT NULL, plafondParSemaine INTEGER NOT NULL, maxSemainesParPersonne INTEGER NOT NULL, etat TEXT NOT NULL, PRIMARY KEY (tenantId, id))",
+            "CREATE TABLE IF NOT EXISTS eff_conges_choix (tenantId TEXT NOT NULL, campagneId TEXT NOT NULL, ressourceId TEXT NOT NULL, rang INTEGER NOT NULL, semaine TEXT NOT NULL, statut TEXT NOT NULL, motif TEXT, PRIMARY KEY (tenantId, campagneId, ressourceId, semaine))",
+            // Rattachements datés d'une personne à d'autres unités (changeset 0030, addenda 8, M-09).
+            "CREATE TABLE IF NOT EXISTS eff_rattachements (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, uniteCode TEXT NOT NULL, depuis TEXT NOT NULL, jusqua TEXT, poseePar TEXT NOT NULL, poseeLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, uniteCode, depuis))",
+            // Réglage du journal : les consultations (changeset 0029, addenda 8, M-10).
+            "CREATE TABLE IF NOT EXISTS eff_reglages_journal (tenantId TEXT PRIMARY KEY, consultations INTEGER NOT NULL DEFAULT 0)",
+            // Demandes opérationnelles (changeset 0028, addenda 8, M-08).
+            "CREATE TABLE IF NOT EXISTS eff_demandes (tenantId TEXT NOT NULL, id TEXT NOT NULL, ressourceId TEXT NOT NULL, uniteCode TEXT NOT NULL, typeCode TEXT NOT NULL, du TEXT NOT NULL, au TEXT NOT NULL, commentaire TEXT, statut TEXT NOT NULL, creeLe TEXT NOT NULL, decideePar TEXT, decideeLe TEXT, motifDecision TEXT, PRIMARY KEY (tenantId, id))",
             // Compétences détenues et leurs échéances (changeset 0027, addenda 8, M-04).
             "CREATE TABLE IF NOT EXISTS eff_competences (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, code TEXT NOT NULL, obtenueLe TEXT NOT NULL, echeance TEXT, poseePar TEXT NOT NULL, poseeLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, code))");
 

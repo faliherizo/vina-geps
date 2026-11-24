@@ -25,7 +25,11 @@ public final class RelevesEffectifs {
     /** Les sources d'effectifs du constructeur de rapports, par leur code au catalogue. */
     public enum Source {
         HEURES("effectifs_heures"), JOURNEES("effectifs_journees"), POINTAGES("effectifs_pointages"), PLACES("effectifs_places"),
-        ABSENCES("effectifs_absences");
+        ABSENCES("effectifs_absences"),
+        /** Addenda 8, M-18 : l'horaire de chacun, une ligne par quart tenu. */
+        HORAIRES("effectifs_horaires"),
+        /** Addenda 8, M-18 : le budget d'heures de la campagne AGPH, confronté aux heures planifiées et pourvues de la semaine. */
+        BUDGET("effectifs_budget");
 
         private final String code;
 
@@ -48,6 +52,8 @@ public final class RelevesEffectifs {
 
     private static final int LONGUEUR_MOIS = 7;
     private static final double MINUTES_PAR_HEURE = 60;
+    private static final int MINUTES_HEURE = 60;
+    private static final int MINUTES_PAR_JOUR = 1440;
 
     /** Une période de relevé, bornes comprises (AAAA-MM-JJ). */
     public record Periode(String du, String au) {
@@ -126,5 +132,25 @@ public final class RelevesEffectifs {
     public static Number heures(long minutes) {
         BigDecimal h = BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(MINUTES_PAR_HEURE), 2, RoundingMode.HALF_UP).stripTrailingZeros();
         return h.scale() <= 0 ? (Number) h.longValueExact() : (Number) h.doubleValue();
+    }
+
+    /** La durée d'un quart, en minutes ; un quart de nuit qui passe minuit finit le lendemain. */
+    public static int dureeMinutes(int debut, int fin) {
+        return fin > debut ? fin - debut : fin + MINUTES_PAR_JOUR - debut;
+    }
+
+    /** Des minutes depuis minuit en {@code HH:MM} ; 1440 (minuit du lendemain) se lit {@code 24:00}. */
+    public static String hhmm(int minutes) {
+        return String.format(java.util.Locale.ROOT, "%02d:%02d", minutes / MINUTES_HEURE, minutes % MINUTES_HEURE);
+    }
+
+    /** Une semaine de budget : son lundi, l'unité et le corps d'emploi ; l'écart est planifié moins budget. */
+    public record SemaineBudget(String lundi, String uniteCode, String corpsEmploiCode) { }
+
+    /** Les heures d'une semaine de budget : budgétées (nulles sans campagne), planifiées (toutes les places) et pourvues. */
+    public record HeuresSemaine(double budget, long minutesPlanifiees, long minutesPourvues) {
+        public Number ecart() {
+            return heures(Math.round(minutesPlanifiees - budget * MINUTES_HEURE));
+        }
     }
 }

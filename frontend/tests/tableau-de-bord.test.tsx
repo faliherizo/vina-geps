@@ -212,7 +212,8 @@ describe("Tableau de bord — à l'écran", () => {
     expect(texte("tdb-mon-quart-pl-1")).toContain("06:00–14:00");
     expect(texte("tdb-mon-quart-pl-1")).toContain("—");
     const portes = [...conteneur.querySelectorAll('[data-testid^="dashboard-tile-"]')].map((b) => b.getAttribute("data-testid"));
-    expect(portes).toEqual(["dashboard-tile-monhoraire", "dashboard-tile-mesdisponibilites"]);
+    // Addenda 8, M-08 : « Mes demandes » relève de la planification, comme « Mon horaire ».
+    expect(portes).toEqual(["dashboard-tile-monhoraire", "dashboard-tile-mesdisponibilites", "dashboard-tile-mesdemandes"]);
     await cliquer("dashboard-tile-mesdisponibilites");
     expect(navigation.vers).toEqual(["mesdisponibilites"]);
     expect(conteneur.querySelector('[data-testid="tdb-onglets"]')).toBeNull();

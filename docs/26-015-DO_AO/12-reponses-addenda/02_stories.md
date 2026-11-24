@@ -216,3 +216,100 @@ Preuves : `CompetencesTest`, `ControleurPlanificationEffectifsHttpTest.competenc
 `RetourArriereSchemaTest`), BDD `02-quarts-et-attribution.feature` (@M-04), vitest `competences.test.tsx`, audit
 géométrique « Ressources » (fiche ouverte). Scénarios : [05_scenarios/AD-09.md](05_scenarios/AD-09.md).
 
+---
+
+## AD-14 — Relevés « horaires » et « budget en heures » (addenda 8, M-18)
+
+**Pour** que les rapports attendus dès la mise en production existent tous : horaires, taux de comblement, absences,
+heures supplémentaires, anomalies de présence **et budget en heures**, en Excel, CSV et PDF.
+
+Critères d'acceptation :
+1. Source `effectifs_horaires` (module planification) : une ligne par quart tenu — personne, jour, début et fin
+   (`HH:MM`), plage, milieu, nature, heures (un quart de nuit compte ses heures réelles).
+2. Source `effectifs_budget` (module AGPH) : par semaine (son lundi dans la période), unité et corps d'emploi, le budget
+   hebdomadaire de la campagne AGPH de l'année, les heures de toutes les places, les heures pourvues et l'écart
+   planifié moins budget ; sans campagne, budget nul.
+3. Les deux sont bornées au périmètre de l'acteur, se regroupent et s'exportent comme les autres relevés.
+
+Preuves : `RelevesEffectifsDomaineTest.horairesEtBudget`, `FaitsRelevesEffectifsHttpTest.horairesEtBudget`.
+
+
+---
+
+## AD-11 — Demandes opérationnelles et liste de temps supplémentaire (addenda 8, M-08)
+
+**Pour** que le formulaire couvre aussi la liste de temps supplémentaire, les événements, la formation et les autres
+demandes opérationnelles. **En tant que** paramédic, **je veux** soumettre une demande datée et la suivre ; **en tant
+qu'**encadrement, **je veux** l'accepter ou la refuser avec un motif, et lire la liste de temps supplémentaire d'un jour.
+
+Critères d'acceptation :
+1. Le référentiel `types_demande` déclare chaque type avec son comportement (`LISTE_TEMPS_SUPPLEMENTAIRE`, `EVENEMENT`,
+   `FORMATION`, `AUTRE`). L'organisme en ajoute sans code.
+2. La personne soumet une demande (type, du, au, précisions ≤ 500 caractères ; « au » avant « du » refusé) et peut
+   l'annuler tant qu'elle est en attente.
+3. L'encadrement de l'unité (périmètre `GESTION`) accepte ou refuse ; un refus exige un motif. Une demande décidée ne
+   se redécide pas.
+4. La liste de temps supplémentaire d'un jour réunit les inscriptions **acceptées** qui le couvrent, par ancienneté
+   décroissante, dans le périmètre de l'acteur.
+5. Écrans « Mes demandes » (espace personnel) et « Demandes opérationnelles » (gestion) ; WCAG 2.2 AA.
+
+Preuves : `DemandesOperationnellesTest`, `ControleurDemandesEffectifsHttpTest`, changeset 0028, vitest
+`addenda-08-ecrans.test.tsx`, audit géométrique « Mes demandes » et « Demandes opérationnelles », e2e déployé
+`deploiement-addenda-08.spec.ts` (lecture, et gestes soumettre, annuler, refuser).
+
+---
+
+## AD-13 — Journal des consultations (addenda 8, M-10)
+
+**Pour** que la **consultation** des dossiers et des horaires puisse être tracée, au choix de l'organisme.
+
+Critères d'acceptation :
+1. Un réglage par organisme, `consultations`, désactivé par défaut ; seule l'administration (`CONFIGURER`) le change.
+2. Activé, toute lecture réussie d'un dossier (liste des ressources, compétences, rattachements) ou d'un horaire
+   (quarts, pointages, équipages d'une période, disponibilités) s'inscrit au journal des actions : acteur, action
+   `consultation`, type d'objet et chemin lu. Une lecture refusée ou une écriture n'y entre pas.
+3. Le réglage se pose depuis « Journal des décisions » ; WCAG 2.2 AA.
+
+Preuves : `ConsultationsTest`, `ControleurReglagesJournalHttpTest`, changeset 0029, vitest `addenda-08-ecrans.test.tsx`,
+e2e déployé (réglage activé au semis).
+
+---
+
+## AD-10 — Choix annuel des congés (addenda 8, M-02)
+
+**Pour** que le choix des congés annuels se fasse par formulaire et s'octroie par ancienneté, avec un plafond
+d'absents par semaine paramétrable par groupe.
+
+Critères d'acceptation :
+1. Une campagne vise une unité et un corps d'emploi, une année, une plage de dates, un code d'absence, un plafond
+   d'absents par semaine et un maximum de semaines par personne. États : brouillon → choix ouverts → choix fermés →
+   octroyée ; aucun retour en arrière.
+2. Pendant les choix ouverts, la personne visée classe ses semaines (lundis de la plage, sans doublon) ; elle
+   remplace son classement tant que les choix sont ouverts.
+3. L'octroi, choix fermés, sert les personnes par ancienneté décroissante (puis nom), chacune dans l'ordre de ses
+   rangs, sans dépasser le plafond d'une semaine ni le maximum de semaines par personne ; un refus porte son motif.
+4. Chaque semaine octroyée devient une absence déclarée du lundi au dimanche, jugée par les règles de l'organisme :
+   une absence « à approuver » le dit dans le motif.
+5. Écrans « Mes congés annuels » et « Congés annuels » (campagnes, résultats) ; WCAG 2.2 AA.
+
+Preuves : `CongesAnnuelsTest`, `ControleurAbsencesEffectifsHttpTest.congesAnnuels`, changeset 0031, vitest
+`addenda-08-ecrans.test.tsx`, audit géométrique (résultats ouverts), e2e déployé.
+
+---
+
+## AD-12 — Appartenance datée à d'autres unités (addenda 8, M-09)
+
+**Pour** qu'un paramédic affecté à deux secteurs, ou prêté, figure parmi les ressources de l'autre unité pendant la
+durée voulue, sans changer son unité principale.
+
+Critères d'acceptation :
+1. L'encadrement rattache une personne à une autre unité, depuis une date, jusqu'à une date facultative ; deux
+   rattachements à la même unité ne se chevauchent pas ; l'unité principale est refusée.
+2. Pendant sa durée, la personne apparaît dans la liste des ressources et des candidats de l'autre unité, pour qui en
+   a le périmètre ; qui voit ses quarts reste décidé par les périmètres (profil et droits) — c'est la visibilité
+   paramétrable de M-09.
+3. Un rattachement se retire ; chaque geste est au journal.
+4. « Ressources » ouvre les autres unités d'une personne ; WCAG 2.2 AA.
+
+Preuves : `RattachementsTest`, `ControleurRattachementsEffectifsHttpTest`, changeset 0030, vitest
+`addenda-08-ecrans.test.tsx`, audit géométrique « Ressources » (autres unités ouvertes), e2e déployé.

@@ -721,6 +721,128 @@ Suivre les échanges de quarts de son périmètre, en créer un pour une personn
 
 > **Attention :** L'échange est jugé dans les deux sens : un quart qui créerait un conflit chez l'un ou l'autre est refusé, avec la règle nommée.
 
+### Mes demandes
+
+*Adresse : `/admin/mesdemandes` — Toute personne planifiable.*
+
+Demander une inscription à la liste de temps supplémentaire, un événement, une formation ou une autre demande opérationnelle, et suivre sa décision.
+
+**Avant de commencer**
+
+1. L'exploitant de la plateforme (superadmin) accorde à l'organisme les modules « effectifs » et « effectifs_planification » (Administration › Superadmin, modules de l'organisme) et laisse cette vue au menu : sans cela, l'entrée n'apparaît pas au menu et le serveur refuse l'accès.
+2. L'administration déclare les types de demande au référentiel « Types de demande » (Administration › Paramètres des effectifs › Référentiels), chacun avec son comportement : liste de temps supplémentaire, événement, formation, remplacement ou autre. (écran `/admin/usreferentiels`)
+3. L'administration de l'organisme crée le compte de chaque personne dans Administration › Administration, onglet « Comptes et rôles ». Rôle attendu : n'importe lequel. (écran `/admin/admin`)
+4. Un planificateur (niveau Gestion sur l'unité) ou l'administration crée la ressource de la personne dans Menu principal › Gestion des quarts › Ressources — matricule, nom, unité, corps d'emploi — et choisit son « Compte utilisateur ». C'est ce lien qui manque quand l'écran répond « votre compte n'est relié à aucune ressource planifiable : demandez-le à votre planificateur ». (écran `/admin/usressources`)
+5. Pour qu'une demande soit décidée : l'administration donne à un gestionnaire un périmètre de niveau Gestion sur l'unité de la personne (Paramètres des effectifs › Périmètres). (écran `/admin/usperimetres`)
+
+**Comment faire**
+
+1. Choisir le type de demande, la période (du, au) et, au besoin, des précisions.
+2. « Envoyer la demande » : elle attend la décision de l'encadrement de votre unité.
+3. Suivre son statut ; une demande en attente s'annule d'un geste.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Type de demande | Liste de temps supplémentaire |
+| Du | 2026-12-01 |
+| Au | 2026-12-31 |
+| Précisions | Disponible les soirs de semaine |
+
+**Résultat :** « Demande « Liste de temps supplémentaire » envoyée. » ; acceptée, l'inscription figure à la liste de temps supplémentaire de chaque jour qu'elle couvre.
+
+> **Attention :** Une absence (vacances, férié, formation payée) se déclare dans Mes absences ; une indisponibilité, dans Mes disponibilités.
+
+### Demandes opérationnelles
+
+*Adresse : `/admin/usdemandes` — Planificateurs et chefs, dans leur périmètre.*
+
+Accepter ou refuser, en motivant, les demandes opérationnelles de son périmètre, et lire la liste de temps supplémentaire d'un jour.
+
+**Avant de commencer**
+
+1. L'exploitant de la plateforme (superadmin) accorde à l'organisme les modules « effectifs » et « effectifs_planification » (Administration › Superadmin, modules de l'organisme) et laisse cette vue au menu : sans cela, l'entrée n'apparaît pas au menu et le serveur refuse l'accès.
+2. L'administration de l'organisme crée le compte de chaque personne dans Administration › Administration, onglet « Comptes et rôles ». Rôle attendu : administration, direction ou gestionnaire (capacité « effectifs.manage »). (écran `/admin/admin`)
+3. L'administration donne au compte de l'encadrement un périmètre sur l'unité, au niveau Lecture pour voir les demandes, Gestion sur l'unité de la personne pour décider (Administration › Paramètres des effectifs › Périmètres) : sinon la décision est refusée. Un compte d'administration voit toutes les unités sans périmètre. (écran `/admin/usperimetres`)
+4. Des personnes reliées à leur compte qui ont envoyé des demandes (Mes demandes), sur des types déclarés au référentiel « Types de demande ». (écran `/admin/usreferentiels`)
+
+**Comment faire**
+
+1. Filtrer par statut (« En attente » par défaut).
+2. Saisir un motif (exigé pour refuser), puis « Accepter » ou « Refuser ».
+3. Choisir un jour sous « Liste de temps supplémentaire » : les inscriptions acceptées qui le couvrent, par ancienneté.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Statut | En attente |
+| Motif | Quota de formation atteint pour décembre |
+
+**Résultat :** « Demande de Julie Roy acceptée. » ; la décision et son motif sont consignés au journal des décisions.
+
+### Mes congés annuels
+
+*Adresse : `/admin/mescongesannuels` — Toute personne planifiable dont l'unité et le corps d'emploi ont une campagne ouverte.*
+
+Classer ses semaines de congé dans la campagne annuelle de son groupe, puis lire ce qui a été octroyé.
+
+**Avant de commencer**
+
+1. L'exploitant de la plateforme (superadmin) accorde à l'organisme les modules « effectifs » et « effectifs_absences » (Administration › Superadmin, modules de l'organisme) et laisse cette vue au menu : sans cela, l'entrée n'apparaît pas au menu et le serveur refuse l'accès.
+2. L'administration de l'organisme crée le compte de chaque personne dans Administration › Administration, onglet « Comptes et rôles ». Rôle attendu : n'importe lequel. (écran `/admin/admin`)
+3. Un planificateur (niveau Gestion sur l'unité) ou l'administration crée la ressource de la personne dans Menu principal › Gestion des quarts › Ressources — matricule, nom, unité, corps d'emploi — et choisit son « Compte utilisateur ». C'est ce lien qui manque quand l'écran répond « votre compte n'est relié à aucune ressource planifiable : demandez-le à votre planificateur ». (écran `/admin/usressources`)
+4. L'encadrement crée la campagne de votre unité et de votre corps d'emploi, puis l'ouvre aux choix (Absences › Choix des congés annuels). (écran `/admin/uscongesannuels`)
+5. Le code d'absence octroyé existe aux codes d'absence ; si une règle de solde de banque est publiée, le solde transmis par l'organisme s'applique à chaque semaine octroyée. (écran `/admin/uscodesabsence`)
+
+**Comment faire**
+
+1. Cocher les semaines voulues dans l'ordre de préférence : la première cochée est le premier choix.
+2. « Enregistrer mes choix » : on peut les changer tant que les choix sont ouverts.
+3. Après l'octroi, chaque semaine porte « Octroyée » ou « Refusée » avec son motif.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| 1ᵉʳ choix | Semaine du 2027-07-05 au 2027-07-11 |
+| 2ᵉ choix | Semaine du 2027-07-12 au 2027-07-18 |
+
+**Résultat :** « Vos 2 choix sont enregistrés. » ; octroyées, les semaines deviennent des absences du code de la campagne.
+
+> **Attention :** L'ancienneté décide de l'ordre d'octroi : une semaine déjà au plafond d'absents est refusée, et le choix suivant est examiné.
+
+### Choix des congés annuels
+
+*Adresse : `/admin/uscongesannuels` — Planificateurs et chefs, dans leur périmètre.*
+
+Créer la campagne annuelle d'un groupe d'employés, ouvrir et fermer les choix, octroyer par ancienneté sous un plafond d'absents par semaine.
+
+**Avant de commencer**
+
+1. L'exploitant de la plateforme (superadmin) accorde à l'organisme les modules « effectifs » et « effectifs_absences » (Administration › Superadmin, modules de l'organisme) et laisse cette vue au menu : sans cela, l'entrée n'apparaît pas au menu et le serveur refuse l'accès.
+2. L'administration de l'organisme crée le compte de chaque personne dans Administration › Administration, onglet « Comptes et rôles ». Rôle attendu : administration, direction ou gestionnaire (capacité « effectifs.manage »). (écran `/admin/admin`)
+3. L'administration donne au compte de l'encadrement un périmètre sur l'unité, au niveau Gestion sur l'unité de la campagne (Administration › Paramètres des effectifs › Périmètres) : sinon la création et l'octroi sont refusés. Un compte d'administration voit toutes les unités sans périmètre. (écran `/admin/usperimetres`)
+4. Le code d'absence à octroyer existe (Codes d'absence), et les personnes du groupe ont une ancienneté à jour (Ressources). (écran `/admin/uscodesabsence`)
+
+**Comment faire**
+
+1. « Nouvelle campagne » : nom, unité, corps d'emploi, code d'absence, année, saison (du, au) et plafond d'absents par semaine.
+2. « Ouvrir les choix » : chaque personne du groupe classe ses semaines dans Mes congés annuels.
+3. « Fermer les choix », puis « Octroyer par ancienneté » ; « Résultats » montre chaque choix et son octroi.
+
+**Exemple de remplissage**
+
+| Champ | Valeur saisie |
+|---|---|
+| Nom | Vacances d'été 2027 |
+| Saison | 2027-06-01 au 2027-09-30 |
+| Code d'absence | VAC — Vacances annuelles |
+| Plafond | 2 |
+
+**Résultat :** « Vacances d'été 2027 est octroyée. » ; chaque semaine octroyée devient une absence jugée par les règles de l'organisme.
+
 ### Nouvelle alerte
 
 *Adresse : `/admin/alnouvelle` — Administration, direction et planificateurs (capacité « alertes.envoyer »).*

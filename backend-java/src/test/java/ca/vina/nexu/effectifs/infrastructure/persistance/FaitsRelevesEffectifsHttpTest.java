@@ -54,7 +54,7 @@ class FaitsRelevesEffectifsHttpTest {
 
     private static final String T = "t-1";
     private static final String MODULES = "[\"personnel\",\"effectifs\",\"effectifs_regles\",\"effectifs_planification\",\"effectifs_presence\","
-            + "\"effectifs_temps\",\"effectifs_absences\"]";
+            + "\"effectifs_temps\",\"effectifs_absences\",\"effectifs_agph\"]";
     private static final ContexteRequete ADMIN = ClientHttpEssai.session("admin", T);
     private static final ContexteRequete CHEF = new ContexteRequete("usr-chef", "chef", "manager", null, T);
     private static final ContexteRequete JULIE = new ContexteRequete("usr-julie", "julie", "employee", null, T);
@@ -105,6 +105,7 @@ class FaitsRelevesEffectifsHttpTest {
         SchemaPlanification schemaPlanif = new SchemaPlanification(jdbc);
         SchemaPresenceEffectifs schemaPresence = new SchemaPresenceEffectifs(jdbc);
         new SchemaAbsencesEffectifs(jdbc);
+        new SchemaAgph(jdbc);
         Sequence seq = sequence();
         LectureReferentiels referentiels = new LectureReferentiels(new DepotReferentiels(jdbc, schema));
         LecturePerimetres perimetres = new LecturePerimetres(new DepotPerimetres(jdbc, schema), referentiels);
@@ -198,7 +199,7 @@ class FaitsRelevesEffectifsHttpTest {
     }
 
     @Test
-    @DisplayName("les cinq sources sont offertes avec leur période et leur capacité ; l'agrégat « taux » est annoncé")
+    @DisplayName("les sept sources sont offertes avec leur période et leur capacité ; l'agrégat « taux » est annoncé")
     void catalogue() throws Exception {
         http.get("/api/rapports/sources", ADMIN).andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].code").value("effectifs_heures")).andExpect(jsonPath("$[0].faits.periode").value("jour"))
@@ -239,6 +240,36 @@ class FaitsRelevesEffectifsHttpTest {
                 .andExpect(status().isOk()).andExpect(jsonPath("$.lignes[0].unite").value("EST")).andExpect(jsonPath("$.lignes[0].pourvues").value(66.67))
                 .andExpect(jsonPath("$.lignes[0].equipagesSousMinimum").value(1)).andExpect(jsonPath("$.lignes[0].equipages").value(2))
                 .andExpect(jsonPath("$.lignes[1].pourvues").value(100));
+    }
+
+    @Test
+    @DisplayName("addenda 8, M-18 : l'horaire de chacun, quart par quart ; le budget en heures de la semaine contre le planifié et le pourvu")
+    void horairesEtBudget() throws Exception {
+        produire(ADMIN, "{\"source\":\"effectifs_horaires\",\"groupes\":[\"ressource\",\"jour\",\"debut\",\"fin\"],\"colonnes\":[{\"champ\":\"ressource\"},"
+                + "{\"champ\":\"jour\"},{\"champ\":\"debut\"},{\"champ\":\"fin\"},{\"champ\":\"heures\",\"agregat\":\"somme\"}],\"filtres\":[" + SEMAINE
+                + ",{\"champ\":\"unite\",\"operateur\":\"egal\",\"valeurs\":[\"EST\"]}],\"tri\":{\"champ\":\"jour\"}}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.lignes.length()").value(2))
+                .andExpect(jsonPath("$.lignes[0].ressource").value("P1 — Julie")).andExpect(jsonPath("$.lignes[0].jour").value("2031-01-15"))
+                .andExpect(jsonPath("$.lignes[0].debut").value("06:00")).andExpect(jsonPath("$.lignes[0].fin").value("18:00"))
+                .andExpect(jsonPath("$.lignes[0].heures").value(12));
+        // La campagne AGPH d'EST fixe 20 h par semaine ; OUEST n'en a pas.
+        jdbc.sql("INSERT INTO eff_agph_campagnes (id, tenantId, uniteCode, annee, nom, corpsEmploiCode, etat, delaiChoixMinutes, creeLe, budgetHeuresSemaine) "
+                + "VALUES ('cp-1', ?, 'EST', 2031, 'AGPH 2031', 'PARA', 'OUVERTE', 60, ?, 20)").params(T, CREE).update();
+        produire(ADMIN, "{\"source\":\"effectifs_budget\",\"groupes\":[\"semaine\",\"unite\",\"corpsEmploi\"],\"colonnes\":[{\"champ\":\"semaine\"},"
+                + "{\"champ\":\"unite\"},{\"champ\":\"corpsEmploi\"},{\"champ\":\"budgetHeures\",\"agregat\":\"somme\"},"
+                + "{\"champ\":\"heuresPlanifiees\",\"agregat\":\"somme\"},{\"champ\":\"heuresPourvues\",\"agregat\":\"somme\"},"
+                + "{\"champ\":\"ecartHeures\",\"agregat\":\"somme\"}],\"filtres\":[" + SEMAINE + "],\"tri\":{\"champ\":\"unite\"}}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.lignes.length()").value(2))
+                .andExpect(jsonPath("$.lignes[0].semaine").value("2031-01-13")).andExpect(jsonPath("$.lignes[0].unite").value("EST"))
+                .andExpect(jsonPath("$.lignes[0].corpsEmploi").value("PARA")).andExpect(jsonPath("$.lignes[0].budgetHeures").value(20))
+                .andExpect(jsonPath("$.lignes[0].heuresPlanifiees").value(36)).andExpect(jsonPath("$.lignes[0].heuresPourvues").value(24))
+                .andExpect(jsonPath("$.lignes[0].ecartHeures").value(16))
+                .andExpect(jsonPath("$.lignes[1].unite").value("OUEST")).andExpect(jsonPath("$.lignes[1].budgetHeures").value(0))
+                .andExpect(jsonPath("$.lignes[1].ecartHeures").value(12));
+        // Une période qui ne contient le lundi d'aucune semaine de quarts ne rend aucune semaine.
+        produire(ADMIN, "{\"source\":\"effectifs_budget\",\"groupes\":[\"unite\"],\"colonnes\":[{\"champ\":\"unite\"},{\"champ\":\"budgetHeures\",\"agregat\":\"somme\"}],"
+                + "\"filtres\":[{\"champ\":\"jour\",\"operateur\":\"entre\",\"valeurs\":[\"2031-01-14\",\"2031-01-19\"]}]}")
+                .andExpect(status().isOk()).andExpect(jsonPath("$.lignes.length()").value(0));
     }
 
     @Test

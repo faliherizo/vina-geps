@@ -28,6 +28,10 @@
       "usdisponibilites",
       "mesabsences",
       "usabsences",
+      "uscongesannuels",
+      "mescongesannuels",
+      "usdemandes",
+      "mesdemandes",
       "alparametres",
       "admin",
       "access",
@@ -112,7 +116,13 @@
   "periodesCollecte": {
     "pourquoi": "« Mes disponibilités » (critère 25) n'a rien à offrir sans une période en collecte : Saint-Jérôme en ouvre une, à venir, où le personnel dépose ses disponibilités. Jours comptés depuis le semis ; la collecte se termine avant le début de la période.",
     "liste": [
-      { "nom": "Collecte — Hôpital de Saint-Jérôme", "uniteCode": "HSJ", "debut": 14, "fin": 27, "finCollecte": 7 }
+      {
+        "nom": "Collecte — Hôpital de Saint-Jérôme",
+        "uniteCode": "HSJ",
+        "debut": 14,
+        "fin": 27,
+        "finCollecte": 7
+      }
     ]
   },
   "rolesPropres": {
@@ -402,5 +412,114 @@
     "personne": "dr.lavoie",
     "texte": "En congé jusqu'au 20 : joindre la Dre Tremblay",
     "critere": "2"
+  },
+  "addenda8": {
+    "pourquoi": "Les réponses de l'addenda 8 de 26-015-DO, montrées aussi sur l'organisme FX-AO : compétences et échéances (M-04), demandes opérationnelles et liste de temps supplémentaire (M-08), choix annuel des congés (M-02), une infirmière prêtée à une autre unité (M-09), journal des consultations (M-10). Jours comptés depuis le semis ; idempotent (« --completer » met à niveau un exemplaire existant).",
+    "typesDemande": [
+      {
+        "code": "LISTE-TS",
+        "libelleFr": "Liste de temps supplémentaire",
+        "comportement": "LISTE_TEMPS_SUPPLEMENTAIRE"
+      },
+      {
+        "code": "EVENEMENT",
+        "libelleFr": "Événement",
+        "comportement": "EVENEMENT"
+      },
+      {
+        "code": "FORMATION",
+        "libelleFr": "Formation",
+        "comportement": "FORMATION"
+      },
+      {
+        "code": "AUTRE",
+        "libelleFr": "Autre demande opérationnelle",
+        "comportement": "AUTRE"
+      }
+    ],
+    "competences": [
+      {
+        "code": "BLS",
+        "libelleFr": "Soins immédiats de réanimation (BLS)",
+        "attributs": {
+          "corps": [
+            "INF",
+            "MED"
+          ]
+        }
+      },
+      {
+        "code": "ACLS",
+        "libelleFr": "Réanimation cardiovasculaire avancée (ACLS)",
+        "attributs": {
+          "corps": []
+        }
+      }
+    ],
+    "detentions": [
+      {
+        "personne": "inf.roy",
+        "code": "BLS",
+        "obtenueLe": -300,
+        "echeance": 400
+      },
+      {
+        "personne": "inf.cote",
+        "code": "BLS",
+        "obtenueLe": -700,
+        "echeance": 15
+      },
+      {
+        "personne": "dre.tremblay",
+        "code": "BLS",
+        "obtenueLe": -200,
+        "echeance": 500
+      },
+      {
+        "personne": "dre.tremblay",
+        "code": "ACLS",
+        "obtenueLe": -800,
+        "echeance": -4
+      }
+    ],
+    "demandes": [
+      {
+        "personne": "inf.roy",
+        "typeCode": "LISTE-TS",
+        "du": 3,
+        "au": 60,
+        "commentaire": "Soirs de semaine",
+        "decision": "ACCEPTER"
+      },
+      {
+        "personne": "inf.pelletier",
+        "typeCode": "FORMATION",
+        "du": 30,
+        "au": 31,
+        "commentaire": "Formation en triage"
+      }
+    ],
+    "campagne": {
+      "nom": "Vacances d'été — Saint-Jérôme",
+      "uniteCode": "HSJ",
+      "corpsEmploiCode": "INF",
+      "codeAbsence": "CONG",
+      "plafondParSemaine": 1,
+      "maxSemainesParPersonne": 2
+    },
+    "choix": {
+      "personne": "chef.urgence.hsj",
+      "semaines": [
+        0,
+        2
+      ]
+    },
+    "rattachement": {
+      "personne": "inf.cote",
+      "uniteCode": "HSJ",
+      "depuis": 0,
+      "jusqua": 90
+    },
+    "consultations": true
   }
 }

@@ -30,7 +30,7 @@ test("les référentiels passent dans l'ordre : une référence vise toujours un
     poses.get(type).add(corps.code);
     assert.equal(corps.effectifDepuis, D.EFFECTIF_DEPUIS);
   }
-  assert.equal(liste.length, 44);
+  assert.equal(liste.length, 49);
 });
 
 test("chaque code d'absence porte sa catégorie de durée ; ceux d'une banque portent leurs heures par jour", () => {
@@ -287,3 +287,18 @@ test("addenda 8, M-04 : les compétences de démonstration laissent passer les a
   assert.ok(c.some((x) => x.corps.echeance < "2026-11-23"), "une compétence échue au relevé");
   assert.ok(c.every((x) => x.corps.obtenueLe <= x.corps.echeance));
 });
+
+test("addenda 8 : les données de démonstration visent des types, des unités et des semaines qui existent", () => {
+  const a = D.addenda8DeDemo("2026-11-23");
+  const types = D.TYPES_DEMANDE.map((t) => t.code);
+  for (const d of a.demandes) assert.ok(types.includes(d.corps.typeCode), d.corps.typeCode);
+  assert.ok(D.UNITES.some((u) => u.code === a.rattachement.corps.uniteCode));
+  assert.equal(a.campagne.annee, 2027);
+  // Les semaines choisies sont des lundis de la saison.
+  for (const s of a.choix.semaines) {
+    assert.equal(new Date(`${s}T12:00:00`).getDay(), 1, s);
+    assert.ok(s >= a.campagne.du && s <= a.campagne.au, s);
+  }
+  assert.ok(D.CODES_ABSENCE.some((c) => c.code === a.campagne.codeAbsence));
+});
+

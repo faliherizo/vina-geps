@@ -23,6 +23,10 @@ import Uscomblement from "./pages/uscomblement";
 import Usequipages from "./pages/usequipages";
 import Usdisponibilites from "./pages/usdisponibilites";
 import Usabsences from "./pages/usabsences";
+import Mesdemandes from "./pages/mesdemandes";
+import Mescongesannuels from "./pages/mescongesannuels";
+import Uscongesannuels from "./pages/uscongesannuels";
+import Usdemandes from "./pages/usdemandes";
 import Usechanges from "./pages/usechanges";
 import Usagph from "./pages/usagph";
 import Uspresence from "./pages/uspresence";
@@ -48,16 +52,20 @@ export const PAGES_US: Record<string, ComponentType> = {
   monhoraire: Monhoraire,
   mesdisponibilites: Mesdisponibilites,
   mesabsences: Mesabsences,
+  mescongesannuels: Mescongesannuels,
   monagph: Monagph,
   monpointage: Monpointage,
   matemps: Matemps,
   mesechanges: Mesechanges,
+  mesdemandes: Mesdemandes,
   monequipe: Monequipe,
   uscomblement: Uscomblement,
   usequipages: Usequipages,
   usdisponibilites: Usdisponibilites,
   usabsences: Usabsences,
+  uscongesannuels: Uscongesannuels,
   usechanges: Usechanges,
+  usdemandes: Usdemandes,
   usagph: Usagph,
   uspresence: Uspresence,
   ustemps: Ustemps,

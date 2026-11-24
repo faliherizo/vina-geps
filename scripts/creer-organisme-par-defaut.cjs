@@ -333,8 +333,42 @@ async function competences(ctx, ids) {
   }
 }
 
+/**
+ * Addenda 8 : chaque réponse a de quoi se montrer. Idempotent par le sens : une demande du même type, une campagne du même
+ * nom, un rattachement à la même unité existent déjà ? Rien n'est doublé.
+ */
+async function addenda8(ctx, ids, etat) {
+  const a = D.addenda8DeDemo(aujourdhui());
+  await appeler("/api/effectifs/journal/reglages", { ...ctx, methode: "PUT", corps: { consultations: a.consultations } });
+  const r = a.rattachement;
+  const base = `/api/effectifs/planification/ressources/${ids[r.cle].ressourceId}/rattachements`;
+  if (!(await appeler(base, ctx)).some((x) => x.uniteCode === r.corps.uniteCode)) await appeler(base, { ...ctx, methode: "POST", corps: r.corps });
+  compter("rattachements", true);
+  const campagnes = await appeler("/api/effectifs/absences/conges", ctx);
+  let campagne = campagnes.find((c) => c.nom === a.campagne.nom);
+  if (!campagne) {
+    campagne = await appeler("/api/effectifs/absences/conges", { ...ctx, methode: "POST", corps: a.campagne });
+    campagne = await appeler(`/api/effectifs/absences/conges/${campagne.id}/etat`, { ...ctx, methode: "POST", corps: { etat: "OUVERTE" } });
+  }
+  compter("campagnes de congés", true);
+  for (const d of a.demandes) {
+    const moi = { jeton: await connecter({ username: d.cle, password: motDePasseConnu(etat, d.cle), tenantId: ctx.tenantId }), tenantId: ctx.tenantId };
+    const miennes = await appeler("/api/effectifs/planification/demandes/miennes", moi);
+    const existante = miennes.find((x) => x.typeCode === d.corps.typeCode && x.statut !== "ANNULEE");
+    const demande = existante ?? await appeler("/api/effectifs/planification/demandes", { ...moi, methode: "POST", corps: d.corps });
+    if (d.decision && demande.statut === "EN_ATTENTE") {
+      await appeler(`/api/effectifs/planification/demandes/${demande.id}/decision`, { ...ctx, methode: "POST", corps: { decision: d.decision, motif: "Démonstration" } });
+    }
+    compter("demandes", !existante);
+    if (d.cle === a.choix.cle && campagne.etat === "OUVERTE") {
+      await appeler(`/api/effectifs/absences/conges/${campagne.id}/choix`, { ...moi, methode: "PUT", corps: { semaines: a.choix.semaines } });
+    }
+  }
+}
+
 async function demonstration(ctx, plan, ids, etat) {
   await competences(ctx, ids);
+  await addenda8(ctx, ids, etat).catch((e) => bilan.avertissements.push(`addenda 8 non semé : ${e.message}`));
   await attribuer(ctx, plan, ids);
   await absence(ctx.tenantId, etat);
   const lundi = D.lundiDe(aujourdhui());
