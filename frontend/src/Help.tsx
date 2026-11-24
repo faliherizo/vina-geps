@@ -9,6 +9,7 @@ import { pageOuverte, sectionsVisibles } from "./aideParEcran";
 import { FICHES, idFiche, type Prealable } from "./aide/fichesEcrans";
 import { cheminEcran } from "./aide/liensAide";
 import PremiersPas from "./aide/PremiersPas";
+import { idParcours, parcoursVisibles, videoDeParcours, type ParcoursVideo } from "./aide/parcoursVideo";
 import type { Page } from "./App";
 import { useModuleAllowed, usePageMasquee } from "./moduleAccess";
 
@@ -29,7 +30,9 @@ export default function Help({ section }: { section?: string | null }) {
   const ouvert = useModuleAllowed();
   // Et le menu de l'établissement : un écran que le superadmin en a retiré n'a pas d'aide non plus.
   const masquee = usePageMasquee();
-  const sections = useMemo(() => sectionsVisibles(ouvert, masquee), [ouvert, masquee]);
+  const parcours = useMemo(() => parcoursVisibles(ouvert, (p) => pageOuverte(p, ouvert, masquee)), [ouvert, masquee]);
+  // Une section sans parcours n'a rien à montrer : elle sort aussi du sommaire, qui ne mène jamais à une ancre absente.
+  const sections = useMemo(() => sectionsVisibles(ouvert, masquee).filter((x) => x.id !== "parcours" || parcours.length > 0), [ouvert, masquee, parcours]);
   const visible = useCallback((id: string) => sections.some((x) => x.id === id), [sections]);
 
   /**
@@ -86,6 +89,8 @@ export default function Help({ section }: { section?: string | null }) {
           <PremiersPas ecranOuvert={(p) => pageOuverte(p, ouvert, masquee)} />
         </section>
       )}
+
+{visible("parcours") && <ParcoursEnVideo parcours={parcours} />}
 
 {visible("notions") && (
         <section id="notions" className="card" aria-labelledby="notions-h">
@@ -329,7 +334,7 @@ export default function Help({ section }: { section?: string | null }) {
           </ul>
         </section>
       )}
-      <FichesDesEcrans ouvert={ouvert} masquee={masquee} cible={section ?? null} />
+      <FichesDesEcrans ouvert={ouvert} masquee={masquee} cible={section ?? null} parcours={parcours} />
     </div>
   );
 }
@@ -342,24 +347,31 @@ export default function Help({ section }: { section?: string | null }) {
  * la même raison que les sections. Chacune est un `<details>` : le guide reste parcourable d'un
  * coup d'œil, et la fiche visée par « Aide sur cet écran » s'ouvre d'elle-même.
  */
-function FichesDesEcrans({ ouvert, masquee, cible }: { ouvert: (code?: string) => boolean; masquee: (page: string) => boolean; cible: string | null }) {
+function FichesDesEcrans({ ouvert, masquee, cible, parcours }: { ouvert: (code?: string) => boolean; masquee: (page: string) => boolean; cible: string | null; parcours: ParcoursVideo[] }) {
   const ecranOuvert = (p: Page) => pageOuverte(p, ouvert, masquee);
   const pages = (Object.keys(FICHES) as Page[]).filter(ecranOuvert);
   return (
     <section id="fiches" className="card" aria-labelledby="fiches-h">
       <h2 id="fiches-h">Écran par écran : aide et exemple de remplissage</h2>
       <p>Chaque fiche reprend les libellés de l'écran. Les exemples sont ceux de l'organisme de démonstration : on peut les rejouer tels quels.</p>
-      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} ecranOuvert={ecranOuvert} />)}
+      {pages.map((p) => <FicheEcran key={p} page={p} ouverte={cible === idFiche(p)} ecranOuvert={ecranOuvert}
+        parcours={parcours.filter((x) => x.ecrans.includes(p))} />)}
     </section>
   );
 }
 
-function FicheEcran({ page, ouverte, ecranOuvert }: { page: Page; ouverte: boolean; ecranOuvert: (p: Page) => boolean }) {
+function FicheEcran({ page, ouverte, ecranOuvert, parcours }: { page: Page; ouverte: boolean; ecranOuvert: (p: Page) => boolean; parcours: ParcoursVideo[] }) {
   const f = FICHES[page];
   return (
     <details id={idFiche(page)} className="fiche-ecran" open={ouverte || undefined} data-testid={`help-fiche-${page}`}>
       <summary><h3 className="fiche-ecran-titre">{f.titre}</h3></summary>
       <VideoFiche page={page} titre={f.titre} />
+      {parcours.length > 0 && (
+        <p data-testid={`aide-parcours-${page}`}>
+          Voir aussi, en vidéo, la tâche complète :{" "}
+          {parcours.map((x, i) => <span key={x.id}>{i > 0 && " · "}<a href={`#${idParcours(x.id)}`} data-testid={`aide-parcours-${page}-${x.id}`}>{x.titre}</a></span>)}
+        </p>
+      )}
       <p>{f.objet}</p>
       <p><strong>Qui :</strong> {f.qui}</p>
       <h4>Avant de commencer</h4>
@@ -396,6 +408,34 @@ function PrealableFiche({ prealable, testId, ecranOuvert }: { prealable: Prealab
       {texte}
       {ecran && ecranOuvert(ecran) && <> <a href={cheminEcran(ecran)} data-testid={`${testId}-lien`}>Ouvrir « {FICHES[ecran].titre} »</a></>}
     </li>
+  );
+}
+
+/**
+ * **Les parcours en vidéo** : une tâche entière, d'un écran et d'une personne à l'autre, jouée sur l'organisme de
+ * démonstration. Même lecteur que les fiches : rien ne se télécharge d'avance, sous-titres facultatifs, et le résumé
+ * écrit dit ce que la vidéo montre (WCAG 1.2.1).
+ */
+function ParcoursEnVideo({ parcours }: { parcours: ParcoursVideo[] }) {
+  return (
+    <section id="parcours" className="card" aria-labelledby="parcours-h" data-testid="aide-parcours">
+      <h2 id="parcours-h">Parcours en vidéo : configurer, alertes, absences, disponibilités, quarts</h2>
+      <p>Chaque vidéo suit une tâche du début à la fin, avec les personnes et les données de l'organisme de démonstration. Elle est jouée et vérifiée dans l'application.</p>
+      {parcours.map((x) => {
+        const { video, sousTitres } = videoDeParcours(x.id);
+        const resume = `${idParcours(x.id)}-resume`;
+        return (
+          <article key={x.id} id={idParcours(x.id)} className="fiche-video" data-testid={`aide-parcours-video-${x.id}`}>
+            <h3>{x.titre}</h3>
+            <video controls preload="none" src={video} data-testid={`help-parcours-${x.id}`} aria-describedby={resume}>
+              <track kind="captions" srcLang="fr" label="Français (facultatif)" src={sousTitres} />
+              <a href={video}>Télécharger le parcours « {x.titre} »</a>
+            </video>
+            <p id={resume}>{x.resume}</p>
+          </article>
+        );
+      })}
+    </section>
   );
 }
 
