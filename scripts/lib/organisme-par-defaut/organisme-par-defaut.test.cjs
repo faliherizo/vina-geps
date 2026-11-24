@@ -24,11 +24,13 @@ test("les référentiels passent dans l'ordre : une référence vise toujours un
   for (const { type, corps } of liste) {
     if (corps.attributs?.parent) assert.ok(poses.get("unites")?.has(corps.attributs.parent), `parent ${corps.attributs.parent}`);
     if (type === "titres_emploi") assert.ok(poses.get("corps_emploi").has(corps.attributs.corps), `corps de ${corps.code}`);
+    // Addenda 8, M-04 : une compétence n'est exigée que de corps d'emploi déjà posés.
+    if (type === "competences") for (const c of corps.attributs.corps) assert.ok(poses.get("corps_emploi").has(c), `corps exigeant ${corps.code}`);
     if (!poses.has(type)) poses.set(type, new Set());
     poses.get(type).add(corps.code);
     assert.equal(corps.effectifDepuis, D.EFFECTIF_DEPUIS);
   }
-  assert.equal(liste.length, 42);
+  assert.equal(liste.length, 44);
 });
 
 test("chaque code d'absence porte sa catégorie de durée ; ceux d'une banque portent leurs heures par jour", () => {
@@ -270,4 +272,18 @@ test("absence de démonstration : celle d'un semis antérieur (dates décalées)
   // Annulée ou refusée, elle libère ses dates : le serveur accepte alors la nouvelle.
   assert.equal(D.chevauche({ du: "2026-12-14", au: "2026-12-15", statut: "ANNULEE" }, voulue), false);
   assert.equal(D.chevauche({ au: "2026-12-15" }, voulue), false);
+});
+
+test("addenda 8, M-04 : les compétences de démonstration laissent passer les attributions et peuplent le relevé des échéances", () => {
+  const c = D.competencesDeDemo("2026-11-23");
+  const exigees = D.COMPETENCES.filter((x) => x.attributs.corps.includes("PARA")).map((x) => x.code);
+  // Chaque employé paramédic détient chaque compétence exigée, valide au moins jusqu'à la fin de la période de démonstration.
+  for (const cle of D.COMPTES.filter((x) => x.role === "employee").map((x) => x.cle)) {
+    for (const code of exigees) {
+      const d = c.find((x) => x.cle === cle && x.code === code);
+      assert.ok(d && d.corps.echeance >= "2026-12-07", `${cle} ${code}`);
+    }
+  }
+  assert.ok(c.some((x) => x.corps.echeance < "2026-11-23"), "une compétence échue au relevé");
+  assert.ok(c.every((x) => x.corps.obtenueLe <= x.corps.echeance));
 });

@@ -84,18 +84,22 @@ public class ServiceSso {
 
     // ── Entra ID ────────────────────────────────────────────────────────────
 
-    public Oidc.Configuration configurationEntra() {
+    /**
+     * {@code origine} : l'adresse que le navigateur atteint pour l'hôte de la requête, vide hors déploiement par
+     * sous-domaine. Le flux commence et finit sur le même hôte : le cookie de session n'est valable que là.
+     */
+    public Oidc.Configuration configurationEntra(Optional<String> origine) {
         Optional<Oidc.Demo> demo = Optional.empty();
         if (demonstrations.estBranchee("entra")) {
             Map<String, String> r = demonstrations.reglages("entra");
-            demo = Optional.of(new Oidc.Demo(r.get("tenantId"), r.get("clientId"), r.get("clientSecret"), demonstrations.urlServeur(), demonstrations.urlApplication()));
+            demo = Optional.of(new Oidc.Demo(r.get("tenantId"), r.get("clientId"), r.get("clientSecret"), demonstrations.urlServeur(), demonstrations.urlApplication(), origine));
         }
         return Oidc.configuration(env, demo);
     }
 
     /** La configuration d'un Entra ID offert ; sinon {@link Oidc.DesactiveException} (404 à la frontière). */
-    public Oidc.Configuration configurationEntraActive() {
-        Oidc.Configuration cfg = configurationEntra();
+    public Oidc.Configuration configurationEntraActive(Optional<String> origine) {
+        Oidc.Configuration cfg = configurationEntra(origine);
         if (!cfg.actif()) {
             throw new Oidc.DesactiveException();
         }
@@ -107,8 +111,8 @@ public class ServiceSso {
         demandesEntra.values().removeIf(d -> d.expiree(maintenant));
     }
 
-    public Oidc.Debut debuterEntra() {
-        Oidc.Configuration cfg = configurationEntraActive();
+    public Oidc.Debut debuterEntra(Optional<String> origine) {
+        Oidc.Configuration cfg = configurationEntraActive(origine);
         purgerEntra();
         Oidc.Demande d = Oidc.nouvelleDemande(alea, horloge.millis());
         demandesEntra.put(d.state(), d);
@@ -120,8 +124,8 @@ public class ServiceSso {
      * (JWKS, émetteur, audience, échéance, nonce) sinon. Un code simulé hors du mode simulé est refusé : ses
      * revendications sont écrites par qui le présente.
      */
-    public Verifiee completerEntra(String code, String state) {
-        Oidc.Configuration cfg = configurationEntraActive();
+    public Verifiee completerEntra(String code, String state, Optional<String> origine) {
+        Oidc.Configuration cfg = configurationEntraActive(origine);
         purgerEntra();
         Oidc.Demande d = demandesEntra.remove(state);
         if (d == null) {
@@ -139,12 +143,12 @@ public class ServiceSso {
 
     // ── SAML ────────────────────────────────────────────────────────────────
 
-    public Saml.Configuration configurationSaml() {
+    public Saml.Configuration configurationSaml(Optional<String> origine) {
         Optional<Saml.Demo> demo = Optional.empty();
         if (demonstrations.estBranchee("saml")) {
             Map<String, String> r = demonstrations.reglages("saml");
             PublicKey cle = Primitives.surement("clé de l'IdP de démonstration", () -> java.security.KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(Base64.getDecoder().decode(r.get("clePublique")))));
-            demo = Optional.of(new Saml.Demo(r.get("issuer"), cle, demonstrations.urlServeur(), demonstrations.urlApplication()));
+            demo = Optional.of(new Saml.Demo(r.get("issuer"), cle, demonstrations.urlServeur(), demonstrations.urlApplication(), origine));
         }
         return Saml.configuration(env, demo);
     }
@@ -154,8 +158,8 @@ public class ServiceSso {
         demandesSaml.values().removeIf(creeLe -> maintenant - creeLe > Oidc.DUREE_DEMANDE_MS);
     }
 
-    public DebutSaml debuterSaml() {
-        Saml.Configuration cfg = configurationSaml();
+    public DebutSaml debuterSaml(Optional<String> origine) {
+        Saml.Configuration cfg = configurationSaml(origine);
         purgerSaml();
         byte[] b = new byte[16];
         alea.nextBytes(b);
@@ -166,9 +170,9 @@ public class ServiceSso {
     }
 
     /** Signature, émetteur, audience, validité et {@code InResponseTo} vérifiés ; la clé est (émetteur, NameID). */
-    public Verifiee recevoirSaml(String samlResponseB64) {
+    public Verifiee recevoirSaml(String samlResponseB64, Optional<String> origine) {
         purgerSaml();
-        Saml.Configuration cfg = configurationSaml();
+        Saml.Configuration cfg = configurationSaml(origine);
         Saml.AssertionValidee a = Saml.recevoirReponse(samlResponseB64, cfg, horloge.instant(), demandesSaml::containsKey);
         demandesSaml.remove(a.inResponseTo());
         return new Verifiee(IdentitesExternes.Cle.de(cfg.idpIssuer(), a.claims().oid()), revendications(a.claims()), !cfg.demonstration());

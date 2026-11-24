@@ -49,6 +49,15 @@ protocoles, sans compte réel : **aucun texto ni courriel ne part**. `api` et `w
 (Admin › Intégrations) : les nommer dans la variable arrête le démarrage. Le mode d'essai `NEXU_ESSAI` n'est **pas**
 activé : il ouvre des routes de remise à zéro qui n'ont rien à faire sur une adresse publique.
 
+**SSO de démonstration (Entra, SAML).** Le serveur joint ses simulateurs par son adresse interne (`MOCK_URL_BASE`,
+`http://localhost:4000`) : l'échange du code, les clés et la découverte ne quittent pas le conteneur. Ce que voit le
+**navigateur** — la page de connexion du fournisseur et le retour (`/api/auth/sso/*/callback`, ACS) — passe par l'hôte de
+la requête (`https://<hôte>`, racine ou sous-domaine d'un niveau ; un `X-Forwarded-Host` hors domaine est ignoré) :
+le flux commence et finit sur le même hôte, où le cookie de session est posé. Le frontal ne relaie de `/mock/` que ces
+pages (`authorize`, `login`, `logout` d'Entra ; `/mock/saml/sso`) ; le reste des simulateurs reste interne. Avant le
+23 novembre 2026, le navigateur était envoyé vers `http://localhost:4000`. `deploiement-comptes-demo.spec.ts` le vérifie
+sur chaque hôte.
+
 ### Un hôte par organisme (ADR 0094, depuis le 23 novembre 2026)
 
 | Hôte | Ce qu'il sert |

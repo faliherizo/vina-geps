@@ -262,6 +262,7 @@ public final class SchemaEssai {
             "CREATE TABLE IF NOT EXISTS soutien_battements (minute TEXT PRIMARY KEY, le TEXT NOT NULL, latenceMs INTEGER NOT NULL)",
             // Soldes des banques transmis par l'organisme (changeset 0022, AD-06b).
             "CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode))",
+            "CREATE TABLE IF NOT EXISTS eff_competences (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, code TEXT NOT NULL, obtenueLe TEXT NOT NULL, echeance TEXT, poseePar TEXT NOT NULL, poseeLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, code))",
             // Seuils d'heures supplémentaires par convention (changeset 0020, AD-03).
             // Offres de quart par ancienneté et à tour de rôle (changeset 0024, AD-07).
             "CREATE TABLE IF NOT EXISTS eff_offres_parametres (tenantId TEXT PRIMARY KEY, mode TEXT NOT NULL, delaiReponseMinutes INTEGER NOT NULL, seuilUrgenceMinutes INTEGER NOT NULL, fenetreRepartitionJours INTEGER NOT NULL, modifieLe TEXT NOT NULL, modifiePar TEXT NOT NULL)",

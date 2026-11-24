@@ -89,6 +89,12 @@ const MODULES_AUDIT = {
     milieuId: "m-1", modeAttribution: "AUTOMATISE", minimumOperationnel: 2, note: null, pourvues: 1, statut: "SOUS_MINIMUM", places: [
       { id: "pl-1", rang: 1, corpsEmploiCode: "PARA", posteId: null, ressourceId: "rs-1", ressourceNom: "Julie Roy", attribueePar: "UTILISATEUR", justificationForcage: null },
       { id: "pl-2", rang: 2, corpsEmploiCode: "PARA", posteId: null, ressourceId: null, ressourceNom: null, attribueePar: null, justificationForcage: null }] }],
+  // Addenda 8, M-04 : les compétences d'une personne, et le relevé des échéances sous la liste des ressources.
+  "GET /api/effectifs/referentiels/competences": [{ code: "RCR", libelleFr: "Réanimation cardiorespiratoire", attributs: { corps: ["PARA"] }, effectifDepuis: "2026-01-01", effectifJusqua: null }],
+  "GET /api/effectifs/planification/ressources/rs-1/competences": { ressourceId: "rs-1", manquantes: ["RCR"],
+    detenues: [{ ressourceId: "rs-1", code: "RCR", obtenueLe: "2025-01-10", echeance: "2026-11-01", valide: false }] },
+  "GET /api/effectifs/planification/competences/echeances": [{ ressourceId: "rs-1", ressourceNom: "Julie Roy", uniteCode: "EST", code: "RCR",
+    obtenueLe: "2025-01-10", echeance: "2026-11-01", valide: false, etat: "echue", jours: -22 }],
   "GET /api/effectifs/planification/ressources": [{ id: "rs-1", matricule: "P1", nom: "Julie Roy", uniteCode: "EST", corpsEmploiCode: "PARA", titreEmploiCode: null,
     statutEmploiCode: null, conventionCode: null, anciennete: 3, actif: true }],
   // E-CH-3 : un poste, pour que la sélection multiple et le tiroir de modification en lot s'auditent.
@@ -792,7 +798,10 @@ const PAGES = [
     }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Postes", nav: "nav-uspostes" },
   { nom: "Périodes", nav: "nav-usperiodes" },
-  { nom: "Ressources", nav: "nav-usressources" },
+  { nom: "Ressources", nav: "nav-usressources", etats: [{ nom: "compétences d'une personne ouvertes", agir: async (page) => {
+      await page.getByTestId("pla-ressource-competences-P1").click();
+      await page.getByTestId("pla-competences-manquantes").waitFor({ state: "visible" });
+    }, apres: async (page) => { await page.keyboard.press("Escape"); } }] },
   { nom: "Quotas", nav: "nav-usquotas" },
   { nom: "Référentiels", nav: "nav-usreferentiels" },
   { nom: "Codes d'absence", nav: "nav-uscodesabsence" },

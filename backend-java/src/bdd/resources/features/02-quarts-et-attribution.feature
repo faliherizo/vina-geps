@@ -527,3 +527,77 @@ Fonctionnalité: Quarts ad hoc, attribution manuelle et postes publiés
       { "ressourceId": "{{P2}}" }
       """
     Alors la réponse a le statut 200
+
+  @E-GN-11 @E-GN-16 @M-04
+  Scénario: Une compétence exigée qui manque ou est échue au jour du quart rend inadmissible selon la règle ; renouvelée, elle débloque ; le relevé nomme ce qui échoit
+    Soit un organisme d'Urgences-santé amorcé
+    Quand admin envoie POST /api/effectifs/referentiels/competences avec :
+      """json
+      { "code": "RCR", "libelleFr": "Réanimation cardiorespiratoire", "effectifDepuis": "2026-01-01", "attributs": { "corps": ["PARA"] } }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie POST /api/effectifs/regles avec :
+      """json
+      {
+        "contexte": "ATTRIBUTION",
+        "cle": "competence-exigee",
+        "condition": { "fait": "competencesManquantes", "op": ">", "valeur": 0 },
+        "action": "BLOQUER",
+        "message": "{competencesManquantes} compétence(s) exigée(s) manquante(s) ou échue(s)",
+        "effectifDepuis": "{{demain}}"
+      }
+      """
+    Alors la réponse a le statut 201
+    Quand admin envoie POST /api/effectifs/planification/periodes avec :
+      """json
+      { "nom": "CMP", "uniteCode": "EST", "debut": "2030-04-01", "fin": "2030-04-07" }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "id" sous le nom "cmp"
+    Quand admin envoie POST /api/effectifs/planification/equipages avec :
+      """json
+      { "periodeId": "{{cmp}}", "date": "2030-04-01", "debut": 360, "fin": 1080, "natureCode": "REG", "milieuId": "{{c12}}",
+        "composition": [ { "corpsEmploiCode": "PARA", "nombre": 1 } ] }
+      """
+    Alors la réponse a le statut 201
+    Et je retiens "places.0.id" sous le nom "placeCmp"
+    # Sans la compétence : la règle bloque, et le dit
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeCmp}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 409
+    Et la réponse correspond à "1 compétence\(s\) exigée\(s\) manquante\(s\) ou échue\(s\)"
+    # Échue la veille du quart : toujours inadmissible
+    Quand admin envoie PUT /api/effectifs/planification/ressources/{{P1}}/competences/RCR avec :
+      """json
+      { "obtenueLe": "2026-01-10", "echeance": "2030-03-31" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeCmp}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 409
+    # Renouvelée : l'attribution passe
+    Quand admin envoie PUT /api/effectifs/planification/ressources/{{P1}}/competences/RCR avec :
+      """json
+      { "obtenueLe": "2026-01-10", "echeance": "2032-01-10" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie POST /api/effectifs/planification/places/{{placeCmp}}/attribuer avec :
+      """json
+      { "ressourceId": "{{P1}}" }
+      """
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "\"action\":\"ACCEPTER\""
+    # Le relevé : une compétence échue figure, la plus pressante d'abord
+    Quand admin envoie PUT /api/effectifs/planification/ressources/{{P2}}/competences/RCR avec :
+      """json
+      { "obtenueLe": "2020-01-10", "echeance": "2021-01-10" }
+      """
+    Alors la réponse a le statut 200
+    Quand admin envoie GET /api/effectifs/planification/competences/echeances
+    Alors la réponse a le statut 200
+    Et la réponse correspond à "\"code\":\"RCR\""
+    Et la réponse correspond à "\"etat\":\"echue\""

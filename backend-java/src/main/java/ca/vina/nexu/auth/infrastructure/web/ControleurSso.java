@@ -14,6 +14,8 @@ import ca.vina.nexu.partage.audit.infrastructure.JournalAudit;
 import ca.vina.nexu.partage.demonstration.RegistreDemonstrations;
 import ca.vina.nexu.partage.securite.AdressePublique;
 import ca.vina.nexu.partage.securite.JetonDeSession;
+import ca.vina.nexu.partage.securite.HoteEtablissement;
+import ca.vina.nexu.partage.securite.ResolutionHote;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +40,7 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
@@ -59,21 +62,33 @@ public class ControleurSso {
     private final JournalAudit audit;
     private final AdressePublique adresse;
     private final boolean cookieSecurise;
+    private final ResolutionHote.Configuration hote;
 
     @Autowired
     public ControleurSso(DepotComptes comptes, ServiceResolutionIdentite resolution, DepotQuestionsSecretes questions, RegistreDemonstrations demonstrations,
                          JournalAudit audit, Clock horloge, @Value("${nexu.jwt.secret}") String secret, AdressePublique adresse,
-                         @Value("${nexu.cookie.secure:false}") boolean cookieSecurise) {
+                         @Value("${nexu.cookie.secure:false}") boolean cookieSecurise, HoteEtablissement hote) {
         this(new ServiceSso(System.getenv(), demonstrations, resolution, new ServiceConnexion(comptes, questions, new JetonDeSession(secret), horloge),
-                new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(10), horloge), horloge, ALEA), audit, adresse, cookieSecurise);
+                new EchangeurOidcHttp(HttpClient.newHttpClient(), Duration.ofSeconds(10), horloge), horloge, ALEA), audit, adresse, cookieSecurise, hote.configuration());
+    }
+
+    /** Hors déploiement par sous-domaine (essais, développement) : aucune origine de requête n'est retenue. */
+    public ControleurSso(ServiceSso sso, JournalAudit audit, AdressePublique adresse, boolean cookieSecurise) {
+        this(sso, audit, adresse, cookieSecurise, ResolutionHote.Configuration.depuis(null, null, null));
     }
 
     /** L'adresse de retour après le SSO : celle de l'établissement du compte (ADR 0033), sinon le tableau de bord. */
-    public ControleurSso(ServiceSso sso, JournalAudit audit, AdressePublique adresse, boolean cookieSecurise) {
+    public ControleurSso(ServiceSso sso, JournalAudit audit, AdressePublique adresse, boolean cookieSecurise, ResolutionHote.Configuration hote) {
         this.sso = sso;
         this.audit = audit;
         this.adresse = adresse;
         this.cookieSecurise = cookieSecurise;
+        this.hote = hote;
+    }
+
+    /** L'origine que le navigateur atteint pour l'hôte de la requête : le SSO commence et finit là. */
+    private Optional<String> origine(HttpServletRequest requete) {
+        return hote.originePublique(ResolutionHote.hoteDe(requete));
     }
 
     private static ResponseEntity<Object> erreur(int code, String message) {
@@ -168,8 +183,8 @@ public class ControleurSso {
     // ── Entra ID ────────────────────────────────────────────────────────────
 
     @GetMapping("/sso/entra/status")
-    public ResponseEntity<Object> statutEntra() {
-        Oidc.Configuration cfg = sso.configurationEntra();
+    public ResponseEntity<Object> statutEntra(HttpServletRequest requete) {
+        Oidc.Configuration cfg = sso.configurationEntra(origine(requete));
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("enabled", cfg.actif());
         r.put("mock", cfg.mock());
@@ -179,14 +194,15 @@ public class ControleurSso {
 
     /** Démarre le flux : redirige vers Entra (réel, démonstration) ou l'émetteur de test (simulé). */
     @GetMapping("/sso/entra/login")
-    public ResponseEntity<Object> connexionEntra() {
-        return tenter(500, () -> rediriger(sso.debuterEntra().authUrl()));
+    public ResponseEntity<Object> connexionEntra(HttpServletRequest requete) {
+        return tenter(500, () -> rediriger(sso.debuterEntra(origine(requete)).authUrl()));
     }
 
     /** Reçoit le code d'autorisation, provisionne l'utilisateur, pose la session et revient à l'application. */
     @GetMapping("/sso/entra/callback")
-    public ResponseEntity<Object> rappelEntra(@RequestParam(name = "code", required = false) String code, @RequestParam(name = "state", required = false) String state) {
-        return tenter(400, () -> repondreRedirection(sso.provisionner(sso.completerEntra(code == null ? "" : code, state == null ? "" : state)), null));
+    public ResponseEntity<Object> rappelEntra(HttpServletRequest requete, @RequestParam(name = "code", required = false) String code,
+                                              @RequestParam(name = "state", required = false) String state) {
+        return tenter(400, () -> repondreRedirection(sso.provisionner(sso.completerEntra(code == null ? "" : code, state == null ? "" : state, origine(requete))), null));
     }
 
     /**
@@ -194,14 +210,15 @@ public class ControleurSso {
      * fournisseur. Hors de ce mode, elle n'existe pas (404) : elle rendait une session à tout appel anonyme.
      */
     @PostMapping("/sso/entra/session")
-    public ResponseEntity<Object> sessionEntra() {
+    public ResponseEntity<Object> sessionEntra(HttpServletRequest requete) {
+        Optional<String> origine = origine(requete);
         return tenter(400, () -> {
-            if (!sso.configurationEntra().mock()) {
+            if (!sso.configurationEntra(origine).mock()) {
                 throw new Oidc.DesactiveException();
             }
-            Oidc.Debut debut = sso.debuterEntra();
+            Oidc.Debut debut = sso.debuterEntra(origine);
             String code = URI.create(debut.authUrl()).getRawQuery() == null ? "" : parametre(URI.create(debut.authUrl()).getRawQuery(), "code");
-            return repondreJson(sso.provisionner(sso.completerEntra(code, debut.state())), null);
+            return repondreJson(sso.provisionner(sso.completerEntra(code, debut.state(), origine)), null);
         });
     }
 
@@ -218,8 +235,8 @@ public class ControleurSso {
     // ── SAML 2.0 ────────────────────────────────────────────────────────────
 
     @GetMapping("/sso/saml/status")
-    public ResponseEntity<Object> statutSaml() {
-        Saml.Configuration cfg = sso.configurationSaml();
+    public ResponseEntity<Object> statutSaml(HttpServletRequest requete) {
+        Saml.Configuration cfg = sso.configurationSaml(origine(requete));
         Map<String, Object> r = new LinkedHashMap<>();
         r.put("enabled", cfg.enabled());
         r.put("provider", "SAML 2.0");
@@ -229,13 +246,13 @@ public class ControleurSso {
     }
 
     @GetMapping("/sso/saml/metadata")
-    public ResponseEntity<Object> metadonneesSaml() {
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(Saml.metadonneesSp(sso.configurationSaml()));
+    public ResponseEntity<Object> metadonneesSaml(HttpServletRequest requete) {
+        return ResponseEntity.ok().contentType(MediaType.APPLICATION_XML).body(Saml.metadonneesSp(sso.configurationSaml(origine(requete))));
     }
 
     @GetMapping("/sso/saml/login")
-    public ResponseEntity<Object> connexionSaml() {
-        return tenter(503, () -> rediriger(sso.debuterSaml().url()));
+    public ResponseEntity<Object> connexionSaml(HttpServletRequest requete) {
+        return tenter(503, () -> rediriger(sso.debuterSaml(origine(requete)).url()));
     }
 
     /** ACS : l'IdP poste la réponse ; la signature, l'émetteur, l'audience, la validité et le InResponseTo sont vérifiés avant tout provisionnement. */
@@ -244,7 +261,7 @@ public class ControleurSso {
         boolean json = requete.getContentType() != null && requete.getContentType().startsWith("application/json");
         try {
             String reponse = json ? String.valueOf(JSON.readValue(corps == null ? "{}" : corps, CARTE).getOrDefault("SAMLResponse", "")) : requete.getParameter("SAMLResponse");
-            ServiceSso.Issue s = sso.provisionner(sso.recevoirSaml(reponse == null ? "" : reponse));
+            ServiceSso.Issue s = sso.provisionner(sso.recevoirSaml(reponse == null ? "" : reponse, origine(requete)));
             return json ? repondreJson(s, "saml") : repondreRedirection(s, "saml");
         } catch (RuntimeException e) {
             audit.consigner("anonymous", "saml", "auth.sso.login.refus", null, Map.of("motif", String.valueOf(e.getMessage())));

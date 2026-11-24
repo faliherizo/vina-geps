@@ -121,6 +121,28 @@ function joursFeries(annee) {
   ];
 }
 
+/**
+ * Addenda 8, M-04 : les compétences et les corps d'emploi qui les exigent. La réanimation est exigée des paramédics ; le
+ * permis est suivi (son échéance figure au relevé) sans être exigé.
+ */
+const COMPETENCES = [
+  { code: "RCR", libelleFr: "Réanimation cardiorespiratoire (RCR)", attributs: { corps: ["PARA"] } },
+  { code: "PERMIS4A", libelleFr: "Permis de conduire classe 4A", attributs: { corps: [] } },
+];
+
+/**
+ * Les compétences détenues par les employés : valides pour ce qui est exigé (les attributions de démonstration passent),
+ * une réanimation qui échoit dans 20 jours et un permis échu, pour que le relevé des échéances montre quelque chose.
+ */
+function competencesDeDemo(aujourdhui) {
+  return [
+    { cle: "employe1", code: "RCR", corps: { obtenueLe: decaler(aujourdhui, -300), echeance: decaler(aujourdhui, 430) } },
+    { cle: "employe2", code: "RCR", corps: { obtenueLe: decaler(aujourdhui, -200), echeance: decaler(aujourdhui, 530) } },
+    { cle: "employe3", code: "RCR", corps: { obtenueLe: decaler(aujourdhui, -710), echeance: decaler(aujourdhui, 20) } },
+    { cle: "employe3", code: "PERMIS4A", corps: { obtenueLe: decaler(aujourdhui, -1830), echeance: decaler(aujourdhui, -5) } },
+  ];
+}
+
 /** Les référentiels, dans l'ordre où ils doivent passer (une référence vise une valeur déjà posée). */
 function referentiels(annee) {
   return [
@@ -128,6 +150,7 @@ function referentiels(annee) {
     ["statuts_emploi", STATUTS_EMPLOI], ["conventions", CONVENTIONS], ["natures_quart", NATURES_QUART],
     ["plages_horaires", PLAGES_HORAIRES], ["types_milieu", TYPES_MILIEU], ["codes_absence", CODES_ABSENCE],
     ["types_heure", TYPES_HEURE], ["activites_presence", ACTIVITES_PRESENCE], ["jours_feries", joursFeries(annee)],
+    ["competences", COMPETENCES],
   ].flatMap(([type, valeurs]) => valeurs.map((v) => ({ type, corps: { effectifDepuis: EFFECTIF_DEPUIS, ...v } })));
 }
 
@@ -151,6 +174,10 @@ const REGLES = [
   { cle: "semaine-chargee-attribution", contexte: "ATTRIBUTION", action: "AVERTIR",
     condition: { fait: "heuresSemaine", op: ">", valeur: 48 },
     message: "{heuresSemaine} h déjà planifiées dans la semaine : au-delà de 48, vérifier la fatigue" },
+  // Addenda 8, M-04 : une compétence exigée qui manque ou est échue au jour du quart rend inadmissible.
+  { cle: "competence-exigee-attribution", contexte: "ATTRIBUTION", action: "BLOQUER",
+    condition: { fait: "competencesManquantes", op: ">", valeur: 0 },
+    message: "{competencesManquantes} compétence(s) exigée(s) manquante(s) ou échue(s) au jour du quart" },
   { cle: "solde-insuffisant-absence", contexte: "ABSENCE", action: "REFUSER",
     condition: { tous: [{ fait: "soldeBanqueConnu", op: "=", valeur: true }, { fait: "soldeBanqueApresHeures", op: "<", valeur: 0 }] },
     message: "Solde de la banque insuffisant : il resterait {soldeBanqueApresHeures} h" },
@@ -268,6 +295,6 @@ function chevauche(existante, { du, au }) {
 
 module.exports = {
   EFFECTIF_DEPUIS, FAMILLES_HORS_PRODUIT, MODULES_DU_PRODUIT, UNITES, CORPS_EMPLOI, TITRES_EMPLOI, STATUTS_EMPLOI, CONVENTIONS,
-  NATURES_QUART, PLAGES_HORAIRES, TYPES_MILIEU, CODES_ABSENCE, TYPES_HEURE, ACTIVITES_PRESENCE, MILIEUX, REGLES, PARAMETRES_TEMPS,
-  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo, chevauche,
+  NATURES_QUART, PLAGES_HORAIRES, TYPES_MILIEU, CODES_ABSENCE, TYPES_HEURE, ACTIVITES_PRESENCE, COMPETENCES, MILIEUX, REGLES, PARAMETRES_TEMPS,
+  SEUILS_CONVENTIONS, COMPTES, joursFeries, referentiels, decaler, lundiDe, periodes, equipages, attributionsDeDemo, absenceDeDemo, competencesDeDemo, chevauche,
 };

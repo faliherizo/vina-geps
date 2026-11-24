@@ -79,8 +79,15 @@ public final class Oidc {
         return VRAI.contains(env(env, VARIABLE_SIMULATION, "")) && VRAI.contains(env(env, VARIABLE_ESSAI, ""));
     }
 
-    /** Ce que le registre des démonstrations fournit quand l'Entra ID embarqué est branché. */
-    public record Demo(String tenantId, String clientId, String clientSecret, String urlServeur, Optional<String> urlApplication) {
+    /**
+     * Ce que le registre des démonstrations fournit quand l'Entra ID embarqué est branché. {@code origine} : l'adresse
+     * que le navigateur atteint pour l'hôte de la requête (déploiement par sous-domaine) ; la page de connexion et le
+     * retour y passent, l'échange du code reste interne ({@code urlServeur}).
+     */
+    public record Demo(String tenantId, String clientId, String clientSecret, String urlServeur, Optional<String> urlApplication, Optional<String> origine) {
+        public Demo(String tenantId, String clientId, String clientSecret, String urlServeur, Optional<String> urlApplication) {
+            this(tenantId, clientId, clientSecret, urlServeur, urlApplication, Optional.empty());
+        }
     }
 
     private static String env(Map<String, String> env, String cle, String defaut) {
@@ -94,10 +101,12 @@ public final class Oidc {
         String tenantId = demo.map(Demo::tenantId).orElse(env(env, "AZURE_TENANT_ID", "common"));
         String authority = demo.map(d -> d.urlServeur() + "/mock/entra/" + tenantId).orElse(env(env, "AZURE_AUTHORITY", "https://login.microsoftonline.com/" + tenantId)).replaceAll("/$", "");
         // En démonstration, le retour passe par l'origine de l'application (son mandataire `/api`), apprise au branchement.
-        String redirectUri = demo.map(d -> d.urlApplication().orElse(d.urlServeur()) + "/api/auth/sso/entra/callback").orElse(env(env, "AZURE_REDIRECT_URI", "http://localhost:4000/api/auth/sso/entra/callback"));
+        String redirectUri = demo.map(d -> d.origine().or(d::urlApplication).orElse(d.urlServeur()) + "/api/auth/sso/entra/callback").orElse(env(env, "AZURE_REDIRECT_URI", "http://localhost:4000/api/auth/sso/entra/callback"));
+        // La page de connexion est vue par le navigateur : en démonstration, sur l'origine de la requête s'il y en a une.
+        String autorisation = demo.flatMap(Demo::origine).map(o -> o + "/mock/entra/" + tenantId).orElse(authority) + "/oauth2/v2.0/authorize";
         boolean simule = clientId.isEmpty() && demo.isEmpty() && simulationPermise(env);
         return new Configuration(simule, demo.isPresent(), tenantId, clientId, clientSecret, redirectUri, authority,
-                authority + "/oauth2/v2.0/authorize", authority + "/oauth2/v2.0/token", authority + "/v2.0/.well-known/openid-configuration");
+                autorisation, authority + "/oauth2/v2.0/token", authority + "/v2.0/.well-known/openid-configuration");
     }
 
     // ── Demande ─────────────────────────────────────────────────────────────

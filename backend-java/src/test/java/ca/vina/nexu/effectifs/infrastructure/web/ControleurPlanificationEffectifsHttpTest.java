@@ -8,6 +8,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireEquipages;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireMilieux;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePerimetres;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePeriodes;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireCompetences;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePlaces;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePostes;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireQuotas;
@@ -15,6 +16,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireReferentiels;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRegles;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
 import ca.vina.nexu.effectifs.application.commandes.RepercussionPostes;
+import ca.vina.nexu.effectifs.application.requetes.LectureCompetences;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LectureJournalEffectifs;
 import ca.vina.nexu.effectifs.application.requetes.LectureMilieux;
@@ -30,6 +32,7 @@ import ca.vina.nexu.effectifs.domaine.EffectifsInvalideException;
 import ca.vina.nexu.effectifs.domaine.Planification;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurComptesPourEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.AdaptateurModulesPourEffectifs;
+import ca.vina.nexu.effectifs.infrastructure.persistance.DepotCompetences;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotEquipages;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotJournalEffectifs;
 import ca.vina.nexu.effectifs.infrastructure.persistance.DepotMilieux;
@@ -169,12 +172,17 @@ class ControleurPlanificationEffectifsHttpTest {
         quotas = new GestionnaireQuotas(depotQuo, lectQuo, referentiels, perimetres, journal, seq);
         GestionnaireEquipages equipages = new GestionnaireEquipages(depotEqp, new GestionnaireEquipages.Lectures(lectEqp, lectPrd, lectPos, referentiels, milieux),
                 journal, seq);
+        // Addenda 8, M-04 : les compétences exigées au référentiel entrent dans les faits de l'attribution.
+        DepotCompetences depotCmp = new DepotCompetences(jdbc, schema);
+        LectureCompetences competences = new LectureCompetences(depotCmp, depotRef, lectRes);
         GestionnairePlaces places = new GestionnairePlaces(depotEqp, lectEqp, lectRes, perimetres, equipages,
-                new EvaluateurRegles(depotRegles, referentiels, journal, seq), journal);
+                new EvaluateurRegles(depotRegles, referentiels, journal, seq), journal, competences);
         regles = new GestionnaireRegles(depotRegles, new LectureRegles(depotRegles), referentiels, journal, seq);
         http = new ClientHttpEssai(socle, new ControleurPlanificationEffectifs(garde,
                 new ControleurPlanificationEffectifs.Lectures(lectRes, lectPrd, lectPos, lectEqp, lectQuo),
-                new ControleurPlanificationEffectifs.Gestes(ressources, periodes, postes, equipages, places, quotas)));
+                new ControleurPlanificationEffectifs.Gestes(ressources, periodes, postes, equipages, places, quotas)),
+                new ControleurCompetencesEffectifs(garde, competences, new GestionnaireCompetences(depotCmp,
+                        new GestionnaireCompetences.Lectures(lectRes, referentiels, perimetres), journal)));
         socle();
     }
 
@@ -479,6 +487,61 @@ class ControleurPlanificationEffectifsHttpTest {
         http.post(API + "/periodes/" + ids.get("periode") + "/generer", PLANIF, "").andExpect(status().is(422));
         http.get(API + "/periodes", ADMIN).andExpect(jsonPath("$[0].etat").value("CLOSE")).andExpect(jsonPath("$[0].publieeLe").isString())
                 .andExpect(jsonPath("$[0].closeLe").isString());
+    }
+
+    @Test
+    @DisplayName("addenda 8, M-04 : une compétence exigée qui manque ou est échue au jour du quart bloque l'attribution selon la règle ; "
+            + "renouvelée, elle débloque ; le relevé liste ce qui échoit ; seul l'encadrement de l'unité la pose, et le journal le dit")
+    void competences() throws Exception {
+        ref("competences", "{\"code\":\"RCR\",\"libelleFr\":\"Réanimation cardiorespiratoire\",\"attributs\":{\"corps\":[\"PARA\"]}}");
+        ref("competences", "{\"code\":\"PERMIS\",\"libelleFr\":\"Permis de conduire 4A\"}");
+        periodeEnConfection();
+        postesPublies();
+        generation();
+        Map<String, Object> e = new HashMap<>();
+        e.put("contexte", "ATTRIBUTION");
+        e.put("cle", "competence-exigee");
+        e.put("condition", Map.of("fait", "competencesManquantes", "op", ">", "valeur", 0));
+        e.put("action", "BLOQUER");
+        e.put("message", "{competencesManquantes} compétence(s) exigée(s) manquante(s) ou échue(s)");
+        e.put("effectifDepuis", "2027-02-01");
+        regles.creer(ctx("2027-01-15T10:00:00Z"), e);
+        String p2 = ids.get("P2");
+        String vacante = API + "/places/" + ids.get("placeVacanteLundi") + "/attribuer";
+        String competence = API + "/ressources/" + p2 + "/competences/";
+
+        http.post(vacante, PLANIF, "{\"ressourceId\":\"" + p2 + "\"}").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.verdict.motifs[0].message").value("1 compétence(s) exigée(s) manquante(s) ou échue(s)"));
+        // Échue la veille du quart (2030-03-04) : toujours inadmissible.
+        http.put(competence + "RCR", ADMIN, "{\"obtenueLe\":\"2027-01-10\",\"echeance\":\"2030-03-03\"}").andExpect(status().isOk())
+                .andExpect(jsonPath("$.echeance").value("2030-03-03"));
+        http.post(vacante, PLANIF, "{\"ressourceId\":\"" + p2 + "\"}").andExpect(status().isConflict());
+        // Renouvelée : la même pose remplace l'échéance, et l'attribution passe.
+        http.put(competence + "RCR", ADMIN, "{\"obtenueLe\":\"2027-01-10\",\"echeance\":\"2031-01-10\"}").andExpect(status().isOk());
+        http.post(vacante, PLANIF, "{\"ressourceId\":\"" + p2 + "\"}").andExpect(status().isOk()).andExpect(jsonPath("$.verdict.action").value("ACCEPTER"));
+
+        http.put(competence + "PERMIS", ADMIN, "{\"obtenueLe\":\"2020-05-01\",\"echeance\":\"2027-02-01\"}").andExpect(status().isOk());
+        http.get(API + "/ressources/" + p2 + "/competences", ADMIN).andExpect(status().isOk())
+                .andExpect(jsonPath("$.detenues[*].code", Matchers.contains("PERMIS", "RCR"))).andExpect(jsonPath("$.detenues[1].valide").value(true))
+                .andExpect(jsonPath("$.manquantes", Matchers.hasSize(0)));
+        http.get(API + "/ressources/" + ids.get("P1") + "/competences", ADMIN).andExpect(jsonPath("$.manquantes[0]").value("RCR"));
+        // Le relevé, au 15 janvier 2027 : le permis échoit dans 17 jours ; la réanimation, en 2031, n'y est pas.
+        http.get(API + "/competences/echeances", ADMIN).andExpect(status().isOk()).andExpect(jsonPath("$", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$[0].code").value("PERMIS")).andExpect(jsonPath("$[0].etat").value("a_echoir")).andExpect(jsonPath("$[0].jours").value(17))
+                .andExpect(jsonPath("$[0].ressourceNom").isNotEmpty());
+        http.get(API + "/competences/echeances?dans=5", ADMIN).andExpect(jsonPath("$", Matchers.hasSize(0)));
+        http.get(API + "/competences/echeances?dans=trente", ADMIN).andExpect(status().is(422));
+
+        http.put(competence + "INCONNUE", ADMIN, "{\"obtenueLe\":\"2027-01-10\"}").andExpect(status().is4xxClientError());
+        http.put(competence + "RCR", ADMIN, "{}").andExpect(status().is(422));
+        http.put(API + "/ressources/inconnue/competences/RCR", ADMIN, "{\"obtenueLe\":\"2027-01-10\"}").andExpect(status().isNotFound());
+        // Sans le périmètre de gestion de l'unité, on ne pose rien.
+        http.put(competence + "RCR", PLANIF, "{\"obtenueLe\":\"2027-01-10\"}").andExpect(status().isForbidden());
+        http.delete(competence + "PERMIS", ADMIN).andExpect(status().isOk()).andExpect(jsonPath("$.retiree").value("PERMIS"));
+        http.delete(competence + "PERMIS", ADMIN).andExpect(status().isNotFound());
+        http.get(E + "/journal?action=competence.renouvelee", ADMIN).andExpect(jsonPath("$[0].apres.echeance").value("2031-01-10"))
+                .andExpect(jsonPath("$[0].avant.echeance").value("2030-03-03"));
+        http.get(E + "/journal?action=competence.retiree", ADMIN).andExpect(jsonPath("$[0].avant.code").value("PERMIS"));
     }
 
     @Test

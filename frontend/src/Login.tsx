@@ -1,3 +1,4 @@
+import { lireDeploiement } from "./deploiementHote";
 import { useEffect, useState } from "react";
 import { Message } from "./composants";
 import { useAuth } from "./AuthContext";
@@ -39,7 +40,9 @@ export default function Login() {
   const [tenants, setTenants] = useState<TenantOption[]>([]);
   const [tenantId, setTenantId] = useState<string>("");
   const [tenantLocked, setTenantLocked] = useState<TenantOption | null>(null);
-  const [hote, setHote] = useState<"selecteur" | "etablissement" | "global" | "inconnu">("selecteur");
+  const [hote, setHote] = useState<"chargement" | "selecteur" | "etablissement" | "global" | "inconnu" | "indisponible">("chargement");
+  // Relire ce que l'hôte désigne : le bouton « Réessayer » d'un service momentanément indisponible.
+  const [lectureHote, setLectureHote] = useState(0);
   // SAML 2.0 (exigence 41) : le bouton n'apparaît que si l'instance a un IdP déclaré —
   // un bouton qui mène à un 503 est une porte peinte sur un mur.
   const [samlActif, setSamlActif] = useState(false);
@@ -56,21 +59,25 @@ export default function Login() {
   // l'établissement (tenant) et appliqués après connexion (`useCurrentTenant` renseigne
   // `localStorage.hostCountry` depuis le tenant). Aucun sélecteur de pays au login.
   useEffect(() => {
-    // Ce que le déploiement a résolu depuis l'hôte fait foi ; le sélecteur n'existe qu'en mode « selecteur ».
-    fetch("/api/auth/deploiement")
-      .then(async (r) => ({ ok: r.ok, corps: await r.json().catch(() => null) }))
-      .then(({ ok, corps }) => {
-        const resolution = corps?.resolution ?? "selecteur";
-        if (resolution !== "sous_domaine") {
-          setHote("selecteur");
-          fetch("/api/auth/tenants").then((r) => (r.ok ? r.json() : [])).then((l) => setTenants(Array.isArray(l) ? l : [])).catch(() => setTenants([]));
-          return;
-        }
-        if (!ok || !corps) { setHote("inconnu"); return; }
-        if (corps.etablissement) { setTenantLocked({ id: corps.etablissement.id, name: corps.etablissement.nom, slug: corps.etablissement.slug }); setTenantId(corps.etablissement.id); setHote("etablissement"); }
-        else { setTenantId(GLOBAL_ACCOUNT); setHote("global"); }
-      })
-      .catch(() => { setHote("selecteur"); fetch("/api/auth/tenants").then((r) => (r.ok ? r.json() : [])).then((l) => setTenants(Array.isArray(l) ? l : [])).catch(() => setTenants([])); });
+    // Ce que le déploiement a résolu depuis l'hôte fait foi ; le sélecteur n'existe que si le serveur le dit.
+    let vivant = true;
+    void lireDeploiement().then((l) => {
+      if (!vivant) return;
+      if (l.etat === "indisponible") { setHote("indisponible"); return; }
+      const { ok, corps } = l;
+      if (corps.resolution !== "sous_domaine") {
+        setHote("selecteur");
+        fetch("/api/auth/tenants").then((r) => (r.ok ? r.json() : [])).then((x) => setTenants(Array.isArray(x) ? x : [])).catch(() => setTenants([]));
+        return;
+      }
+      if (!ok) { setHote("inconnu"); return; }
+      if (corps.etablissement) { setTenantLocked({ id: corps.etablissement.id, name: corps.etablissement.nom, slug: corps.etablissement.slug }); setTenantId(corps.etablissement.id); setHote("etablissement"); }
+      else { setTenantId(GLOBAL_ACCOUNT); setHote("global"); }
+    });
+    return () => { vivant = false; };
+  }, [lectureHote]);
+
+  useEffect(() => {
     fetch("/api/auth/sso/entra/status").then((r) => (r.ok ? r.json() : null))
       .then((j) => { setEntraSimule(j?.mock === true); setEntraActif(j?.enabled === true); }).catch(() => setEntraActif(false));
     fetch("/api/auth/sso/saml/status").then((r) => (r.ok ? r.json() : null)).then((j) => setSamlActif(!!j?.enabled)).catch(() => setSamlActif(false));
@@ -110,9 +117,12 @@ export default function Login() {
     } finally { setBusy(false); }
   }
 
+  /** Tant que l'hôte n'a rien désigné, se connecter enverrait le compte nulle part. */
+  const hoteNonResolu = hote === "inconnu" || hote === "chargement" || hote === "indisponible";
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (hote === "inconnu") return;
+    if (hoteNonResolu) return;
     if (!tenantLocked && !tenantId) {
       setError("Sélectionnez votre organisme pour vous connecter.");
       return;
@@ -174,7 +184,17 @@ export default function Login() {
         <h1 style={{ marginBottom: 4 }}>{t("login.title")}</h1>
         <p className="subtitle">{t("login.subtitle")}</p>
         {error && <Message variante="erreur" testId="login-error">{error}</Message>}
-        {hote === "inconnu" ? (
+        {hote === "indisponible" ? (
+          // Le serveur n'a rien dit (redéploiement, limitation de débit) : ni liste vide, ni organisme deviné.
+          <div role="alert" data-testid="login-service-indisponible" style={{ marginBottom: 12 }}>
+            <strong>{t("login.serviceIndisponible")}</strong>
+            <p className="subtitle" style={{ marginTop: 4 }}>{t("login.serviceIndisponibleAide")}</p>
+            <button type="button" className="secondary" data-testid="login-reessayer"
+              onClick={() => { setHote("chargement"); setLectureHote((n) => n + 1); }}>{t("login.reessayer")}</button>
+          </div>
+        ) : hote === "chargement" ? (
+          <p className="subtitle" role="status" data-testid="login-hote-chargement" style={{ marginBottom: 12 }}>{t("login.hoteChargement")}</p>
+        ) : hote === "inconnu" ? (
           // Le sous-domaine ne désigne aucun établissement actif : on le dit, sans formulaire ni liste.
           <div role="alert" data-testid="login-tenant-inconnu" style={{ marginBottom: 12 }}>
             <strong>{t("login.etablissementInconnu")}</strong>
@@ -256,7 +276,7 @@ export default function Login() {
             />
           </div>
         )}
-        <button type="submit" className="primary" data-testid="login-submit" disabled={busy || hote === "inconnu"} style={{ width: "100%" }}>
+        <button type="submit" className="primary" data-testid="login-submit" disabled={busy || hoteNonResolu} style={{ width: "100%" }}>
           {busy ? t("login.enCours") : mfaMethod ? t("login.validerFacteur") : t("login.seConnecter")}
         </button>
 

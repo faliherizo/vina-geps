@@ -57,6 +57,16 @@ class OidcTest {
         assertThat(d.redirectUri()).isEqualTo("http://localhost:5173/admin/api/auth/sso/entra/callback");
         Oidc.Configuration sansApp = Oidc.configuration(Map.of(), Optional.of(new Oidc.Demo("t", "c", "s", "http://localhost:4000", Optional.empty())));
         assertThat(sansApp.redirectUri()).isEqualTo("http://localhost:4000/api/auth/sso/entra/callback");
+        assertThat(sansApp.authorizeUrl()).isEqualTo("http://localhost:4000/mock/entra/t/oauth2/v2.0/authorize");
+
+        // Déployée par sous-domaine : la page de connexion et le retour passent par l'hôte de la requête ; l'échange du
+        // code reste interne. Sans cela, le navigateur était envoyé vers http://localhost:4000 (constaté le 23 nov. 2026).
+        Oidc.Configuration publique = Oidc.configuration(Map.of(), Optional.of(new Oidc.Demo("t", "c", "s", "http://localhost:4000",
+                Optional.of("http://localhost:5173"), Optional.of("https://clincom.geps.exemple"))));
+        assertThat(publique.authorizeUrl()).isEqualTo("https://clincom.geps.exemple/mock/entra/t/oauth2/v2.0/authorize");
+        assertThat(publique.redirectUri()).isEqualTo("https://clincom.geps.exemple/api/auth/sso/entra/callback");
+        assertThat(publique.tokenUrl()).isEqualTo("http://localhost:4000/mock/entra/t/oauth2/v2.0/token");
+        assertThat(publique.authority()).isEqualTo("http://localhost:4000/mock/entra/t");
     }
 
     @Test

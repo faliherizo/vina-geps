@@ -85,4 +85,32 @@ test.describe("Déploiement — les comptes de démonstration publiés", () => {
     expect(refus.ok(), `${propre.username} ouvert sur la racine`).toBe(false);
     await racine.dispose();
   });
+
+  /**
+   * Le SSO envoie le navigateur sur l'hôte où l'on a cliqué, jamais sur l'adresse interne du serveur. Le 23 novembre
+   * 2026, « Se connecter avec Microsoft » menait à http://localhost:4000/mock/… sur la racine comme sur Clincom : aucun
+   * essai ne suivait la redirection. Lecture seule : la page du fournisseur s'ouvre, aucun compte n'est choisi.
+   */
+  test("Microsoft et SAML mènent à une page de connexion atteignable, sur l'hôte de la requête", async ({ playwright }) => {
+    const racine = await playwright.request.newContext({ baseURL: process.env.E2E_BASE_URL! });
+    const d: Deploiement = await (await racine.get("/api/auth/deploiement")).json();
+    await racine.dispose();
+    test.skip(d.resolution !== "sous_domaine", "déploiement par sélecteur : l'hôte de la requête n'est pas retenu");
+    const hotes = [d.domaineRacine!, ...comptesDemo.organismes.map((o) => `${o.sousDomaine}.${d.domaineRacine}`)];
+    const defauts: string[] = [];
+    for (const hote of hotes) {
+      const api = await playwright.request.newContext({ baseURL: `https://${hote}`, maxRedirects: 0 });
+      for (const fournisseur of ["entra", "saml"]) {
+        const statut = await (await api.get(`/api/auth/sso/${fournisseur}/status`)).json();
+        if (!statut.enabled) continue;
+        const r = await api.get(`/api/auth/sso/${fournisseur}/login`);
+        const vers = r.headers()["location"] ?? "";
+        if (r.status() !== 302 || !vers.startsWith(`https://${hote}/`)) { defauts.push(`${hote} ${fournisseur} : ${r.status()} → ${vers.slice(0, 90)}`); continue; }
+        const page = await api.get(vers);
+        if (page.status() !== 200) defauts.push(`${hote} ${fournisseur} : la page du fournisseur répond ${page.status()}`);
+      }
+      await api.dispose();
+    }
+    expect(defauts).toEqual([]);
+  });
 });

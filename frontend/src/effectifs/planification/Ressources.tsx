@@ -10,6 +10,7 @@ import { liste as listeRecue } from "../../formeRecue";
 import type { Valeur } from "../Referentiels";
 import type { Ressource } from "./types";
 import { libelleDe, useReferentiels } from "./useReferentiels";
+import { CompetencesRessource, EcheancesCompetences } from "./Competences";
 
 const API = "/api/effectifs/planification/ressources";
 
@@ -38,6 +39,7 @@ export default function Ressources() {
   const { refs } = useReferentiels(["unites", "corps_emploi", "titres_emploi", "statuts_emploi", "conventions"]);
   const [ressources, setRessources] = useState<Ressource[]>([]);
   const [fiche, setFiche] = useState<Ressource | "nouvelle" | null>(null);
+  const [competences, setCompetences] = useState<Ressource | null>(null);
   const charger = useCallback(async () => { const r = await lire<Ressource[]>(API); if (r) setRessources(r); }, [lire]);
   useEffect(() => { void charger(); }, [charger]);
 
@@ -68,6 +70,9 @@ export default function Ressources() {
               <button type="button" className="secondary" data-testid={`pla-ressource-modifier-${r.matricule}`} onClick={() => { setErreur(""); setFiche(r); }}>
                 Modifier<span className="sr-only"> {r.nom}</span>
               </button>
+              <button type="button" className="secondary" data-testid={`pla-ressource-competences-${r.matricule}`} onClick={() => setCompetences(r)}>
+                Compétences<span className="sr-only"> de {r.nom}</span>
+              </button>
             </td>
           </tr>
         )} />
@@ -77,6 +82,8 @@ export default function Ressources() {
           if (r) { setFiche(null); setSucces(`« ${r.nom} » enregistrée.`); await charger(); }
         }} />
       )}
+      {competences && <CompetencesRessource ressource={competences} onFermer={() => setCompetences(null)} />}
+      <EcheancesCompetences />
     </div>
   );
 }

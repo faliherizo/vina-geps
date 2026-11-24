@@ -32,7 +32,9 @@ public class SchemaEffectifs {
             "CREATE INDEX IF NOT EXISTS idx_eff_journal_temps ON eff_journal (tenantId, horodatage)",
             "CREATE INDEX IF NOT EXISTS idx_eff_journal_objet ON eff_journal (tenantId, objetType, objetId)",
             // Soldes des banques transmis par l'organisme (changeset 0022, AD-06b) ; heures en texte décimal exact.
-            "CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode))");
+            "CREATE TABLE IF NOT EXISTS eff_soldes_banques (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, banqueCode TEXT NOT NULL, heures TEXT NOT NULL, auJour TEXT NOT NULL, recuLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, banqueCode))",
+            // Compétences détenues et leurs échéances (changeset 0027, addenda 8, M-04).
+            "CREATE TABLE IF NOT EXISTS eff_competences (tenantId TEXT NOT NULL, ressourceId TEXT NOT NULL, code TEXT NOT NULL, obtenueLe TEXT NOT NULL, echeance TEXT, poseePar TEXT NOT NULL, poseeLe TEXT NOT NULL, PRIMARY KEY (tenantId, ressourceId, code))");
 
     public SchemaEffectifs(JdbcClient jdbc) {
         DDL.forEach(d -> jdbc.sql(d).update());

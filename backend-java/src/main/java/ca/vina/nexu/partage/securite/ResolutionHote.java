@@ -59,6 +59,17 @@ public final class ResolutionHote {
          * L'URL publique d'un établissement pour les liens sortants : {@code https://{slug}.{racine}} —
          * l'hôte des comptes globaux sans slug ; hors sous-domaine, l'adresse commune donnée.
          */
+        /**
+         * L'origine qu'un navigateur atteint pour cet hôte : {@code https://{hote}} si c'est la racine ou un sous-domaine
+         * d'un seul niveau de la racine, sinon rien. Le TLS se termine au mandataire central : l'origine est toujours en
+         * {@code https}. Un hôte hors du domaine — un en-tête forgé — ne devient jamais une adresse de redirection.
+         */
+        public java.util.Optional<String> originePublique(String hote) {
+            Genre g = genreDe(hote == null ? "" : hote, this);
+            boolean admis = g instanceof Genre.Racine || g instanceof Genre.Etablissement || g instanceof Genre.Reserve;
+            return admis ? java.util.Optional.of("https://" + hote) : java.util.Optional.empty();
+        }
+
         public String urlPublique(String slug, String commune) {
             if (!parSousDomaine()) {
                 return commune == null ? "" : commune;

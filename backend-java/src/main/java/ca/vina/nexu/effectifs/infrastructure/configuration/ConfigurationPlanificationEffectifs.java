@@ -1,6 +1,7 @@
 package ca.vina.nexu.effectifs.infrastructure.configuration;
 
 import ca.vina.nexu.effectifs.application.commandes.EvaluateurRegles;
+import ca.vina.nexu.effectifs.application.commandes.GestionnaireCompetences;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireEquipages;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePeriodes;
 import ca.vina.nexu.effectifs.application.commandes.GestionnairePlaces;
@@ -9,6 +10,7 @@ import ca.vina.nexu.effectifs.application.commandes.GestionnaireQuotas;
 import ca.vina.nexu.effectifs.application.commandes.GestionnaireRessources;
 import ca.vina.nexu.partage.personnel.FichesPersonnelPort;
 import ca.vina.nexu.effectifs.application.commandes.RepercussionPostes;
+import ca.vina.nexu.effectifs.application.requetes.LectureCompetences;
 import ca.vina.nexu.effectifs.application.requetes.LectureEquipages;
 import ca.vina.nexu.effectifs.application.requetes.LectureMilieux;
 import ca.vina.nexu.effectifs.application.requetes.LecturePeriodes;
@@ -17,7 +19,9 @@ import ca.vina.nexu.effectifs.application.requetes.LecturePostes;
 import ca.vina.nexu.effectifs.application.requetes.LectureQuotas;
 import ca.vina.nexu.effectifs.application.requetes.LectureReferentiels;
 import ca.vina.nexu.effectifs.application.requetes.LectureRessources;
+import ca.vina.nexu.effectifs.domaine.CompetencesPort;
 import ca.vina.nexu.effectifs.domaine.DepotEquipagesPort;
+import ca.vina.nexu.effectifs.domaine.DepotReferentielsPort;
 import ca.vina.nexu.effectifs.domaine.DepotPeriodesPort;
 import ca.vina.nexu.effectifs.domaine.DepotPostesPort;
 import ca.vina.nexu.effectifs.domaine.DepotQuotasPort;
@@ -105,8 +109,20 @@ public class ConfigurationPlanificationEffectifs {
     @Bean
     public GestionnairePlaces gestionnairePlacesEffectifs(DepotEquipagesPort depot, LectureEquipages equipages, LectureRessources ressources,
                                                           LecturePerimetres perimetres, GestionnaireEquipages gestion, EvaluateurRegles regles,
-                                                          JournalEffectifsPort journal) {
-        return new GestionnairePlaces(depot, equipages, ressources, perimetres, gestion, regles, journal);
+                                                          JournalEffectifsPort journal, LectureCompetences competences) {
+        return new GestionnairePlaces(depot, equipages, ressources, perimetres, gestion, regles, journal, competences);
+    }
+
+    /** Addenda 8, M-04 : les compétences exigées au référentiel, confrontées à celles que la personne détient. */
+    @Bean
+    public LectureCompetences lectureCompetencesEffectifs(CompetencesPort depot, DepotReferentielsPort referentiels, LectureRessources ressources) {
+        return new LectureCompetences(depot, referentiels, ressources);
+    }
+
+    @Bean
+    public GestionnaireCompetences gestionnaireCompetencesEffectifs(CompetencesPort depot, LectureRessources ressources, LectureReferentiels referentiels,
+                                                                    LecturePerimetres perimetres, JournalEffectifsPort journal) {
+        return new GestionnaireCompetences(depot, new GestionnaireCompetences.Lectures(ressources, referentiels, perimetres), journal);
     }
 
     @Bean
