@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHauteurBarre } from "./hauteurBarre";
 import { objet } from "./formeRecue";
+import { lireModules } from "./modulesDeLOrganisme";
 import { Icone } from "./composants";
 import Dashboard from "./Dashboard";
 import ConstructeurRapports from "./ConstructeurRapports";
@@ -88,6 +89,9 @@ const PAGE_DROIT_SERVEUR: Partial<Record<Page, "peutApprouver">> = {
 
 /** Le nom du produit : VINA Gestion des Personnels de la Santé. L'organisme client se nomme à côté. */
 export const MARQUE = "VINA GePS";
+
+/** Après une panne qui a duré au-delà des nouveaux essais, la relecture des modules : le menu se reconstitue seul. */
+const RELECTURE_APRES_PANNE_MS = 10_000;
 
 const PAGES: { key: Page; i18nKey: string; icon: string; roles: Role[]; espacePersonnel?: true }[] = [
   // Les pages d'Urgences-santé sont déclarées par `urgencessante/menu.ts` : ajouter un écran
@@ -216,32 +220,26 @@ function AppShell() {
    * personne n'y tombe par un signet. La frontière de sécurité reste le module.
    */
   const [vuesMasquees, setVuesMasquees] = useState<Set<string>>(new Set());
+  const refreshModulesRef = useRef<() => Promise<void>>(async () => {});
   const refreshModules = useCallback(async () => {
     if (!user) { setEnabledModules(null); setVuesMasquees(new Set()); setModulesCharges(false); return; }
-    try {
-      // `no-store` : on ne veut jamais une copie mise en cache — une désactivation par le
-      // superadmin doit se refléter dès le prochain chargement/retour d'onglet.
-      const r = await apiFetch("/api/saas/my-modules", { cache: "no-store" });
-      const j = r.ok ? await r.json() : null;
-      /*
-       * **Sans établissement, aucun menu de module.**
-       *
-       * L'ancienne règle lisait `planCode` : un compte global le recevait `null`, et l'on en
-       * concluait « aucun filtrage », c'est-à-dire **tous** les menus — y compris Santé Québec,
-       * dont les pages s'ouvraient alors sans locataire et échouaient à chaque appel. Un
-       * établissement sans plan tarifaire tombait dans le même trou.
-       *
-       * Le serveur dit maintenant quel établissement il a retenu. Aucun ⇒ ensemble vide ⇒ seuls
-       * les menus du cœur (tableau de bord, mon compte, aide, administration, superadmin), qui
-       * ne sont rattachés à aucun module, restent visibles.
-       */
-      setEnabledModules(j && Array.isArray(j.modules) ? new Set<string>(j.modules) : new Set<string>());
-      // Le masquage suit les modules : même appel, même fraîcheur. Un superadmin qui masque une
-      // entrée doit la voir disparaître au prochain chargement, pas le lendemain.
-      setVuesMasquees(new Set<string>(Array.isArray(j?.vuesMasquees) ? j.vuesMasquees : []));
-    } catch { setEnabledModules(null); setVuesMasquees(new Set()); }
+    /*
+     * **Sans établissement, aucun menu de module.** Le serveur dit quel établissement il a retenu ; aucun ⇒ ensemble
+     * vide ⇒ seuls les menus du cœur (tableau de bord, mon compte, aide, administration, superadmin) restent. Le
+     * masquage suit les modules : même appel, même fraîcheur. Une panne passagère, elle, ne vide rien
+     * (`lireModules`) : on garde ce qu'on savait, et une lecture de plus est prévue.
+     */
+    const lus = await lireModules(apiFetch);
+    if (lus) {
+      setEnabledModules(new Set<string>(lus.modules));
+      setVuesMasquees(new Set<string>(lus.vuesMasquees));
+    } else {
+      setEnabledModules((avant) => avant ?? new Set<string>());
+      window.setTimeout(() => { void refreshModulesRef.current(); }, RELECTURE_APRES_PANNE_MS);
+    }
     setModulesCharges(true);
   }, [user, apiFetch]);
+  refreshModulesRef.current = refreshModules;
   useEffect(() => { refreshModules(); }, [refreshModules]);
   // Rafraîchit les modules quand l'onglet reprend le focus (le superadmin a pu en désactiver
   // dans un autre onglet/poste) — le menu se met alors à jour sans reconnexion.

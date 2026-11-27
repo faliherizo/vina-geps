@@ -9,7 +9,7 @@
  * MEDIUM et plus, un certificat expiré, non approuvé ou qui ne nomme pas l'hôte, un certificat qui expire dans moins
  * de 14 jours, l'absence de HSTS. Code de sortie 1 au premier refus ; le bilan Markdown nomme chaque constat.
  */
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 
 const SEVERITES_REFUSEES = new Set(["MEDIUM", "HIGH", "CRITICAL"]);
@@ -53,11 +53,13 @@ export function bilan(rapports) {
   return { conforme, markdown: lignes.join("\n") + "\n" };
 }
 
-function principal(args) {
+export function principal(args) {
   const i = args.indexOf("--sortie");
   const sortie = i >= 0 ? args[i + 1] : null;
-  const fichiers = args.filter((a, k) => a !== "--sortie" && k !== i + 1);
+  const fichiers = args.filter((a, k) => a !== "--sortie" && !(i >= 0 && k === i + 1));
   if (fichiers.length === 0) throw new Error("aucun rapport testssl à juger");
+  const absents = fichiers.filter((f) => !existsSync(f));
+  if (absents.length) throw new Error(`rapport introuvable : ${absents.join(", ")} — testssl a-t-il pu écrire ?`);
   const { conforme, markdown } = bilan(fichiers.map((f) => {
     const brut = JSON.parse(readFileSync(f, "utf8"));
     return { nom: basename(f, ".json"), rapport: Array.isArray(brut) ? brut : brut.scanResult ?? [] };
