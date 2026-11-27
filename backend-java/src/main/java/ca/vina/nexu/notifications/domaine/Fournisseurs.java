@@ -1,5 +1,6 @@
 package ca.vina.nexu.notifications.domaine;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -18,6 +19,25 @@ public final class Fournisseurs {
     }
 
     public static final List<String> ADMIS = List.of("twilio", "telnyx", "http");
+
+    /** Les adresses de fournisseur qu'un déploiement peut poser : chacune part en HTTPS (E-TN-8). */
+    private static final List<String> ADRESSES = List.of("SMS_URL", "APPEL_URL", "TELNYX_URL", "TWILIO_URL");
+    private static final String SCHEMA_CHIFFRE = "https";
+    private static final String SCHEMA_LOCAL = "http";
+    /** Un simulateur sur le poste ou dans l'essai : le seul cas où le texte clair ne quitte pas la machine. */
+    private enum HoteLocal {
+        NOM("localhost"), BOUCLE("127.0.0.1");
+
+        private final String hote;
+
+        HoteLocal(String hote) {
+            this.hote = hote;
+        }
+
+        static boolean est(String hote) {
+            return hote != null && java.util.Arrays.stream(values()).anyMatch(h -> h.hote.equals(hote));
+        }
+    }
 
     public record Choix(String fournisseur, List<String> manquantes) {
     }
@@ -65,6 +85,30 @@ public final class Fournisseurs {
         if (choix != null && !choix.manquantes().isEmpty()) {
             throw new IllegalStateException(cle + "=" + choix.fournisseur() + " : variables manquantes " + String.join(", ", choix.manquantes()));
         }
+        if (choix != null) {
+            ADRESSES.forEach(v -> exigerChiffrement(v, valeur(env, v)));
+        }
         return choix;
+    }
+
+    /**
+     * Un numéro de téléphone et le texte d'une alerte ne partent jamais en clair : une adresse de fournisseur hors HTTPS
+     * arrête le démarrage, qui la nomme. Seul un hôte local admet {@code http}.
+     */
+    static void exigerChiffrement(String variable, String adresse) {
+        if (adresse.isBlank()) {
+            return;
+        }
+        URI u;
+        try {
+            u = URI.create(adresse.trim());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException(variable + " illisible : « " + adresse + " »", e);
+        }
+        String schema = u.getScheme() == null ? "" : u.getScheme().toLowerCase(Locale.ROOT);
+        boolean local = HoteLocal.est(u.getHost());
+        if (!schema.equals(SCHEMA_CHIFFRE) && !(local && schema.equals(SCHEMA_LOCAL))) {
+            throw new IllegalStateException(variable + " doit être en https (E-TN-8) : « " + adresse + " »");
+        }
     }
 }

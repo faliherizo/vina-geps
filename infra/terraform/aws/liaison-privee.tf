@@ -155,12 +155,12 @@ resource "aws_vpn_connection_route" "organisme" {
   vpn_connection_id      = aws_vpn_connection.organisme[0].id
 }
 
-# Seule la table privée apprend les routes de l'organisme : ce sont les tâches, dans les
+# Seules les tables privées (une par zone) apprennent les routes de l'organisme : ce sont les tâches, dans les
 # sous-réseaux privés, qui lui parlent. La table publique (répartiteur, NAT) n'a rien à y faire.
 resource "aws_vpn_gateway_route_propagation" "privee" {
-  count          = var.vpn_site_a_site ? 1 : 0
+  count          = var.vpn_site_a_site ? 3 : 0
   vpn_gateway_id = aws_vpn_gateway.organisme[0].id
-  route_table_id = aws_route_table.privee.id
+  route_table_id = aws_route_table.privee[count.index].id
 }
 
 # La redondance des deux tunnels n'a de valeur que si sa perte se voit : un tunnel tombé laisse la

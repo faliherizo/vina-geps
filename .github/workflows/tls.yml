@@ -1,0 +1,62 @@
+# Balayage TLS d'un environnement en service (AO 26-015-DO, E-TN-8) : testssl.sh, version épinglée, contre l'hôte
+# commun et chaque sous-domaine d'organisme publié ; scripts/tls/juger-tls.mjs refuse TLS < 1.2, une faille MEDIUM et
+# plus, un certificat expiré, non approuvé ou à moins de 14 jours de son échéance, l'absence de HSTS.
+# Lancé après chaque déploiement de la démonstration, chaque lundi, ou à la main. Le bilan est joint à l'exécution.
+name: Balayage TLS
+
+on:
+  workflow_dispatch:
+    inputs:
+      environnement:
+        description: "Environnement GitHub visé"
+        type: string
+        default: geps-demo
+  workflow_call:
+    inputs:
+      environnement: { type: string, required: true }
+  schedule:
+    - cron: "17 9 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  tls:
+    name: TLS — ${{ inputs.environnement || 'geps-demo' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: ${{ inputs.environnement || 'geps-demo' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - name: Les hôtes en service
+        id: hotes
+        env:
+          APP_URL: ${{ vars.APP_URL }}
+        run: |
+          [ -n "$APP_URL" ] || { echo "::error::variable APP_URL absente"; exit 2; }
+          node -e '
+            const app = new URL(process.env.APP_URL);
+            const comptes = require("./e2e/donnees/geps/comptes-demo.json");
+            fetch(`${app.origin}/api/auth/deploiement`).then((r) => r.json()).then((d) => {
+              const hotes = new Set([app.host]);
+              if (d.resolution === "sous_domaine" && d.domaineRacine) for (const o of comptes.organismes) hotes.add(`${o.sousDomaine}.${d.domaineRacine}`);
+              console.log(`liste=${[...hotes].join(" ")}`);
+            });' >> "$GITHUB_OUTPUT"
+      - name: testssl.sh
+        run: |
+          mkdir -p rapports-tls
+          for h in ${{ steps.hotes.outputs.liste }}; do
+            docker run --rm -v "$PWD/rapports-tls:/out" drwetter/testssl.sh:3.2 --quiet --warnings off --color 0 \
+              --protocols --server-defaults --vulnerable --fs --headers --jsonfile "/out/$h.json" "https://$h" || true
+          done
+      - name: Verdict
+        run: |
+          node --test scripts/tls/juger-tls.test.mjs
+          node scripts/tls/juger-tls.mjs rapports-tls/*.json --sortie rapports-tls/bilan.md
+      - if: always()
+        run: cat rapports-tls/bilan.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: rapports-tls, path: rapports-tls, retention-days: 90 }

@@ -1,5 +1,6 @@
 environnement              = "production"
-taches_application         = 2              # la seconde permet un déploiement sans coupure
+taches_application         = 1              # SQLite : un seul écrivain ; la tâche est remplacée d'office (E-TN-9)
+nat_par_zone               = true           # la sortie survit à la perte d'une zone
 processeur_tache           = 1024           # 1 vCPU
 memoire_tache              = 2048           # 2 Gio
 classe_base                = "db.t4g.large" # 2 vCPU, 8 Gio — 0,141 USD/h relevé le 27 sept. 2026

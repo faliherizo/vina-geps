@@ -61,37 +61,43 @@ resource "aws_route_table_association" "publics" {
 }
 
 /**
- * Sortie vers l'Internet pour les tâches : **un seul** NAT, et non un par zone.
- *
- * Trois NAT coûteraient trois fois le prix pour protéger un trafic sortant — appels à l'Espace API
- * de la GRICS, à l'opérateur de textos — que la reprise à 48 heures autorise à interrompre. C'est
- * un arbitrage assumé, pas un oubli.
+ * Sortie vers l'Internet pour les tâches : une passerelle NAT par zone en production (`nat_par_zone`), une seule
+ * ailleurs. Avec une seule, la perte de sa zone coupait les textos, les appels et le courriel même quand la tâche
+ * repartait dans une autre zone (E-TN-9) ; en essai, l'économie l'emporte.
  */
+locals {
+  nats = var.nat_par_zone ? 3 : 1
+}
+
 resource "aws_eip" "nat" {
+  count  = local.nats
   domain = "vpc"
-  tags   = { Name = "${local.prefixe}-nat" }
+  tags   = { Name = "${local.prefixe}-nat-${count.index}" }
 }
 
 resource "aws_nat_gateway" "sortie" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.publics[0].id
+  count         = local.nats
+  allocation_id = aws_eip.nat[count.index].id
+  subnet_id     = aws_subnet.publics[count.index].id
   depends_on    = [aws_internet_gateway.entree]
-  tags          = { Name = local.prefixe }
+  tags          = { Name = "${local.prefixe}-${count.index}" }
 }
 
+# Une table par zone privée : chacune sort par la passerelle de sa zone (ou par l'unique passerelle).
 resource "aws_route_table" "privee" {
+  count  = 3
   vpc_id = aws_vpc.principal.id
   route {
     cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.sortie.id
+    nat_gateway_id = aws_nat_gateway.sortie[min(count.index, local.nats - 1)].id
   }
-  tags = { Name = "${local.prefixe}-privee" }
+  tags = { Name = "${local.prefixe}-privee-${count.index}" }
 }
 
 resource "aws_route_table_association" "prives" {
   count          = 3
   subnet_id      = aws_subnet.prives[count.index].id
-  route_table_id = aws_route_table.privee.id
+  route_table_id = aws_route_table.privee[count.index].id
 }
 
 # ── Groupes de sécurité : chaque flux est nommé ────────────────────────────
@@ -110,7 +116,7 @@ resource "aws_security_group" "repartiteur" {
   }
 
   egress {
-    description     = "Vers les taches applicatives (interface et relais de l'API)"
+    description     = "Vers les taches applicatives (interface et relais API)"
     from_port       = local.port_web
     to_port         = local.port_web
     protocol        = "tcp"

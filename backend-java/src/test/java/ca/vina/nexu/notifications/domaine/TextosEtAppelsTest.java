@@ -89,6 +89,18 @@ class TextosEtAppelsTest {
         assertThatThrownBy(() -> Fournisseurs.lireChoix(Map.of("APPEL_FOURNISSEUR", "telnyx"), "APPEL_FOURNISSEUR")).hasMessage("APPEL_FOURNISSEUR=telnyx : l'appel sortant n'est pris en charge que par twilio ou http");
         assertThatThrownBy(() -> Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "telnyx"), "SMS_FOURNISSEUR")).hasMessage("SMS_FOURNISSEUR=telnyx : variables manquantes TELNYX_API_KEY, TELNYX_FROM");
         assertThat(Fournisseurs.exigerChoix(Map.of(), "SMS_FOURNISSEUR")).isNull();
+        // E-TN-8 : une adresse de fournisseur part en https ; le http n'est admis que vers un simulateur local.
+        assertThatThrownBy(() -> Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "http://sms.exemple.qc", "SMS_JETON", "j"), "SMS_FOURNISSEUR"))
+                .hasMessage("SMS_URL doit être en https (E-TN-8) : « http://sms.exemple.qc »");
+        assertThatThrownBy(() -> Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "twilio", "TWILIO_ACCOUNT_SID", "a", "TWILIO_AUTH_TOKEN", "b", "TWILIO_FROM", "c", "TWILIO_URL", "ftp://twilio"), "SMS_FOURNISSEUR"))
+                .hasMessageContaining("TWILIO_URL doit être en https");
+        assertThatThrownBy(() -> Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "https://a b", "SMS_JETON", "j"), "SMS_FOURNISSEUR"))
+                .hasMessageContaining("SMS_URL illisible");
+        assertThat(Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "http://127.0.0.1:9000/sms", "SMS_JETON", "j"), "SMS_FOURNISSEUR")).isNotNull();
+        assertThat(Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "http://localhost/sms", "SMS_JETON", "j"), "SMS_FOURNISSEUR")).isNotNull();
+        assertThat(Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "HTTPS://sms.exemple.qc", "SMS_JETON", "j", "APPEL_URL", " "), "SMS_FOURNISSEUR")).isNotNull();
+        assertThatThrownBy(() -> Fournisseurs.exigerChoix(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "sms.exemple.qc", "SMS_JETON", "j"), "SMS_FOURNISSEUR"))
+                .hasMessageContaining("doit être en https");
         assertThat(Fournisseurs.lireChoix(Map.of("APPEL_FOURNISSEUR", "", "SMS_FOURNISSEUR", ""), "APPEL_FOURNISSEUR")).isNull();
     }
 

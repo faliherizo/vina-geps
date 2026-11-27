@@ -128,26 +128,18 @@ resource "aws_ecs_task_definition" "application" {
   }
 
   container_definitions = jsonencode([
-    # 1. Le schéma : les migrations versionnées du Node (backend/src/db/migrations), puis arrêt.
-    merge(local.conteneur_commun, {
-      name             = "migrations"
-      image            = "${var.registre_images}/migrations:${var.version_images}"
-      essential        = false
-      command          = ["node", "dist/db/migrateCli.js", "migrate"]
-      environment      = [{ name = "NODE_ENV", value = "production" }, { name = "PAYROLL_DB", value = local.fichier_base }]
-      logConfiguration = merge(local.journal, { options = merge(local.journal.options, { "awslogs-stream-prefix" = "migrations" }) })
-    }),
-
-    # 2. L'API : le Java, une fois le schéma à jour.
+    # 1. L'API : le Java, qui bâtit et met à jour son schéma au démarrage (Liquibase). Le conteneur de migrations du
+    #    Node a disparu avec le Node (séparation du 13 novembre 2026) : il ne restait qu'une image introuvable.
     merge(local.conteneur_commun, {
       name         = "api"
       image        = "${var.registre_images}/backend:${var.version_images}"
       essential    = true
-      dependsOn    = [{ containerName = "migrations", condition = "SUCCESS" }]
       portMappings = [{ containerPort = local.port_api, protocol = "tcp" }]
       environment = [
         { name = "PORT", value = tostring(local.port_api) },
-        { name = "DB_FICHIER", value = local.fichier_base },
+        # La base sur le volume EFS : le Java lit DB_URL. DB_FICHIER, qu'il ne lit pas, laissait la base dans le
+        # système de fichiers éphémère du conteneur — perdue au premier remplacement de la tâche.
+        { name = "DB_URL", value = "jdbc:sqlite:${local.fichier_base}" },
         { name = "NEXU_DONNEES", value = "${local.racine_donnees}/java" },
         { name = "SAUVEGARDES_DOSSIER", value = "${local.racine_donnees}/sauvegardes" },
         # Les pièces jointes de la messagerie : dans la base, ou en fichiers sur ce même volume EFS.
@@ -176,7 +168,7 @@ resource "aws_ecs_task_definition" "application" {
       logConfiguration = merge(local.journal, { options = merge(local.journal.options, { "awslogs-stream-prefix" = "api" }) })
     }),
 
-    # 3. L'interface : nginx sert les pages et relaie /api au conteneur voisin (même tâche, même hôte).
+    # 2. L'interface : nginx sert les pages et relaie /api au conteneur voisin (même tâche, même hôte).
     merge(local.conteneur_commun, {
       name         = "web"
       image        = "${var.registre_images}/frontend:${var.version_images}"
@@ -203,7 +195,7 @@ resource "aws_ecs_task_definition" "application" {
 
 locals {
   racine_donnees = "/donnees"
-  fichier_base   = "/donnees/payroll.db"
+  fichier_base   = "/donnees/urgences-sante.db"
   port_api       = 4000
   port_web       = 8080 # nginx sans privilège (IN-01)
 
@@ -215,7 +207,7 @@ locals {
     }
   }
 
-  # Ce que les trois conteneurs partagent : le volume, et les identifiants du registre privé s'il y en a.
+  # Ce que les deux conteneurs partagent : le volume, et les identifiants du registre privé s'il y en a.
   conteneur_commun = merge(
     { mountPoints = [{ sourceVolume = "donnees", containerPath = "/donnees", readOnly = false }] },
     var.secret_registre_arn == "" ? {} : { repositoryCredentials = { credentialsParameter = var.secret_registre_arn } },
