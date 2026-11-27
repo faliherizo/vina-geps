@@ -34,6 +34,18 @@ test.describe("Menu — une notion, une entrée", () => {
     await expect(page.getByTestId("nav-usmessages")).toHaveCount(0);
   });
 
+  test("une limitation passagère de my-modules (503) ne vide pas le menu : la lecture est réessayée", async ({ page, mock }) => {
+    let appels = 0;
+    await mock({ "GET /api/saas/my-modules": () => (++appels === 1
+      ? { status: 503, body: { errors: ["limitation"] } }
+      : { modules: DEFAULT_MODULES, planCode: "enterprise" }) });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.goto("/");
+    await expect(page.getByTestId("nav-concept-usquarts")).toHaveCount(1, { timeout: 15_000 });
+    await expect(page.getByTestId("nav-usmessages")).toHaveCount(1);
+    expect(appels).toBeGreaterThanOrEqual(2);
+  });
+
   test("avant la réponse des modules, aucun menu de module ne paraît — pas même le temps d'un éclair", async ({ page, mock }) => {
     const souscrits = DEFAULT_MODULES.filter((m) => m !== "paie");
     await mock(MODULES);

@@ -1,7 +1,10 @@
 /** Le verdict TLS : ce qui est refusé l'est en le nommant ; un rapport sain passe. `node --test scripts/tls/`. */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { bilan, constats } from "./juger-tls.mjs";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { bilan, constats, principal } from "./juger-tls.mjs";
 
 const dans = (jours) => new Date(Date.now() + jours * 86_400_000).toISOString().slice(0, 16).replace("T", " ");
 const sain = () => [
@@ -36,4 +39,13 @@ test("sans TLS moderne, chaîne rompue : refusé ; un rapport vide n'est jamais 
   const vide = bilan([{ nom: "muet", rapport: [] }]);
   assert.equal(vide.conforme, false);
   assert.match(vide.markdown, /rapport vide/);
+});
+
+test("la ligne de commande juge chaque rapport, avec ou sans --sortie, et refuse un rapport introuvable", () => {
+  const d = mkdtempSync(join(tmpdir(), "tls-"));
+  const f = join(d, "geps.json");
+  writeFileSync(f, JSON.stringify(sain()));
+  assert.equal(principal([f]), 0);
+  assert.equal(principal([f, "--sortie", join(d, "bilan.md")]), 0);
+  assert.throws(() => principal([join(d, "*.json")]), /rapport introuvable/);
 });

@@ -46,7 +46,9 @@ jobs:
             });' >> "$GITHUB_OUTPUT"
       - name: testssl.sh
         run: |
-          mkdir -p rapports-tls
+          # L'image testssl tourne sous son propre utilisateur : sans ces droits, elle n'écrivait aucun rapport
+          # (« Permission denied »), et le verdict recevait le motif *.json tel quel.
+          mkdir -p rapports-tls && chmod 0777 rapports-tls
           for h in ${{ steps.hotes.outputs.liste }}; do
             docker run --rm -v "$PWD/rapports-tls:/out" drwetter/testssl.sh:3.2 --quiet --warnings off --color 0 \
               --protocols --server-defaults --vulnerable --fs --headers --jsonfile "/out/$h.json" "https://$h" || true
@@ -54,7 +56,10 @@ jobs:
       - name: Verdict
         run: |
           node --test scripts/tls/juger-tls.test.mjs
-          node scripts/tls/juger-tls.mjs rapports-tls/*.json --sortie rapports-tls/bilan.md
+          shopt -s nullglob
+          rapports=(rapports-tls/*.json)
+          [ ${#rapports[@]} -gt 0 ] || { echo "::error::testssl n'a écrit aucun rapport"; exit 1; }
+          node scripts/tls/juger-tls.mjs "${rapports[@]}" --sortie rapports-tls/bilan.md
       - if: always()
         run: cat rapports-tls/bilan.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
       - uses: actions/upload-artifact@v4
