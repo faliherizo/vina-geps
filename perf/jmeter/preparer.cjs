@@ -71,8 +71,21 @@ async function semer(appel, tenant, n) {
  * employé transmis **par l'API elle-même**, avec le jeton client_credentials — la préparation éprouve l'écriture machine
  * avant que la campagne ne la mesure. Le secret n'est écrit que dans le CSV local de la campagne (non versionné).
  */
+/**
+ * **Un seul client d'API par campagne.** Le secret n'a qu'un fichier (`secret-client-<env>.txt`) : un client par jeu
+ * d'identifiants réécrivait ce fichier à chaque jeu, et seul le dernier client gardait un secret valide — JMeter, qui
+ * tourne sur les jeux du CSV, recevait 401 sur les autres (campagne de l'accord du 27 novembre 2026).
+ */
+const clientsDeCampagne = new Map();
+async function clientDeCampagne(appel, tenant) {
+  if (!clientsDeCampagne.has(tenant)) {
+    clientsDeCampagne.set(tenant, await appel("POST", "/api/integrations/api-clients", { name: "Charge API", scopes: ["read", "write"] }, tenant));
+  }
+  return clientsDeCampagne.get(tenant);
+}
+
 async function semerApiEchanges(appel, tenant, effectifs, n) {
-  const client = await appel("POST", "/api/integrations/api-clients", { name: `Charge API ${n}`, scopes: ["read", "write"] }, tenant);
+  const client = await clientDeCampagne(appel, tenant);
   const jeton = await jetonMachine(appel.base, client.clientId, client.clientSecret);
   const matricule = `API${Date.now().toString(36).toUpperCase().slice(-5)}${n}`;
   const r = await fetch(`${appel.base}/api/echanges/v1/employes/${matricule}`, { method: "PUT",
@@ -229,7 +242,10 @@ async function semerEffectifs(appel, tenant, n) {
   const ouverts = await appel("GET", "/api/saas/my-modules", null, tenant).catch(() => null);
   if (ouverts && !(ouverts.modules ?? []).includes("effectifs_planification")) {
     const cible = tenant || ouverts.tenantId;
-    const voulus = [...new Set([...(ouverts.modules ?? []), ...MODULES])];
+    // Pour un compte système, `my-modules` rend une liste vide : remplacer par MODULES seuls effaçait les modules que
+    // la campagne venait d'ouvrir (dont `integrations` : la création du client de l'API d'échange répondait 403, et la
+    // préparation s'arrêtait sans écrire ses identifiants — campagne de l'accord du 27 novembre 2026).
+    const voulus = [...new Set([...(ouverts.modules ?? []), ...MODULES_AVIS, ...MODULES])];
     await appel("PUT", `/api/saas/tenants/${cible}/modules`, { modules: voulus }, tenant).catch(() => null);
   }
   const ref = (type, corps) => appel("POST", `/api/effectifs/referentiels/${type}`,

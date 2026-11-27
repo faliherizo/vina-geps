@@ -37,7 +37,7 @@ demarrer_java
 node "$ICI/preparer.cjs" --env local --lignes 3 | tee -a "$JOURNAL"
 
 echo "▶ $(date +%H:%M) contexte typique" | tee -a "$JOURNAL"
-"$ICI/lancer.sh" local operations -Jduree_operation="$DUREE" 2>&1 | grep -E "▶|summary =|✅|❌|rapports :" | tee -a "$JOURNAL" || true
+"$ICI/lancer.sh" local operations -Jduree_operation="$DUREE" -JclientSecret="$(cat "$ICI/donnees/secret-client-local.txt")" 2>&1 | grep -E "▶|summary =|✅|❌|rapports :" | tee -a "$JOURNAL" || true
 TYPIQUE="$(ls -td "$ICI"/rapports/local/*/ | head -1)"
 
 # Base neuve avant le profil volumineux : les écritures du contexte typique (12 000 saisies, 12 000 demandes
@@ -50,7 +50,7 @@ node "$ICI/preparer.cjs" --env local --profil volumineux | tee -a "$JOURNAL"
 node "$ICI/preparer.cjs" --env local --lignes 3 | tee -a "$JOURNAL"
 
 echo "▶ $(date +%H:%M) contexte volumineux" | tee -a "$JOURNAL"
-"$ICI/lancer.sh" local operations -Jduree_operation="$DUREE" 2>&1 | grep -E "▶|summary =|✅|❌|rapports :" | tee -a "$JOURNAL" || true
+"$ICI/lancer.sh" local operations -Jduree_operation="$DUREE" -JclientSecret="$(cat "$ICI/donnees/secret-client-local.txt")" 2>&1 | grep -E "▶|summary =|✅|❌|rapports :" | tee -a "$JOURNAL" || true
 VOLUMINEUX="$(ls -td "$ICI"/rapports/local/*/ | head -1)"
 
 echo "▶ $(date +%H:%M) documents" | tee -a "$JOURNAL"

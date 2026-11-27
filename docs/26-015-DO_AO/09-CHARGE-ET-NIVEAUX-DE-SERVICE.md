@@ -168,6 +168,43 @@ qu'on a mesuré un pointage.
 préparée, elle renvoie les feuilles existantes. Le chemin coûteux — bâtir une feuille par ressource
 depuis l'horaire et les pointages — reste à mesurer sur le contexte volumineux.
 
+## 9.6 bis Les mesures du 27 novembre 2026 — contre le serveur Java
+
+Les mesures du 1er novembre visaient le Node. Celles-ci visent le **Java**, le seul serveur du produit depuis la
+séparation, sur une base neuve que Liquibase bâtit (`perf/jmeter/backend-java-local.sh`).
+
+### La pointe des pointages, fidèle
+
+`perf/jmeter/pointe-pointages.cjs` sème **500 personnes**, chacune avec son compte, sa ressource et **sa** place sur un
+quart en cours, les connecte avant la mesure, puis :
+
+| Vague | N | Codes | p50 | p95 | p99 | max | E-TN-17 (p95 ≤ 2 s) |
+|---|---:|---|---:|---:|---:|---:|---|
+| 500 entrées réparties sur 60 s (la pointe de l'accord : 500 paramédics au changement de garde) | 500 | 201 × 500 | 8 ms | **14 ms** | 28 ms | 64 ms | ✅ |
+| 500 sorties, 50 simultanées (au-delà de la pointe) | 500 | 201 × 500 | 229 ms | **309 ms** | 343 ms | 404 ms | ✅ |
+
+Chaque pointage est **accepté** (201) : c'est l'écriture et l'évaluation des règles du quart qui sont mesurées, et non
+plus le refus de la garde (§ 9.6). Rapport : `perf/jmeter/rapports/local/<horodatage>/pointe-pointages/RESULTATS.md`.
+
+### Les quatorze opérations de l'accord
+
+`perf/jmeter/campagne-accord.sh` (1 minute par opération, profils typique et volumineux) : **28 plans sur 28 tiennent
+leurs objectifs de latence et d'erreurs**, écritures comprises (préparer les feuilles de temps, transmettre des soldes
+par l'API d'échange, pointer). Document : [docs/SLA/ACCORD-NIVEAU-SERVICE-PERFORMANCE.md](../SLA/ACCORD-NIVEAU-SERVICE-PERFORMANCE.md)
+(.docx, .pdf). Les seules cellules ❌ du document sont la **durée** : 60 s au lieu des 600 s de référence — une
+répétition, pas la mesure de référence (`PERF_DUREE=600`).
+
+Deux défauts de la campagne elle-même ont été corrigés avant cette mesure : la préparation remplaçait les modules de
+l'organisme et effaçait `integrations` (le client de l'API d'échange répondait 403, la préparation s'arrêtait), et
+chaque jeu d'identifiants créait son propre client alors que le secret n'a qu'un fichier — seul le dernier client était
+valide, et JMeter recevait 401 sur les autres. Un seul client par campagne, désormais.
+
+### Ce que ces mesures ne disent pas
+
+La charge contractuelle complète (1 100 usagers simultanés) n'a pas été rejouée : un générateur et un serveur sur la
+même machine de développement partagée ne la représentent pas (§ 9.7). La pointe des pointages, elle, est la
+transaction qui dimensionne, et elle tient avec une marge de deux ordres de grandeur.
+
 ## 9.7 Pourquoi ces temps ne sont pas une référence — et ce qu'ils permettent tout de même
 
 La machine portait une **charge moyenne de 14,9 pour 12 cœurs** au moment de la campagne (une
