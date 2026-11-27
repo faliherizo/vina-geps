@@ -1,0 +1,38 @@
+# Essai de panne et de reprise automatique (AO 26-015-DO, E-TN-9) : tue le serveur Java de la démonstration et mesure
+# la durée de la coupure jusqu'au retour automatique, rapportée au budget de 99,7 % (addenda 6). Coupure : ~1 minute.
+# Lancé à la main seulement. Plan et registre : docs/securite/PLAN-CONTINUITE-REPRISE.md.
+name: Essai de panne et de reprise automatique
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deployer-geps
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  exercice:
+    name: Panne — geps-demo
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: geps-demo
+    steps:
+      - name: Clé SSH du serveur
+        env:
+          CLE: ${{ secrets.DEPLOY_SSH_KEY }}
+          HOTES: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$CLE" > ~/.ssh/geps && chmod 600 ~/.ssh/geps
+          printf '%s\n' "$HOTES" > ~/.ssh/known_hosts
+          printf 'Host geps\n  HostName %s\n  User %s\n  IdentityFile ~/.ssh/geps\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n  ServerAliveInterval 30\n' \
+            "${{ secrets.DEPLOY_HOST }}" "${{ secrets.DEPLOY_USER }}" > ~/.ssh/config
+      - name: Exercice
+        run: |
+          set -o pipefail
+          ssh geps "cd ~/projets/vina-geps && deploy/geps/essai-bascule.sh" | tee rapport.md
+      - if: always()
+        run: cat rapport.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true

@@ -79,7 +79,19 @@ variable "haute_disponibilite" {
 
 variable "taches_application" {
   type        = number
-  description = "Nombre de tâches applicatives. Deux en production : une suffit à servir la charge, la seconde permet un déploiement sans coupure."
+  description = "Nombre de tâches applicatives. Une seule : la base SQLite n'admet qu'un écrivain. La disponibilité tient au remplacement automatique de la tâche (E-TN-9, docs/securite/PLAN-CONTINUITE-REPRISE.md)."
+
+  validation {
+    # Deux tâches ouvertes sur le même fichier SQLite du volume corrompraient la base : la production en demandait deux.
+    condition     = var.taches_application == 1
+    error_message = "La base SQLite n'admet qu'un écrivain : une seule tâche applicative tant que l'application n'est pas portée sur PostgreSQL."
+  }
+}
+
+variable "nat_par_zone" {
+  type        = bool
+  default     = false
+  description = "Une passerelle NAT dans chacune des trois zones (E-TN-9) : la sortie vers l'Internet (textos, appels, courriel, annuaires) survit à la perte d'une zone. Environ 3 × 45 USD par mois au lieu d'un."
 }
 
 variable "processeur_tache" {
@@ -142,7 +154,7 @@ variable "hotes_supplementaires" {
 
 variable "registre_images" {
   type        = string
-  description = "Registre et préfixe des trois images publiées par la CI (backend, migrations, frontend), p. ex. ghcr.io/organisation/depot."
+  description = "Registre et préfixe des deux images publiées par la CI (backend, frontend), p. ex. ghcr.io/organisation/depot."
 }
 
 variable "version_images" {

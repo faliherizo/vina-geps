@@ -14,13 +14,18 @@ import java.util.Properties;
 
 /**
  * Le courrier par SMTP ({@code SMTP_HOST}, {@code SMTP_PORT} 587 à défaut, {@code SMTP_SECURE=1}
- * pour SMTPS, {@code SMTP_USER}/{@code SMTP_PASS}, {@code MAIL_FROM}). Un refus du serveur ne
+ * pour SMTPS, {@code SMTP_USER}/{@code SMTP_PASS}, {@code MAIL_FROM}). Le chiffrement est
+ * <strong>exigé</strong> (E-TN-8) : sur 587, STARTTLS obligatoire — un serveur qui ne l'offre pas
+ * est refusé plutôt que de recevoir le courriel en clair — et le certificat doit nommer l'hôte. Un refus du serveur ne
  * lève jamais : il se journalise et le geste métier continue — la remise des accès l'affiche à
  * l'écran, l'avis de soutien reste dans la file.
  */
 public class CourrierSmtp implements Courrier {
 
     private static final Logger JOURNAL = LoggerFactory.getLogger(CourrierSmtp.class);
+    /** TLS 1.2 et 1.3 seulement, comme le répartiteur (ITSP.40.062). */
+    static final String PROTOCOLES_TLS = "TLSv1.3 TLSv1.2";
+    private static final String DELAI_MS = "10000";
 
     private final JavaMailSender envoyeur;
     private final String hote;
@@ -50,14 +55,23 @@ public class CourrierSmtp implements Courrier {
             sender.setUsername(utilisateur);
             sender.setPassword(env.getOrDefault("SMTP_PASS", ""));
         }
-        Properties p = sender.getJavaMailProperties();
-        p.put("mail.smtp.auth", String.valueOf(!utilisateur.isEmpty()));
-        p.put("mail.smtp.starttls.enable", String.valueOf(!securise));
-        p.put("mail.smtp.ssl.enable", String.valueOf(securise));
-        p.put("mail.smtp.connectiontimeout", "10000");
-        p.put("mail.smtp.timeout", "10000");
+        sender.setJavaMailProperties(proprietes(securise, !utilisateur.isEmpty()));
         String expediteur = env.getOrDefault("MAIL_FROM", "").trim();
         return new CourrierSmtp(sender, hote, expediteur.isEmpty() ? EXPEDITEUR_PAR_DEFAUT : expediteur);
+    }
+
+    /** Les réglages de session : SMTPS direct, ou STARTTLS exigé ; l'identité du serveur vérifiée dans les deux cas. */
+    static Properties proprietes(boolean securise, boolean authentifie) {
+        Properties p = new Properties();
+        p.put("mail.smtp.auth", String.valueOf(authentifie));
+        p.put("mail.smtp.starttls.enable", String.valueOf(!securise));
+        p.put("mail.smtp.starttls.required", String.valueOf(!securise));
+        p.put("mail.smtp.ssl.enable", String.valueOf(securise));
+        p.put("mail.smtp.ssl.checkserveridentity", "true");
+        p.put("mail.smtp.ssl.protocols", PROTOCOLES_TLS);
+        p.put("mail.smtp.connectiontimeout", DELAI_MS);
+        p.put("mail.smtp.timeout", DELAI_MS);
+        return p;
     }
 
     @Override

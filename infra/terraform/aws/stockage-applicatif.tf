@@ -2,8 +2,8 @@
  * **Le stockage que l'application lit vraiment** — AO 26-015-DO E-TN-9 (disponibilité), E-TN-15
  * (copies de sécurité et leur conservation), E-TN-16 (retour arrière), P-TN-3 (essais de reprise).
  *
- * L'application tient ses données dans une base SQLite (`DB_FICHIER`), bâtie par le travail de
- * migrations puis servie par le Java, et écrit ses propres sauvegardes à côté (toutes les 15
+ * L'application tient ses données dans une base SQLite (`DB_URL`), dont le Java bâtit le schéma au
+ * démarrage (Liquibase) et qu'il sert, et écrit ses propres sauvegardes à côté (toutes les 15
  * minutes, `SAUVEGARDES_DOSSIER`). Sur Fargate, le disque d'une tâche disparaît avec elle : sans
  * ce volume, chaque redémarrage repartait d'une base vide. EFS est régional — ses données sont
  * répliquées dans les zones de disponibilité de Montréal — et chiffré au repos comme en transit.

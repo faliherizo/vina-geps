@@ -538,15 +538,15 @@
       "id": "E-TN-8",
       "verdict": "PARTIEL",
       "lot": "U0",
-      "preuves": "Matrice de sécurité par type de transmission (docs/urgences-sante/SECURITE-DES-TRANSMISSIONS.md) ; HTTPS TLS 1.2+ au répartiteur, HSTS et cookie Secure (aws/calcul.tf, `FiltrePareFeuTest`) ; VPN IPsec site à site optionnel (aws/liaison-privee.tf, terraform validate) ; volume monté en TLS ; https exigé pour les connecteurs (`ContratIntegrationsEffectifsTest`)",
-      "ecart": "VPN décrit mais jamais monté avec un équipement de l'organisme ; répartiteur → tâches en HTTP dans le VPC ; STARTTLS SMTP opportuniste ; MPLS et SFTP absents ; aucun balayage TLS d'un environnement en service."
+      "preuves": "Matrice de sécurité par type de transmission (docs/urgences-sante/SECURITE-DES-TRANSMISSIONS.md) ; HTTPS TLS 1.2+ au répartiteur, HSTS et cookie Secure (aws/calcul.tf, `FiltrePareFeuTest`) ; VPN IPsec site à site optionnel (aws/liaison-privee.tf, terraform validate) ; volume monté en TLS ; https exigé pour les connecteurs (`ContratIntegrationsEffectifsTest`) ; STARTTLS exigé et identité du serveur vérifiée pour le courriel (`CourrierSmtpTest`) ; https exigé pour les fournisseurs de textos et d'appels (`TextosEtAppelsTest`) ; dépôt SFTP à empreinte épinglée (`ClientSftpIntegration`) ; balayage TLS de l'environnement en service après chaque déploiement (.github/workflows/tls.yml, scripts/tls/juger-tls.mjs)",
+      "ecart": "VPN décrit mais jamais monté avec un équipement de l'organisme ; répartiteur → tâches en HTTP dans le VPC ; MPLS : circuit à commander auprès d'un opérateur."
     },
     {
       "id": "E-TN-9",
       "verdict": "PARTIEL",
       "lot": "U0",
-      "preuves": "Données sur volume EFS régional (multizone), chiffré, monté par la tâche ; tâche remplacée d'office par ECS dans une autre zone ; migrations, API et interface dans la même tâche (aws/stockage-applicatif.tf, aws/calcul.tf, terraform validate) ; garde-fous RTO/RPO au plan (objectifs-de-reprise.tf) ; la disponibilité du mois est jugée contre 99,7 % (manquement) et 99,0 % (manquement majeur) pour un organisme sous la politique « service essentiel », maintenance planifiée retirée du temps prévu comme le veut 6.01.02 (`EngagementsDeService`, `SoutienTest`, `ControleurEngagementsSoutienHttpTest`)",
-      "ecart": "Addenda 06 : 24 h / 7 j / 365 j à 99,7 %, 2 h 10 min d'indisponibilité par mois hors maintenance annoncée. SQLite n'admet qu'un écrivain : une tâche unique, et la disponibilité repose sur son remplacement (minutes), pas sur deux tâches actives ; jamais déployé ni éprouvé par un essai de bascule ; NAT unique."
+      "preuves": "Données sur volume EFS régional (multizone), chiffré, monté par la tâche ; tâche remplacée d'office par ECS dans une autre zone ; migrations, API et interface dans la même tâche (aws/stockage-applicatif.tf, aws/calcul.tf, terraform validate) ; garde-fous RTO/RPO au plan (objectifs-de-reprise.tf) ; la disponibilité du mois est jugée contre 99,7 % (manquement) et 99,0 % (manquement majeur) pour un organisme sous la politique « service essentiel », maintenance planifiée retirée du temps prévu comme le veut 6.01.02 (`EngagementsDeService`, `SoutienTest`, `ControleurEngagementsSoutienHttpTest`) ; Terraform réaligné le 26 nov. 2026 : la base SQLite sur le volume EFS (DB_URL, la variable lue par le Java), un seul écrivain imposé (validation de taches_application), une passerelle NAT par zone en production (nat_par_zone), plus de conteneur de migrations Node — essais `terraform test` (haute-disponibilite.tftest.hcl, apply sur fournisseurs simulés) ; essai de panne mesuré (deploy/geps/essai-bascule.sh, .github/workflows/essai-bascule.yml) : processus Java tué, retour automatique chronométré et rapporté au budget de 99,7 %",
+      "ecart": "Addenda 06 : 99,7 % sur 24/7/365. La base SQLite n'admet qu'un écrivain : la disponibilité repose sur le remplacement automatique de la tâche (mesuré sur la démonstration), pas sur deux tâches actives ; le portage sur PostgreSQL (deux tâches, RDS Multi-AZ) est un engagement daté de la soumission ; bascule ECS jamais éprouvée sur AWS."
     },
     {
       "id": "E-TN-10",
@@ -867,8 +867,8 @@
       "id": "P-TN-3",
       "verdict": "PARTIEL",
       "lot": "U0",
-      "preuves": "Essai de restauration mensuel automatisé du volume de données (AWS Backup Restore Testing, aws/stockage-applicatif.tf), échec signalé au sujet d'alertes ; Terraform vérifié en CI (travail terraform de ci-cd.yml) ; exercice de reprise applicatif journalisé (`ControleurExploitationHttpTest`) ; docs/securite/PLAN-CONTINUITE-REPRISE.md",
-      "ecart": "Jamais exécuté contre un déploiement réel : aucun rapport d'exercice de reprise ni révision de plan consignée à ce jour."
+      "preuves": "Essai de restauration mensuel automatisé du volume de données (AWS Backup Restore Testing, aws/stockage-applicatif.tf), échec signalé au sujet d'alertes ; Terraform vérifié en CI (travail terraform de ci-cd.yml) ; exercice de reprise applicatif journalisé (`ControleurExploitationHttpTest`) ; docs/securite/PLAN-CONTINUITE-REPRISE.md ; exercice de reprise joué sur la démonstration : restauration de la dernière copie dans une pile isolée, intégrité, santé, connexion et lecture vérifiées, RPO et RTO mesurés, rapport consigné (deploy/geps/exercice-reprise.sh, .github/workflows/exercice-reprise.yml, trimestriel) ; plan, objectifs et registre des exercices : docs/securite/PLAN-CONTINUITE-REPRISE.md",
+      "ecart": "L'exercice est joué sur la démonstration OVH, pas sur un déploiement AWS de production ; l'essai mensuel d'AWS Backup n'a jamais tourné."
     },
     {
       "id": "P-TN-4",

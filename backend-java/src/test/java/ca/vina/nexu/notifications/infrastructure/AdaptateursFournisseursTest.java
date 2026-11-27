@@ -133,7 +133,7 @@ class AdaptateursFournisseursTest {
         assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of(), client)).isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule.class);
         assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of("APPEL_FOURNISSEUR", "twilio", "TWILIO_ACCOUNT_SID", "a", "TWILIO_AUTH_TOKEN", "b"), client))
                 .isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.ParTwilio.class);
-        assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of("APPEL_FOURNISSEUR", "http", "APPEL_URL", "http://x", "APPEL_JETON", "j"), client))
+        assertThat(ConfigurationFournisseurs.appelsVocaux(Map.of("APPEL_FOURNISSEUR", "http", "APPEL_URL", "https://x", "APPEL_JETON", "j"), client))
                 .isInstanceOf(ca.vina.nexu.notifications.infrastructure.persistance.AppelsVocaux.Simule.class);
     }
 
@@ -216,11 +216,11 @@ class AdaptateursFournisseursTest {
         assertThat(ConfigurationFournisseurs.porteurSms(Map.of(), client, () -> T)).isInstanceOf(Textos.SmsSimule.class);
         assertThat(ConfigurationFournisseurs.porteurSms(Map.of("SMS_FOURNISSEUR", "twilio", "TWILIO_ACCOUNT_SID", "a", "TWILIO_AUTH_TOKEN", "b", "TWILIO_FROM", "c"), client, () -> T)).isInstanceOf(Twilio.Sms.class);
         assertThat(ConfigurationFournisseurs.porteurSms(Map.of("SMS_FOURNISSEUR", "telnyx", "TELNYX_API_KEY", "a", "TELNYX_FROM", "b"), client, () -> T)).isInstanceOf(SmsTelnyx.class);
-        assertThat(ConfigurationFournisseurs.porteurSms(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "http://x", "SMS_JETON", "j", "SMS_EXPEDITEUR", "Moi"), client, () -> T)).isInstanceOf(SmsHttp.class);
+        assertThat(ConfigurationFournisseurs.porteurSms(Map.of("SMS_FOURNISSEUR", "http", "SMS_URL", "https://x", "SMS_JETON", "j", "SMS_EXPEDITEUR", "Moi"), client, () -> T)).isInstanceOf(SmsHttp.class);
         assertThatThrownBy(() -> ConfigurationFournisseurs.porteurSms(Map.of("SMS_FOURNISSEUR", "http"), client, () -> T)).hasMessage("SMS_FOURNISSEUR=http : variables manquantes SMS_URL, SMS_JETON");
         assertThat(ConfigurationFournisseurs.porteurAppel(Map.of(), client, () -> T)).isInstanceOf(Appels.AppelSimule.class);
         assertThat(ConfigurationFournisseurs.porteurAppel(Map.of("SMS_FOURNISSEUR", "twilio", "TWILIO_ACCOUNT_SID", "a", "TWILIO_AUTH_TOKEN", "b"), client, () -> T)).isInstanceOf(Twilio.Appel.class);
-        assertThat(ConfigurationFournisseurs.porteurAppel(Map.of("APPEL_FOURNISSEUR", "http", "APPEL_URL", "http://x", "APPEL_JETON", "j"), client, () -> T)).isInstanceOf(AppelHttp.class);
+        assertThat(ConfigurationFournisseurs.porteurAppel(Map.of("APPEL_FOURNISSEUR", "http", "APPEL_URL", "https://x", "APPEL_JETON", "j"), client, () -> T)).isInstanceOf(AppelHttp.class);
         ConfigurationFournisseurs.ClesInstance tirees = ConfigurationFournisseurs.clesVapid(Map.of(), new SecureRandom());
         assertThat(tirees.configurees()).isFalse();
         assertThat(tirees.cles().sujet()).isEqualTo(PousseeWeb.SUJET_PAR_DEFAUT);

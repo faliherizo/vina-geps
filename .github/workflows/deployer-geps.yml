@@ -6,6 +6,7 @@
 #                       deploy/geps/deployer.sh — sauvegarde, démarrage, santé, retour arrière automatique.
 #   semer             : semer-demo.yml — les organismes de démonstration et leurs comptes publiés (rien n'est doublé).
 #   recette           : recette-e2e.yml — la pile déployée, en lecture seule : le superadmin, l'API, chaque compte publié.
+#   tls               : tls.yml — balayage TLS de l'hôte commun et de chaque sous-domaine d'organisme (E-TN-8).
 # La performance (perf.yml) se lance à part, à la main : elle charge un serveur partagé.
 #
 # Déclenché à chaque poussée sur develop (la démonstration montre la version en cours), ou à la main (Actions › Run).
@@ -125,6 +126,15 @@ jobs:
     needs: [construire-livrer, semer]
     if: always() && needs.construire-livrer.result == 'success' && needs.semer.result != 'failure'
     uses: ./.github/workflows/recette-e2e.yml
+    with:
+      environnement: geps-demo
+    secrets: inherit
+
+  tls:
+    name: Balayage TLS
+    needs: construire-livrer
+    if: needs.construire-livrer.result == 'success'
+    uses: ./.github/workflows/tls.yml
     with:
       environnement: geps-demo
     secrets: inherit

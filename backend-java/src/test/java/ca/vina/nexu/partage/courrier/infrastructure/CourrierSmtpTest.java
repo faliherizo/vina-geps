@@ -29,6 +29,17 @@ class CourrierSmtpTest {
     }
 
     @Test
+    void chiffrementExige_starttlsObligatoireSur587_tlsDirectSur465_certificatVerifie() {
+        assertThat(CourrierSmtp.proprietes(false, true)).containsEntry("mail.smtp.auth", "true")
+                .containsEntry("mail.smtp.starttls.enable", "true").containsEntry("mail.smtp.starttls.required", "true")
+                .containsEntry("mail.smtp.ssl.enable", "false").containsEntry("mail.smtp.ssl.checkserveridentity", "true")
+                .containsEntry("mail.smtp.ssl.protocols", "TLSv1.3 TLSv1.2").containsEntry("mail.smtp.timeout", "10000");
+        assertThat(CourrierSmtp.proprietes(true, false)).containsEntry("mail.smtp.auth", "false")
+                .containsEntry("mail.smtp.ssl.enable", "true").containsEntry("mail.smtp.starttls.required", "false")
+                .containsEntry("mail.smtp.ssl.checkserveridentity", "true");
+    }
+
+    @Test
     void envoi_remisAuServeur_etRefusSansLever() {
         List<SimpleMailMessage> remis = new ArrayList<>();
         JavaMailSender factice = new JavaMailSenderImpl() {
