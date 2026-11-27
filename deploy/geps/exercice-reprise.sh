@@ -36,6 +36,8 @@ ARCHIVE="${1:-$(ls -1t "$SAUVEGARDES"/donnees-*.tar.gz 2>/dev/null | head -1)}"
 lire_env() { grep -E "^$1=" .env.geps | head -1 | cut -d= -f2-; }
 SA_NOM="$(lire_env SUPERADMIN_USERNAME)"; SA_NOM="${SA_NOM:-superadmin}"
 SA_MDP="$(lire_env SUPERADMIN_PASSWORD)"
+# En résolution par sous-domaine, l'organisme se déduit de l'hôte : le superadmin se connecte sur l'hôte commun.
+HOTE="$(lire_env DOMAINE_RACINE)"; HOTE="${HOTE:-localhost}"
 
 nettoyer() {
   docker rm -f "$CONTENEUR" >/dev/null 2>&1 || true
@@ -52,11 +54,11 @@ noter() { constats+=("| $1 | $2 | $3 |"); [ "$2" = "✅" ] || echec=1; }
 # Les organismes vus par le superadmin, sur une instance joignable depuis `conteneur` à `adresse`.
 organismes() {
   local conteneur="$1" adresse="$2" jeton
-  jeton="$(docker exec -e N="$SA_NOM" -e M="$SA_MDP" "$conteneur" sh -c \
-    'curl -fsS -H "Content-Type: application/json" -d "{\"username\":\"$N\",\"password\":\"$M\"}" '"$adresse"'/api/auth/login' \
+  jeton="$(docker exec -e N="$SA_NOM" -e M="$SA_MDP" -e H="$HOTE" "$conteneur" sh -c \
+    'curl -fsS -H "Host: $H" -H "Content-Type: application/json" -d "{\"username\":\"$N\",\"password\":\"$M\"}" '"$adresse"'/api/auth/login' \
     | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')"
   [ -n "$jeton" ] || { echo "-1"; return; }
-  docker exec -e J="$jeton" "$conteneur" sh -c 'curl -fsS -H "Authorization: Bearer $J" '"$adresse"'/api/superadmin/tenants' \
+  docker exec -e J="$jeton" -e H="$HOTE" "$conteneur" sh -c 'curl -fsS -H "Host: $H" -H "Authorization: Bearer $J" '"$adresse"'/api/superadmin/tenants' \
     | grep -o '"modules":' | wc -l | tr -d ' '
 }
 

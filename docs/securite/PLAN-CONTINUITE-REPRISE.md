@@ -53,3 +53,5 @@ plan, consignée au registre ci-dessous. Sans écart, le plan est revu au moins 
 
 | Date | Lieu | Copie (âge) | RTO mesuré | Verdict | Révision |
 |---|---|---|---|---|---|
+| 2026-11-26 | Démonstration OVH, pile isolée | archive du volume du 24 nov. (56 h) | 29 s, restauration → service vérifié | ✅ intégrité ok, superadmin connecté, 6 organismes restaurés sur 6 | Vérification de connexion corrigée : présenter l'hôte commun (résolution par sous-domaine) |
+| 2026-11-26 | Démonstration OVH, essai de panne | — | 15 s d'indisponibilité, retour automatique | ✅ 518 pannes semblables tiennent dans le budget mensuel de 99,7 % | Un premier essai par `docker kill` a laissé le service à terre 11 minutes : Docker ne relance pas un conteneur arrêté de l'hôte. L'essai simule désormais la panne de l'intérieur et relance lui-même le service s'il ne revient pas en 2 minutes |

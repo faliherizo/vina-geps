@@ -46,11 +46,25 @@ public final class Totp {
         return "otpauth://totp/" + encoder(issuer) + ":" + encoder(label) + "?secret=" + secretBase32 + "&issuer=" + encoder(issuer) + "&algorithm=SHA1&digits=6&period=30";
     }
 
-    /** La forme compacte pour le code QR (libellé tronqué à 32 caractères, valeurs par défaut implicites) : elle tient en version 6. */
+    /**
+     * La forme compacte pour le code QR (valeurs par défaut implicites) : elle doit tenir dans la plus grande version du
+     * code. Le libellé est tronqué à 32 caractères, puis encore, caractère par caractère, tant que l'adresse encodée
+     * dépasse la capacité — un nom long (clé technique {@code login@@organisme}, « @ » encodé sur trois octets) faisait
+     * lever le générateur, et l'usager ne pouvait pas activer son second facteur (tests d'intrusion du 26 nov. 2026).
+     * Le secret et l'émetteur, eux, ne se tronquent jamais : seul le libellé affiché par l'application est raccourci.
+     */
     public static String urlOtpauthCompacte(String label, String secretBase32, String issuer) {
-        String court = label.length() > 32 ? label.substring(0, 32) : label;
-        return "otpauth://totp/" + encoder(issuer) + ":" + encoder(court) + "?secret=" + secretBase32 + "&issuer=" + encoder(issuer);
+        String debut = "otpauth://totp/" + encoder(issuer) + ":";
+        String fin = "?secret=" + secretBase32 + "&issuer=" + encoder(issuer);
+        String court = label.length() > LIBELLE_MAX ? label.substring(0, LIBELLE_MAX) : label;
+        while (!court.isEmpty() && (debut + encoder(court) + fin).getBytes(StandardCharsets.UTF_8).length > CodeQr.capaciteOctets()) {
+            court = court.substring(0, court.length() - 1);
+        }
+        return debut + encoder(court) + fin;
     }
+
+    /** La longueur d'un libellé lisible dans une application d'authentification. */
+    private static final int LIBELLE_MAX = 32;
 
     public static String encoderBase32(byte[] octets) {
         StringBuilder sortie = new StringBuilder();

@@ -148,7 +148,7 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
   it("isolation de l'origine (ZAP 90004) : CORP partout où nosniff est posé, COOP partout où la CSP l'est — jamais sur l'API", () => {
     const compter = (motif: RegExp) => (conf.match(motif) ?? []).length;
     expect(compter(/add_header X-Content-Type-Options "nosniff" always;/g)).toBe(compter(/add_header Cross-Origin-Resource-Policy "same-origin" always;/g));
-    expect(compter(/add_header Content-Security-Policy \$politique_contenu always;/g)).toBe(compter(/add_header Cross-Origin-Opener-Policy "same-origin" always;/g));
+    expect(compter(/add_header Content-Security-Policy [^\n]+ always;/g)).toBe(compter(/add_header Cross-Origin-Opener-Policy "same-origin" always;/g));
     for (const location of ["/api/", "/public/"]) expect(blocEntier(location), location).not.toContain("Cross-Origin-");
   });
 
@@ -165,6 +165,13 @@ describe("nginx — durcissements IN-01 et IN-05", () => {
     const b = bloc(`~ ${motif![1]}`);
     expect(b).toMatch(/set \$\w+ \$\{API_UPSTREAM\};/);
     expect(b).toContain("proxy_set_header X-Forwarded-Host $host;");
+    // PT-08 (26 nov. 2026) : un add_header dans ce bloc coupait l'héritage — les pages de connexion n'avaient ni nosniff,
+    // ni CSP, ni interdiction d'encadrement. Le script de la réponse SAML n'est admis que par son empreinte.
+    expect(b).toContain('add_header X-Content-Type-Options "nosniff" always;');
+    expect(b).toContain('add_header X-Frame-Options "DENY" always;');
+    expect(b).toMatch(/Content-Security-Policy "[^"]*frame-ancestors 'none'/);
+    expect(b).toMatch(/script-src 'sha256-[A-Za-z0-9+\/=]+';/);
+    expect(b).not.toMatch(/unsafe-(inline|eval)'[^;]*;[^"]*script-src|script-src[^;]*unsafe/);
   });
 
   it("co-hébergement : /public/ vise le même amont configuré que /api/, jamais un nom d'hôte en dur", () => {

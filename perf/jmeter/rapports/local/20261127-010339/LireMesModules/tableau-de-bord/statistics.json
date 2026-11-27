@@ -1,0 +1,50 @@
+{
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 1208,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 2.107615894039741,
+    "medianResTime" : 2.0,
+    "minResTime" : 1.0,
+    "maxResTime" : 106.0,
+    "pct1ResTime" : 3.0,
+    "pct2ResTime" : 4.0,
+    "pct3ResTime" : 7.0,
+    "throughput" : 19.370770661620856,
+    "receivedKBytesPerSec" : 9.558354847503287,
+    "sentKBytesPerSec" : 9.455377473461402
+  },
+  "LireMesModules" : {
+    "transaction" : "LireMesModules",
+    "sampleCount" : 1207,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 2.0215410107705076,
+    "medianResTime" : 2.0,
+    "minResTime" : 1.0,
+    "maxResTime" : 12.0,
+    "pct1ResTime" : 3.0,
+    "pct2ResTime" : 4.0,
+    "pct3ResTime" : 6.920000000000073,
+    "throughput" : 20.166747422766537,
+    "receivedKBytesPerSec" : 9.921089194416133,
+    "sentKBytesPerSec" : 9.847044640022723
+  },
+  "POST /api/auth/login" : {
+    "transaction" : "POST /api/auth/login",
+    "sampleCount" : 1,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 106.0,
+    "medianResTime" : 106.0,
+    "minResTime" : 106.0,
+    "maxResTime" : 106.0,
+    "pct1ResTime" : 106.0,
+    "pct2ResTime" : 106.0,
+    "pct3ResTime" : 106.0,
+    "throughput" : 9.433962264150942,
+    "receivedKBytesPerSec" : 21.61335495283019,
+    "sentKBytesPerSec" : 2.837558962264151
+  }
+}

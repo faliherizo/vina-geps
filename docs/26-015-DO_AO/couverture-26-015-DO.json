@@ -601,8 +601,8 @@
       "id": "E-TN-17",
       "verdict": "PARTIEL",
       "lot": "U0",
-      "preuves": "docs/PERFORMANCE-JMETER.md : p95 < 2 000 ms mesuré sur 29 plans (horaires, absences, paie…)",
-      "ecart": "Plans JMeter des effectifs générés (148 routes) et six transactions de base au catalogue de l'accord (doc 09), mais mesurés sur le Node, pas sur le Java ; écritures non mesurées (45 corps refusés en 422) ; pointage non mesuré (machine à états rejouée sur la même place) ; charge contractuelle (1 100 usagers, pointe de 500 pointages) non rejouée sur une machine au repos."
+      "preuves": "Mesures du 27 nov. 2026 contre le Java (docs/26-015-DO_AO/09-CHARGE-ET-NIVEAUX-DE-SERVICE.md § 9.6 bis) : pointe des pointages fidèle — 500 personnes, une place chacune, 500 entrées sur 60 s, 201 × 500, p95 14 ms ; 500 sorties à 50 simultanées, p95 309 ms (perf/jmeter/pointe-pointages.cjs) ; les 14 opérations de l'accord, écritures comprises, 28 plans sur 28 dans leurs objectifs (docs/SLA/ACCORD-NIVEAU-SERVICE-PERFORMANCE.md)",
+      "ecart": "Mesuré sur la machine de développement partagée, en répétition (60 s par opération au lieu de 600) ; la charge contractuelle de 1 100 usagers simultanés n'a pas été rejouée sur une machine au repos ni sur l'environnement de production."
     },
     {
       "id": "E-TN-18",

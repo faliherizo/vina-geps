@@ -52,6 +52,22 @@ class CodeQrTest {
     }
 
     @Test
+    @DisplayName("un nom long, un vrai secret de 32 caractères : le QR tient toujours, le libellé seul est raccourci")
+    void nomLongTientDansLeQr() {
+        assertThat(CodeQr.capaciteOctets()).isEqualTo(106);
+        String secret = "JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP";
+        // La clé technique d'un compte d'organisme : login@@<identifiant>, chaque « @ » encodé sur trois octets.
+        String url = Totp.urlOtpauthCompacte("pemp-a-mwyf1abc@@db5a08d5-1cdb-4fcc-8aaa-064862941870", secret, "VINA GePS");
+        assertThat(url.getBytes(StandardCharsets.UTF_8).length).isLessThanOrEqualTo(106);
+        assertThat(url).startsWith("otpauth://totp/VINA%20GePS:pemp-a-mwyf1abc").endsWith("?secret=" + secret + "&issuer=VINA%20GePS");
+        assertThat(CodeQr.matrice(url)).hasDimensions(41, 41);
+        // Un émetteur qui ne laisse aucune place au libellé : le libellé disparaît, le secret reste entier.
+        String sansLibelle = Totp.urlOtpauthCompacte("ana", secret, "E".repeat(21));
+        assertThat(sansLibelle).contains(":?secret=" + secret).hasSize(106);
+        assertThat(CodeQr.matrice(sansLibelle)).hasDimensions(41, 41);
+    }
+
+    @Test
     @DisplayName("au-delà de la version 6, la charge est refusée plutôt que rendue illisible")
     void tropLong() {
         assertThatThrownBy(() -> CodeQr.matrice("x".repeat(107))).isInstanceOf(IllegalArgumentException.class).hasMessage("payload too long for QR (max version 6)");

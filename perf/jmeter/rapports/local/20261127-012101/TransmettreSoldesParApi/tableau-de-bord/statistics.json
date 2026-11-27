@@ -1,0 +1,50 @@
+{
+  "Total" : {
+    "transaction" : "Total",
+    "sampleCount" : 1206,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 7.276948590381437,
+    "medianResTime" : 5.0,
+    "minResTime" : 3.0,
+    "maxResTime" : 265.0,
+    "pct1ResTime" : 8.0,
+    "pct2ResTime" : 11.0,
+    "pct3ResTime" : 68.93000000000006,
+    "throughput" : 18.686954770131862,
+    "receivedKBytesPerSec" : 14.103162236391526,
+    "sentKBytesPerSec" : 12.386850275810774
+  },
+  "TransmettreSoldesParApi" : {
+    "transaction" : "TransmettreSoldesParApi",
+    "sampleCount" : 1205,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 7.064730290456429,
+    "medianResTime" : 5.0,
+    "minResTime" : 3.0,
+    "maxResTime" : 265.0,
+    "pct1ResTime" : 8.0,
+    "pct2ResTime" : 10.700000000000045,
+    "pct3ResTime" : 67.58000000000038,
+    "throughput" : 20.118540779697803,
+    "receivedKBytesPerSec" : 15.18241232051924,
+    "sentKBytesPerSec" : 13.340321474037898
+  },
+  "POST /api/oauth/token" : {
+    "transaction" : "POST /api/oauth/token",
+    "sampleCount" : 1,
+    "errorCount" : 0,
+    "errorPct" : 0.0,
+    "meanResTime" : 263.0,
+    "medianResTime" : 263.0,
+    "minResTime" : 263.0,
+    "maxResTime" : 263.0,
+    "pct1ResTime" : 263.0,
+    "pct2ResTime" : 263.0,
+    "pct3ResTime" : 263.0,
+    "throughput" : 3.802281368821293,
+    "receivedKBytesPerSec" : 3.1376247623574143,
+    "sentKBytesPerSec" : 1.488979325095057
+  }
+}

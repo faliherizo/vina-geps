@@ -14,16 +14,37 @@ pile Docker locale.
 |---|---|
 | `PLAN-TESTS-INTRUSION.md` | Portée, règles d'engagement, méthode (OWASP WSTG / ASVS L2 / API Top 10, PTES), outils, triage CVSS 3.1, CI |
 | `RAPPORT-TESTS-INTRUSION-2026-11-22.md` | Exécution du 2026-11-22 : constats, preuves, recommandations |
-| `tests/*.test.mjs` | 53 assertions `node:test` ; chacune échoue si la faille existe |
+| `tests/*.test.mjs` | 72 assertions `node:test`, dont le balayage de chaque route ; chacune échoue si la faille existe |
 | `lancer-tout.sh` | Toutes les couches contre `CIBLE_WEB`, résultats dans `resultats/<date>/` |
 
 ```bash
 # Secrets d'amorçage générés dans le projet de tests (ignorés par git) : la pile se monte comme en production.
 set -a && . ../urgences-sante-pentest/secrets-essai/pile.env && set +a
-US_WEB_PORT=8096 docker compose -p us-pentest up -d --build
-cd ../urgences-sante-pentest && CIBLE_WEB=http://localhost:8096 npm test          # 54 assertions, un fichier à la fois
-CIBLE_WEB=http://localhost:8096 bash scripts/20-zap.sh                              # OWASP ZAP baseline + API
+US_WEB_PORT=8097 docker compose -p us-pentest up -d --build                         # 8095 et 8096 : pris par un autre projet
+cd ../urgences-sante-pentest && CIBLE_WEB=http://localhost:8097 npm test          # 72 assertions (balayage compris), un fichier à la fois
+CIBLE_WEB=http://localhost:8097 bash scripts/20-zap.sh                              # OWASP ZAP baseline + API
 ```
+
+## Résultat du 2026-11-26 — balayage de chaque route, les deux avis
+
+Rapport complet : `urgences-sante-pentest/RAPPORT-TESTS-INTRUSION-2026-11-26.md`. Le balayage lit la spécification
+OpenAPI servie par le Java et joue **chacune des 627 routes** : refus sans session, rôles, isolation entre
+établissements (identifiants de l'autre établissement compris), injection SQL classique et à l'aveugle dans chaque
+paramètre de chemin, de requête et de corps, XSS réfléchi et stocké, traversée de chemin, SSRF, redirection ouverte,
+jeton falsifié, attribution de masse. Une route qui ferme la session (déconnexion) ne peut plus masquer le reste :
+le balayage se reconnecte, et échoue au-delà de 5 % de 401.
+
+| Avis | Ce qui l'éprouve | Résultat |
+|---|---|---|
+| Urgences-santé (26-015-DO) | Balayage (effectifs, paie, communication, socle) · suite 01 à 09 · contrôle statique du frontend | 12/12 · 57/57 · 3/3 |
+| FX-AO-20260810 | Balayage (alertes, communication, socle) · suite du dépôt `securite/intrusion/fx-ao` | 12/12 · 15/15 |
+| Les deux | OWASP ZAP 2.16.1, base et API | 0 échec ; avertissements triés (503 de la limitation, faux positifs SQL vérifiés) |
+
+| ID | Gravité | Constat | État |
+|---|---|---|---|
+| PT-10 | Moyen 5.3 | Activation du second facteur en 500 quand l'adresse `otpauth://` dépasse la capacité du QR (nom technique `login@@organisme`) : l'usager ne pouvait pas activer son second facteur | ✅ libellé tronqué jusqu'à tenir, secret intact (`Totp`, `CodeQrTest`) |
+| PT-08 | Faible 3.1 | Pages de connexion SSO simulées sans `nosniff`, CSP ni interdiction d'encadrement (`add_header` coupant l'héritage nginx) | ✅ en-têtes redéclarés, CSP par empreinte (`nginx-conf.test.ts`) |
+| PT-09 | Informatif | Authentification vérifiée par contrôleur : deux routes répondent 400 avant 401 à un anonyme, sans rien servir | Recommandation : filtre de refus par défaut sur `/api/**` |
 
 ## Résultat du 2026-11-22
 
