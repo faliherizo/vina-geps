@@ -387,9 +387,17 @@ public final class CodeQr {
         return penalty;
     }
 
+    /** La plus grande version produite : 1 à 6 ont été validées par décodage. */
+    private static final int VERSION_MAX = 6;
+
+    /** Ce que la plus grande version contient en mode octet : indicateur de mode (4 bits) et longueur (8 bits) déduits. */
+    public static int capaciteOctets() {
+        return (BLOCS_M.get(VERSION_MAX).stream().mapToInt(Bloc::data).sum() * 8 - 4 - 8) / 8;
+    }
+
     /** Limité aux versions 1 à 6 (validées par décodage) : les charges utiles otpauth compactes y tiennent. */
     static int version(int octets) {
-        for (int v = 1; v <= 6; v++) {
+        for (int v = 1; v <= VERSION_MAX; v++) {
             int capacite = BLOCS_M.get(v).stream().mapToInt(Bloc::data).sum() * 8;
             if (4 + 8 + octets * 8 <= capacite) {
                 return v;
